@@ -1,0 +1,39 @@
+# This file is used by the dorny/paths-filter action to figure out if a program or
+# client has changed and thus if it should be built or tested. Any changes in the
+# files listed below will trigger the appropriate workflow for that program or client.
+
+# Programs.
+
+program_common: &program_common
+  - ".github/workflows/build-programs.yml"
+  - ".github/workflows/test-programs.yml"
+  - ".github/workflows/main.yml"
+
+mpl_project_name: &mpl_project_name
+  - *program_common
+  - "programs/mpl-project-name/**"
+
+programs: &programs
+  - *mpl_project_name
+
+# Clients.
+
+client_common: &client_common
+  - *programs
+  - ".github/workflows/test-js.yml"
+  - ".github/workflows/main.yml"
+  - "configs/shank.cjs"
+  - "configs/kinobi.cjs"
+
+js_client: &js_client
+  - *client_common
+  - "clients/js/**"
+
+clients: &clients
+  - *js_client
+
+# Any.
+
+any: &any
+  - *programs
+  - *clients

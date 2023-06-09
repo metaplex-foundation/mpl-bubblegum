@@ -1,0 +1,165 @@
+{
+  "version": "0.1.0",
+  "name": "mpl_project_name",
+  "instructions": [
+    {
+      "name": "Create",
+      "accounts": [
+        {
+          "name": "address",
+          "isMut": true,
+          "isSigner": true,
+          "desc": "The address of the new account"
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "The authority of the new account"
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "desc": "The account paying for the storage fees"
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "The system program"
+        }
+      ],
+      "args": [
+        {
+          "name": "createArgs",
+          "type": {
+            "defined": "CreateArgs"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 0
+      }
+    }
+  ],
+  "accounts": [
+    {
+      "name": "MyAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "key",
+            "type": {
+              "defined": "Key"
+            }
+          },
+          {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
+            "name": "data",
+            "type": {
+              "defined": "MyData"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "MyPdaAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "key",
+            "type": {
+              "defined": "Key"
+            }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    }
+  ],
+  "types": [
+    {
+      "name": "CreateArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "foo",
+            "type": "u16"
+          },
+          {
+            "name": "bar",
+            "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "MyData",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "foo",
+            "type": "u16"
+          },
+          {
+            "name": "bar",
+            "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Key",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Uninitialized"
+          },
+          {
+            "name": "MyAccount"
+          },
+          {
+            "name": "MyPdaAccount"
+          }
+        ]
+      }
+    }
+  ],
+  "errors": [
+    {
+      "code": 0,
+      "name": "InvalidSystemProgram",
+      "msg": "Invalid System Program"
+    },
+    {
+      "code": 1,
+      "name": "DeserializationError",
+      "msg": "Error deserializing account"
+    },
+    {
+      "code": 2,
+      "name": "SerializationError",
+      "msg": "Error serializing account"
+    }
+  ],
+  "metadata": {
+    "origin": "shank",
+    "address": "MyProgram1111111111111111111111111111111111",
+    "binaryVersion": "0.0.12",
+    "libVersion": "0.0.12"
+  }
+}
