@@ -11,6 +11,6 @@ generateIdl({
   programId: "BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY",
   idlDir,
   binaryInstallDir,
-  programDir: path.join(programDir, "mpl-bubblegum"),
+  programDir: path.join(programDir, "bubblegum", "program"),
   rustbin: { locked: true },
 });
