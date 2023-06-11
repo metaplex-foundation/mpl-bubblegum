@@ -32,8 +32,8 @@
   },
   "devDependencies": {
     "@ava/typescript": "^3.0.1",
-    "@metaplex-foundation/umi": "^0.7.2",
-    "@metaplex-foundation/umi-bundle-tests": "^0.7.2",
+    "@metaplex-foundation/umi": "^0.7.14",
+    "@metaplex-foundation/umi-bundle-tests": "^0.7.14",
     "@solana/web3.js": "^1.73.0",
     "@typescript-eslint/eslint-plugin": "^5.0.0",
     "@typescript-eslint/parser": "^5.46.1",

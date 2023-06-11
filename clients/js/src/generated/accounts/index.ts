@@ -6,5 +6,5 @@
  * @see https://github.com/metaplex-foundation/kinobi
  */
 
-export * from './myAccount';
-export * from './myPdaAccount';
+export * from './treeConfig';
+export * from './voucher';

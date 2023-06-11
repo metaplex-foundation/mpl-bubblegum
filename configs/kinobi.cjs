@@ -11,14 +11,6 @@ const kinobi = k.createFromIdls([path.join(idlDir, "mpl_bubblegum.json")]);
 // Update accounts.
 kinobi.update(
   new k.UpdateAccountsVisitor({
-    myPdaAccount: {
-      seeds: [
-        k.stringConstantSeed("myPdaAccount"),
-        k.programSeed(),
-        k.publicKeySeed("authority", "The address of the authority"),
-        k.stringSeed("name", "The name of the account"),
-      ],
-    },
     // ...
   })
 );
@@ -26,19 +18,12 @@ kinobi.update(
 // Update instructions.
 kinobi.update(
   new k.UpdateInstructionsVisitor({
-    create: {
-      bytesCreatedOnChain: k.bytesFromAccount("myAccount"),
+    decompressV1: {
+      args: {
+        metadata: { name: "metadataArgs" },
+      },
     },
     // ...
-  })
-);
-
-// Set ShankAccount discriminator.
-const key = (name) => ({ field: "key", value: k.vEnum("Key", name) });
-kinobi.update(
-  new k.SetAccountDiscriminatorFromFieldVisitor({
-    myAccount: key("MyAccount"),
-    myPdaAccount: key("MyPdaAccount"),
   })
 );
 

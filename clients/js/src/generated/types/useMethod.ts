@@ -8,17 +8,19 @@
 
 import { Context, Serializer } from '@metaplex-foundation/umi';
 
-export enum Key {
-  Uninitialized,
-  MyAccount,
-  MyPdaAccount,
+export enum UseMethod {
+  Burn,
+  Multiple,
+  Single,
 }
 
-export type KeyArgs = Key;
+export type UseMethodArgs = UseMethod;
 
-export function getKeySerializer(
+export function getUseMethodSerializer(
   context: Pick<Context, 'serializer'>
-): Serializer<KeyArgs, Key> {
+): Serializer<UseMethodArgs, UseMethod> {
   const s = context.serializer;
-  return s.enum<Key>(Key, { description: 'Key' }) as Serializer<KeyArgs, Key>;
+  return s.enum<UseMethod>(UseMethod, {
+    description: 'UseMethod',
+  }) as Serializer<UseMethodArgs, UseMethod>;
 }

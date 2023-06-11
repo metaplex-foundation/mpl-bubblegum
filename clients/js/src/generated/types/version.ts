@@ -8,19 +8,18 @@
 
 import { Context, Serializer } from '@metaplex-foundation/umi';
 
-export type MyData = { foo: number; bar: number };
+export enum Version {
+  V1,
+}
 
-export type MyDataArgs = MyData;
+export type VersionArgs = Version;
 
-export function getMyDataSerializer(
+export function getVersionSerializer(
   context: Pick<Context, 'serializer'>
-): Serializer<MyDataArgs, MyData> {
+): Serializer<VersionArgs, Version> {
   const s = context.serializer;
-  return s.struct<MyData>(
-    [
-      ['foo', s.u16()],
-      ['bar', s.u32()],
-    ],
-    { description: 'MyData' }
-  ) as Serializer<MyDataArgs, MyData>;
+  return s.enum<Version>(Version, { description: 'Version' }) as Serializer<
+    VersionArgs,
+    Version
+  >;
 }
