@@ -7,7 +7,7 @@ const idlDir = path.join(__dirname, "..", "idls");
 
 // Instanciate Kinobi.
 const kinobi = k.createFromIdls([
-  path.join(idlDir, "mpl_bubblegum.json"),
+  path.join(idlDir, "bubblegum.json"),
   path.join(idlDir, "spl_account_compression.json"),
   path.join(idlDir, "spl_noop.json"),
 ]);

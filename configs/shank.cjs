@@ -7,7 +7,7 @@ const programDir = path.join(__dirname, "..", "programs");
 
 generateIdl({
   generator: "anchor",
-  programName: "mpl_bubblegum",
+  programName: "bubblegum",
   programId: "BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY",
   idlDir,
   binaryInstallDir,
