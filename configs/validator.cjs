@@ -1,8 +1,9 @@
 const path = require("path");
 
 const programDir = path.join(__dirname, "..", "programs");
-function getProgram(dir, programName) {
-  return path.join(programDir, dir, "target", "deploy", programName);
+
+function getProgram(programName) {
+  return path.join(programDir, ".bin", programName);
 }
 
 module.exports = {
@@ -12,7 +13,22 @@ module.exports = {
       {
         label: "Mpl Bubblegum",
         programId: "BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY",
-        deployPath: getProgram("mpl-bubblegum", "mpl_bubblegum.so"),
+        deployPath: getProgram("mpl_bubblegum.so"),
+      },
+      {
+        label: "Token Metadata",
+        programId: "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s",
+        deployPath: getProgram("mpl_token_metadata.so"),
+      },
+      {
+        label: "SPL Account Compression",
+        programId: "cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK",
+        deployPath: getProgram("spl_account_compression.so"),
+      },
+      {
+        label: "SPL Noop",
+        programId: "noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV",
+        deployPath: getProgram("spl_noop.so"),
       },
     ],
   },
