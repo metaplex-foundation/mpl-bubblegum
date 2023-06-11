@@ -61,5 +61,5 @@ jobs:
         with:
           name: program-builds
           # First wildcard ensures exported paths are consistently under the programs folder.
-          path: ./program*/bin/*.so
+          path: ./program*/.bin/*.so
           if-no-files-found: error
