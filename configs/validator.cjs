@@ -10,9 +10,9 @@ module.exports = {
     commitment: "processed",
     programs: [
       {
-        label: "Mpl Project Name",
-        programId: "MyProgram1111111111111111111111111111111111",
-        deployPath: getProgram("mpl-project-name", "mpl_project_name.so"),
+        label: "Mpl Bubblegum",
+        programId: "BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY",
+        deployPath: getProgram("mpl-bubblegum", "mpl_bubblegum.so"),
       },
     ],
   },

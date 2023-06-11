@@ -14,23 +14,23 @@ import {
   publicKey,
 } from '@metaplex-foundation/umi';
 import {
-  getMplProjectNameErrorFromCode,
-  getMplProjectNameErrorFromName,
+  getMplBubblegumErrorFromCode,
+  getMplBubblegumErrorFromName,
 } from '../errors';
 
-export const MPL_PROJECT_NAME_PROGRAM_ID = publicKey(
-  'MyProgram1111111111111111111111111111111111'
+export const MPL_BUBBLEGUM_PROGRAM_ID = publicKey(
+  'BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'
 );
 
-export function createMplProjectNameProgram(): Program {
+export function createMplBubblegumProgram(): Program {
   return {
-    name: 'mplProjectName',
-    publicKey: MPL_PROJECT_NAME_PROGRAM_ID,
+    name: 'mplBubblegum',
+    publicKey: MPL_BUBBLEGUM_PROGRAM_ID,
     getErrorFromCode(code: number, cause?: Error) {
-      return getMplProjectNameErrorFromCode(code, this, cause);
+      return getMplBubblegumErrorFromCode(code, this, cause);
     },
     getErrorFromName(name: string, cause?: Error) {
-      return getMplProjectNameErrorFromName(name, this, cause);
+      return getMplBubblegumErrorFromName(name, this, cause);
     },
     isOnCluster() {
       return true;
@@ -38,20 +38,20 @@ export function createMplProjectNameProgram(): Program {
   };
 }
 
-export function getMplProjectNameProgram<T extends Program = Program>(
+export function getMplBubblegumProgram<T extends Program = Program>(
   context: Pick<Context, 'programs'>,
   clusterFilter?: ClusterFilter
 ): T {
-  return context.programs.get<T>('mplProjectName', clusterFilter);
+  return context.programs.get<T>('mplBubblegum', clusterFilter);
 }
 
-export function getMplProjectNameProgramId(
+export function getMplBubblegumProgramId(
   context: Pick<Context, 'programs'>,
   clusterFilter?: ClusterFilter
 ): PublicKey {
   return context.programs.getPublicKey(
-    'mplProjectName',
-    MPL_PROJECT_NAME_PROGRAM_ID,
+    'mplBubblegum',
+    MPL_BUBBLEGUM_PROGRAM_ID,
     clusterFilter
   );
 }

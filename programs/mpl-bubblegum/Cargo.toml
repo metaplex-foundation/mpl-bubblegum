@@ -1,5 +1,5 @@
 [package]
-name = "mpl-project-name"
+name = "mpl-bubblegum"
 version = "0.1.0"
 edition = "2021"
 readme = "./README.md"

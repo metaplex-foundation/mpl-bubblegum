@@ -1,6 +1,6 @@
 {
   "version": "0.1.0",
-  "name": "mpl_project_name",
+  "name": "mpl_bubblegum",
   "instructions": [
     {
       "name": "Create",
@@ -158,7 +158,7 @@
   ],
   "metadata": {
     "origin": "shank",
-    "address": "MyProgram1111111111111111111111111111111111",
+    "address": "BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY",
     "binaryVersion": "0.0.12",
     "libVersion": "0.0.12"
   }

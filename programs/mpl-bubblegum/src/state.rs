@@ -6,7 +6,7 @@ use solana_program::msg;
 use solana_program::program_error::ProgramError;
 use solana_program::pubkey::Pubkey;
 
-use crate::error::MplProjectNameError;
+use crate::error::MplBubblegumError;
 
 #[derive(Clone, BorshSerialize, BorshDeserialize, Debug)]
 pub enum Key {
@@ -30,7 +30,7 @@ impl MyAccount {
         let mut bytes: &[u8] = &(*account.data).borrow();
         MyAccount::deserialize(&mut bytes).map_err(|error| {
             msg!("Error: {}", error);
-            MplProjectNameError::DeserializationError.into()
+            MplBubblegumError::DeserializationError.into()
         })
     }
 
@@ -38,7 +38,7 @@ impl MyAccount {
         let mut bytes = Vec::with_capacity(account.data_len());
         self.serialize(&mut bytes).map_err(|error| {
             msg!("Error: {}", error);
-            MplProjectNameError::SerializationError
+            MplBubblegumError::SerializationError
         })?;
         account.try_borrow_mut_data().unwrap()[..bytes.len()].copy_from_slice(&bytes);
         Ok(())

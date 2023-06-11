@@ -58,7 +58,7 @@ nameToErrorMap.set('SerializationError', SerializationErrorError);
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  */
-export function getMplProjectNameErrorFromCode(
+export function getMplBubblegumErrorFromCode(
   code: number,
   program: Program,
   cause?: Error
@@ -71,7 +71,7 @@ export function getMplProjectNameErrorFromCode(
  * Attempts to resolve a custom program error from the provided error name, i.e. 'Unauthorized'.
  * @category Errors
  */
-export function getMplProjectNameErrorFromName(
+export function getMplBubblegumErrorFromName(
   name: string,
   program: Program,
   cause?: Error

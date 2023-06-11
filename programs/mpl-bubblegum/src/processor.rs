@@ -1,5 +1,5 @@
-use crate::error::MplProjectNameError;
-use crate::instruction::{CreateArgs, MplProjectNameInstruction};
+use crate::error::MplBubblegumError;
+use crate::instruction::{CreateArgs, MplBubblegumInstruction};
 use crate::state::{Key, MyAccount, MyData};
 use borsh::BorshDeserialize;
 use solana_program::{
@@ -20,10 +20,10 @@ impl Processor {
         accounts: &[AccountInfo],
         instruction_data: &[u8],
     ) -> ProgramResult {
-        let instruction: MplProjectNameInstruction =
-            MplProjectNameInstruction::try_from_slice(instruction_data)?;
+        let instruction: MplBubblegumInstruction =
+            MplBubblegumInstruction::try_from_slice(instruction_data)?;
         match instruction {
-            MplProjectNameInstruction::Create(args) => {
+            MplBubblegumInstruction::Create(args) => {
                 msg!("Instruction: Create");
                 create(accounts, args)
             }
@@ -42,7 +42,7 @@ fn create(accounts: &[AccountInfo], args: CreateArgs) -> ProgramResult {
 
     // Guards.
     if *system_program.key != system_program::id() {
-        return Err(MplProjectNameError::InvalidSystemProgram.into());
+        return Err(MplBubblegumError::InvalidSystemProgram.into());
     }
 
     // Fetch the space and minimum lamports required for rent exemption.

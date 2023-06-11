@@ -1,7 +1,7 @@
 #![cfg(feature = "test-bpf")]
 
 use borsh::BorshDeserialize;
-use mpl_project_name::{instruction::CreateArgs, state::MyAccount};
+use mpl_bubblegum::{instruction::CreateArgs, state::MyAccount};
 use solana_program_test::{tokio, ProgramTest};
 use solana_sdk::{
     signature::{Keypair, Signer},
@@ -10,14 +10,14 @@ use solana_sdk::{
 
 #[tokio::test]
 async fn create() {
-    let mut context = ProgramTest::new("mpl_project_name", mpl_project_name::ID, None)
+    let mut context = ProgramTest::new("mpl_bubblegum", mpl_bubblegum::ID, None)
         .start_with_context()
         .await;
 
     let address = Keypair::new();
     let create_args = CreateArgs { foo: 1, bar: 2 };
 
-    let ix = mpl_project_name::instruction::create(
+    let ix = mpl_bubblegum::instruction::create(
         &address.pubkey(),
         &context.payer.pubkey(),
         &context.payer.pubkey(),
