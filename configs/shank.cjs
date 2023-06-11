@@ -6,10 +6,11 @@ const binaryInstallDir = path.join(__dirname, "..", ".crates");
 const programDir = path.join(__dirname, "..", "programs");
 
 generateIdl({
-  generator: "shank",
+  generator: "anchor",
   programName: "mpl_bubblegum",
   programId: "BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY",
   idlDir,
   binaryInstallDir,
   programDir: path.join(programDir, "mpl-bubblegum"),
+  rustbin: { locked: true },
 });
