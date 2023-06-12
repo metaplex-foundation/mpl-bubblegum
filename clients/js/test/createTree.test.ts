@@ -1,20 +1,33 @@
-import { generateSigner } from '@metaplex-foundation/umi';
+import { generateSigner, publicKey } from '@metaplex-foundation/umi';
 import test from 'ava';
-import { createTree } from '../src';
+import { TreeConfig, createTree, fetchTreeConfigFromSeeds } from '../src';
 import { createUmi } from './_setup';
 
-test.skip('it can create a Bubblegum tree', async (t) => {
-  // Given.
+test('it can create a Bubblegum tree', async (t) => {
+  // Given a brand new merkle tree signer.
   const umi = await createUmi();
   const merkleTree = generateSigner(umi);
 
-  // When.
-  await createTree(umi, {
-    merkleTree: merkleTree.publicKey,
-    maxDepth: 1,
-    maxBufferSize: 1,
-  }).sendAndConfirm(umi);
+  // When we create a tree at this address.
+  const builder = await createTree(umi, {
+    merkleTree,
+    maxDepth: 14,
+    maxBufferSize: 64,
+  });
+  await builder.sendAndConfirm(umi);
 
-  // Then.
-  t.pass();
+  // Then an account exists at the merkle tree address.
+  t.true(await umi.rpc.accountExists(merkleTree.publicKey));
+
+  // And a tree config was created with the correct data.
+  const treeConfig = await fetchTreeConfigFromSeeds(umi, {
+    merkleTree: merkleTree.publicKey,
+  });
+  t.like(treeConfig, <TreeConfig>{
+    treeCreator: publicKey(umi.identity),
+    treeDelegate: publicKey(umi.identity),
+    totalMintCapacity: 2n ** 14n,
+    numMinted: 0n,
+    isPublic: false,
+  });
 });

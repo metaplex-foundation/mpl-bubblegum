@@ -8,7 +8,7 @@
 
 export * from './burn';
 export * from './cancelRedeem';
-export * from './createTree';
+export * from './createTreeConfig';
 export * from './decompressV1';
 export * from './delegate';
 export * from './mintToCollectionV1';

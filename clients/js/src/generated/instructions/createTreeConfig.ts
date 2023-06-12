@@ -7,6 +7,7 @@
  */
 
 import {
+  ACCOUNT_HEADER_SIZE,
   AccountMeta,
   Context,
   Option,
@@ -19,11 +20,11 @@ import {
   publicKey,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
-import { findTreeConfigPda } from '../accounts';
+import { findTreeConfigPda, getTreeConfigSize } from '../accounts';
 import { addObjectProperty, isWritable } from '../shared';
 
 // Accounts.
-export type CreateTreeInstructionAccounts = {
+export type CreateTreeConfigInstructionAccounts = {
   treeAuthority?: PublicKey;
   merkleTree: PublicKey;
   payer?: Signer;
@@ -34,55 +35,62 @@ export type CreateTreeInstructionAccounts = {
 };
 
 // Data.
-export type CreateTreeInstructionData = {
+export type CreateTreeConfigInstructionData = {
   discriminator: Array<number>;
   maxDepth: number;
   maxBufferSize: number;
   public: Option<boolean>;
 };
 
-export type CreateTreeInstructionDataArgs = {
+export type CreateTreeConfigInstructionDataArgs = {
   maxDepth: number;
   maxBufferSize: number;
   public?: Option<boolean>;
 };
 
-export function getCreateTreeInstructionDataSerializer(
+export function getCreateTreeConfigInstructionDataSerializer(
   context: Pick<Context, 'serializer'>
-): Serializer<CreateTreeInstructionDataArgs, CreateTreeInstructionData> {
+): Serializer<
+  CreateTreeConfigInstructionDataArgs,
+  CreateTreeConfigInstructionData
+> {
   const s = context.serializer;
   return mapSerializer<
-    CreateTreeInstructionDataArgs,
+    CreateTreeConfigInstructionDataArgs,
     any,
-    CreateTreeInstructionData
+    CreateTreeConfigInstructionData
   >(
-    s.struct<CreateTreeInstructionData>(
+    s.struct<CreateTreeConfigInstructionData>(
       [
         ['discriminator', s.array(s.u8(), { size: 8 })],
         ['maxDepth', s.u32()],
         ['maxBufferSize', s.u32()],
         ['public', s.option(s.bool())],
       ],
-      { description: 'CreateTreeInstructionData' }
+      { description: 'CreateTreeConfigInstructionData' }
     ),
     (value) => ({
       ...value,
       discriminator: [165, 83, 136, 142, 89, 202, 47, 220],
       public: value.public ?? none(),
     })
-  ) as Serializer<CreateTreeInstructionDataArgs, CreateTreeInstructionData>;
+  ) as Serializer<
+    CreateTreeConfigInstructionDataArgs,
+    CreateTreeConfigInstructionData
+  >;
 }
 
 // Args.
-export type CreateTreeInstructionArgs = CreateTreeInstructionDataArgs;
+export type CreateTreeConfigInstructionArgs =
+  CreateTreeConfigInstructionDataArgs;
 
 // Instruction.
-export function createTree(
+export function createTreeConfig(
   context: Pick<
     Context,
     'serializer' | 'programs' | 'eddsa' | 'identity' | 'payer'
   >,
-  input: CreateTreeInstructionAccounts & CreateTreeInstructionArgs
+  input: CreateTreeConfigInstructionAccounts & CreateTreeConfigInstructionArgs
 ): TransactionBuilder {
   const signers: Signer[] = [];
   const keys: AccountMeta[] = [];
@@ -200,10 +208,12 @@ export function createTree(
 
   // Data.
   const data =
-    getCreateTreeInstructionDataSerializer(context).serialize(resolvedArgs);
+    getCreateTreeConfigInstructionDataSerializer(context).serialize(
+      resolvedArgs
+    );
 
   // Bytes Created On Chain.
-  const bytesCreatedOnChain = 0;
+  const bytesCreatedOnChain = getTreeConfigSize() + ACCOUNT_HEADER_SIZE;
 
   return transactionBuilder([
     { instruction: { keys, programId, data }, signers, bytesCreatedOnChain },

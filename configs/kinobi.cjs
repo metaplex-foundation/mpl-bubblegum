@@ -77,9 +77,11 @@ kinobi.update(
 kinobi.update(
   new k.UpdateInstructionsVisitor({
     createTree: {
+      name: "createTreeConfig",
       accounts: {
         treeAuthority: { defaultsTo: k.pdaDefault("treeConfig") },
       },
+      bytesCreatedOnChain: k.bytesFromAccount("treeConfig"),
     },
     decompressV1: {
       args: {
@@ -101,7 +103,7 @@ kinobi.update(
 // Set default values for structs.
 kinobi.update(
   new k.SetStructDefaultValuesVisitor({
-    createTreeInstructionData: {
+    createTreeConfigInstructionData: {
       public: k.vNone(),
     },
   })
