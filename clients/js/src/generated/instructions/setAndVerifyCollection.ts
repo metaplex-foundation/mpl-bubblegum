@@ -116,7 +116,7 @@ export function setAndVerifyCollection(
   // Program ID.
   const programId = {
     ...context.programs.getPublicKey(
-      'mplBubblegum',
+      'bubblegum',
       'BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'
     ),
     isWritable: false,

@@ -26,30 +26,46 @@ import {
 } from '.';
 
 export type MetadataArgs = {
+  /** The name of the asset */
   name: string;
+  /** The symbol for the asset */
   symbol: string;
+  /** URI pointing to JSON representing the asset */
   uri: string;
+  /** Royalty basis points that goes to creators in secondary sales (0-10000) */
   sellerFeeBasisPoints: number;
   primarySaleHappened: boolean;
   isMutable: boolean;
+  /** nonce for easy calculation of editions, if present */
   editionNonce: Option<number>;
+  /** Since we cannot easily change Metadata, we add the new DataV2 fields here at the end. */
   tokenStandard: Option<TokenStandard>;
+  /** Collection */
   collection: Option<Collection>;
+  /** Uses */
   uses: Option<Uses>;
   tokenProgramVersion: TokenProgramVersion;
   creators: Array<Creator>;
 };
 
 export type MetadataArgsArgs = {
+  /** The name of the asset */
   name: string;
+  /** The symbol for the asset */
   symbol: string;
+  /** URI pointing to JSON representing the asset */
   uri: string;
+  /** Royalty basis points that goes to creators in secondary sales (0-10000) */
   sellerFeeBasisPoints: number;
   primarySaleHappened: boolean;
   isMutable: boolean;
+  /** nonce for easy calculation of editions, if present */
   editionNonce: Option<number>;
+  /** Since we cannot easily change Metadata, we add the new DataV2 fields here at the end. */
   tokenStandard: Option<TokenStandardArgs>;
+  /** Collection */
   collection: Option<CollectionArgs>;
+  /** Uses */
   uses: Option<UsesArgs>;
   tokenProgramVersion: TokenProgramVersionArgs;
   creators: Array<CreatorArgs>;

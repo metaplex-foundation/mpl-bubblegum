@@ -123,7 +123,7 @@ export function getTreeConfigGpaBuilder(
 ) {
   const s = context.serializer;
   const programId = context.programs.getPublicKey(
-    'mplBubblegum',
+    'bubblegum',
     'BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'
   );
   return gpaBuilder(context, programId)
