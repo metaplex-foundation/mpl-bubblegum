@@ -3,7 +3,7 @@
   "scripts": {
     "programs:build": "./configs/program-scripts/build.sh",
     "programs:test": "./configs/program-scripts/test.sh",
-    "programs:clean": "rm -rf ./programs/bin",
+    "programs:clean": "rm -rf ./programs/.bin",
     "generate": "pnpm generate:idls && pnpm generate:clients",
     "generate:idls": "node ./configs/shank.cjs",
     "generate:clients": "node ./configs/kinobi.cjs",

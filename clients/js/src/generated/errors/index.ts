@@ -6,6 +6,6 @@
  * @see https://github.com/metaplex-foundation/kinobi
  */
 
-export * from './bubblegum';
+export * from './mplBubblegum';
 export * from './splAccountCompression';
 export * from './splNoop';

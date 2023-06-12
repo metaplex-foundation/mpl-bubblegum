@@ -395,7 +395,7 @@ nameToErrorMap.set('CollectionMustBeSized', CollectionMustBeSizedError);
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  */
-export function getBubblegumErrorFromCode(
+export function getMplBubblegumErrorFromCode(
   code: number,
   program: Program,
   cause?: Error
@@ -408,7 +408,7 @@ export function getBubblegumErrorFromCode(
  * Attempts to resolve a custom program error from the provided error name, i.e. 'Unauthorized'.
  * @category Errors
  */
-export function getBubblegumErrorFromName(
+export function getMplBubblegumErrorFromName(
   name: string,
   program: Program,
   cause?: Error

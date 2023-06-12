@@ -89,7 +89,7 @@ export function transfer(
   // Program ID.
   const programId = {
     ...context.programs.getPublicKey(
-      'bubblegum',
+      'mplBubblegum',
       'BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'
     ),
     isWritable: false,

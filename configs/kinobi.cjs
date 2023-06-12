@@ -12,6 +12,13 @@ const kinobi = k.createFromIdls([
   path.join(idlDir, "spl_noop.json"),
 ]);
 
+// Update programs.
+kinobi.update(
+  new k.UpdateProgramsVisitor({
+    bubblegum: { name: "mplBubblegum" },
+  })
+);
+
 // Update accounts.
 kinobi.update(
   new k.UpdateAccountsVisitor({

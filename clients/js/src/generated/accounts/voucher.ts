@@ -116,7 +116,7 @@ export function getVoucherGpaBuilder(
 ) {
   const s = context.serializer;
   const programId = context.programs.getPublicKey(
-    'bubblegum',
+    'mplBubblegum',
     'BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'
   );
   return gpaBuilder(context, programId)
