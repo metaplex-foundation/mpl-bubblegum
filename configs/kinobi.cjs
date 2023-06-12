@@ -26,6 +26,23 @@ kinobi.update(
   })
 );
 
+// Update types.
+kinobi.update(
+  new k.UpdateDefinedTypesVisitor({
+    // Remove unnecessary spl_account_compression type.
+    ApplicationDataEventV1: { delete: true },
+    ChangeLogEventV1: { delete: true },
+    ConcurrentMerkleTreeHeader: { delete: true },
+    ConcurrentMerkleTreeHeaderDataV1: { delete: true },
+    PathNode: { delete: true },
+    ApplicationDataEvent: { delete: true },
+    ChangeLogEvent: { delete: true },
+    AccountCompressionEvent: { delete: true },
+    CompressionAccountType: { delete: true },
+    ConcurrentMerkleTreeHeaderData: { delete: true },
+  })
+);
+
 // Update instructions.
 kinobi.update(
   new k.UpdateInstructionsVisitor({
@@ -34,7 +51,15 @@ kinobi.update(
         metadata: { name: "metadataArgs" },
       },
     },
-    // ...
+    // Remove unnecessary spl_account_compression instructions.
+    append: { delete: true },
+    closeEmptyTree: { delete: true },
+    compress: { delete: true },
+    initEmptyMerkleTree: { delete: true },
+    insertOrAppend: { delete: true },
+    noopInstruction: { delete: true },
+    replaceLeaf: { delete: true },
+    transferAuthority: { delete: true },
   })
 );
 

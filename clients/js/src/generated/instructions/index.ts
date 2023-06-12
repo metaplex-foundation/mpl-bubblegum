@@ -6,25 +6,17 @@
  * @see https://github.com/metaplex-foundation/kinobi
  */
 
-export * from './append';
 export * from './burn';
 export * from './cancelRedeem';
-export * from './closeEmptyTree';
-export * from './compress';
 export * from './createTree';
 export * from './decompressV1';
 export * from './delegate';
-export * from './initEmptyMerkleTree';
-export * from './insertOrAppend';
 export * from './mintToCollectionV1';
 export * from './mintV1';
-export * from './noopInstruction';
 export * from './redeem';
-export * from './replaceLeaf';
 export * from './setAndVerifyCollection';
 export * from './setTreeDelegate';
 export * from './transfer';
-export * from './transferAuthority';
 export * from './unverifyCollection';
 export * from './unverifyCreator';
 export * from './verifyCollection';
