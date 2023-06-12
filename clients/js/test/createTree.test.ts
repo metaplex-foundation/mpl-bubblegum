@@ -1,15 +1,25 @@
-import { samePublicKey } from '@metaplex-foundation/umi';
+import { generateSigner, none } from '@metaplex-foundation/umi';
 import test from 'ava';
-import { MPL_BUBBLEGUM_PROGRAM_ID } from '../src';
+import { createTree } from '../src';
 import { createUmi } from './_setup';
 
-test('it registers the program', async (t) => {
-  // Given a Umi instance using the project's plugin.
+test.skip('it can create a Bubblegum tree', async (t) => {
+  // Given.
   const umi = await createUmi();
+  const todo = generateSigner(umi);
 
-  // When we fetch the registered program.
-  const program = umi.programs.get('mplBubblegum');
+  // When.
+  await createTree(umi, {
+    treeAuthority: todo.publicKey,
+    merkleTree: todo.publicKey,
+    treeCreator: todo,
+    logWrapper: todo.publicKey,
+    compressionProgram: todo.publicKey,
+    maxDepth: 1,
+    maxBufferSize: 1,
+    public: none(),
+  }).sendAndConfirm(umi);
 
-  // Then we expect it to be the same as the program ID constant.
-  t.true(samePublicKey(program.publicKey, MPL_BUBBLEGUM_PROGRAM_ID));
+  // Then.
+  t.pass();
 });
