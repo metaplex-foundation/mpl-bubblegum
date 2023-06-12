@@ -15,18 +15,21 @@ import {
   Signer,
   TransactionBuilder,
   mapSerializer,
+  none,
+  publicKey,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
+import { findTreeConfigPda } from '../accounts';
 import { addObjectProperty, isWritable } from '../shared';
 
 // Accounts.
 export type CreateTreeInstructionAccounts = {
-  treeAuthority: PublicKey;
+  treeAuthority?: PublicKey;
   merkleTree: PublicKey;
   payer?: Signer;
-  treeCreator: Signer;
-  logWrapper: PublicKey;
-  compressionProgram: PublicKey;
+  treeCreator?: Signer;
+  logWrapper?: PublicKey;
+  compressionProgram?: PublicKey;
   systemProgram?: PublicKey;
 };
 
@@ -41,7 +44,7 @@ export type CreateTreeInstructionData = {
 export type CreateTreeInstructionDataArgs = {
   maxDepth: number;
   maxBufferSize: number;
-  public: Option<boolean>;
+  public?: Option<boolean>;
 };
 
 export function getCreateTreeInstructionDataSerializer(
@@ -65,6 +68,7 @@ export function getCreateTreeInstructionDataSerializer(
     (value) => ({
       ...value,
       discriminator: [165, 83, 136, 142, 89, 202, 47, 220],
+      public: value.public ?? none(),
     })
   ) as Serializer<CreateTreeInstructionDataArgs, CreateTreeInstructionData>;
 }
@@ -74,7 +78,10 @@ export type CreateTreeInstructionArgs = CreateTreeInstructionDataArgs;
 
 // Instruction.
 export function createTree(
-  context: Pick<Context, 'serializer' | 'programs' | 'payer'>,
+  context: Pick<
+    Context,
+    'serializer' | 'programs' | 'eddsa' | 'identity' | 'payer'
+  >,
   input: CreateTreeInstructionAccounts & CreateTreeInstructionArgs
 ): TransactionBuilder {
   const signers: Signer[] = [];
@@ -92,7 +99,40 @@ export function createTree(
   // Resolved inputs.
   const resolvingAccounts = {};
   const resolvingArgs = {};
+  addObjectProperty(
+    resolvingAccounts,
+    'treeAuthority',
+    input.treeAuthority ??
+      findTreeConfigPda(context, { merkleTree: publicKey(input.merkleTree) })
+  );
   addObjectProperty(resolvingAccounts, 'payer', input.payer ?? context.payer);
+  addObjectProperty(
+    resolvingAccounts,
+    'treeCreator',
+    input.treeCreator ?? context.identity
+  );
+  addObjectProperty(
+    resolvingAccounts,
+    'logWrapper',
+    input.logWrapper ?? {
+      ...context.programs.getPublicKey(
+        'splNoop',
+        'noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV'
+      ),
+      isWritable: false,
+    }
+  );
+  addObjectProperty(
+    resolvingAccounts,
+    'compressionProgram',
+    input.compressionProgram ?? {
+      ...context.programs.getPublicKey(
+        'splAccountCompression',
+        'cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK'
+      ),
+      isWritable: false,
+    }
+  );
   addObjectProperty(
     resolvingAccounts,
     'systemProgram',

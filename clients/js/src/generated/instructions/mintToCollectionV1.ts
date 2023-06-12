@@ -37,8 +37,8 @@ export type MintToCollectionV1InstructionAccounts = {
   collectionMetadata: PublicKey;
   editionAccount: PublicKey;
   bubblegumSigner: PublicKey;
-  logWrapper: PublicKey;
-  compressionProgram: PublicKey;
+  logWrapper?: PublicKey;
+  compressionProgram?: PublicKey;
   tokenMetadataProgram?: PublicKey;
   systemProgram?: PublicKey;
 };
@@ -108,6 +108,28 @@ export function mintToCollectionV1(
   const resolvingAccounts = {};
   const resolvingArgs = {};
   addObjectProperty(resolvingAccounts, 'payer', input.payer ?? context.payer);
+  addObjectProperty(
+    resolvingAccounts,
+    'logWrapper',
+    input.logWrapper ?? {
+      ...context.programs.getPublicKey(
+        'splNoop',
+        'noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV'
+      ),
+      isWritable: false,
+    }
+  );
+  addObjectProperty(
+    resolvingAccounts,
+    'compressionProgram',
+    input.compressionProgram ?? {
+      ...context.programs.getPublicKey(
+        'splAccountCompression',
+        'cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK'
+      ),
+      isWritable: false,
+    }
+  );
   addObjectProperty(
     resolvingAccounts,
     'tokenMetadataProgram',

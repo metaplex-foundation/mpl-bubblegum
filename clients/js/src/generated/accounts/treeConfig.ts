@@ -9,6 +9,7 @@
 import {
   Account,
   Context,
+  Pda,
   PublicKey,
   RpcAccount,
   RpcGetAccountOptions,
@@ -149,5 +150,41 @@ export function getTreeConfigGpaBuilder(
 }
 
 export function getTreeConfigSize(): number {
-  return 89;
+  return 96;
+}
+
+export function findTreeConfigPda(
+  context: Pick<Context, 'eddsa' | 'programs' | 'serializer'>,
+  seeds: {
+    merkleTree: PublicKey;
+  }
+): Pda {
+  const s = context.serializer;
+  const programId = context.programs.getPublicKey(
+    'mplBubblegum',
+    'BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'
+  );
+  return context.eddsa.findPda(programId, [
+    s.publicKey().serialize(seeds.merkleTree),
+  ]);
+}
+
+export async function fetchTreeConfigFromSeeds(
+  context: Pick<Context, 'eddsa' | 'programs' | 'rpc' | 'serializer'>,
+  seeds: Parameters<typeof findTreeConfigPda>[1],
+  options?: RpcGetAccountOptions
+): Promise<TreeConfig> {
+  return fetchTreeConfig(context, findTreeConfigPda(context, seeds), options);
+}
+
+export async function safeFetchTreeConfigFromSeeds(
+  context: Pick<Context, 'eddsa' | 'programs' | 'rpc' | 'serializer'>,
+  seeds: Parameters<typeof findTreeConfigPda>[1],
+  options?: RpcGetAccountOptions
+): Promise<TreeConfig | null> {
+  return safeFetchTreeConfig(
+    context,
+    findTreeConfigPda(context, seeds),
+    options
+  );
 }

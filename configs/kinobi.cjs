@@ -22,7 +22,10 @@ kinobi.update(
 // Update accounts.
 kinobi.update(
   new k.UpdateAccountsVisitor({
-    // ...
+    treeConfig: {
+      seeds: [k.publicKeySeed("merkleTree")],
+      size: 96,
+    },
   })
 );
 
@@ -43,9 +46,41 @@ kinobi.update(
   })
 );
 
+// Set default account values accross multiple instructions.
+kinobi.update(
+  new k.SetInstructionAccountDefaultValuesVisitor([
+    {
+      account: "logWrapper",
+      ignoreIfOptional: true,
+      ...k.programDefault(
+        "splNoop",
+        "noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV"
+      ),
+    },
+    {
+      account: "compressionProgram",
+      ignoreIfOptional: true,
+      ...k.programDefault(
+        "splAccountCompression",
+        "cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK"
+      ),
+    },
+    {
+      account: "treeCreator",
+      ignoreIfOptional: true,
+      ...k.identityDefault(),
+    },
+  ])
+);
+
 // Update instructions.
 kinobi.update(
   new k.UpdateInstructionsVisitor({
+    createTree: {
+      accounts: {
+        treeAuthority: { defaultsTo: k.pdaDefault("treeConfig") },
+      },
+    },
     decompressV1: {
       args: {
         metadata: { name: "metadataArgs" },
@@ -60,6 +95,15 @@ kinobi.update(
     noopInstruction: { delete: true },
     replaceLeaf: { delete: true },
     transferAuthority: { delete: true },
+  })
+);
+
+// Set default values for structs.
+kinobi.update(
+  new k.SetStructDefaultValuesVisitor({
+    createTreeInstructionData: {
+      public: k.vNone(),
+    },
   })
 );
 

@@ -21,7 +21,7 @@ import { addObjectProperty, isWritable } from '../shared';
 // Accounts.
 export type SetTreeDelegateInstructionAccounts = {
   treeAuthority: PublicKey;
-  treeCreator: Signer;
+  treeCreator?: Signer;
   newTreeDelegate: PublicKey;
   merkleTree: PublicKey;
   systemProgram?: PublicKey;
@@ -60,7 +60,7 @@ export function getSetTreeDelegateInstructionDataSerializer(
 
 // Instruction.
 export function setTreeDelegate(
-  context: Pick<Context, 'serializer' | 'programs'>,
+  context: Pick<Context, 'serializer' | 'programs' | 'identity'>,
   input: SetTreeDelegateInstructionAccounts
 ): TransactionBuilder {
   const signers: Signer[] = [];
@@ -77,6 +77,11 @@ export function setTreeDelegate(
 
   // Resolved inputs.
   const resolvingAccounts = {};
+  addObjectProperty(
+    resolvingAccounts,
+    'treeCreator',
+    input.treeCreator ?? context.identity
+  );
   addObjectProperty(
     resolvingAccounts,
     'systemProgram',

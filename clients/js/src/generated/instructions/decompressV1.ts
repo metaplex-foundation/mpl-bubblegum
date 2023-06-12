@@ -38,7 +38,7 @@ export type DecompressV1InstructionAccounts = {
   tokenMetadataProgram?: PublicKey;
   tokenProgram?: PublicKey;
   associatedTokenProgram: PublicKey;
-  logWrapper: PublicKey;
+  logWrapper?: PublicKey;
 };
 
 // Data.
@@ -131,6 +131,17 @@ export function decompressV1(
       ...context.programs.getPublicKey(
         'splToken',
         'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'
+      ),
+      isWritable: false,
+    }
+  );
+  addObjectProperty(
+    resolvingAccounts,
+    'logWrapper',
+    input.logWrapper ?? {
+      ...context.programs.getPublicKey(
+        'splNoop',
+        'noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV'
       ),
       isWritable: false,
     }

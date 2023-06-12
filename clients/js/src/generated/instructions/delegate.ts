@@ -25,8 +25,8 @@ export type DelegateInstructionAccounts = {
   previousLeafDelegate: PublicKey;
   newLeafDelegate: PublicKey;
   merkleTree: PublicKey;
-  logWrapper: PublicKey;
-  compressionProgram: PublicKey;
+  logWrapper?: PublicKey;
+  compressionProgram?: PublicKey;
   systemProgram?: PublicKey;
 };
 
@@ -95,6 +95,28 @@ export function delegate(
   // Resolved inputs.
   const resolvingAccounts = {};
   const resolvingArgs = {};
+  addObjectProperty(
+    resolvingAccounts,
+    'logWrapper',
+    input.logWrapper ?? {
+      ...context.programs.getPublicKey(
+        'splNoop',
+        'noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV'
+      ),
+      isWritable: false,
+    }
+  );
+  addObjectProperty(
+    resolvingAccounts,
+    'compressionProgram',
+    input.compressionProgram ?? {
+      ...context.programs.getPublicKey(
+        'splAccountCompression',
+        'cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK'
+      ),
+      isWritable: false,
+    }
+  );
   addObjectProperty(
     resolvingAccounts,
     'systemProgram',
