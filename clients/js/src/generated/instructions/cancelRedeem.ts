@@ -14,13 +14,15 @@ import {
   Signer,
   TransactionBuilder,
   mapSerializer,
+  publicKey,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
+import { findTreeConfigPda } from '../accounts';
 import { addObjectProperty, isWritable } from '../shared';
 
 // Accounts.
 export type CancelRedeemInstructionAccounts = {
-  treeAuthority: PublicKey;
+  treeAuthority?: PublicKey;
   leafOwner: Signer;
   merkleTree: PublicKey;
   voucher: PublicKey;
@@ -65,7 +67,7 @@ export type CancelRedeemInstructionArgs = CancelRedeemInstructionDataArgs;
 
 // Instruction.
 export function cancelRedeem(
-  context: Pick<Context, 'serializer' | 'programs'>,
+  context: Pick<Context, 'serializer' | 'programs' | 'eddsa'>,
   input: CancelRedeemInstructionAccounts & CancelRedeemInstructionArgs
 ): TransactionBuilder {
   const signers: Signer[] = [];
@@ -83,6 +85,12 @@ export function cancelRedeem(
   // Resolved inputs.
   const resolvingAccounts = {};
   const resolvingArgs = {};
+  addObjectProperty(
+    resolvingAccounts,
+    'treeAuthority',
+    input.treeAuthority ??
+      findTreeConfigPda(context, { merkleTree: publicKey(input.merkleTree) })
+  );
   addObjectProperty(
     resolvingAccounts,
     'logWrapper',

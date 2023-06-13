@@ -6,7 +6,14 @@
  * @see https://github.com/metaplex-foundation/kinobi
  */
 
-import { Context, Option, Serializer } from '@metaplex-foundation/umi';
+import {
+  Context,
+  Option,
+  Serializer,
+  mapSerializer,
+  none,
+  some,
+} from '@metaplex-foundation/umi';
 import {
   Collection,
   CollectionArgs,
@@ -52,22 +59,22 @@ export type MetadataArgsArgs = {
   /** The name of the asset */
   name: string;
   /** The symbol for the asset */
-  symbol: string;
+  symbol?: string;
   /** URI pointing to JSON representing the asset */
   uri: string;
   /** Royalty basis points that goes to creators in secondary sales (0-10000) */
   sellerFeeBasisPoints: number;
-  primarySaleHappened: boolean;
-  isMutable: boolean;
+  primarySaleHappened?: boolean;
+  isMutable?: boolean;
   /** nonce for easy calculation of editions, if present */
-  editionNonce: Option<number>;
+  editionNonce?: Option<number>;
   /** Since we cannot easily change Metadata, we add the new DataV2 fields here at the end. */
-  tokenStandard: Option<TokenStandardArgs>;
+  tokenStandard?: Option<TokenStandardArgs>;
   /** Collection */
   collection: Option<CollectionArgs>;
   /** Uses */
-  uses: Option<UsesArgs>;
-  tokenProgramVersion: TokenProgramVersionArgs;
+  uses?: Option<UsesArgs>;
+  tokenProgramVersion?: TokenProgramVersionArgs;
   creators: Array<CreatorArgs>;
 };
 
@@ -75,21 +82,34 @@ export function getMetadataArgsSerializer(
   context: Pick<Context, 'serializer'>
 ): Serializer<MetadataArgsArgs, MetadataArgs> {
   const s = context.serializer;
-  return s.struct<MetadataArgs>(
-    [
-      ['name', s.string()],
-      ['symbol', s.string()],
-      ['uri', s.string()],
-      ['sellerFeeBasisPoints', s.u16()],
-      ['primarySaleHappened', s.bool()],
-      ['isMutable', s.bool()],
-      ['editionNonce', s.option(s.u8())],
-      ['tokenStandard', s.option(getTokenStandardSerializer(context))],
-      ['collection', s.option(getCollectionSerializer(context))],
-      ['uses', s.option(getUsesSerializer(context))],
-      ['tokenProgramVersion', getTokenProgramVersionSerializer(context)],
-      ['creators', s.array(getCreatorSerializer(context))],
-    ],
-    { description: 'MetadataArgs' }
+  return mapSerializer<MetadataArgsArgs, any, MetadataArgs>(
+    s.struct<MetadataArgs>(
+      [
+        ['name', s.string()],
+        ['symbol', s.string()],
+        ['uri', s.string()],
+        ['sellerFeeBasisPoints', s.u16()],
+        ['primarySaleHappened', s.bool()],
+        ['isMutable', s.bool()],
+        ['editionNonce', s.option(s.u8())],
+        ['tokenStandard', s.option(getTokenStandardSerializer(context))],
+        ['collection', s.option(getCollectionSerializer(context))],
+        ['uses', s.option(getUsesSerializer(context))],
+        ['tokenProgramVersion', getTokenProgramVersionSerializer(context)],
+        ['creators', s.array(getCreatorSerializer(context))],
+      ],
+      { description: 'MetadataArgs' }
+    ),
+    (value) => ({
+      ...value,
+      symbol: value.symbol ?? '',
+      primarySaleHappened: value.primarySaleHappened ?? false,
+      isMutable: value.isMutable ?? true,
+      editionNonce: value.editionNonce ?? none(),
+      tokenStandard: value.tokenStandard ?? some(TokenStandard.NonFungible),
+      uses: value.uses ?? none(),
+      tokenProgramVersion:
+        value.tokenProgramVersion ?? some(TokenProgramVersion.Original),
+    })
   ) as Serializer<MetadataArgsArgs, MetadataArgs>;
 }

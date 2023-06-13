@@ -13,6 +13,7 @@ module.exports = {
     '@typescript-eslint/no-unused-vars': 'off',
     'class-methods-use-this': 'off',
     'import/prefer-default-export': 'off',
+    'import/no-cycle': 'off',
     'no-underscore-dangle': 'off',
     'max-classes-per-file': 'off',
     'no-param-reassign': 'off',

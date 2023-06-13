@@ -70,6 +70,11 @@ kinobi.update(
       ignoreIfOptional: true,
       ...k.identityDefault(),
     },
+    {
+      account: "treeAuthority",
+      ignoreIfOptional: true,
+      ...k.pdaDefault("treeConfig"),
+    },
   ])
 );
 
@@ -78,14 +83,20 @@ kinobi.update(
   new k.UpdateInstructionsVisitor({
     createTree: {
       name: "createTreeConfig",
-      accounts: {
-        treeAuthority: { defaultsTo: k.pdaDefault("treeConfig") },
-      },
       bytesCreatedOnChain: k.bytesFromAccount("treeConfig"),
+    },
+    mintV1: {
+      accounts: {
+        leafDelegate: { defaultsTo: k.accountDefault("leafOwner") },
+        treeDelegate: {
+          name: "treeCreatorOrDelegate",
+          defaultsTo: k.identityDefault(),
+        },
+      },
     },
     decompressV1: {
       args: {
-        metadata: { name: "metadataArgs" },
+        metadata: { name: "message" },
       },
     },
     // Remove unnecessary spl_account_compression instructions.
@@ -105,6 +116,15 @@ kinobi.update(
   new k.SetStructDefaultValuesVisitor({
     createTreeConfigInstructionData: {
       public: k.vNone(),
+    },
+    metadataArgs: {
+      symbol: k.vScalar(""),
+      primarySaleHappened: k.vScalar(false),
+      isMutable: k.vScalar(true),
+      editionNonce: k.vNone(),
+      tokenStandard: k.vSome(k.vEnum("TokenStandard", "NonFungible")),
+      uses: k.vNone(),
+      tokenProgramVersion: k.vSome(k.vEnum("TokenProgramVersion", "Original")),
     },
   })
 );

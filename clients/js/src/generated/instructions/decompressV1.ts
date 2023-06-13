@@ -44,12 +44,10 @@ export type DecompressV1InstructionAccounts = {
 // Data.
 export type DecompressV1InstructionData = {
   discriminator: Array<number>;
-  metadataArgs: MetadataArgs;
+  message: MetadataArgs;
 };
 
-export type DecompressV1InstructionDataArgs = {
-  metadataArgs: MetadataArgsArgs;
-};
+export type DecompressV1InstructionDataArgs = { message: MetadataArgsArgs };
 
 export function getDecompressV1InstructionDataSerializer(
   context: Pick<Context, 'serializer'>
@@ -63,7 +61,7 @@ export function getDecompressV1InstructionDataSerializer(
     s.struct<DecompressV1InstructionData>(
       [
         ['discriminator', s.array(s.u8(), { size: 8 })],
-        ['metadataArgs', getMetadataArgsSerializer(context)],
+        ['message', getMetadataArgsSerializer(context)],
       ],
       { description: 'DecompressV1InstructionData' }
     ),

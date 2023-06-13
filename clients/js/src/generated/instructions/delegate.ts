@@ -14,13 +14,15 @@ import {
   Signer,
   TransactionBuilder,
   mapSerializer,
+  publicKey,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
+import { findTreeConfigPda } from '../accounts';
 import { addObjectProperty, isWritable } from '../shared';
 
 // Accounts.
 export type DelegateInstructionAccounts = {
-  treeAuthority: PublicKey;
+  treeAuthority?: PublicKey;
   leafOwner: Signer;
   previousLeafDelegate: PublicKey;
   newLeafDelegate: PublicKey;
@@ -77,7 +79,7 @@ export type DelegateInstructionArgs = DelegateInstructionDataArgs;
 
 // Instruction.
 export function delegate(
-  context: Pick<Context, 'serializer' | 'programs'>,
+  context: Pick<Context, 'serializer' | 'programs' | 'eddsa'>,
   input: DelegateInstructionAccounts & DelegateInstructionArgs
 ): TransactionBuilder {
   const signers: Signer[] = [];
@@ -95,6 +97,12 @@ export function delegate(
   // Resolved inputs.
   const resolvingAccounts = {};
   const resolvingArgs = {};
+  addObjectProperty(
+    resolvingAccounts,
+    'treeAuthority',
+    input.treeAuthority ??
+      findTreeConfigPda(context, { merkleTree: publicKey(input.merkleTree) })
+  );
   addObjectProperty(
     resolvingAccounts,
     'logWrapper',

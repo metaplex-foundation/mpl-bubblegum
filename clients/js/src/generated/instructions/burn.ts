@@ -14,13 +14,15 @@ import {
   Signer,
   TransactionBuilder,
   mapSerializer,
+  publicKey,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
+import { findTreeConfigPda } from '../accounts';
 import { addObjectProperty, isWritable } from '../shared';
 
 // Accounts.
 export type BurnInstructionAccounts = {
-  treeAuthority: PublicKey;
+  treeAuthority?: PublicKey;
   leafOwner: PublicKey;
   leafDelegate: PublicKey;
   merkleTree: PublicKey;
@@ -75,7 +77,7 @@ export type BurnInstructionArgs = BurnInstructionDataArgs;
 
 // Instruction.
 export function burn(
-  context: Pick<Context, 'serializer' | 'programs'>,
+  context: Pick<Context, 'serializer' | 'programs' | 'eddsa'>,
   input: BurnInstructionAccounts & BurnInstructionArgs
 ): TransactionBuilder {
   const signers: Signer[] = [];
@@ -93,6 +95,12 @@ export function burn(
   // Resolved inputs.
   const resolvingAccounts = {};
   const resolvingArgs = {};
+  addObjectProperty(
+    resolvingAccounts,
+    'treeAuthority',
+    input.treeAuthority ??
+      findTreeConfigPda(context, { merkleTree: publicKey(input.merkleTree) })
+  );
   addObjectProperty(
     resolvingAccounts,
     'logWrapper',

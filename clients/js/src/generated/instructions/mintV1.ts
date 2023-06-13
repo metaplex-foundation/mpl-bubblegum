@@ -14,8 +14,10 @@ import {
   Signer,
   TransactionBuilder,
   mapSerializer,
+  publicKey,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
+import { findTreeConfigPda } from '../accounts';
 import { addObjectProperty, isWritable } from '../shared';
 import {
   MetadataArgs,
@@ -25,12 +27,12 @@ import {
 
 // Accounts.
 export type MintV1InstructionAccounts = {
-  treeAuthority: PublicKey;
+  treeAuthority?: PublicKey;
   leafOwner: PublicKey;
-  leafDelegate: PublicKey;
+  leafDelegate?: PublicKey;
   merkleTree: PublicKey;
   payer?: Signer;
-  treeDelegate: Signer;
+  treeCreatorOrDelegate?: Signer;
   logWrapper?: PublicKey;
   compressionProgram?: PublicKey;
   systemProgram?: PublicKey;
@@ -68,7 +70,10 @@ export type MintV1InstructionArgs = MintV1InstructionDataArgs;
 
 // Instruction.
 export function mintV1(
-  context: Pick<Context, 'serializer' | 'programs' | 'payer'>,
+  context: Pick<
+    Context,
+    'serializer' | 'programs' | 'eddsa' | 'identity' | 'payer'
+  >,
   input: MintV1InstructionAccounts & MintV1InstructionArgs
 ): TransactionBuilder {
   const signers: Signer[] = [];
@@ -86,7 +91,23 @@ export function mintV1(
   // Resolved inputs.
   const resolvingAccounts = {};
   const resolvingArgs = {};
+  addObjectProperty(
+    resolvingAccounts,
+    'treeAuthority',
+    input.treeAuthority ??
+      findTreeConfigPda(context, { merkleTree: publicKey(input.merkleTree) })
+  );
+  addObjectProperty(
+    resolvingAccounts,
+    'leafDelegate',
+    input.leafDelegate ?? input.leafOwner
+  );
   addObjectProperty(resolvingAccounts, 'payer', input.payer ?? context.payer);
+  addObjectProperty(
+    resolvingAccounts,
+    'treeCreatorOrDelegate',
+    input.treeCreatorOrDelegate ?? context.identity
+  );
   addObjectProperty(
     resolvingAccounts,
     'logWrapper',
@@ -159,12 +180,12 @@ export function mintV1(
     isWritable: isWritable(resolvedAccounts.payer, false),
   });
 
-  // Tree Delegate.
-  signers.push(resolvedAccounts.treeDelegate);
+  // Tree Creator Or Delegate.
+  signers.push(resolvedAccounts.treeCreatorOrDelegate);
   keys.push({
-    pubkey: resolvedAccounts.treeDelegate.publicKey,
+    pubkey: resolvedAccounts.treeCreatorOrDelegate.publicKey,
     isSigner: true,
-    isWritable: isWritable(resolvedAccounts.treeDelegate, false),
+    isWritable: isWritable(resolvedAccounts.treeCreatorOrDelegate, false),
   });
 
   // Log Wrapper.

@@ -14,8 +14,10 @@ import {
   Signer,
   TransactionBuilder,
   mapSerializer,
+  publicKey,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
+import { findTreeConfigPda } from '../accounts';
 import { addObjectProperty, isWritable } from '../shared';
 import {
   MetadataArgs,
@@ -25,7 +27,7 @@ import {
 
 // Accounts.
 export type MintToCollectionV1InstructionAccounts = {
-  treeAuthority: PublicKey;
+  treeAuthority?: PublicKey;
   leafOwner: PublicKey;
   leafDelegate: PublicKey;
   merkleTree: PublicKey;
@@ -88,7 +90,7 @@ export type MintToCollectionV1InstructionArgs =
 
 // Instruction.
 export function mintToCollectionV1(
-  context: Pick<Context, 'serializer' | 'programs' | 'payer'>,
+  context: Pick<Context, 'serializer' | 'programs' | 'eddsa' | 'payer'>,
   input: MintToCollectionV1InstructionAccounts &
     MintToCollectionV1InstructionArgs
 ): TransactionBuilder {
@@ -107,6 +109,12 @@ export function mintToCollectionV1(
   // Resolved inputs.
   const resolvingAccounts = {};
   const resolvingArgs = {};
+  addObjectProperty(
+    resolvingAccounts,
+    'treeAuthority',
+    input.treeAuthority ??
+      findTreeConfigPda(context, { merkleTree: publicKey(input.merkleTree) })
+  );
   addObjectProperty(resolvingAccounts, 'payer', input.payer ?? context.payer);
   addObjectProperty(
     resolvingAccounts,
