@@ -11,16 +11,14 @@ import {
   Context,
   Program,
   PublicKey,
-  publicKey,
 } from '@metaplex-foundation/umi';
 import {
   getSplAccountCompressionErrorFromCode,
   getSplAccountCompressionErrorFromName,
 } from '../errors';
 
-export const SPL_ACCOUNT_COMPRESSION_PROGRAM_ID = publicKey(
-  'cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK'
-);
+export const SPL_ACCOUNT_COMPRESSION_PROGRAM_ID =
+  'cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK' as PublicKey<'cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK'>;
 
 export function createSplAccountCompressionProgram(): Program {
   return {

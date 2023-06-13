@@ -11,13 +11,11 @@ import {
   Context,
   Program,
   PublicKey,
-  publicKey,
 } from '@metaplex-foundation/umi';
 import { getSplNoopErrorFromCode, getSplNoopErrorFromName } from '../errors';
 
-export const SPL_NOOP_PROGRAM_ID = publicKey(
-  'noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV'
-);
+export const SPL_NOOP_PROGRAM_ID =
+  'noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV' as PublicKey<'noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV'>;
 
 export function createSplNoopProgram(): Program {
   return {

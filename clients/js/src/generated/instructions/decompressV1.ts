@@ -9,6 +9,7 @@
 import {
   AccountMeta,
   Context,
+  Pda,
   PublicKey,
   Serializer,
   Signer,
@@ -17,7 +18,7 @@ import {
   publicKey,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
-import { addObjectProperty, isWritable } from '../shared';
+import { addAccountMeta, addObjectProperty } from '../shared';
 import {
   MetadataArgs,
   MetadataArgsArgs,
@@ -26,19 +27,19 @@ import {
 
 // Accounts.
 export type DecompressV1InstructionAccounts = {
-  voucher: PublicKey;
+  voucher: PublicKey | Pda;
   leafOwner: Signer;
-  tokenAccount: PublicKey;
-  mint: PublicKey;
-  mintAuthority: PublicKey;
-  metadata: PublicKey;
-  masterEdition: PublicKey;
-  systemProgram?: PublicKey;
-  sysvarRent?: PublicKey;
-  tokenMetadataProgram?: PublicKey;
-  tokenProgram?: PublicKey;
-  associatedTokenProgram: PublicKey;
-  logWrapper?: PublicKey;
+  tokenAccount: PublicKey | Pda;
+  mint: PublicKey | Pda;
+  mintAuthority: PublicKey | Pda;
+  metadata: PublicKey | Pda;
+  masterEdition: PublicKey | Pda;
+  systemProgram?: PublicKey | Pda;
+  sysvarRent?: PublicKey | Pda;
+  tokenMetadataProgram?: PublicKey | Pda;
+  tokenProgram?: PublicKey | Pda;
+  associatedTokenProgram: PublicKey | Pda;
+  logWrapper?: PublicKey | Pda;
 };
 
 // Data.
@@ -84,160 +85,100 @@ export function decompressV1(
   const keys: AccountMeta[] = [];
 
   // Program ID.
-  const programId = {
-    ...context.programs.getPublicKey(
-      'mplBubblegum',
-      'BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'
-    ),
-    isWritable: false,
-  };
+  const programId = context.programs.getPublicKey(
+    'mplBubblegum',
+    'BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'
+  );
 
   // Resolved inputs.
-  const resolvingAccounts = {};
+  const resolvedAccounts = {
+    voucher: [input.voucher, true] as const,
+    leafOwner: [input.leafOwner, true] as const,
+    tokenAccount: [input.tokenAccount, true] as const,
+    mint: [input.mint, true] as const,
+    mintAuthority: [input.mintAuthority, true] as const,
+    metadata: [input.metadata, true] as const,
+    masterEdition: [input.masterEdition, true] as const,
+    associatedTokenProgram: [input.associatedTokenProgram, false] as const,
+  };
   const resolvingArgs = {};
   addObjectProperty(
-    resolvingAccounts,
+    resolvedAccounts,
     'systemProgram',
-    input.systemProgram ?? {
-      ...context.programs.getPublicKey(
-        'splSystem',
-        '11111111111111111111111111111111'
-      ),
-      isWritable: false,
-    }
+    input.systemProgram
+      ? ([input.systemProgram, false] as const)
+      : ([
+          context.programs.getPublicKey(
+            'splSystem',
+            '11111111111111111111111111111111'
+          ),
+          false,
+        ] as const)
   );
   addObjectProperty(
-    resolvingAccounts,
+    resolvedAccounts,
     'sysvarRent',
-    input.sysvarRent ?? publicKey('SysvarRent111111111111111111111111111111111')
+    input.sysvarRent
+      ? ([input.sysvarRent, false] as const)
+      : ([
+          publicKey('SysvarRent111111111111111111111111111111111'),
+          false,
+        ] as const)
   );
   addObjectProperty(
-    resolvingAccounts,
+    resolvedAccounts,
     'tokenMetadataProgram',
-    input.tokenMetadataProgram ?? {
-      ...context.programs.getPublicKey(
-        'mplTokenMetadata',
-        'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'
-      ),
-      isWritable: false,
-    }
+    input.tokenMetadataProgram
+      ? ([input.tokenMetadataProgram, false] as const)
+      : ([
+          context.programs.getPublicKey(
+            'mplTokenMetadata',
+            'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'
+          ),
+          false,
+        ] as const)
   );
   addObjectProperty(
-    resolvingAccounts,
+    resolvedAccounts,
     'tokenProgram',
-    input.tokenProgram ?? {
-      ...context.programs.getPublicKey(
-        'splToken',
-        'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'
-      ),
-      isWritable: false,
-    }
+    input.tokenProgram
+      ? ([input.tokenProgram, false] as const)
+      : ([
+          context.programs.getPublicKey(
+            'splToken',
+            'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'
+          ),
+          false,
+        ] as const)
   );
   addObjectProperty(
-    resolvingAccounts,
+    resolvedAccounts,
     'logWrapper',
-    input.logWrapper ?? {
-      ...context.programs.getPublicKey(
-        'splNoop',
-        'noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV'
-      ),
-      isWritable: false,
-    }
+    input.logWrapper
+      ? ([input.logWrapper, false] as const)
+      : ([
+          context.programs.getPublicKey(
+            'splNoop',
+            'noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV'
+          ),
+          false,
+        ] as const)
   );
-  const resolvedAccounts = { ...input, ...resolvingAccounts };
   const resolvedArgs = { ...input, ...resolvingArgs };
 
-  // Voucher.
-  keys.push({
-    pubkey: resolvedAccounts.voucher,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.voucher, true),
-  });
-
-  // Leaf Owner.
-  signers.push(resolvedAccounts.leafOwner);
-  keys.push({
-    pubkey: resolvedAccounts.leafOwner.publicKey,
-    isSigner: true,
-    isWritable: isWritable(resolvedAccounts.leafOwner, true),
-  });
-
-  // Token Account.
-  keys.push({
-    pubkey: resolvedAccounts.tokenAccount,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.tokenAccount, true),
-  });
-
-  // Mint.
-  keys.push({
-    pubkey: resolvedAccounts.mint,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.mint, true),
-  });
-
-  // Mint Authority.
-  keys.push({
-    pubkey: resolvedAccounts.mintAuthority,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.mintAuthority, true),
-  });
-
-  // Metadata.
-  keys.push({
-    pubkey: resolvedAccounts.metadata,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.metadata, true),
-  });
-
-  // Master Edition.
-  keys.push({
-    pubkey: resolvedAccounts.masterEdition,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.masterEdition, true),
-  });
-
-  // System Program.
-  keys.push({
-    pubkey: resolvedAccounts.systemProgram,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.systemProgram, false),
-  });
-
-  // Sysvar Rent.
-  keys.push({
-    pubkey: resolvedAccounts.sysvarRent,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.sysvarRent, false),
-  });
-
-  // Token Metadata Program.
-  keys.push({
-    pubkey: resolvedAccounts.tokenMetadataProgram,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.tokenMetadataProgram, false),
-  });
-
-  // Token Program.
-  keys.push({
-    pubkey: resolvedAccounts.tokenProgram,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.tokenProgram, false),
-  });
-
-  // Associated Token Program.
-  keys.push({
-    pubkey: resolvedAccounts.associatedTokenProgram,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.associatedTokenProgram, false),
-  });
-
-  // Log Wrapper.
-  keys.push({
-    pubkey: resolvedAccounts.logWrapper,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.logWrapper, false),
-  });
+  addAccountMeta(keys, signers, resolvedAccounts.voucher, false);
+  addAccountMeta(keys, signers, resolvedAccounts.leafOwner, false);
+  addAccountMeta(keys, signers, resolvedAccounts.tokenAccount, false);
+  addAccountMeta(keys, signers, resolvedAccounts.mint, false);
+  addAccountMeta(keys, signers, resolvedAccounts.mintAuthority, false);
+  addAccountMeta(keys, signers, resolvedAccounts.metadata, false);
+  addAccountMeta(keys, signers, resolvedAccounts.masterEdition, false);
+  addAccountMeta(keys, signers, resolvedAccounts.systemProgram, false);
+  addAccountMeta(keys, signers, resolvedAccounts.sysvarRent, false);
+  addAccountMeta(keys, signers, resolvedAccounts.tokenMetadataProgram, false);
+  addAccountMeta(keys, signers, resolvedAccounts.tokenProgram, false);
+  addAccountMeta(keys, signers, resolvedAccounts.associatedTokenProgram, false);
+  addAccountMeta(keys, signers, resolvedAccounts.logWrapper, false);
 
   // Data.
   const data =

@@ -11,16 +11,14 @@ import {
   Context,
   Program,
   PublicKey,
-  publicKey,
 } from '@metaplex-foundation/umi';
 import {
   getMplBubblegumErrorFromCode,
   getMplBubblegumErrorFromName,
 } from '../errors';
 
-export const MPL_BUBBLEGUM_PROGRAM_ID = publicKey(
-  'BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'
-);
+export const MPL_BUBBLEGUM_PROGRAM_ID =
+  'BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY' as PublicKey<'BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'>;
 
 export function createMplBubblegumProgram(): Program {
   return {

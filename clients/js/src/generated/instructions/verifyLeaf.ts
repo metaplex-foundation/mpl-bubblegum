@@ -9,6 +9,7 @@
 import {
   AccountMeta,
   Context,
+  Pda,
   PublicKey,
   Serializer,
   Signer,
@@ -16,11 +17,11 @@ import {
   mapSerializer,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
-import { isWritable } from '../shared';
+import { addAccountMeta } from '../shared';
 
 // Accounts.
 export type VerifyLeafInstructionAccounts = {
-  merkleTree: PublicKey;
+  merkleTree: PublicKey | Pda;
 };
 
 // Data.
@@ -74,26 +75,19 @@ export function verifyLeaf(
   const keys: AccountMeta[] = [];
 
   // Program ID.
-  const programId = {
-    ...context.programs.getPublicKey(
-      'splAccountCompression',
-      'cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK'
-    ),
-    isWritable: false,
-  };
+  const programId = context.programs.getPublicKey(
+    'splAccountCompression',
+    'cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK'
+  );
 
   // Resolved inputs.
-  const resolvingAccounts = {};
+  const resolvedAccounts = {
+    merkleTree: [input.merkleTree, false] as const,
+  };
   const resolvingArgs = {};
-  const resolvedAccounts = { ...input, ...resolvingAccounts };
   const resolvedArgs = { ...input, ...resolvingArgs };
 
-  // Merkle Tree.
-  keys.push({
-    pubkey: resolvedAccounts.merkleTree,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.merkleTree, false),
-  });
+  addAccountMeta(keys, signers, resolvedAccounts.merkleTree, false);
 
   // Data.
   const data =

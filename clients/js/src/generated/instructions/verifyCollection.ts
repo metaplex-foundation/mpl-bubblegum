@@ -9,6 +9,7 @@
 import {
   AccountMeta,
   Context,
+  Pda,
   PublicKey,
   Serializer,
   Signer,
@@ -18,7 +19,7 @@ import {
   transactionBuilder,
 } from '@metaplex-foundation/umi';
 import { findTreeConfigPda } from '../accounts';
-import { addObjectProperty, isWritable } from '../shared';
+import { addAccountMeta, addObjectProperty } from '../shared';
 import {
   MetadataArgs,
   MetadataArgsArgs,
@@ -27,22 +28,22 @@ import {
 
 // Accounts.
 export type VerifyCollectionInstructionAccounts = {
-  treeAuthority?: PublicKey;
-  leafOwner: PublicKey;
-  leafDelegate: PublicKey;
-  merkleTree: PublicKey;
+  treeAuthority?: PublicKey | Pda;
+  leafOwner: PublicKey | Pda;
+  leafDelegate: PublicKey | Pda;
+  merkleTree: PublicKey | Pda;
   payer?: Signer;
-  treeDelegate: PublicKey;
+  treeDelegate: PublicKey | Pda;
   collectionAuthority: Signer;
-  collectionAuthorityRecordPda: PublicKey;
-  collectionMint: PublicKey;
-  collectionMetadata: PublicKey;
-  editionAccount: PublicKey;
-  bubblegumSigner: PublicKey;
-  logWrapper?: PublicKey;
-  compressionProgram?: PublicKey;
-  tokenMetadataProgram?: PublicKey;
-  systemProgram?: PublicKey;
+  collectionAuthorityRecordPda: PublicKey | Pda;
+  collectionMint: PublicKey | Pda;
+  collectionMetadata: PublicKey | Pda;
+  editionAccount: PublicKey | Pda;
+  bubblegumSigner: PublicKey | Pda;
+  logWrapper?: PublicKey | Pda;
+  compressionProgram?: PublicKey | Pda;
+  tokenMetadataProgram?: PublicKey | Pda;
+  systemProgram?: PublicKey | Pda;
 };
 
 // Data.
@@ -112,187 +113,122 @@ export function verifyCollection(
   const keys: AccountMeta[] = [];
 
   // Program ID.
-  const programId = {
-    ...context.programs.getPublicKey(
-      'mplBubblegum',
-      'BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'
-    ),
-    isWritable: false,
-  };
+  const programId = context.programs.getPublicKey(
+    'mplBubblegum',
+    'BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'
+  );
 
   // Resolved inputs.
-  const resolvingAccounts = {};
+  const resolvedAccounts = {
+    leafOwner: [input.leafOwner, false] as const,
+    leafDelegate: [input.leafDelegate, false] as const,
+    merkleTree: [input.merkleTree, true] as const,
+    treeDelegate: [input.treeDelegate, false] as const,
+    collectionAuthority: [input.collectionAuthority, false] as const,
+    collectionAuthorityRecordPda: [
+      input.collectionAuthorityRecordPda,
+      false,
+    ] as const,
+    collectionMint: [input.collectionMint, false] as const,
+    collectionMetadata: [input.collectionMetadata, true] as const,
+    editionAccount: [input.editionAccount, false] as const,
+    bubblegumSigner: [input.bubblegumSigner, false] as const,
+  };
   const resolvingArgs = {};
   addObjectProperty(
-    resolvingAccounts,
+    resolvedAccounts,
     'treeAuthority',
-    input.treeAuthority ??
-      findTreeConfigPda(context, { merkleTree: publicKey(input.merkleTree) })
+    input.treeAuthority
+      ? ([input.treeAuthority, false] as const)
+      : ([
+          findTreeConfigPda(context, {
+            merkleTree: publicKey(input.merkleTree, false),
+          }),
+          false,
+        ] as const)
   );
-  addObjectProperty(resolvingAccounts, 'payer', input.payer ?? context.payer);
   addObjectProperty(
-    resolvingAccounts,
+    resolvedAccounts,
+    'payer',
+    input.payer
+      ? ([input.payer, false] as const)
+      : ([context.payer, false] as const)
+  );
+  addObjectProperty(
+    resolvedAccounts,
     'logWrapper',
-    input.logWrapper ?? {
-      ...context.programs.getPublicKey(
-        'splNoop',
-        'noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV'
-      ),
-      isWritable: false,
-    }
+    input.logWrapper
+      ? ([input.logWrapper, false] as const)
+      : ([
+          context.programs.getPublicKey(
+            'splNoop',
+            'noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV'
+          ),
+          false,
+        ] as const)
   );
   addObjectProperty(
-    resolvingAccounts,
+    resolvedAccounts,
     'compressionProgram',
-    input.compressionProgram ?? {
-      ...context.programs.getPublicKey(
-        'splAccountCompression',
-        'cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK'
-      ),
-      isWritable: false,
-    }
+    input.compressionProgram
+      ? ([input.compressionProgram, false] as const)
+      : ([
+          context.programs.getPublicKey(
+            'splAccountCompression',
+            'cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK'
+          ),
+          false,
+        ] as const)
   );
   addObjectProperty(
-    resolvingAccounts,
+    resolvedAccounts,
     'tokenMetadataProgram',
-    input.tokenMetadataProgram ?? {
-      ...context.programs.getPublicKey(
-        'mplTokenMetadata',
-        'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'
-      ),
-      isWritable: false,
-    }
+    input.tokenMetadataProgram
+      ? ([input.tokenMetadataProgram, false] as const)
+      : ([
+          context.programs.getPublicKey(
+            'mplTokenMetadata',
+            'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'
+          ),
+          false,
+        ] as const)
   );
   addObjectProperty(
-    resolvingAccounts,
+    resolvedAccounts,
     'systemProgram',
-    input.systemProgram ?? {
-      ...context.programs.getPublicKey(
-        'splSystem',
-        '11111111111111111111111111111111'
-      ),
-      isWritable: false,
-    }
+    input.systemProgram
+      ? ([input.systemProgram, false] as const)
+      : ([
+          context.programs.getPublicKey(
+            'splSystem',
+            '11111111111111111111111111111111'
+          ),
+          false,
+        ] as const)
   );
-  const resolvedAccounts = { ...input, ...resolvingAccounts };
   const resolvedArgs = { ...input, ...resolvingArgs };
 
-  // Tree Authority.
-  keys.push({
-    pubkey: resolvedAccounts.treeAuthority,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.treeAuthority, false),
-  });
-
-  // Leaf Owner.
-  keys.push({
-    pubkey: resolvedAccounts.leafOwner,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.leafOwner, false),
-  });
-
-  // Leaf Delegate.
-  keys.push({
-    pubkey: resolvedAccounts.leafDelegate,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.leafDelegate, false),
-  });
-
-  // Merkle Tree.
-  keys.push({
-    pubkey: resolvedAccounts.merkleTree,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.merkleTree, true),
-  });
-
-  // Payer.
-  signers.push(resolvedAccounts.payer);
-  keys.push({
-    pubkey: resolvedAccounts.payer.publicKey,
-    isSigner: true,
-    isWritable: isWritable(resolvedAccounts.payer, false),
-  });
-
-  // Tree Delegate.
-  keys.push({
-    pubkey: resolvedAccounts.treeDelegate,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.treeDelegate, false),
-  });
-
-  // Collection Authority.
-  signers.push(resolvedAccounts.collectionAuthority);
-  keys.push({
-    pubkey: resolvedAccounts.collectionAuthority.publicKey,
-    isSigner: true,
-    isWritable: isWritable(resolvedAccounts.collectionAuthority, false),
-  });
-
-  // Collection Authority Record Pda.
-  keys.push({
-    pubkey: resolvedAccounts.collectionAuthorityRecordPda,
-    isSigner: false,
-    isWritable: isWritable(
-      resolvedAccounts.collectionAuthorityRecordPda,
-      false
-    ),
-  });
-
-  // Collection Mint.
-  keys.push({
-    pubkey: resolvedAccounts.collectionMint,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.collectionMint, false),
-  });
-
-  // Collection Metadata.
-  keys.push({
-    pubkey: resolvedAccounts.collectionMetadata,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.collectionMetadata, true),
-  });
-
-  // Edition Account.
-  keys.push({
-    pubkey: resolvedAccounts.editionAccount,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.editionAccount, false),
-  });
-
-  // Bubblegum Signer.
-  keys.push({
-    pubkey: resolvedAccounts.bubblegumSigner,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.bubblegumSigner, false),
-  });
-
-  // Log Wrapper.
-  keys.push({
-    pubkey: resolvedAccounts.logWrapper,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.logWrapper, false),
-  });
-
-  // Compression Program.
-  keys.push({
-    pubkey: resolvedAccounts.compressionProgram,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.compressionProgram, false),
-  });
-
-  // Token Metadata Program.
-  keys.push({
-    pubkey: resolvedAccounts.tokenMetadataProgram,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.tokenMetadataProgram, false),
-  });
-
-  // System Program.
-  keys.push({
-    pubkey: resolvedAccounts.systemProgram,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.systemProgram, false),
-  });
+  addAccountMeta(keys, signers, resolvedAccounts.treeAuthority, false);
+  addAccountMeta(keys, signers, resolvedAccounts.leafOwner, false);
+  addAccountMeta(keys, signers, resolvedAccounts.leafDelegate, false);
+  addAccountMeta(keys, signers, resolvedAccounts.merkleTree, false);
+  addAccountMeta(keys, signers, resolvedAccounts.payer, false);
+  addAccountMeta(keys, signers, resolvedAccounts.treeDelegate, false);
+  addAccountMeta(keys, signers, resolvedAccounts.collectionAuthority, false);
+  addAccountMeta(
+    keys,
+    signers,
+    resolvedAccounts.collectionAuthorityRecordPda,
+    false
+  );
+  addAccountMeta(keys, signers, resolvedAccounts.collectionMint, false);
+  addAccountMeta(keys, signers, resolvedAccounts.collectionMetadata, false);
+  addAccountMeta(keys, signers, resolvedAccounts.editionAccount, false);
+  addAccountMeta(keys, signers, resolvedAccounts.bubblegumSigner, false);
+  addAccountMeta(keys, signers, resolvedAccounts.logWrapper, false);
+  addAccountMeta(keys, signers, resolvedAccounts.compressionProgram, false);
+  addAccountMeta(keys, signers, resolvedAccounts.tokenMetadataProgram, false);
+  addAccountMeta(keys, signers, resolvedAccounts.systemProgram, false);
 
   // Data.
   const data =

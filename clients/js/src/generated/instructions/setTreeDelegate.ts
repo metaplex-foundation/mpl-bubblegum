@@ -9,6 +9,7 @@
 import {
   AccountMeta,
   Context,
+  Pda,
   PublicKey,
   Serializer,
   Signer,
@@ -18,15 +19,15 @@ import {
   transactionBuilder,
 } from '@metaplex-foundation/umi';
 import { findTreeConfigPda } from '../accounts';
-import { addObjectProperty, isWritable } from '../shared';
+import { addAccountMeta, addObjectProperty } from '../shared';
 
 // Accounts.
 export type SetTreeDelegateInstructionAccounts = {
-  treeAuthority?: PublicKey;
+  treeAuthority?: PublicKey | Pda;
   treeCreator?: Signer;
-  newTreeDelegate: PublicKey;
-  merkleTree: PublicKey;
-  systemProgram?: PublicKey;
+  newTreeDelegate: PublicKey | Pda;
+  merkleTree: PublicKey | Pda;
+  systemProgram?: PublicKey | Pda;
 };
 
 // Data.
@@ -69,75 +70,54 @@ export function setTreeDelegate(
   const keys: AccountMeta[] = [];
 
   // Program ID.
-  const programId = {
-    ...context.programs.getPublicKey(
-      'mplBubblegum',
-      'BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'
-    ),
-    isWritable: false,
-  };
+  const programId = context.programs.getPublicKey(
+    'mplBubblegum',
+    'BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'
+  );
 
   // Resolved inputs.
-  const resolvingAccounts = {};
+  const resolvedAccounts = {
+    newTreeDelegate: [input.newTreeDelegate, false] as const,
+    merkleTree: [input.merkleTree, false] as const,
+  };
   addObjectProperty(
-    resolvingAccounts,
+    resolvedAccounts,
     'treeAuthority',
-    input.treeAuthority ??
-      findTreeConfigPda(context, { merkleTree: publicKey(input.merkleTree) })
+    input.treeAuthority
+      ? ([input.treeAuthority, true] as const)
+      : ([
+          findTreeConfigPda(context, {
+            merkleTree: publicKey(input.merkleTree, false),
+          }),
+          true,
+        ] as const)
   );
   addObjectProperty(
-    resolvingAccounts,
+    resolvedAccounts,
     'treeCreator',
-    input.treeCreator ?? context.identity
+    input.treeCreator
+      ? ([input.treeCreator, false] as const)
+      : ([context.identity, false] as const)
   );
   addObjectProperty(
-    resolvingAccounts,
+    resolvedAccounts,
     'systemProgram',
-    input.systemProgram ?? {
-      ...context.programs.getPublicKey(
-        'splSystem',
-        '11111111111111111111111111111111'
-      ),
-      isWritable: false,
-    }
+    input.systemProgram
+      ? ([input.systemProgram, false] as const)
+      : ([
+          context.programs.getPublicKey(
+            'splSystem',
+            '11111111111111111111111111111111'
+          ),
+          false,
+        ] as const)
   );
-  const resolvedAccounts = { ...input, ...resolvingAccounts };
 
-  // Tree Authority.
-  keys.push({
-    pubkey: resolvedAccounts.treeAuthority,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.treeAuthority, true),
-  });
-
-  // Tree Creator.
-  signers.push(resolvedAccounts.treeCreator);
-  keys.push({
-    pubkey: resolvedAccounts.treeCreator.publicKey,
-    isSigner: true,
-    isWritable: isWritable(resolvedAccounts.treeCreator, false),
-  });
-
-  // New Tree Delegate.
-  keys.push({
-    pubkey: resolvedAccounts.newTreeDelegate,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.newTreeDelegate, false),
-  });
-
-  // Merkle Tree.
-  keys.push({
-    pubkey: resolvedAccounts.merkleTree,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.merkleTree, false),
-  });
-
-  // System Program.
-  keys.push({
-    pubkey: resolvedAccounts.systemProgram,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.systemProgram, false),
-  });
+  addAccountMeta(keys, signers, resolvedAccounts.treeAuthority, false);
+  addAccountMeta(keys, signers, resolvedAccounts.treeCreator, false);
+  addAccountMeta(keys, signers, resolvedAccounts.newTreeDelegate, false);
+  addAccountMeta(keys, signers, resolvedAccounts.merkleTree, false);
+  addAccountMeta(keys, signers, resolvedAccounts.systemProgram, false);
 
   // Data.
   const data = getSetTreeDelegateInstructionDataSerializer(context).serialize(
