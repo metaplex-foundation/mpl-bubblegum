@@ -109,7 +109,7 @@ export function getMetadataArgsSerializer(
       tokenStandard: value.tokenStandard ?? some(TokenStandard.NonFungible),
       uses: value.uses ?? none(),
       tokenProgramVersion:
-        value.tokenProgramVersion ?? some(TokenProgramVersion.Original),
+        value.tokenProgramVersion ?? TokenProgramVersion.Original,
     })
   ) as Serializer<MetadataArgsArgs, MetadataArgs>;
 }

@@ -124,7 +124,7 @@ kinobi.update(
       editionNonce: k.vNone(),
       tokenStandard: k.vSome(k.vEnum("TokenStandard", "NonFungible")),
       uses: k.vNone(),
-      tokenProgramVersion: k.vSome(k.vEnum("TokenProgramVersion", "Original")),
+      tokenProgramVersion: k.vEnum("TokenProgramVersion", "Original"),
     },
   })
 );
