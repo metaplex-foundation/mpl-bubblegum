@@ -103,7 +103,7 @@ export async function safeFetchAllMerkleTree(
 export function getMerkleTreeGpaBuilder(
   context: Pick<Context, 'rpc' | 'serializer' | 'programs'>
 ) {
-  // const s = context.serializer;
+  const s = context.serializer;
   const programId = context.programs.getPublicKey(
     'splAccountCompression',
     'cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK'
@@ -112,9 +112,11 @@ export function getMerkleTreeGpaBuilder(
     .registerFields<{
       discriminator: CompressionAccountTypeArgs;
       treeHeader: ConcurrentMerkleTreeHeaderDataArgs;
+      serializedTree: Uint8Array;
     }>({
       discriminator: [0, getCompressionAccountTypeSerializer(context)],
       treeHeader: [1, getConcurrentMerkleTreeHeaderDataSerializer(context)],
+      serializedTree: [56, s.bytes()],
     })
     .deserializeUsing<MerkleTree>((account) =>
       deserializeMerkleTree(context, account)

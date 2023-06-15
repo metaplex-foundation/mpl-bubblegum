@@ -157,6 +157,10 @@ kinobi.update(
                     name: "treeHeader",
                     child: k.linkTypeNode("concurrentMerkleTreeHeaderData"),
                   }),
+                  k.structFieldTypeNode({
+                    name: "serializedTree",
+                    child: k.bytesTypeNode(k.remainderSize()),
+                  }),
                 ]),
               }),
             }),
@@ -164,6 +168,13 @@ kinobi.update(
         });
       },
     },
+  ])
+);
+
+// Transform tuple enum variants to structs.
+kinobi.update(
+  new k.UnwrapTupleEnumWithSingleStructVisitor([
+    "ConcurrentMerkleTreeHeaderData",
   ])
 );
 

@@ -10,22 +10,68 @@ import {
   Context,
   GetDataEnumKind,
   GetDataEnumKindContent,
+  PublicKey,
   Serializer,
 } from '@metaplex-foundation/umi';
-import {
-  ConcurrentMerkleTreeHeaderDataV1,
-  ConcurrentMerkleTreeHeaderDataV1Args,
-  getConcurrentMerkleTreeHeaderDataV1Serializer,
-} from '.';
 
 export type ConcurrentMerkleTreeHeaderData = {
   __kind: 'V1';
-  fields: [ConcurrentMerkleTreeHeaderDataV1];
+  /**
+   * Buffer of changelogs stored on-chain.
+   * Must be a power of 2; see above table for valid combinations.
+   */
+  maxBufferSize: number;
+  /**
+   * Depth of the SPL ConcurrentMerkleTree to store.
+   * Tree capacity can be calculated as power(2, max_depth).
+   * See above table for valid options.
+   */
+  maxDepth: number;
+  /**
+   * Authority that validates the content of the trees.
+   * Typically a program, e.g., the Bubblegum contract validates that leaves are valid NFTs.
+   */
+  authority: PublicKey;
+  /**
+   * Slot corresponding to when the Merkle tree was created.
+   * Provides a lower-bound on what slot to start (re-)building a tree from.
+   */
+  creationSlot: bigint;
+  /**
+   * Needs padding for the account to be 8-byte aligned
+   * 8-byte alignment is necessary to zero-copy the SPL ConcurrentMerkleTree
+   */
+  padding: Array<number>;
 };
 
 export type ConcurrentMerkleTreeHeaderDataArgs = {
   __kind: 'V1';
-  fields: [ConcurrentMerkleTreeHeaderDataV1Args];
+  /**
+   * Buffer of changelogs stored on-chain.
+   * Must be a power of 2; see above table for valid combinations.
+   */
+  maxBufferSize: number;
+  /**
+   * Depth of the SPL ConcurrentMerkleTree to store.
+   * Tree capacity can be calculated as power(2, max_depth).
+   * See above table for valid options.
+   */
+  maxDepth: number;
+  /**
+   * Authority that validates the content of the trees.
+   * Typically a program, e.g., the Bubblegum contract validates that leaves are valid NFTs.
+   */
+  authority: PublicKey;
+  /**
+   * Slot corresponding to when the Merkle tree was created.
+   * Provides a lower-bound on what slot to start (re-)building a tree from.
+   */
+  creationSlot: number | bigint;
+  /**
+   * Needs padding for the account to be 8-byte aligned
+   * 8-byte alignment is necessary to zero-copy the SPL ConcurrentMerkleTree
+   */
+  padding: Array<number>;
 };
 
 export function getConcurrentMerkleTreeHeaderDataSerializer(
@@ -40,10 +86,11 @@ export function getConcurrentMerkleTreeHeaderDataSerializer(
       [
         'V1',
         s.struct<GetDataEnumKindContent<ConcurrentMerkleTreeHeaderData, 'V1'>>([
-          [
-            'fields',
-            s.tuple([getConcurrentMerkleTreeHeaderDataV1Serializer(context)]),
-          ],
+          ['maxBufferSize', s.u32()],
+          ['maxDepth', s.u32()],
+          ['authority', s.publicKey()],
+          ['creationSlot', s.u64()],
+          ['padding', s.array(s.u8(), { size: 6 })],
         ]),
       ],
     ],
@@ -57,10 +104,7 @@ export function getConcurrentMerkleTreeHeaderDataSerializer(
 // Data Enum Helpers.
 export function concurrentMerkleTreeHeaderData(
   kind: 'V1',
-  data: GetDataEnumKindContent<
-    ConcurrentMerkleTreeHeaderDataArgs,
-    'V1'
-  >['fields']
+  data: GetDataEnumKindContent<ConcurrentMerkleTreeHeaderDataArgs, 'V1'>
 ): GetDataEnumKind<ConcurrentMerkleTreeHeaderDataArgs, 'V1'>;
 export function concurrentMerkleTreeHeaderData<
   K extends ConcurrentMerkleTreeHeaderDataArgs['__kind']

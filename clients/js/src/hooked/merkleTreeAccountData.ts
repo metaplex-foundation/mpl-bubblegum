@@ -1,5 +1,6 @@
 import {
   Context,
+  GetDataEnumKind,
   PublicKey,
   Serializer,
   mapSerializer,
@@ -8,7 +9,6 @@ import {
   CompressionAccountType,
   ConcurrentMerkleTreeHeaderData,
   ConcurrentMerkleTreeHeaderDataArgs,
-  ConcurrentMerkleTreeHeaderDataV1Args,
   getConcurrentMerkleTreeHeaderDataSerializer,
   getConcurrentMerkleTreeHeaderSerializer,
 } from '../generated';
@@ -44,7 +44,7 @@ export const getMerkleTreeAccountDataSerializer = (
         case 'V1':
           return getMerkleTreeAccountDataV1Serializer(
             context,
-            value.treeHeader.fields[0]
+            value.treeHeader
           ).serialize(value);
         default:
           throw new Error(
@@ -58,7 +58,7 @@ export const getMerkleTreeAccountDataSerializer = (
         case 'V1':
           return getMerkleTreeAccountDataV1Serializer(
             context,
-            header.fields[0]
+            header
           ).deserialize(bytes, offset);
         default:
           throw new Error(
@@ -71,7 +71,10 @@ export const getMerkleTreeAccountDataSerializer = (
 
 export const getMerkleTreeAccountDataV1Serializer = (
   context: Pick<Context, 'serializer'>,
-  { maxDepth, maxBufferSize }: ConcurrentMerkleTreeHeaderDataV1Args
+  {
+    maxDepth,
+    maxBufferSize,
+  }: GetDataEnumKind<ConcurrentMerkleTreeHeaderDataArgs, 'V1'>
 ): Serializer<MerkleTreeAccountDataArgs, MerkleTreeAccountData> => {
   const s = context.serializer;
   return mapSerializer(

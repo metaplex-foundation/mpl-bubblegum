@@ -11,7 +11,6 @@ export * from './collection';
 export * from './compressionAccountType';
 export * from './concurrentMerkleTreeHeader';
 export * from './concurrentMerkleTreeHeaderData';
-export * from './concurrentMerkleTreeHeaderDataV1';
 export * from './creator';
 export * from './instructionName';
 export * from './leafSchema';
