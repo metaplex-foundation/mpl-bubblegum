@@ -35,14 +35,10 @@ kinobi.update(
     // Remove unnecessary spl_account_compression type.
     ApplicationDataEventV1: { delete: true },
     ChangeLogEventV1: { delete: true },
-    ConcurrentMerkleTreeHeader: { delete: true },
-    ConcurrentMerkleTreeHeaderDataV1: { delete: true },
     PathNode: { delete: true },
     ApplicationDataEvent: { delete: true },
     ChangeLogEvent: { delete: true },
     AccountCompressionEvent: { delete: true },
-    CompressionAccountType: { delete: true },
-    ConcurrentMerkleTreeHeaderData: { delete: true },
   })
 );
 
@@ -127,6 +123,55 @@ kinobi.update(
       tokenProgramVersion: k.vEnum("TokenProgramVersion", "Original"),
     },
   })
+);
+
+// Custom tree updates.
+kinobi.update(
+  new k.TransformNodesVisitor([
+    {
+      // Add nodes to the splAccountCompression program.
+      selector: { kind: "programNode", name: "splAccountCompression" },
+      transformer: (node) => {
+        k.assertProgramNode(node);
+        return k.programNode({
+          ...node,
+          accounts: [
+            ...node.accounts,
+            k.accountNode({
+              name: "merkleTree",
+              data: k.accountDataNode({
+                name: "merkleTreeAccountData",
+                link: k.linkTypeNode("merkleTreeAccountData", {
+                  importFrom: "hooked",
+                }),
+                struct: k.structTypeNode([
+                  k.structFieldTypeNode({
+                    name: "discriminator",
+                    child: k.linkTypeNode("compressionAccountType"),
+                  }),
+                  k.structFieldTypeNode({
+                    name: "treeHeader",
+                    child: k.linkTypeNode("concurrentMerkleTreeHeaderData"),
+                  }),
+                  k.structFieldTypeNode({
+                    name: "serializedTree",
+                    child: k.bytesTypeNode(k.remainderSize()),
+                  }),
+                ]),
+              }),
+            }),
+          ],
+        });
+      },
+    },
+  ])
+);
+
+// Transform tuple enum variants to structs.
+kinobi.update(
+  new k.UnwrapTupleEnumWithSingleStructVisitor([
+    "ConcurrentMerkleTreeHeaderData",
+  ])
 );
 
 // Render JavaScript.

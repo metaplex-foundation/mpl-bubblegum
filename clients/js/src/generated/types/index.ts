@@ -8,6 +8,9 @@
 
 export * from './bubblegumEventType';
 export * from './collection';
+export * from './compressionAccountType';
+export * from './concurrentMerkleTreeHeader';
+export * from './concurrentMerkleTreeHeaderData';
 export * from './creator';
 export * from './instructionName';
 export * from './leafSchema';

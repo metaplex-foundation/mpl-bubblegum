@@ -4,6 +4,9 @@ dependencies:
   '@metaplex-foundation/mpl-toolbox':
     specifier: ^0.7.0
     version: 0.7.0(@metaplex-foundation/umi@0.8.0)
+  '@noble/hashes':
+    specifier: ^1.3.1
+    version: 1.3.1
 
 devDependencies:
   '@ava/typescript':
@@ -1739,14 +1742,9 @@ packages:
     resolution: {integrity: sha512-Rk4SkJFaXZiznFyC/t77Q0NKS4FL7TLJJsVG2V2oiEq3kJVeTdxysEe/yRWSpnWMe808XRDJ+VFh5pt/FN5plw==}
     dev: true
 
-  /@noble/hashes@1.1.5:
-    resolution: {integrity: sha512-LTMZiiLc+V4v1Yi16TD6aX2gmtKszNye0pQgbaLqkvhIqP7nVsSaJsWloGQjJfJ8offaoP5GtX3yY5swbcJxxQ==}
-    dev: true
-
   /@noble/hashes@1.3.1:
     resolution: {integrity: sha512-EbqwksQwz9xDRGfDST86whPBgM65E0OH/pCgqW0GBVzO22bNE+NuIbeTb714+IfSjU3aRk47EUvXIb5bTsenKA==}
     engines: {node: '>= 16'}
-    dev: true
 
   /@noble/secp256k1@1.7.0:
     resolution: {integrity: sha512-kbacwGSsH/CTout0ZnZWxnW1B+jH/7r/WAAKLBtrRJ/+CUH7lgmQzl3GTrQua3SGKWNSDsS6lmjnDpIJ5Dxyaw==}
@@ -1908,7 +1906,7 @@ packages:
     dependencies:
       '@babel/runtime': 7.20.7
       '@noble/ed25519': 1.7.1
-      '@noble/hashes': 1.1.5
+      '@noble/hashes': 1.3.1
       '@noble/secp256k1': 1.7.0
       '@solana/buffer-layout': 4.0.1
       agentkeepalive: 4.2.1
