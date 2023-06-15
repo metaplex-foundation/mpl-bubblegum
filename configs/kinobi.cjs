@@ -35,14 +35,10 @@ kinobi.update(
     // Remove unnecessary spl_account_compression type.
     ApplicationDataEventV1: { delete: true },
     ChangeLogEventV1: { delete: true },
-    // ConcurrentMerkleTreeHeader: { delete: true },
-    // ConcurrentMerkleTreeHeaderDataV1: { delete: true },
     PathNode: { delete: true },
     ApplicationDataEvent: { delete: true },
     ChangeLogEvent: { delete: true },
     AccountCompressionEvent: { delete: true },
-    // CompressionAccountType: { delete: true },
-    // ConcurrentMerkleTreeHeaderData: { delete: true },
   })
 );
 

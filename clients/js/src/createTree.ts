@@ -10,6 +10,7 @@ import {
   SPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
   createTreeConfig,
 } from './generated';
+import { getMerkleTreeSize } from './hooked';
 
 export const createTree = async (
   context: Parameters<typeof createAccount>[0] &
@@ -23,7 +24,8 @@ export const createTree = async (
 ): Promise<TransactionBuilder> => {
   const space =
     input.merkleTreeSize ??
-    getMerkleTreeAccountSize(
+    getMerkleTreeSize(
+      context,
       input.maxDepth,
       input.maxBufferSize,
       input.canopyDepth
@@ -54,18 +56,3 @@ export const createTree = async (
       )
   );
 };
-
-export const getMerkleTreeAccountSize = (
-  maxDepth: number,
-  maxBufferSize: number,
-  canopyDepth?: number
-): number =>
-  1 + // Account discriminant.
-  1 + // Header version.
-  54 + // Merkle tree header V1.
-  8 + // Merkle tree > sequenceNumber.
-  8 + // Merkle tree > activeIndex.
-  8 + // Merkle tree > bufferSize.
-  (40 + 32 * maxDepth) * maxBufferSize + // Merkle tree > changeLogs.
-  (32 * maxDepth + 40) + // Merkle tree > rightMostPath.
-  (canopyDepth ? Math.max(((1 << (canopyDepth + 1)) - 2) * 32, 0) : 0);

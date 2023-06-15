@@ -1,6 +1,5 @@
 import {
   Context,
-  GetDataEnumKind,
   PublicKey,
   Serializer,
   mapSerializer,
@@ -44,7 +43,8 @@ export const getMerkleTreeAccountDataSerializer = (
         case 'V1':
           return getMerkleTreeAccountDataV1Serializer(
             context,
-            value.treeHeader
+            value.treeHeader.maxDepth,
+            value.treeHeader.maxBufferSize
           ).serialize(value);
         default:
           throw new Error(
@@ -58,7 +58,8 @@ export const getMerkleTreeAccountDataSerializer = (
         case 'V1':
           return getMerkleTreeAccountDataV1Serializer(
             context,
-            header
+            header.maxDepth,
+            header.maxBufferSize
           ).deserialize(bytes, offset);
         default:
           throw new Error(
@@ -71,10 +72,8 @@ export const getMerkleTreeAccountDataSerializer = (
 
 export const getMerkleTreeAccountDataV1Serializer = (
   context: Pick<Context, 'serializer'>,
-  {
-    maxDepth,
-    maxBufferSize,
-  }: GetDataEnumKind<ConcurrentMerkleTreeHeaderDataArgs, 'V1'>
+  maxDepth: number,
+  maxBufferSize: number
 ): Serializer<MerkleTreeAccountDataArgs, MerkleTreeAccountData> => {
   const s = context.serializer;
   return mapSerializer(
@@ -99,24 +98,21 @@ export const getMerkleTreeAccountDataV1Serializer = (
   );
 };
 
-export const getMerkleTreeSize = (): number => {
-  const foo = 42; // TODO
-  return foo;
+export const getMerkleTreeSize = (
+  context: Pick<Context, 'serializer'>,
+  maxDepth: number,
+  maxBufferSize: number,
+  canopyDepth = 0
+): number => {
+  const discriminatorSize = 1;
+  const headerSize = getConcurrentMerkleTreeHeaderDataSerializer(context)
+    .fixedSize as number;
+  const treeSize = getConcurrentMerkleTreeSerializer(
+    context,
+    maxDepth,
+    maxBufferSize
+  ).fixedSize as number;
+  // eslint-disable-next-line no-bitwise
+  const canopySize = 32 * Math.max((1 << (canopyDepth + 1)) - 2, 0);
+  return discriminatorSize + headerSize + treeSize + canopySize;
 };
-
-// ['discriminator', beet.u8],
-// ['headerVersion', beet.u8],
-// Header Data V1.
-//   ['maxBufferSize', beet.u32],
-//   ['maxDepth', beet.u32],
-//   ['authority', beetSolana.publicKey],
-//   ['creationSlot', beet.u64],
-//   ['padding', beet.uniformFixedSizeArray(beet.u8, 6)],
-// Concurrent Merkle Tree.
-//   ['sequenceNumber', beet.u64],
-//   ['activeIndex', beet.u64],
-//   ['bufferSize', beet.u64],
-//   ['changeLogs', beet.array(getChangeLogSerializer(), {size: maxBufferSize })],
-//   ['rightMostPath', getPathSerializer(umi, maxDepth)],
-// Canopy.
-//   ['canopy', s.bytes({ size: 'remainder' })], -> Initially: Math.max(((1 << (canopyDepth + 1)) - 2), 0) * 32 // Maybe best as array of 32 bytes.
