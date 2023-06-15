@@ -36,20 +36,39 @@ export function hashLeaf(
     s.publicKey().serialize(input.owner),
     s.publicKey().serialize(delegate),
     s.u64().serialize(input.leafIndex),
-    hashMetadataArgs(context, input.metadata),
+    hashMetadata(context, input.metadata),
   ]);
 }
 
-export function hashMetadataArgs(
+export function hashMetadata(
+  context: Pick<Context, 'serializer'>,
+  metadata: MetadataArgsArgs
+): Uint8Array {
+  return mergeBytes([
+    hashMetadataData(context, metadata),
+    hashMetadataCreators(context, metadata.creators),
+  ]);
+}
+
+export function hashMetadataData(
   context: Pick<Context, 'serializer'>,
   metadata: MetadataArgsArgs
 ): Uint8Array {
   const s = context.serializer;
-  return mergeBytes([
-    hash([
-      getMetadataArgsSerializer(context).serialize(metadata),
-      s.u16().serialize(metadata.sellerFeeBasisPoints),
-    ]),
-    hash(s.array(getCreatorSerializer(context)).serialize(metadata.creators)),
+  return hash([
+    hash(getMetadataArgsSerializer(context).serialize(metadata)),
+    s.u16().serialize(metadata.sellerFeeBasisPoints),
   ]);
+}
+
+export function hashMetadataCreators(
+  context: Pick<Context, 'serializer'>,
+  creators: MetadataArgsArgs['creators']
+): Uint8Array {
+  const s = context.serializer;
+  return hash(
+    s
+      .array(getCreatorSerializer(context), { size: 'remainder' })
+      .serialize(creators)
+  );
 }
