@@ -1,6 +1,6 @@
 import { generateSigner, none } from '@metaplex-foundation/umi';
 import test from 'ava';
-import { mintV1 } from '../src';
+import { fetchMerkleTree, mintV1 } from '../src';
 import { createTree, createUmi } from './_setup';
 
 test('it can mint an NFT from a Bubblegum tree', async (t) => {
@@ -23,5 +23,7 @@ test('it can mint an NFT from a Bubblegum tree', async (t) => {
   }).sendAndConfirm(umi);
 
   // Then
+  const merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  console.log(merkleTreeAccount);
   t.pass();
 });
