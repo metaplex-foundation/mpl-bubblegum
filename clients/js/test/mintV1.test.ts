@@ -1,6 +1,6 @@
-import { generateSigner, none } from '@metaplex-foundation/umi';
+import { generateSigner, none, publicKey } from '@metaplex-foundation/umi';
 import test from 'ava';
-import { fetchMerkleTree, mintV1 } from '../src';
+import { MetadataArgsArgs, fetchMerkleTree, hashLeaf, mintV1 } from '../src';
 import { createTree, createUmi } from './_setup';
 
 test('it can mint an NFT from a Bubblegum tree', async (t) => {
@@ -8,22 +8,34 @@ test('it can mint an NFT from a Bubblegum tree', async (t) => {
   const umi = await createUmi();
   const merkleTree = await createTree(umi);
   const leafOwner = generateSigner(umi).publicKey;
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  console.log(merkleTreeAccount);
 
   // When
+  const metadata: MetadataArgsArgs = {
+    name: 'My NFT',
+    uri: 'https://example.com/my-nft.json',
+    sellerFeeBasisPoints: 500, // 5%
+    collection: none(),
+    creators: [],
+  };
   await mintV1(umi, {
     leafOwner,
     merkleTree,
-    message: {
-      name: 'My NFT',
-      uri: 'https://example.com/my-nft.json',
-      sellerFeeBasisPoints: 500, // 5%
-      collection: none(),
-      creators: [],
-    },
+    message: metadata,
   }).sendAndConfirm(umi);
 
   // Then
-  const merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   console.log(merkleTreeAccount);
   t.pass();
+
+  // Debug
+  const leafHash = hashLeaf(umi, {
+    merkleTree,
+    owner: leafOwner,
+    leafIndex: 0,
+    metadata,
+  });
+  console.log('leafHash', publicKey(leafHash));
 });
