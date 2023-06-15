@@ -1,4 +1,4 @@
-import { Context } from '@metaplex-foundation/umi';
+import { Context, PublicKey } from '@metaplex-foundation/umi';
 import { Path, PathArgs, getPathSerializer } from './path';
 import { ChangeLog, ChangeLogArgs, getChangeLogSerializer } from './changeLog';
 
@@ -37,3 +37,7 @@ export const getConcurrentMerkleTreeSerializer = (
     ['rightMostPath', getPathSerializer(context, maxDepth)],
   ]);
 };
+
+export const getCurrentRoot = (
+  tree: Pick<ConcurrentMerkleTreeArgs, 'changeLogs' | 'activeIndex'>
+): PublicKey => tree.changeLogs[Number(tree.activeIndex)].root;
