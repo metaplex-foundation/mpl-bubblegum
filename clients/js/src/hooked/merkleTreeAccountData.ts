@@ -1,9 +1,12 @@
+import { PublicKey } from '@metaplex-foundation/umi';
 import {
-  Context,
-  PublicKey,
   Serializer,
+  array,
   mapSerializer,
-} from '@metaplex-foundation/umi';
+  publicKey,
+  struct,
+  u8,
+} from '@metaplex-foundation/umi/serializers';
 import {
   CompressionAccountType,
   ConcurrentMerkleTreeHeaderData,
@@ -30,10 +33,11 @@ export type MerkleTreeAccountDataArgs = {
   canopy: PublicKey[];
 };
 
-export const getMerkleTreeAccountDataSerializer = (
-  context: Pick<Context, 'serializer'>
-): Serializer<MerkleTreeAccountDataArgs, MerkleTreeAccountData> => {
-  const headerSerializer = getConcurrentMerkleTreeHeaderSerializer(context);
+export const getMerkleTreeAccountDataSerializer = (): Serializer<
+  MerkleTreeAccountDataArgs,
+  MerkleTreeAccountData
+> => {
+  const headerSerializer = getConcurrentMerkleTreeHeaderSerializer();
   return {
     description: 'MerkleTreeAccountData',
     fixedSize: null,
@@ -42,7 +46,6 @@ export const getMerkleTreeAccountDataSerializer = (
       switch (value.treeHeader.__kind) {
         case 'V1':
           return getMerkleTreeAccountDataV1Serializer(
-            context,
             value.treeHeader.maxDepth,
             value.treeHeader.maxBufferSize
           ).serialize(value);
@@ -57,7 +60,6 @@ export const getMerkleTreeAccountDataSerializer = (
       switch (header.__kind) {
         case 'V1':
           return getMerkleTreeAccountDataV1Serializer(
-            context,
             header.maxDepth,
             header.maxBufferSize
           ).deserialize(bytes, offset);
@@ -71,23 +73,18 @@ export const getMerkleTreeAccountDataSerializer = (
 };
 
 export const getMerkleTreeAccountDataV1Serializer = (
-  context: Pick<Context, 'serializer'>,
   maxDepth: number,
   maxBufferSize: number
-): Serializer<MerkleTreeAccountDataArgs, MerkleTreeAccountData> => {
-  const s = context.serializer;
-  return mapSerializer(
-    s.struct<
+): Serializer<MerkleTreeAccountDataArgs, MerkleTreeAccountData> =>
+  mapSerializer(
+    struct<
       MerkleTreeAccountDataArgs & { discriminator: number },
       MerkleTreeAccountData
     >([
-      ['discriminator', s.u8()],
-      ['treeHeader', getConcurrentMerkleTreeHeaderDataSerializer(context)],
-      [
-        'tree',
-        getConcurrentMerkleTreeSerializer(context, maxDepth, maxBufferSize),
-      ],
-      ['canopy', s.array(s.publicKey(), { size: 'remainder' })],
+      ['discriminator', u8()],
+      ['treeHeader', getConcurrentMerkleTreeHeaderDataSerializer()],
+      ['tree', getConcurrentMerkleTreeSerializer(maxDepth, maxBufferSize)],
+      ['canopy', array(publicKey(), { size: 'remainder' })],
     ]),
     (
       value: MerkleTreeAccountDataArgs
@@ -96,22 +93,17 @@ export const getMerkleTreeAccountDataV1Serializer = (
       discriminator: CompressionAccountType.ConcurrentMerkleTree,
     })
   );
-};
 
 export const getMerkleTreeSize = (
-  context: Pick<Context, 'serializer'>,
   maxDepth: number,
   maxBufferSize: number,
   canopyDepth = 0
 ): number => {
   const discriminatorSize = 1;
-  const headerSize = getConcurrentMerkleTreeHeaderDataSerializer(context)
+  const headerSize = getConcurrentMerkleTreeHeaderDataSerializer()
     .fixedSize as number;
-  const treeSize = getConcurrentMerkleTreeSerializer(
-    context,
-    maxDepth,
-    maxBufferSize
-  ).fixedSize as number;
+  const treeSize = getConcurrentMerkleTreeSerializer(maxDepth, maxBufferSize)
+    .fixedSize as number;
   // eslint-disable-next-line no-bitwise
   const canopySize = 32 * Math.max((1 << (canopyDepth + 1)) - 2, 0);
   return discriminatorSize + headerSize + treeSize + canopySize;

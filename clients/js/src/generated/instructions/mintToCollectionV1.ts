@@ -11,13 +11,18 @@ import {
   Context,
   Pda,
   PublicKey,
-  Serializer,
   Signer,
   TransactionBuilder,
-  mapSerializer,
   publicKey,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
+import {
+  Serializer,
+  array,
+  mapSerializer,
+  struct,
+  u8,
+} from '@metaplex-foundation/umi/serializers';
 import { findTreeConfigPda } from '../accounts';
 import { addAccountMeta, addObjectProperty } from '../shared';
 import {
@@ -56,22 +61,32 @@ export type MintToCollectionV1InstructionDataArgs = {
   metadataArgs: MetadataArgsArgs;
 };
 
+/** @deprecated Use `getMintToCollectionV1InstructionDataSerializer()` without any argument instead. */
 export function getMintToCollectionV1InstructionDataSerializer(
-  context: Pick<Context, 'serializer'>
+  _context: object
+): Serializer<
+  MintToCollectionV1InstructionDataArgs,
+  MintToCollectionV1InstructionData
+>;
+export function getMintToCollectionV1InstructionDataSerializer(): Serializer<
+  MintToCollectionV1InstructionDataArgs,
+  MintToCollectionV1InstructionData
+>;
+export function getMintToCollectionV1InstructionDataSerializer(
+  _context: object = {}
 ): Serializer<
   MintToCollectionV1InstructionDataArgs,
   MintToCollectionV1InstructionData
 > {
-  const s = context.serializer;
   return mapSerializer<
     MintToCollectionV1InstructionDataArgs,
     any,
     MintToCollectionV1InstructionData
   >(
-    s.struct<MintToCollectionV1InstructionData>(
+    struct<MintToCollectionV1InstructionData>(
       [
-        ['discriminator', s.array(s.u8(), { size: 8 })],
-        ['metadataArgs', getMetadataArgsSerializer(context)],
+        ['discriminator', array(u8(), { size: 8 })],
+        ['metadataArgs', getMetadataArgsSerializer()],
       ],
       { description: 'MintToCollectionV1InstructionData' }
     ),
@@ -91,7 +106,7 @@ export type MintToCollectionV1InstructionArgs =
 
 // Instruction.
 export function mintToCollectionV1(
-  context: Pick<Context, 'serializer' | 'programs' | 'eddsa' | 'payer'>,
+  context: Pick<Context, 'programs' | 'eddsa' | 'payer'>,
   input: MintToCollectionV1InstructionAccounts &
     MintToCollectionV1InstructionArgs
 ): TransactionBuilder {
@@ -218,9 +233,7 @@ export function mintToCollectionV1(
 
   // Data.
   const data =
-    getMintToCollectionV1InstructionDataSerializer(context).serialize(
-      resolvedArgs
-    );
+    getMintToCollectionV1InstructionDataSerializer().serialize(resolvedArgs);
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 0;

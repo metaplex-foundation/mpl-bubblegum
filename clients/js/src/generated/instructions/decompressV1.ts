@@ -11,13 +11,18 @@ import {
   Context,
   Pda,
   PublicKey,
-  Serializer,
   Signer,
   TransactionBuilder,
-  mapSerializer,
   publicKey,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
+import {
+  Serializer,
+  array,
+  mapSerializer,
+  struct,
+  u8,
+} from '@metaplex-foundation/umi/serializers';
 import { addAccountMeta, addObjectProperty } from '../shared';
 import {
   MetadataArgs,
@@ -50,19 +55,26 @@ export type DecompressV1InstructionData = {
 
 export type DecompressV1InstructionDataArgs = { message: MetadataArgsArgs };
 
+/** @deprecated Use `getDecompressV1InstructionDataSerializer()` without any argument instead. */
 export function getDecompressV1InstructionDataSerializer(
-  context: Pick<Context, 'serializer'>
+  _context: object
+): Serializer<DecompressV1InstructionDataArgs, DecompressV1InstructionData>;
+export function getDecompressV1InstructionDataSerializer(): Serializer<
+  DecompressV1InstructionDataArgs,
+  DecompressV1InstructionData
+>;
+export function getDecompressV1InstructionDataSerializer(
+  _context: object = {}
 ): Serializer<DecompressV1InstructionDataArgs, DecompressV1InstructionData> {
-  const s = context.serializer;
   return mapSerializer<
     DecompressV1InstructionDataArgs,
     any,
     DecompressV1InstructionData
   >(
-    s.struct<DecompressV1InstructionData>(
+    struct<DecompressV1InstructionData>(
       [
-        ['discriminator', s.array(s.u8(), { size: 8 })],
-        ['message', getMetadataArgsSerializer(context)],
+        ['discriminator', array(u8(), { size: 8 })],
+        ['message', getMetadataArgsSerializer()],
       ],
       { description: 'DecompressV1InstructionData' }
     ),
@@ -78,7 +90,7 @@ export type DecompressV1InstructionArgs = DecompressV1InstructionDataArgs;
 
 // Instruction.
 export function decompressV1(
-  context: Pick<Context, 'serializer' | 'programs'>,
+  context: Pick<Context, 'programs'>,
   input: DecompressV1InstructionAccounts & DecompressV1InstructionArgs
 ): TransactionBuilder {
   const signers: Signer[] = [];
@@ -182,7 +194,7 @@ export function decompressV1(
 
   // Data.
   const data =
-    getDecompressV1InstructionDataSerializer(context).serialize(resolvedArgs);
+    getDecompressV1InstructionDataSerializer().serialize(resolvedArgs);
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 0;

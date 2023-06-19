@@ -24,12 +24,7 @@ export const createTree = async (
 ): Promise<TransactionBuilder> => {
   const space =
     input.merkleTreeSize ??
-    getMerkleTreeSize(
-      context,
-      input.maxDepth,
-      input.maxBufferSize,
-      input.canopyDepth
-    );
+    getMerkleTreeSize(input.maxDepth, input.maxBufferSize, input.canopyDepth);
   const lamports = await context.rpc.getRent(space);
 
   return (

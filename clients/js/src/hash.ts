@@ -1,4 +1,12 @@
-import { Context, PublicKey, mergeBytes } from '@metaplex-foundation/umi';
+import { Context, PublicKey } from '@metaplex-foundation/umi';
+import {
+  array,
+  mergeBytes,
+  publicKey,
+  u16,
+  u64,
+  u8,
+} from '@metaplex-foundation/umi/serializers';
 import { keccak_256 } from '@noble/hashes/sha3';
 import {
   MetadataArgsArgs,
@@ -12,7 +20,7 @@ export function hash(input: Uint8Array | Uint8Array[]): Uint8Array {
 }
 
 export function hashLeaf(
-  context: Pick<Context, 'serializer' | 'eddsa' | 'programs'>,
+  context: Pick<Context, 'eddsa' | 'programs'>,
   input: {
     merkleTree: PublicKey;
     owner: PublicKey;
@@ -22,7 +30,6 @@ export function hashLeaf(
     nftVersion?: number;
   }
 ): Uint8Array {
-  const s = context.serializer;
   const delegate = input.delegate ?? input.owner;
   const nftVersion = input.nftVersion ?? 1;
   const [leafAssetId] = findLeafAssetIdPda(context, {
@@ -31,44 +38,33 @@ export function hashLeaf(
   });
 
   return hash([
-    s.u8().serialize(nftVersion),
-    s.publicKey().serialize(leafAssetId),
-    s.publicKey().serialize(input.owner),
-    s.publicKey().serialize(delegate),
-    s.u64().serialize(input.leafIndex),
-    hashMetadata(context, input.metadata),
+    u8().serialize(nftVersion),
+    publicKey().serialize(leafAssetId),
+    publicKey().serialize(input.owner),
+    publicKey().serialize(delegate),
+    u64().serialize(input.leafIndex),
+    hashMetadata(input.metadata),
   ]);
 }
 
-export function hashMetadata(
-  context: Pick<Context, 'serializer'>,
-  metadata: MetadataArgsArgs
-): Uint8Array {
+export function hashMetadata(metadata: MetadataArgsArgs): Uint8Array {
   return mergeBytes([
-    hashMetadataData(context, metadata),
-    hashMetadataCreators(context, metadata.creators),
+    hashMetadataData(metadata),
+    hashMetadataCreators(metadata.creators),
   ]);
 }
 
-export function hashMetadataData(
-  context: Pick<Context, 'serializer'>,
-  metadata: MetadataArgsArgs
-): Uint8Array {
-  const s = context.serializer;
+export function hashMetadataData(metadata: MetadataArgsArgs): Uint8Array {
   return hash([
-    hash(getMetadataArgsSerializer(context).serialize(metadata)),
-    s.u16().serialize(metadata.sellerFeeBasisPoints),
+    hash(getMetadataArgsSerializer().serialize(metadata)),
+    u16().serialize(metadata.sellerFeeBasisPoints),
   ]);
 }
 
 export function hashMetadataCreators(
-  context: Pick<Context, 'serializer'>,
   creators: MetadataArgsArgs['creators']
 ): Uint8Array {
-  const s = context.serializer;
   return hash(
-    s
-      .array(getCreatorSerializer(context), { size: 'remainder' })
-      .serialize(creators)
+    array(getCreatorSerializer(), { size: 'remainder' }).serialize(creators)
   );
 }

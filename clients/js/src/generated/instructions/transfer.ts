@@ -11,13 +11,21 @@ import {
   Context,
   Pda,
   PublicKey,
-  Serializer,
   Signer,
   TransactionBuilder,
-  mapSerializer,
   publicKey,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
+import {
+  Serializer,
+  array,
+  bytes,
+  mapSerializer,
+  struct,
+  u32,
+  u64,
+  u8,
+} from '@metaplex-foundation/umi/serializers';
 import { findTreeConfigPda } from '../accounts';
 import { addAccountMeta, addObjectProperty } from '../shared';
 
@@ -51,23 +59,30 @@ export type TransferInstructionDataArgs = {
   index: number;
 };
 
+/** @deprecated Use `getTransferInstructionDataSerializer()` without any argument instead. */
 export function getTransferInstructionDataSerializer(
-  context: Pick<Context, 'serializer'>
+  _context: object
+): Serializer<TransferInstructionDataArgs, TransferInstructionData>;
+export function getTransferInstructionDataSerializer(): Serializer<
+  TransferInstructionDataArgs,
+  TransferInstructionData
+>;
+export function getTransferInstructionDataSerializer(
+  _context: object = {}
 ): Serializer<TransferInstructionDataArgs, TransferInstructionData> {
-  const s = context.serializer;
   return mapSerializer<
     TransferInstructionDataArgs,
     any,
     TransferInstructionData
   >(
-    s.struct<TransferInstructionData>(
+    struct<TransferInstructionData>(
       [
-        ['discriminator', s.array(s.u8(), { size: 8 })],
-        ['root', s.bytes({ size: 32 })],
-        ['dataHash', s.bytes({ size: 32 })],
-        ['creatorHash', s.bytes({ size: 32 })],
-        ['nonce', s.u64()],
-        ['index', s.u32()],
+        ['discriminator', array(u8(), { size: 8 })],
+        ['root', bytes({ size: 32 })],
+        ['dataHash', bytes({ size: 32 })],
+        ['creatorHash', bytes({ size: 32 })],
+        ['nonce', u64()],
+        ['index', u32()],
       ],
       { description: 'TransferInstructionData' }
     ),
@@ -83,7 +98,7 @@ export type TransferInstructionArgs = TransferInstructionDataArgs;
 
 // Instruction.
 export function transfer(
-  context: Pick<Context, 'serializer' | 'programs' | 'eddsa'>,
+  context: Pick<Context, 'programs' | 'eddsa'>,
   input: TransferInstructionAccounts & TransferInstructionArgs
 ): TransactionBuilder {
   const signers: Signer[] = [];
@@ -166,8 +181,7 @@ export function transfer(
   addAccountMeta(keys, signers, resolvedAccounts.systemProgram, false);
 
   // Data.
-  const data =
-    getTransferInstructionDataSerializer(context).serialize(resolvedArgs);
+  const data = getTransferInstructionDataSerializer().serialize(resolvedArgs);
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 0;

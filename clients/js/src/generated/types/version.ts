@@ -6,7 +6,7 @@
  * @see https://github.com/metaplex-foundation/kinobi
  */
 
-import { Context, Serializer } from '@metaplex-foundation/umi';
+import { Serializer, scalarEnum } from '@metaplex-foundation/umi/serializers';
 
 export enum Version {
   V1,
@@ -14,11 +14,15 @@ export enum Version {
 
 export type VersionArgs = Version;
 
+/** @deprecated Use `getVersionSerializer()` without any argument instead. */
 export function getVersionSerializer(
-  context: Pick<Context, 'serializer'>
+  _context: object
+): Serializer<VersionArgs, Version>;
+export function getVersionSerializer(): Serializer<VersionArgs, Version>;
+export function getVersionSerializer(
+  _context: object = {}
 ): Serializer<VersionArgs, Version> {
-  const s = context.serializer;
-  return s.enum<Version>(Version, { description: 'Version' }) as Serializer<
+  return scalarEnum<Version>(Version, { description: 'Version' }) as Serializer<
     VersionArgs,
     Version
   >;

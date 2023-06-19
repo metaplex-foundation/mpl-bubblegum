@@ -11,13 +11,21 @@ import {
   Context,
   Pda,
   PublicKey,
-  Serializer,
   Signer,
   TransactionBuilder,
-  mapSerializer,
   publicKey,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
+import {
+  Serializer,
+  array,
+  bytes,
+  mapSerializer,
+  struct,
+  u32,
+  u64,
+  u8,
+} from '@metaplex-foundation/umi/serializers';
 import { findTreeConfigPda } from '../accounts';
 import { addAccountMeta, addObjectProperty } from '../shared';
 
@@ -51,19 +59,26 @@ export type RedeemInstructionDataArgs = {
   index: number;
 };
 
+/** @deprecated Use `getRedeemInstructionDataSerializer()` without any argument instead. */
 export function getRedeemInstructionDataSerializer(
-  context: Pick<Context, 'serializer'>
+  _context: object
+): Serializer<RedeemInstructionDataArgs, RedeemInstructionData>;
+export function getRedeemInstructionDataSerializer(): Serializer<
+  RedeemInstructionDataArgs,
+  RedeemInstructionData
+>;
+export function getRedeemInstructionDataSerializer(
+  _context: object = {}
 ): Serializer<RedeemInstructionDataArgs, RedeemInstructionData> {
-  const s = context.serializer;
   return mapSerializer<RedeemInstructionDataArgs, any, RedeemInstructionData>(
-    s.struct<RedeemInstructionData>(
+    struct<RedeemInstructionData>(
       [
-        ['discriminator', s.array(s.u8(), { size: 8 })],
-        ['root', s.bytes({ size: 32 })],
-        ['dataHash', s.bytes({ size: 32 })],
-        ['creatorHash', s.bytes({ size: 32 })],
-        ['nonce', s.u64()],
-        ['index', s.u32()],
+        ['discriminator', array(u8(), { size: 8 })],
+        ['root', bytes({ size: 32 })],
+        ['dataHash', bytes({ size: 32 })],
+        ['creatorHash', bytes({ size: 32 })],
+        ['nonce', u64()],
+        ['index', u32()],
       ],
       { description: 'RedeemInstructionData' }
     ),
@@ -79,7 +94,7 @@ export type RedeemInstructionArgs = RedeemInstructionDataArgs;
 
 // Instruction.
 export function redeem(
-  context: Pick<Context, 'serializer' | 'programs' | 'eddsa'>,
+  context: Pick<Context, 'programs' | 'eddsa'>,
   input: RedeemInstructionAccounts & RedeemInstructionArgs
 ): TransactionBuilder {
   const signers: Signer[] = [];
@@ -162,8 +177,7 @@ export function redeem(
   addAccountMeta(keys, signers, resolvedAccounts.systemProgram, false);
 
   // Data.
-  const data =
-    getRedeemInstructionDataSerializer(context).serialize(resolvedArgs);
+  const data = getRedeemInstructionDataSerializer().serialize(resolvedArgs);
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 0;

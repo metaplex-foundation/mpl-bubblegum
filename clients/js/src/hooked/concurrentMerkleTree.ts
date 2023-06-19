@@ -1,6 +1,7 @@
-import { Context, PublicKey } from '@metaplex-foundation/umi';
-import { Path, PathArgs, getPathSerializer } from './path';
+import { PublicKey } from '@metaplex-foundation/umi';
+import { array, struct, u64 } from '@metaplex-foundation/umi/serializers';
 import { ChangeLog, ChangeLogArgs, getChangeLogSerializer } from './changeLog';
+import { Path, PathArgs, getPathSerializer } from './path';
 
 export type ConcurrentMerkleTree = {
   sequenceNumber: bigint;
@@ -19,24 +20,19 @@ export type ConcurrentMerkleTreeArgs = {
 };
 
 export const getConcurrentMerkleTreeSerializer = (
-  context: Pick<Context, 'serializer'>,
   maxDepth: number,
   maxBufferSize: number
-) => {
-  const s = context.serializer;
-  return s.struct([
-    ['sequenceNumber', s.u64()],
-    ['activeIndex', s.u64()],
-    ['bufferSize', s.u64()],
+) =>
+  struct([
+    ['sequenceNumber', u64()],
+    ['activeIndex', u64()],
+    ['bufferSize', u64()],
     [
       'changeLogs',
-      s.array(getChangeLogSerializer(context, maxDepth), {
-        size: maxBufferSize,
-      }),
+      array(getChangeLogSerializer(maxDepth), { size: maxBufferSize }),
     ],
-    ['rightMostPath', getPathSerializer(context, maxDepth)],
+    ['rightMostPath', getPathSerializer(maxDepth)],
   ]);
-};
 
 export const getCurrentRoot = (
   tree: Pick<ConcurrentMerkleTreeArgs, 'changeLogs' | 'activeIndex'>

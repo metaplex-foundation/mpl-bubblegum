@@ -6,13 +6,19 @@
  * @see https://github.com/metaplex-foundation/kinobi
  */
 
+import { PublicKey } from '@metaplex-foundation/umi';
 import {
-  Context,
   GetDataEnumKind,
   GetDataEnumKindContent,
-  PublicKey,
   Serializer,
-} from '@metaplex-foundation/umi';
+  array,
+  dataEnum,
+  publicKey as publicKeySerializer,
+  struct,
+  u32,
+  u64,
+  u8,
+} from '@metaplex-foundation/umi/serializers';
 
 export type ConcurrentMerkleTreeHeaderData = {
   __kind: 'V1';
@@ -74,23 +80,33 @@ export type ConcurrentMerkleTreeHeaderDataArgs = {
   padding: Array<number>;
 };
 
+/** @deprecated Use `getConcurrentMerkleTreeHeaderDataSerializer()` without any argument instead. */
 export function getConcurrentMerkleTreeHeaderDataSerializer(
-  context: Pick<Context, 'serializer'>
+  _context: object
+): Serializer<
+  ConcurrentMerkleTreeHeaderDataArgs,
+  ConcurrentMerkleTreeHeaderData
+>;
+export function getConcurrentMerkleTreeHeaderDataSerializer(): Serializer<
+  ConcurrentMerkleTreeHeaderDataArgs,
+  ConcurrentMerkleTreeHeaderData
+>;
+export function getConcurrentMerkleTreeHeaderDataSerializer(
+  _context: object = {}
 ): Serializer<
   ConcurrentMerkleTreeHeaderDataArgs,
   ConcurrentMerkleTreeHeaderData
 > {
-  const s = context.serializer;
-  return s.dataEnum<ConcurrentMerkleTreeHeaderData>(
+  return dataEnum<ConcurrentMerkleTreeHeaderData>(
     [
       [
         'V1',
-        s.struct<GetDataEnumKindContent<ConcurrentMerkleTreeHeaderData, 'V1'>>([
-          ['maxBufferSize', s.u32()],
-          ['maxDepth', s.u32()],
-          ['authority', s.publicKey()],
-          ['creationSlot', s.u64()],
-          ['padding', s.array(s.u8(), { size: 6 })],
+        struct<GetDataEnumKindContent<ConcurrentMerkleTreeHeaderData, 'V1'>>([
+          ['maxBufferSize', u32()],
+          ['maxDepth', u32()],
+          ['authority', publicKeySerializer()],
+          ['creationSlot', u64()],
+          ['padding', array(u8(), { size: 6 })],
         ]),
       ],
     ],

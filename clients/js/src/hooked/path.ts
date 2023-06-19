@@ -1,9 +1,12 @@
+import { PublicKey } from '@metaplex-foundation/umi';
 import {
-  Context,
-  PublicKey,
   Serializer,
+  array,
   mapSerializer,
-} from '@metaplex-foundation/umi';
+  publicKey,
+  struct,
+  u32,
+} from '@metaplex-foundation/umi/serializers';
 
 export type Path = {
   proof: PublicKey[];
@@ -14,17 +17,15 @@ export type Path = {
 export type PathArgs = Path;
 
 export function getPathSerializer(
-  context: Pick<Context, 'serializer'>,
   maxDepth: number
 ): Serializer<PathArgs, Path> {
-  const s = context.serializer;
   return mapSerializer(
-    s.struct<Path & { padding: number }>(
+    struct<Path & { padding: number }>(
       [
-        ['proof', s.array(s.publicKey(), { size: maxDepth })],
-        ['leaf', s.publicKey()],
-        ['index', s.u32()],
-        ['padding', s.u32()],
+        ['proof', array(publicKey(), { size: maxDepth })],
+        ['leaf', publicKey()],
+        ['index', u32()],
+        ['padding', u32()],
       ],
       { description: 'Path' }
     ),

@@ -1,4 +1,11 @@
-import { Context, PublicKey, fixSerializer } from '@metaplex-foundation/umi';
+import { PublicKey } from '@metaplex-foundation/umi';
+import {
+  array,
+  fixSerializer,
+  publicKey,
+  struct,
+  u32,
+} from '@metaplex-foundation/umi/serializers';
 
 export type ChangeLog = {
   root: PublicKey;
@@ -8,14 +15,9 @@ export type ChangeLog = {
 
 export type ChangeLogArgs = ChangeLog;
 
-export const getChangeLogSerializer = (
-  context: Pick<Context, 'serializer'>,
-  maxDepth: number
-) => {
-  const s = context.serializer;
-  return s.struct([
-    ['root', s.publicKey()],
-    ['pathNodes', s.array(s.publicKey(), { size: maxDepth })],
-    ['index', fixSerializer(s.u32(), 8)],
+export const getChangeLogSerializer = (maxDepth: number) =>
+  struct([
+    ['root', publicKey()],
+    ['pathNodes', array(publicKey(), { size: maxDepth })],
+    ['index', fixSerializer(u32(), 8)],
   ]);
-};

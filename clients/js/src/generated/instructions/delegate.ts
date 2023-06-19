@@ -11,13 +11,21 @@ import {
   Context,
   Pda,
   PublicKey,
-  Serializer,
   Signer,
   TransactionBuilder,
-  mapSerializer,
   publicKey,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
+import {
+  Serializer,
+  array,
+  bytes,
+  mapSerializer,
+  struct,
+  u32,
+  u64,
+  u8,
+} from '@metaplex-foundation/umi/serializers';
 import { findTreeConfigPda } from '../accounts';
 import { addAccountMeta, addObjectProperty } from '../shared';
 
@@ -51,23 +59,30 @@ export type DelegateInstructionDataArgs = {
   index: number;
 };
 
+/** @deprecated Use `getDelegateInstructionDataSerializer()` without any argument instead. */
 export function getDelegateInstructionDataSerializer(
-  context: Pick<Context, 'serializer'>
+  _context: object
+): Serializer<DelegateInstructionDataArgs, DelegateInstructionData>;
+export function getDelegateInstructionDataSerializer(): Serializer<
+  DelegateInstructionDataArgs,
+  DelegateInstructionData
+>;
+export function getDelegateInstructionDataSerializer(
+  _context: object = {}
 ): Serializer<DelegateInstructionDataArgs, DelegateInstructionData> {
-  const s = context.serializer;
   return mapSerializer<
     DelegateInstructionDataArgs,
     any,
     DelegateInstructionData
   >(
-    s.struct<DelegateInstructionData>(
+    struct<DelegateInstructionData>(
       [
-        ['discriminator', s.array(s.u8(), { size: 8 })],
-        ['root', s.bytes({ size: 32 })],
-        ['dataHash', s.bytes({ size: 32 })],
-        ['creatorHash', s.bytes({ size: 32 })],
-        ['nonce', s.u64()],
-        ['index', s.u32()],
+        ['discriminator', array(u8(), { size: 8 })],
+        ['root', bytes({ size: 32 })],
+        ['dataHash', bytes({ size: 32 })],
+        ['creatorHash', bytes({ size: 32 })],
+        ['nonce', u64()],
+        ['index', u32()],
       ],
       { description: 'DelegateInstructionData' }
     ),
@@ -80,7 +95,7 @@ export type DelegateInstructionArgs = DelegateInstructionDataArgs;
 
 // Instruction.
 export function delegate(
-  context: Pick<Context, 'serializer' | 'programs' | 'eddsa'>,
+  context: Pick<Context, 'programs' | 'eddsa'>,
   input: DelegateInstructionAccounts & DelegateInstructionArgs
 ): TransactionBuilder {
   const signers: Signer[] = [];
@@ -163,8 +178,7 @@ export function delegate(
   addAccountMeta(keys, signers, resolvedAccounts.systemProgram, false);
 
   // Data.
-  const data =
-    getDelegateInstructionDataSerializer(context).serialize(resolvedArgs);
+  const data = getDelegateInstructionDataSerializer().serialize(resolvedArgs);
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 0;

@@ -6,7 +6,7 @@
  * @see https://github.com/metaplex-foundation/kinobi
  */
 
-import { Context, Serializer } from '@metaplex-foundation/umi';
+import { Serializer, scalarEnum } from '@metaplex-foundation/umi/serializers';
 
 export enum InstructionName {
   Unknown,
@@ -29,11 +29,18 @@ export enum InstructionName {
 
 export type InstructionNameArgs = InstructionName;
 
+/** @deprecated Use `getInstructionNameSerializer()` without any argument instead. */
 export function getInstructionNameSerializer(
-  context: Pick<Context, 'serializer'>
+  _context: object
+): Serializer<InstructionNameArgs, InstructionName>;
+export function getInstructionNameSerializer(): Serializer<
+  InstructionNameArgs,
+  InstructionName
+>;
+export function getInstructionNameSerializer(
+  _context: object = {}
 ): Serializer<InstructionNameArgs, InstructionName> {
-  const s = context.serializer;
-  return s.enum<InstructionName>(InstructionName, {
+  return scalarEnum<InstructionName>(InstructionName, {
     description: 'InstructionName',
   }) as Serializer<InstructionNameArgs, InstructionName>;
 }

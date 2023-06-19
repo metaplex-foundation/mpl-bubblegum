@@ -11,13 +11,21 @@ import {
   Context,
   Pda,
   PublicKey,
-  Serializer,
   Signer,
   TransactionBuilder,
-  mapSerializer,
   publicKey,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
+import {
+  Serializer,
+  array,
+  bytes,
+  mapSerializer,
+  struct,
+  u32,
+  u64,
+  u8,
+} from '@metaplex-foundation/umi/serializers';
 import { findTreeConfigPda } from '../accounts';
 import { addAccountMeta, addObjectProperty } from '../shared';
 
@@ -50,19 +58,26 @@ export type BurnInstructionDataArgs = {
   index: number;
 };
 
+/** @deprecated Use `getBurnInstructionDataSerializer()` without any argument instead. */
 export function getBurnInstructionDataSerializer(
-  context: Pick<Context, 'serializer'>
+  _context: object
+): Serializer<BurnInstructionDataArgs, BurnInstructionData>;
+export function getBurnInstructionDataSerializer(): Serializer<
+  BurnInstructionDataArgs,
+  BurnInstructionData
+>;
+export function getBurnInstructionDataSerializer(
+  _context: object = {}
 ): Serializer<BurnInstructionDataArgs, BurnInstructionData> {
-  const s = context.serializer;
   return mapSerializer<BurnInstructionDataArgs, any, BurnInstructionData>(
-    s.struct<BurnInstructionData>(
+    struct<BurnInstructionData>(
       [
-        ['discriminator', s.array(s.u8(), { size: 8 })],
-        ['root', s.bytes({ size: 32 })],
-        ['dataHash', s.bytes({ size: 32 })],
-        ['creatorHash', s.bytes({ size: 32 })],
-        ['nonce', s.u64()],
-        ['index', s.u32()],
+        ['discriminator', array(u8(), { size: 8 })],
+        ['root', bytes({ size: 32 })],
+        ['dataHash', bytes({ size: 32 })],
+        ['creatorHash', bytes({ size: 32 })],
+        ['nonce', u64()],
+        ['index', u32()],
       ],
       { description: 'BurnInstructionData' }
     ),
@@ -78,7 +93,7 @@ export type BurnInstructionArgs = BurnInstructionDataArgs;
 
 // Instruction.
 export function burn(
-  context: Pick<Context, 'serializer' | 'programs' | 'eddsa'>,
+  context: Pick<Context, 'programs' | 'eddsa'>,
   input: BurnInstructionAccounts & BurnInstructionArgs
 ): TransactionBuilder {
   const signers: Signer[] = [];
@@ -159,8 +174,7 @@ export function burn(
   addAccountMeta(keys, signers, resolvedAccounts.systemProgram, false);
 
   // Data.
-  const data =
-    getBurnInstructionDataSerializer(context).serialize(resolvedArgs);
+  const data = getBurnInstructionDataSerializer().serialize(resolvedArgs);
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 0;

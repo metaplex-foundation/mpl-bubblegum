@@ -6,7 +6,7 @@
  * @see https://github.com/metaplex-foundation/kinobi
  */
 
-import { Context, Serializer } from '@metaplex-foundation/umi';
+import { Serializer, scalarEnum } from '@metaplex-foundation/umi/serializers';
 
 export enum TokenProgramVersion {
   Original,
@@ -15,11 +15,18 @@ export enum TokenProgramVersion {
 
 export type TokenProgramVersionArgs = TokenProgramVersion;
 
+/** @deprecated Use `getTokenProgramVersionSerializer()` without any argument instead. */
 export function getTokenProgramVersionSerializer(
-  context: Pick<Context, 'serializer'>
+  _context: object
+): Serializer<TokenProgramVersionArgs, TokenProgramVersion>;
+export function getTokenProgramVersionSerializer(): Serializer<
+  TokenProgramVersionArgs,
+  TokenProgramVersion
+>;
+export function getTokenProgramVersionSerializer(
+  _context: object = {}
 ): Serializer<TokenProgramVersionArgs, TokenProgramVersion> {
-  const s = context.serializer;
-  return s.enum<TokenProgramVersion>(TokenProgramVersion, {
+  return scalarEnum<TokenProgramVersion>(TokenProgramVersion, {
     description: 'TokenProgramVersion',
   }) as Serializer<TokenProgramVersionArgs, TokenProgramVersion>;
 }

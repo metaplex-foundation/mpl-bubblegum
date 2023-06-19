@@ -6,7 +6,7 @@
  * @see https://github.com/metaplex-foundation/kinobi
  */
 
-import { Context, Serializer } from '@metaplex-foundation/umi';
+import { Serializer, struct } from '@metaplex-foundation/umi/serializers';
 import {
   CompressionAccountType,
   CompressionAccountTypeArgs,
@@ -45,14 +45,21 @@ export type ConcurrentMerkleTreeHeaderArgs = {
   header: ConcurrentMerkleTreeHeaderDataArgs;
 };
 
+/** @deprecated Use `getConcurrentMerkleTreeHeaderSerializer()` without any argument instead. */
 export function getConcurrentMerkleTreeHeaderSerializer(
-  context: Pick<Context, 'serializer'>
+  _context: object
+): Serializer<ConcurrentMerkleTreeHeaderArgs, ConcurrentMerkleTreeHeader>;
+export function getConcurrentMerkleTreeHeaderSerializer(): Serializer<
+  ConcurrentMerkleTreeHeaderArgs,
+  ConcurrentMerkleTreeHeader
+>;
+export function getConcurrentMerkleTreeHeaderSerializer(
+  _context: object = {}
 ): Serializer<ConcurrentMerkleTreeHeaderArgs, ConcurrentMerkleTreeHeader> {
-  const s = context.serializer;
-  return s.struct<ConcurrentMerkleTreeHeader>(
+  return struct<ConcurrentMerkleTreeHeader>(
     [
-      ['accountType', getCompressionAccountTypeSerializer(context)],
-      ['header', getConcurrentMerkleTreeHeaderDataSerializer(context)],
+      ['accountType', getCompressionAccountTypeSerializer()],
+      ['header', getConcurrentMerkleTreeHeaderDataSerializer()],
     ],
     { description: 'ConcurrentMerkleTreeHeader' }
   ) as Serializer<ConcurrentMerkleTreeHeaderArgs, ConcurrentMerkleTreeHeader>;

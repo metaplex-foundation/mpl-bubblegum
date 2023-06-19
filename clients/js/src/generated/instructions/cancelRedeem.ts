@@ -11,13 +11,19 @@ import {
   Context,
   Pda,
   PublicKey,
-  Serializer,
   Signer,
   TransactionBuilder,
-  mapSerializer,
   publicKey,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
+import {
+  Serializer,
+  array,
+  bytes,
+  mapSerializer,
+  struct,
+  u8,
+} from '@metaplex-foundation/umi/serializers';
 import { findTreeConfigPda } from '../accounts';
 import { addAccountMeta, addObjectProperty } from '../shared';
 
@@ -40,19 +46,26 @@ export type CancelRedeemInstructionData = {
 
 export type CancelRedeemInstructionDataArgs = { root: Uint8Array };
 
+/** @deprecated Use `getCancelRedeemInstructionDataSerializer()` without any argument instead. */
 export function getCancelRedeemInstructionDataSerializer(
-  context: Pick<Context, 'serializer'>
+  _context: object
+): Serializer<CancelRedeemInstructionDataArgs, CancelRedeemInstructionData>;
+export function getCancelRedeemInstructionDataSerializer(): Serializer<
+  CancelRedeemInstructionDataArgs,
+  CancelRedeemInstructionData
+>;
+export function getCancelRedeemInstructionDataSerializer(
+  _context: object = {}
 ): Serializer<CancelRedeemInstructionDataArgs, CancelRedeemInstructionData> {
-  const s = context.serializer;
   return mapSerializer<
     CancelRedeemInstructionDataArgs,
     any,
     CancelRedeemInstructionData
   >(
-    s.struct<CancelRedeemInstructionData>(
+    struct<CancelRedeemInstructionData>(
       [
-        ['discriminator', s.array(s.u8(), { size: 8 })],
-        ['root', s.bytes({ size: 32 })],
+        ['discriminator', array(u8(), { size: 8 })],
+        ['root', bytes({ size: 32 })],
       ],
       { description: 'CancelRedeemInstructionData' }
     ),
@@ -68,7 +81,7 @@ export type CancelRedeemInstructionArgs = CancelRedeemInstructionDataArgs;
 
 // Instruction.
 export function cancelRedeem(
-  context: Pick<Context, 'serializer' | 'programs' | 'eddsa'>,
+  context: Pick<Context, 'programs' | 'eddsa'>,
   input: CancelRedeemInstructionAccounts & CancelRedeemInstructionArgs
 ): TransactionBuilder {
   const signers: Signer[] = [];
@@ -150,7 +163,7 @@ export function cancelRedeem(
 
   // Data.
   const data =
-    getCancelRedeemInstructionDataSerializer(context).serialize(resolvedArgs);
+    getCancelRedeemInstructionDataSerializer().serialize(resolvedArgs);
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 0;

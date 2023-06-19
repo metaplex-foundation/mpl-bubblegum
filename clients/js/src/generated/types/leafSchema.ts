@@ -6,13 +6,17 @@
  * @see https://github.com/metaplex-foundation/kinobi
  */
 
+import { PublicKey } from '@metaplex-foundation/umi';
 import {
-  Context,
   GetDataEnumKind,
   GetDataEnumKindContent,
-  PublicKey,
   Serializer,
-} from '@metaplex-foundation/umi';
+  bytes,
+  dataEnum,
+  publicKey as publicKeySerializer,
+  struct,
+  u64,
+} from '@metaplex-foundation/umi/serializers';
 
 export type LeafSchema = {
   __kind: 'V1';
@@ -34,21 +38,28 @@ export type LeafSchemaArgs = {
   creatorHash: Uint8Array;
 };
 
+/** @deprecated Use `getLeafSchemaSerializer()` without any argument instead. */
 export function getLeafSchemaSerializer(
-  context: Pick<Context, 'serializer'>
+  _context: object
+): Serializer<LeafSchemaArgs, LeafSchema>;
+export function getLeafSchemaSerializer(): Serializer<
+  LeafSchemaArgs,
+  LeafSchema
+>;
+export function getLeafSchemaSerializer(
+  _context: object = {}
 ): Serializer<LeafSchemaArgs, LeafSchema> {
-  const s = context.serializer;
-  return s.dataEnum<LeafSchema>(
+  return dataEnum<LeafSchema>(
     [
       [
         'V1',
-        s.struct<GetDataEnumKindContent<LeafSchema, 'V1'>>([
-          ['id', s.publicKey()],
-          ['owner', s.publicKey()],
-          ['delegate', s.publicKey()],
-          ['nonce', s.u64()],
-          ['dataHash', s.bytes({ size: 32 })],
-          ['creatorHash', s.bytes({ size: 32 })],
+        struct<GetDataEnumKindContent<LeafSchema, 'V1'>>([
+          ['id', publicKeySerializer()],
+          ['owner', publicKeySerializer()],
+          ['delegate', publicKeySerializer()],
+          ['nonce', u64()],
+          ['dataHash', bytes({ size: 32 })],
+          ['creatorHash', bytes({ size: 32 })],
         ]),
       ],
     ],

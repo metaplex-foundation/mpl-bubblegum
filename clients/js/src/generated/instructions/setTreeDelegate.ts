@@ -11,13 +11,18 @@ import {
   Context,
   Pda,
   PublicKey,
-  Serializer,
   Signer,
   TransactionBuilder,
-  mapSerializer,
   publicKey,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
+import {
+  Serializer,
+  array,
+  mapSerializer,
+  struct,
+  u8,
+} from '@metaplex-foundation/umi/serializers';
 import { findTreeConfigPda } from '../accounts';
 import { addAccountMeta, addObjectProperty } from '../shared';
 
@@ -35,20 +40,30 @@ export type SetTreeDelegateInstructionData = { discriminator: Array<number> };
 
 export type SetTreeDelegateInstructionDataArgs = {};
 
+/** @deprecated Use `getSetTreeDelegateInstructionDataSerializer()` without any argument instead. */
 export function getSetTreeDelegateInstructionDataSerializer(
-  context: Pick<Context, 'serializer'>
+  _context: object
+): Serializer<
+  SetTreeDelegateInstructionDataArgs,
+  SetTreeDelegateInstructionData
+>;
+export function getSetTreeDelegateInstructionDataSerializer(): Serializer<
+  SetTreeDelegateInstructionDataArgs,
+  SetTreeDelegateInstructionData
+>;
+export function getSetTreeDelegateInstructionDataSerializer(
+  _context: object = {}
 ): Serializer<
   SetTreeDelegateInstructionDataArgs,
   SetTreeDelegateInstructionData
 > {
-  const s = context.serializer;
   return mapSerializer<
     SetTreeDelegateInstructionDataArgs,
     any,
     SetTreeDelegateInstructionData
   >(
-    s.struct<SetTreeDelegateInstructionData>(
-      [['discriminator', s.array(s.u8(), { size: 8 })]],
+    struct<SetTreeDelegateInstructionData>(
+      [['discriminator', array(u8(), { size: 8 })]],
       { description: 'SetTreeDelegateInstructionData' }
     ),
     (value) => ({
@@ -63,7 +78,7 @@ export function getSetTreeDelegateInstructionDataSerializer(
 
 // Instruction.
 export function setTreeDelegate(
-  context: Pick<Context, 'serializer' | 'programs' | 'eddsa' | 'identity'>,
+  context: Pick<Context, 'programs' | 'eddsa' | 'identity'>,
   input: SetTreeDelegateInstructionAccounts
 ): TransactionBuilder {
   const signers: Signer[] = [];
@@ -120,9 +135,7 @@ export function setTreeDelegate(
   addAccountMeta(keys, signers, resolvedAccounts.systemProgram, false);
 
   // Data.
-  const data = getSetTreeDelegateInstructionDataSerializer(context).serialize(
-    {}
-  );
+  const data = getSetTreeDelegateInstructionDataSerializer().serialize({});
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 0;

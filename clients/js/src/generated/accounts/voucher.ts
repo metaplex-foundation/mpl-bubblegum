@@ -14,13 +14,20 @@ import {
   RpcAccount,
   RpcGetAccountOptions,
   RpcGetAccountsOptions,
-  Serializer,
   assertAccountExists,
   deserializeAccount,
   gpaBuilder,
-  mapSerializer,
   publicKey as toPublicKey,
 } from '@metaplex-foundation/umi';
+import {
+  Serializer,
+  array,
+  mapSerializer,
+  publicKey as publicKeySerializer,
+  struct,
+  u32,
+  u8,
+} from '@metaplex-foundation/umi/serializers';
 import { LeafSchema, LeafSchemaArgs, getLeafSchemaSerializer } from '../types';
 
 export type Voucher = Account<VoucherAccountData>;
@@ -38,17 +45,24 @@ export type VoucherAccountDataArgs = {
   merkleTree: PublicKey;
 };
 
+/** @deprecated Use `getVoucherAccountDataSerializer()` without any argument instead. */
 export function getVoucherAccountDataSerializer(
-  context: Pick<Context, 'serializer'>
+  _context: object
+): Serializer<VoucherAccountDataArgs, VoucherAccountData>;
+export function getVoucherAccountDataSerializer(): Serializer<
+  VoucherAccountDataArgs,
+  VoucherAccountData
+>;
+export function getVoucherAccountDataSerializer(
+  _context: object = {}
 ): Serializer<VoucherAccountDataArgs, VoucherAccountData> {
-  const s = context.serializer;
   return mapSerializer<VoucherAccountDataArgs, any, VoucherAccountData>(
-    s.struct<VoucherAccountData>(
+    struct<VoucherAccountData>(
       [
-        ['discriminator', s.array(s.u8(), { size: 8 })],
-        ['leafSchema', getLeafSchemaSerializer(context)],
-        ['index', s.u32()],
-        ['merkleTree', s.publicKey()],
+        ['discriminator', array(u8(), { size: 8 })],
+        ['leafSchema', getLeafSchemaSerializer()],
+        ['index', u32()],
+        ['merkleTree', publicKeySerializer()],
       ],
       { description: 'VoucherAccountData' }
     ),
@@ -59,18 +73,24 @@ export function getVoucherAccountDataSerializer(
   ) as Serializer<VoucherAccountDataArgs, VoucherAccountData>;
 }
 
+/** @deprecated Use `deserializeVoucher(rawAccount)` without any context instead. */
 export function deserializeVoucher(
-  context: Pick<Context, 'serializer'>,
+  context: object,
   rawAccount: RpcAccount
+): Voucher;
+export function deserializeVoucher(rawAccount: RpcAccount): Voucher;
+export function deserializeVoucher(
+  context: RpcAccount | object,
+  rawAccount?: RpcAccount
 ): Voucher {
   return deserializeAccount(
-    rawAccount,
-    getVoucherAccountDataSerializer(context)
+    rawAccount ?? (context as RpcAccount),
+    getVoucherAccountDataSerializer()
   );
 }
 
 export async function fetchVoucher(
-  context: Pick<Context, 'rpc' | 'serializer'>,
+  context: Pick<Context, 'rpc'>,
   publicKey: PublicKey | Pda,
   options?: RpcGetAccountOptions
 ): Promise<Voucher> {
@@ -79,11 +99,11 @@ export async function fetchVoucher(
     options
   );
   assertAccountExists(maybeAccount, 'Voucher');
-  return deserializeVoucher(context, maybeAccount);
+  return deserializeVoucher(maybeAccount);
 }
 
 export async function safeFetchVoucher(
-  context: Pick<Context, 'rpc' | 'serializer'>,
+  context: Pick<Context, 'rpc'>,
   publicKey: PublicKey | Pda,
   options?: RpcGetAccountOptions
 ): Promise<Voucher | null> {
@@ -91,11 +111,11 @@ export async function safeFetchVoucher(
     toPublicKey(publicKey, false),
     options
   );
-  return maybeAccount.exists ? deserializeVoucher(context, maybeAccount) : null;
+  return maybeAccount.exists ? deserializeVoucher(maybeAccount) : null;
 }
 
 export async function fetchAllVoucher(
-  context: Pick<Context, 'rpc' | 'serializer'>,
+  context: Pick<Context, 'rpc'>,
   publicKeys: Array<PublicKey | Pda>,
   options?: RpcGetAccountsOptions
 ): Promise<Voucher[]> {
@@ -105,12 +125,12 @@ export async function fetchAllVoucher(
   );
   return maybeAccounts.map((maybeAccount) => {
     assertAccountExists(maybeAccount, 'Voucher');
-    return deserializeVoucher(context, maybeAccount);
+    return deserializeVoucher(maybeAccount);
   });
 }
 
 export async function safeFetchAllVoucher(
-  context: Pick<Context, 'rpc' | 'serializer'>,
+  context: Pick<Context, 'rpc'>,
   publicKeys: Array<PublicKey | Pda>,
   options?: RpcGetAccountsOptions
 ): Promise<Voucher[]> {
@@ -120,15 +140,12 @@ export async function safeFetchAllVoucher(
   );
   return maybeAccounts
     .filter((maybeAccount) => maybeAccount.exists)
-    .map((maybeAccount) =>
-      deserializeVoucher(context, maybeAccount as RpcAccount)
-    );
+    .map((maybeAccount) => deserializeVoucher(maybeAccount as RpcAccount));
 }
 
 export function getVoucherGpaBuilder(
-  context: Pick<Context, 'rpc' | 'serializer' | 'programs'>
+  context: Pick<Context, 'rpc' | 'programs'>
 ) {
-  const s = context.serializer;
   const programId = context.programs.getPublicKey(
     'mplBubblegum',
     'BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'
@@ -140,14 +157,12 @@ export function getVoucherGpaBuilder(
       index: number;
       merkleTree: PublicKey;
     }>({
-      discriminator: [0, s.array(s.u8(), { size: 8 })],
-      leafSchema: [8, getLeafSchemaSerializer(context)],
-      index: [177, s.u32()],
-      merkleTree: [181, s.publicKey()],
+      discriminator: [0, array(u8(), { size: 8 })],
+      leafSchema: [8, getLeafSchemaSerializer()],
+      index: [177, u32()],
+      merkleTree: [181, publicKeySerializer()],
     })
-    .deserializeUsing<Voucher>((account) =>
-      deserializeVoucher(context, account)
-    )
+    .deserializeUsing<Voucher>((account) => deserializeVoucher(account))
     .whereField('discriminator', [191, 204, 149, 234, 213, 165, 13, 65]);
 }
 

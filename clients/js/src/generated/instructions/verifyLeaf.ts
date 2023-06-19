@@ -11,12 +11,19 @@ import {
   Context,
   Pda,
   PublicKey,
-  Serializer,
   Signer,
   TransactionBuilder,
-  mapSerializer,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
+import {
+  Serializer,
+  array,
+  bytes,
+  mapSerializer,
+  struct,
+  u32,
+  u8,
+} from '@metaplex-foundation/umi/serializers';
 import { addAccountMeta } from '../shared';
 
 // Accounts.
@@ -38,21 +45,28 @@ export type VerifyLeafInstructionDataArgs = {
   index: number;
 };
 
+/** @deprecated Use `getVerifyLeafInstructionDataSerializer()` without any argument instead. */
 export function getVerifyLeafInstructionDataSerializer(
-  context: Pick<Context, 'serializer'>
+  _context: object
+): Serializer<VerifyLeafInstructionDataArgs, VerifyLeafInstructionData>;
+export function getVerifyLeafInstructionDataSerializer(): Serializer<
+  VerifyLeafInstructionDataArgs,
+  VerifyLeafInstructionData
+>;
+export function getVerifyLeafInstructionDataSerializer(
+  _context: object = {}
 ): Serializer<VerifyLeafInstructionDataArgs, VerifyLeafInstructionData> {
-  const s = context.serializer;
   return mapSerializer<
     VerifyLeafInstructionDataArgs,
     any,
     VerifyLeafInstructionData
   >(
-    s.struct<VerifyLeafInstructionData>(
+    struct<VerifyLeafInstructionData>(
       [
-        ['discriminator', s.array(s.u8(), { size: 8 })],
-        ['root', s.bytes({ size: 32 })],
-        ['leaf', s.bytes({ size: 32 })],
-        ['index', s.u32()],
+        ['discriminator', array(u8(), { size: 8 })],
+        ['root', bytes({ size: 32 })],
+        ['leaf', bytes({ size: 32 })],
+        ['index', u32()],
       ],
       { description: 'VerifyLeafInstructionData' }
     ),
@@ -68,7 +82,7 @@ export type VerifyLeafInstructionArgs = VerifyLeafInstructionDataArgs;
 
 // Instruction.
 export function verifyLeaf(
-  context: Pick<Context, 'serializer' | 'programs'>,
+  context: Pick<Context, 'programs'>,
   input: VerifyLeafInstructionAccounts & VerifyLeafInstructionArgs
 ): TransactionBuilder {
   const signers: Signer[] = [];
@@ -90,8 +104,7 @@ export function verifyLeaf(
   addAccountMeta(keys, signers, resolvedAccounts.merkleTree, false);
 
   // Data.
-  const data =
-    getVerifyLeafInstructionDataSerializer(context).serialize(resolvedArgs);
+  const data = getVerifyLeafInstructionDataSerializer().serialize(resolvedArgs);
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 0;

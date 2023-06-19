@@ -19,6 +19,7 @@ import {
   gpaBuilder,
   publicKey as toPublicKey,
 } from '@metaplex-foundation/umi';
+import { bytes } from '@metaplex-foundation/umi/serializers';
 import {
   MerkleTreeAccountData,
   getMerkleTreeAccountDataSerializer,
@@ -32,18 +33,24 @@ import {
 
 export type MerkleTree = Account<MerkleTreeAccountData>;
 
+/** @deprecated Use `deserializeMerkleTree(rawAccount)` without any context instead. */
 export function deserializeMerkleTree(
-  context: Pick<Context, 'serializer'>,
+  context: object,
   rawAccount: RpcAccount
+): MerkleTree;
+export function deserializeMerkleTree(rawAccount: RpcAccount): MerkleTree;
+export function deserializeMerkleTree(
+  context: RpcAccount | object,
+  rawAccount?: RpcAccount
 ): MerkleTree {
   return deserializeAccount(
-    rawAccount,
-    getMerkleTreeAccountDataSerializer(context)
+    rawAccount ?? (context as RpcAccount),
+    getMerkleTreeAccountDataSerializer()
   );
 }
 
 export async function fetchMerkleTree(
-  context: Pick<Context, 'rpc' | 'serializer'>,
+  context: Pick<Context, 'rpc'>,
   publicKey: PublicKey | Pda,
   options?: RpcGetAccountOptions
 ): Promise<MerkleTree> {
@@ -52,11 +59,11 @@ export async function fetchMerkleTree(
     options
   );
   assertAccountExists(maybeAccount, 'MerkleTree');
-  return deserializeMerkleTree(context, maybeAccount);
+  return deserializeMerkleTree(maybeAccount);
 }
 
 export async function safeFetchMerkleTree(
-  context: Pick<Context, 'rpc' | 'serializer'>,
+  context: Pick<Context, 'rpc'>,
   publicKey: PublicKey | Pda,
   options?: RpcGetAccountOptions
 ): Promise<MerkleTree | null> {
@@ -64,13 +71,11 @@ export async function safeFetchMerkleTree(
     toPublicKey(publicKey, false),
     options
   );
-  return maybeAccount.exists
-    ? deserializeMerkleTree(context, maybeAccount)
-    : null;
+  return maybeAccount.exists ? deserializeMerkleTree(maybeAccount) : null;
 }
 
 export async function fetchAllMerkleTree(
-  context: Pick<Context, 'rpc' | 'serializer'>,
+  context: Pick<Context, 'rpc'>,
   publicKeys: Array<PublicKey | Pda>,
   options?: RpcGetAccountsOptions
 ): Promise<MerkleTree[]> {
@@ -80,12 +85,12 @@ export async function fetchAllMerkleTree(
   );
   return maybeAccounts.map((maybeAccount) => {
     assertAccountExists(maybeAccount, 'MerkleTree');
-    return deserializeMerkleTree(context, maybeAccount);
+    return deserializeMerkleTree(maybeAccount);
   });
 }
 
 export async function safeFetchAllMerkleTree(
-  context: Pick<Context, 'rpc' | 'serializer'>,
+  context: Pick<Context, 'rpc'>,
   publicKeys: Array<PublicKey | Pda>,
   options?: RpcGetAccountsOptions
 ): Promise<MerkleTree[]> {
@@ -95,15 +100,12 @@ export async function safeFetchAllMerkleTree(
   );
   return maybeAccounts
     .filter((maybeAccount) => maybeAccount.exists)
-    .map((maybeAccount) =>
-      deserializeMerkleTree(context, maybeAccount as RpcAccount)
-    );
+    .map((maybeAccount) => deserializeMerkleTree(maybeAccount as RpcAccount));
 }
 
 export function getMerkleTreeGpaBuilder(
-  context: Pick<Context, 'rpc' | 'serializer' | 'programs'>
+  context: Pick<Context, 'rpc' | 'programs'>
 ) {
-  const s = context.serializer;
   const programId = context.programs.getPublicKey(
     'splAccountCompression',
     'cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK'
@@ -114,11 +116,9 @@ export function getMerkleTreeGpaBuilder(
       treeHeader: ConcurrentMerkleTreeHeaderDataArgs;
       serializedTree: Uint8Array;
     }>({
-      discriminator: [0, getCompressionAccountTypeSerializer(context)],
-      treeHeader: [1, getConcurrentMerkleTreeHeaderDataSerializer(context)],
-      serializedTree: [56, s.bytes()],
+      discriminator: [0, getCompressionAccountTypeSerializer()],
+      treeHeader: [1, getConcurrentMerkleTreeHeaderDataSerializer()],
+      serializedTree: [56, bytes()],
     })
-    .deserializeUsing<MerkleTree>((account) =>
-      deserializeMerkleTree(context, account)
-    );
+    .deserializeUsing<MerkleTree>((account) => deserializeMerkleTree(account));
 }

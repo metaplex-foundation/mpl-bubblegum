@@ -11,13 +11,18 @@ import {
   Context,
   Pda,
   PublicKey,
-  Serializer,
   Signer,
   TransactionBuilder,
-  mapSerializer,
   publicKey,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
+import {
+  Serializer,
+  array,
+  mapSerializer,
+  struct,
+  u8,
+} from '@metaplex-foundation/umi/serializers';
 import { findTreeConfigPda } from '../accounts';
 import { addAccountMeta, addObjectProperty } from '../shared';
 import {
@@ -47,15 +52,22 @@ export type MintV1InstructionData = {
 
 export type MintV1InstructionDataArgs = { message: MetadataArgsArgs };
 
+/** @deprecated Use `getMintV1InstructionDataSerializer()` without any argument instead. */
 export function getMintV1InstructionDataSerializer(
-  context: Pick<Context, 'serializer'>
+  _context: object
+): Serializer<MintV1InstructionDataArgs, MintV1InstructionData>;
+export function getMintV1InstructionDataSerializer(): Serializer<
+  MintV1InstructionDataArgs,
+  MintV1InstructionData
+>;
+export function getMintV1InstructionDataSerializer(
+  _context: object = {}
 ): Serializer<MintV1InstructionDataArgs, MintV1InstructionData> {
-  const s = context.serializer;
   return mapSerializer<MintV1InstructionDataArgs, any, MintV1InstructionData>(
-    s.struct<MintV1InstructionData>(
+    struct<MintV1InstructionData>(
       [
-        ['discriminator', s.array(s.u8(), { size: 8 })],
-        ['message', getMetadataArgsSerializer(context)],
+        ['discriminator', array(u8(), { size: 8 })],
+        ['message', getMetadataArgsSerializer()],
       ],
       { description: 'MintV1InstructionData' }
     ),
@@ -71,10 +83,7 @@ export type MintV1InstructionArgs = MintV1InstructionDataArgs;
 
 // Instruction.
 export function mintV1(
-  context: Pick<
-    Context,
-    'serializer' | 'programs' | 'eddsa' | 'identity' | 'payer'
-  >,
+  context: Pick<Context, 'programs' | 'eddsa' | 'identity' | 'payer'>,
   input: MintV1InstructionAccounts & MintV1InstructionArgs
 ): TransactionBuilder {
   const signers: Signer[] = [];
@@ -177,8 +186,7 @@ export function mintV1(
   addAccountMeta(keys, signers, resolvedAccounts.systemProgram, false);
 
   // Data.
-  const data =
-    getMintV1InstructionDataSerializer(context).serialize(resolvedArgs);
+  const data = getMintV1InstructionDataSerializer().serialize(resolvedArgs);
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 0;

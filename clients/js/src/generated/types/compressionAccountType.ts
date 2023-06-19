@@ -6,7 +6,7 @@
  * @see https://github.com/metaplex-foundation/kinobi
  */
 
-import { Context, Serializer } from '@metaplex-foundation/umi';
+import { Serializer, scalarEnum } from '@metaplex-foundation/umi/serializers';
 
 export enum CompressionAccountType {
   Uninitialized,
@@ -15,11 +15,18 @@ export enum CompressionAccountType {
 
 export type CompressionAccountTypeArgs = CompressionAccountType;
 
+/** @deprecated Use `getCompressionAccountTypeSerializer()` without any argument instead. */
 export function getCompressionAccountTypeSerializer(
-  context: Pick<Context, 'serializer'>
+  _context: object
+): Serializer<CompressionAccountTypeArgs, CompressionAccountType>;
+export function getCompressionAccountTypeSerializer(): Serializer<
+  CompressionAccountTypeArgs,
+  CompressionAccountType
+>;
+export function getCompressionAccountTypeSerializer(
+  _context: object = {}
 ): Serializer<CompressionAccountTypeArgs, CompressionAccountType> {
-  const s = context.serializer;
-  return s.enum<CompressionAccountType>(CompressionAccountType, {
+  return scalarEnum<CompressionAccountType>(CompressionAccountType, {
     description: 'CompressionAccountType',
   }) as Serializer<CompressionAccountTypeArgs, CompressionAccountType>;
 }

@@ -11,13 +11,22 @@ import {
   Context,
   Pda,
   PublicKey,
-  Serializer,
   Signer,
   TransactionBuilder,
-  mapSerializer,
   publicKey,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
+import {
+  Serializer,
+  array,
+  bytes,
+  mapSerializer,
+  publicKey as publicKeySerializer,
+  struct,
+  u32,
+  u64,
+  u8,
+} from '@metaplex-foundation/umi/serializers';
 import { findTreeConfigPda } from '../accounts';
 import { addAccountMeta, addObjectProperty } from '../shared';
 import {
@@ -68,28 +77,38 @@ export type SetAndVerifyCollectionInstructionDataArgs = {
   collection: PublicKey;
 };
 
+/** @deprecated Use `getSetAndVerifyCollectionInstructionDataSerializer()` without any argument instead. */
 export function getSetAndVerifyCollectionInstructionDataSerializer(
-  context: Pick<Context, 'serializer'>
+  _context: object
+): Serializer<
+  SetAndVerifyCollectionInstructionDataArgs,
+  SetAndVerifyCollectionInstructionData
+>;
+export function getSetAndVerifyCollectionInstructionDataSerializer(): Serializer<
+  SetAndVerifyCollectionInstructionDataArgs,
+  SetAndVerifyCollectionInstructionData
+>;
+export function getSetAndVerifyCollectionInstructionDataSerializer(
+  _context: object = {}
 ): Serializer<
   SetAndVerifyCollectionInstructionDataArgs,
   SetAndVerifyCollectionInstructionData
 > {
-  const s = context.serializer;
   return mapSerializer<
     SetAndVerifyCollectionInstructionDataArgs,
     any,
     SetAndVerifyCollectionInstructionData
   >(
-    s.struct<SetAndVerifyCollectionInstructionData>(
+    struct<SetAndVerifyCollectionInstructionData>(
       [
-        ['discriminator', s.array(s.u8(), { size: 8 })],
-        ['root', s.bytes({ size: 32 })],
-        ['dataHash', s.bytes({ size: 32 })],
-        ['creatorHash', s.bytes({ size: 32 })],
-        ['nonce', s.u64()],
-        ['index', s.u32()],
-        ['message', getMetadataArgsSerializer(context)],
-        ['collection', s.publicKey()],
+        ['discriminator', array(u8(), { size: 8 })],
+        ['root', bytes({ size: 32 })],
+        ['dataHash', bytes({ size: 32 })],
+        ['creatorHash', bytes({ size: 32 })],
+        ['nonce', u64()],
+        ['index', u32()],
+        ['message', getMetadataArgsSerializer()],
+        ['collection', publicKeySerializer()],
       ],
       { description: 'SetAndVerifyCollectionInstructionData' }
     ),
@@ -109,7 +128,7 @@ export type SetAndVerifyCollectionInstructionArgs =
 
 // Instruction.
 export function setAndVerifyCollection(
-  context: Pick<Context, 'serializer' | 'programs' | 'eddsa' | 'payer'>,
+  context: Pick<Context, 'programs' | 'eddsa' | 'payer'>,
   input: SetAndVerifyCollectionInstructionAccounts &
     SetAndVerifyCollectionInstructionArgs
 ): TransactionBuilder {
@@ -236,7 +255,7 @@ export function setAndVerifyCollection(
 
   // Data.
   const data =
-    getSetAndVerifyCollectionInstructionDataSerializer(context).serialize(
+    getSetAndVerifyCollectionInstructionDataSerializer().serialize(
       resolvedArgs
     );
 
