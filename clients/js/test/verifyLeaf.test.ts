@@ -11,7 +11,7 @@ test('it can verify a leaf on the merkle tree', async (t) => {
   const leafOwner = generateSigner(umi).publicKey;
   const { leaf, leafIndex } = await mint(umi, { merkleTree, leafOwner });
 
-  // When
+  // When we verify that minted leaf.
   await verifyLeaf(umi, {
     merkleTree,
     root: publicKeyBytes(getCurrentRoot(merkleTreeAccount.tree)),

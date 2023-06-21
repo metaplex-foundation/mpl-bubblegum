@@ -1,4 +1,9 @@
-import { generateSigner, none, publicKey } from '@metaplex-foundation/umi';
+import {
+  defaultPublicKey,
+  generateSigner,
+  none,
+  publicKey,
+} from '@metaplex-foundation/umi';
 import test from 'ava';
 import { MetadataArgsArgs, fetchMerkleTree, hashLeaf, mintV1 } from '../src';
 import { createTree, createUmi } from './_setup';
@@ -13,10 +18,7 @@ test('it can mint an NFT from a Bubblegum tree', async (t) => {
   t.is(merkleTreeAccount.tree.activeIndex, 0n);
   t.is(merkleTreeAccount.tree.bufferSize, 1n);
   t.is(merkleTreeAccount.tree.rightMostPath.index, 0);
-  t.is(
-    merkleTreeAccount.tree.rightMostPath.leaf,
-    publicKey('11111111111111111111111111111111')
-  );
+  t.is(merkleTreeAccount.tree.rightMostPath.leaf, defaultPublicKey());
 
   // When we mint a new NFT from the tree using the following metadata.
   const metadata: MetadataArgsArgs = {
