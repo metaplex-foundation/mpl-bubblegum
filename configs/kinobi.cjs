@@ -90,6 +90,15 @@ kinobi.update(
         },
       },
     },
+    transfer: {
+      accounts: {
+        leafOwner: { isSigner: "either" },
+        leafDelegate: {
+          isSigner: "either",
+          defaultsTo: k.accountDefault("leafOwner"),
+        },
+      },
+    },
     decompressV1: {
       args: {
         metadata: { name: "message" },

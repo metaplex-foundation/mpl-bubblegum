@@ -14,7 +14,7 @@ test('it can verify a leaf on the merkle tree', async (t) => {
   // When we verify that minted leaf.
   await verifyLeaf(umi, {
     merkleTree,
-    root: publicKeyBytes(getCurrentRoot(merkleTreeAccount.tree)),
+    root: getCurrentRoot(merkleTreeAccount.tree),
     leaf: publicKeyBytes(leaf),
     index: leafIndex,
   })
