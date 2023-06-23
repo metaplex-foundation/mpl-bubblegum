@@ -1,4 +1,5 @@
 import { PublicKey, RpcInterface } from '@metaplex-foundation/umi';
+import { ReadApiError } from './errors';
 import {
   GetAssetProofRpcResponse,
   GetAssetsByGroupRpcInput,
@@ -6,7 +7,6 @@ import {
   ReadApiAsset,
   ReadApiAssetList,
 } from './readApiTypes';
-import { ReadApiError } from './errors';
 
 export interface ReadApiInterface {
   getAsset(assetId: PublicKey): Promise<ReadApiAsset>;
@@ -15,7 +15,7 @@ export interface ReadApiInterface {
   getAssetsByOwner(input: GetAssetsByOwnerRpcInput): Promise<ReadApiAssetList>;
 }
 
-export const readApiDecorator = (
+export const createReadApiDecorator = (
   rpc: RpcInterface
 ): RpcInterface & ReadApiInterface => ({
   ...rpc,

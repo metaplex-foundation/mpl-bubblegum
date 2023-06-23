@@ -1,7 +1,4 @@
-import {
-  JsonMetadata,
-  Metadata,
-} from '@metaplex-foundation/mpl-token-metadata';
+import { JsonMetadata } from '@metaplex-foundation/mpl-token-metadata';
 import { Nullable, PublicKey } from '@metaplex-foundation/umi';
 
 export type ReadApiAssetInterface =
@@ -34,10 +31,10 @@ export type ReadApiAssetContent = {
 export type ReadApiAssetCompression = {
   eligible: boolean;
   compressed: boolean;
-  data_hash: string;
-  creator_hash: string;
-  asset_hash: string;
-  tree: string;
+  data_hash: PublicKey;
+  creator_hash: PublicKey;
+  asset_hash: PublicKey;
+  tree: PublicKey;
   seq: number;
   leaf_id: number;
 };
@@ -45,20 +42,30 @@ export type ReadApiAssetCompression = {
 export type ReadApiAssetOwnership = {
   frozen: boolean;
   delegated: boolean;
-  delegate: string | null;
-  owner: string;
+  delegate: PublicKey | null;
+  owner: PublicKey;
   ownership_model: 'single' | 'token';
 };
 
 export type ReadApiAssetSupply = {
-  edition_nonce: number;
+  edition_nonce: number | null;
   print_current_supply: number;
   print_max_supply: number;
 };
 
 export type ReadApiAssetRoyalty = {
+  royalty_model: 'creators';
+  target: PublicKey | null;
+  percent: number;
   primary_sale_happened: boolean;
   basis_points: number;
+  locked: boolean;
+};
+
+export type ReadApiAssetCreator = {
+  address: PublicKey;
+  verified: boolean;
+  share: number;
 };
 
 export type ReadApiAssetGrouping = {
@@ -69,16 +76,16 @@ export type ReadApiAssetGrouping = {
 export type ReadApiAuthorityScope = 'full';
 
 export type ReadApiAssetAuthority = {
-  address: string;
+  address: PublicKey;
   scopes: ReadApiAuthorityScope[];
 };
 
 export type GetAssetProofRpcResponse = {
-  root: string;
-  proof: string[];
+  root: PublicKey;
+  proof: PublicKey[];
   node_index: number;
-  leaf: string;
-  tree_id: string;
+  leaf: PublicKey;
+  tree_id: PublicKey;
 };
 
 export type GetAssetsByGroupRpcInput = {
@@ -109,7 +116,7 @@ export type ReadApiAsset = {
   /**
    * The asset Id
    */
-  id: string;
+  id: PublicKey;
   interface: ReadApiAssetInterface;
   ownership: ReadApiAssetOwnership;
   mutable: boolean;
@@ -117,7 +124,7 @@ export type ReadApiAsset = {
   content: ReadApiAssetContent;
   royalty: ReadApiAssetRoyalty;
   supply: ReadApiAssetSupply;
-  creators: Metadata['creators'];
+  creators: Array<ReadApiAssetCreator>;
   grouping: Array<ReadApiAssetGrouping>;
   compression: ReadApiAssetCompression;
 };

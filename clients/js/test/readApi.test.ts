@@ -1,37 +1,77 @@
-import { transferAllSol } from '@metaplex-foundation/mpl-toolbox';
-import { Umi, generateSigner, publicKey, sol } from '@metaplex-foundation/umi';
+import { Umi, createUmi, publicKey } from '@metaplex-foundation/umi';
+import { testPlugins } from '@metaplex-foundation/umi-bundle-tests';
 import anyTest, { TestFn } from 'ava';
-import { fetchMerkleTree } from '../src';
-import { createTree, createUmi, mint } from './_setup';
+import {
+  ReadApiAsset,
+  ReadApiAssetCreator,
+  ReadApiAssetGrouping,
+  mplBubblegum,
+  readApi,
+} from '../src';
 
 const test = anyTest as TestFn<{ umi: Umi }>;
+const endpoint = process.env.READ_API_ENDPOINT_DEVNET;
 
 test.before(async (t) => {
-  t.context.umi = await createUmi('https://api.devnet.solana.com', sol(0.5));
-  const identity = t.context.umi.identity.publicKey;
-  const balance = await t.context.umi.rpc.getBalance(identity);
-  console.log({ identity, balance });
+  t.context.umi = createUmi()
+    .use(testPlugins(endpoint))
+    .use(mplBubblegum())
+    .use(readApi());
 });
 
-test.after(async (t) => {
-  // Don't loose devnet SOLs.
+test('it can fetch a compressed asset by ID', async (t) => {
+  // Given a minted NFT on devnet.
   const { umi } = t.context;
-  await transferAllSol(umi, {
-    destination: publicKey('LorisCg1FTs89a32VSrFskYDgiRbNQzct1WxyZb7nuA'),
-  }).sendAndConfirm(umi);
-});
+  const assetId = publicKey('BZHZ4GX7JZ1JxngRVtHJgUAnUZQ76ffBTsNXuqTVXvg5');
 
-test('it can fetch a compressed asset', async (t) => {
-  // Given a tree with a minted NFT.
-  const { umi } = t.context;
-  const merkleTree = await createTree(umi);
-  const leafOwner = generateSigner(umi).publicKey;
-  const { leaf, leafIndex } = await mint(umi, { merkleTree, leafOwner });
+  // When we fetch data of the asset.
+  const asset = await umi.rpc.getAsset(assetId);
 
-  // When
-  const merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
-  console.log({ leaf, leafIndex, merkleTree, merkleTreeAccount });
-
-  // Then the transaction was successful.
-  t.pass();
+  // Then we expect the following data.
+  t.like(asset, <ReadApiAsset>{
+    interface: 'V1_NFT',
+    id: assetId,
+    content: {
+      json_uri: 'https://example.com/my-nft.json',
+      metadata: { name: 'My NFT', symbol: '' },
+    },
+    authorities: [
+      {
+        address: 'GzLmvkKDrrvzQAg85C6LYF4LnkCkiPQw8dYpmPzEPXWV',
+        scopes: ['full'],
+      },
+    ],
+    compression: {
+      eligible: false,
+      compressed: true,
+      data_hash: 'HB6sKWxroCdwkChjxckW3CF3fWupZHhPEua62GF46Ljs',
+      creator_hash: 'EKDHSGbrGztomDfuiV4iqiZ6LschDJPsFiXjZ83f92Md',
+      asset_hash: 'ATA3LjhmyvsuAVCwsnwyo5FbMFzK41a2mkng9SFy1jcX',
+      tree: '6tPxkhcjcfR7rXsnGwzh8rPnkiYt2r6tDGN1TUv4T15E',
+      seq: 1,
+      leaf_id: 0,
+    },
+    grouping: [] as ReadApiAssetGrouping[],
+    royalty: {
+      royalty_model: 'creators',
+      target: null,
+      percent: 0.05,
+      basis_points: 500,
+      primary_sale_happened: false,
+      locked: false,
+    },
+    creators: [] as ReadApiAssetCreator[],
+    ownership: {
+      frozen: false,
+      delegated: false,
+      delegate: null,
+      ownership_model: 'single',
+      owner: 'EczRmPqSEWBXtcMKVK1avV87EXH5JZrRbTVdUJdnYaKo',
+    },
+    supply: {
+      print_max_supply: 0,
+      print_current_supply: 0,
+    },
+    mutable: true,
+  });
 });
