@@ -1,18 +1,18 @@
 import { PublicKey, RpcInterface } from '@metaplex-foundation/umi';
 import {
   GetAssetProofRpcResponse,
-  // GetAssetsByGroupRpcInput,
-  // GetAssetsByOwnerRpcInput,
+  GetAssetsByGroupRpcInput,
+  GetAssetsByOwnerRpcInput,
   ReadApiAsset,
-  // ReadApiAssetList,
+  ReadApiAssetList,
 } from './readApiTypes';
 import { ReadApiError } from './errors';
 
 export interface ReadApiInterface {
   getAsset(assetId: PublicKey): Promise<ReadApiAsset>;
   getAssetProof(assetId: PublicKey): Promise<GetAssetProofRpcResponse>;
-  // getAssetsByGroup(input: GetAssetsByGroupRpcInput): Promise<ReadApiAssetList>;
-  // getAssetsByOwner(input: GetAssetsByOwnerRpcInput): Promise<ReadApiAssetList>;
+  getAssetsByGroup(input: GetAssetsByGroupRpcInput): Promise<ReadApiAssetList>;
+  getAssetsByOwner(input: GetAssetsByOwnerRpcInput): Promise<ReadApiAssetList>;
 }
 
 export const readApiDecorator = (
@@ -32,6 +32,51 @@ export const readApiDecorator = (
     if (!proof) throw new ReadApiError(`No proof found for asset: ${assetId}`);
     return proof;
   },
-  // getAssetsByGroup: async (input: GetAssetsByGroupRpcInput) => {},
-  // getAssetsByOwner: async (input: GetAssetsByOwnerRpcInput) => {},
+  getAssetsByGroup: async (input: GetAssetsByGroupRpcInput) => {
+    if (typeof input.page === 'number' && (input.before || input.after)) {
+      throw new ReadApiError(
+        'Pagination Error. Please use either page or before/after, but not both.'
+      );
+    }
+    const assetList = await rpc.call<ReadApiAssetList | null>(
+      'getAssetsByGroup',
+      [
+        input.groupKey,
+        input.groupValue,
+        input.after ?? null,
+        input.before ?? null,
+        input.limit ?? null,
+        input.page ?? 0,
+        input.sortBy ?? null,
+      ]
+    );
+    if (!assetList) {
+      throw new ReadApiError(
+        `No assets found for group: ${input.groupKey} => ${input.groupValue}`
+      );
+    }
+    return assetList;
+  },
+  getAssetsByOwner: async (input: GetAssetsByOwnerRpcInput) => {
+    if (typeof input.page === 'number' && (input.before || input.after)) {
+      throw new ReadApiError(
+        'Pagination Error. Please use either page or before/after, but not both.'
+      );
+    }
+    const assetList = await rpc.call<ReadApiAssetList | null>(
+      'getAssetsByOwner',
+      [
+        input.owner,
+        input.after ?? null,
+        input.before ?? null,
+        input.limit ?? null,
+        input.page ?? 0,
+        input.sortBy ?? null,
+      ]
+    );
+    if (!assetList) {
+      throw new ReadApiError(`No assets found for owner: ${input.owner}`);
+    }
+    return assetList;
+  },
 });

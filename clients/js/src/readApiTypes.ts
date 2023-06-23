@@ -2,7 +2,7 @@ import {
   JsonMetadata,
   Metadata,
 } from '@metaplex-foundation/mpl-token-metadata';
-import { Option } from '@metaplex-foundation/umi';
+import { Nullable, PublicKey } from '@metaplex-foundation/umi';
 
 export type ReadApiAssetInterface =
   | 'V1_NFT'
@@ -84,25 +84,25 @@ export type GetAssetProofRpcResponse = {
 export type GetAssetsByGroupRpcInput = {
   groupKey: ReadApiPropGroupKey;
   groupValue: string;
-  page?: Option<number>;
-  limit?: Option<number>;
+  page?: Nullable<number>;
+  limit?: Nullable<number>;
   /* assetId to search before */
-  before?: Option<string>;
+  before?: Nullable<string>;
   /* assetId to search after */
-  after?: Option<string>;
-  sortBy?: Option<ReadApiParamAssetSortBy>;
+  after?: Nullable<string>;
+  sortBy?: Nullable<ReadApiParamAssetSortBy>;
 };
 
 export type GetAssetsByOwnerRpcInput = {
   /**
    * String of the owner's PublicKey address
    */
-  ownerAddress: string;
-  page?: Option<number>;
-  limit?: Option<number>;
-  before?: Option<string>;
-  after?: Option<string>;
-  sortBy?: Option<ReadApiParamAssetSortBy>;
+  owner: PublicKey;
+  page?: Nullable<number>;
+  limit?: Nullable<number>;
+  before?: Nullable<string>;
+  after?: Nullable<string>;
+  sortBy?: Nullable<ReadApiParamAssetSortBy>;
 };
 
 export type ReadApiAsset = {
@@ -135,22 +135,22 @@ export type ReadApiAssetList = {
    * `page` is only provided when using page based pagination, as apposed
    * to asset id before/after based pagination
    */
-  page: Option<number>;
+  page: Nullable<number>;
 
   /**
    * asset Id searching before
    */
-  before: Option<string>;
+  before: Nullable<string>;
 
   /**
    * asset Id searching after
    */
-  after: Option<string>;
+  after: Nullable<string>;
 
   /**
    * listing of errors provided by the ReadApi RPC
    */
-  errors: Option<ReadApiRpcResponseError[]>;
+  errors: Nullable<ReadApiRpcResponseError[]>;
 };
 
 export type ReadApiRpcResponseError = {
