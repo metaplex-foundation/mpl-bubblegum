@@ -1,6 +1,9 @@
 lockfileVersion: '6.0'
 
 dependencies:
+  '@metaplex-foundation/mpl-token-metadata':
+    specifier: 3.0.0-alpha.24
+    version: 3.0.0-alpha.24(@metaplex-foundation/umi@0.8.2)
   '@metaplex-foundation/mpl-toolbox':
     specifier: ^0.8.0
     version: 0.8.0(@metaplex-foundation/umi@0.8.2)
@@ -1620,6 +1623,15 @@ packages:
       - encoding
       - supports-color
     dev: true
+
+  /@metaplex-foundation/mpl-token-metadata@3.0.0-alpha.24(@metaplex-foundation/umi@0.8.2):
+    resolution: {integrity: sha512-1idZ+9yKGq58OaRQuAjJwPxtgEp62x2iWerMB0b5SRHvHHZc+vvjPX0jjPaiX2MjG1dq18Xua6FpSsIay3+Gjg==}
+    peerDependencies:
+      '@metaplex-foundation/umi': ^0.8.2
+    dependencies:
+      '@metaplex-foundation/mpl-toolbox': 0.8.0(@metaplex-foundation/umi@0.8.2)
+      '@metaplex-foundation/umi': 0.8.2
+    dev: false
 
   /@metaplex-foundation/mpl-toolbox@0.8.0(@metaplex-foundation/umi@0.8.2):
     resolution: {integrity: sha512-SK1VUPU4hCaL3sozgtoVjjbZxqx2gWiRt0YTFbwEt5LAHWOlCb7J7rcrrA5XwymX4iV2bIWygYs0yz7hYyx2rg==}
