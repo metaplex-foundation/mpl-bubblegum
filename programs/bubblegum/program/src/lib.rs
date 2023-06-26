@@ -1425,6 +1425,7 @@ pub mod bubblegum {
         new_name: Option<String>,
         new_symbol: Option<String>,
         new_uri: Option<String>,
+        new_creators: Option<Vec<Creator>>,
         new_seller_fee_basis_points: Option<u16>,
         new_primary_sale_happened: Option<bool>,
         new_is_mutable: Option<bool>,
@@ -1447,11 +1448,17 @@ pub mod bubblegum {
 
         let old_metadata = match old_metadata {
             Some(metadata) => {
-                require!(ctx.accounts.old_metadata.is_none(), BubblegumError::MetadataArgsAmbiguous);
+                require!(
+                    ctx.accounts.old_metadata.is_none(),
+                    BubblegumError::MetadataArgsAmbiguous
+                );
                 metadata
             }
             None => {
-                require!(ctx.accounts.old_metadata.is_some(), BubblegumError::MetadataArgsMissing);
+                require!(
+                    ctx.accounts.old_metadata.is_some(),
+                    BubblegumError::MetadataArgsMissing
+                );
                 let old_metadata_account = ctx.accounts.old_metadata.as_ref().unwrap();
                 let old_metadata_data = old_metadata_account.try_borrow_mut_data()?;
                 let mut old_metadata_data_slice = old_metadata_data.as_ref();
@@ -1490,7 +1497,7 @@ pub mod bubblegum {
         }
 
         let old_data_hash = hash_metadata(&old_metadata)?;
-        let creator_hash = hash_creators(&old_metadata.creators)?;
+        let old_creator_hash = hash_creators(&old_metadata.creators)?;
 
         // Update metadata
         let mut new_metadata = old_metadata;
@@ -1503,6 +1510,22 @@ pub mod bubblegum {
         if let Some(uri) = new_uri {
             new_metadata.uri = uri;
         };
+        if let Some(creators) = new_creators {
+            let old_creators = new_metadata.creators;
+            let no_creators_were_verified = creators
+                .iter()
+                .filter(|c| c.verified) // select only creators that are verified
+                .all(|c| {
+                    old_creators
+                        .iter()
+                        .any(|old| old.address == c.address && old.verified)
+                });
+            require!(
+                no_creators_were_verified,
+                BubblegumError::CreatorDidNotVerify
+            );
+            new_metadata.creators = creators;
+        }
         if let Some(seller_fee_basis_points) = new_seller_fee_basis_points {
             new_metadata.seller_fee_basis_points = seller_fee_basis_points
         };
@@ -1518,6 +1541,7 @@ pub mod bubblegum {
         // ensure new metadata is mpl_compatible
         assert_metadata_is_mpl_compatible(&new_metadata)?;
         let new_data_hash = hash_metadata(&new_metadata)?;
+        let new_creator_hash = hash_creators(&new_metadata.creators)?;
 
         let asset_id = get_asset_id(&merkle_tree.key(), nonce);
         let previous_leaf = LeafSchema::new_v0(
@@ -1526,7 +1550,7 @@ pub mod bubblegum {
             delegate.key(),
             nonce,
             old_data_hash,
-            creator_hash,
+            old_creator_hash,
         );
         let new_leaf = LeafSchema::new_v0(
             asset_id,
@@ -1534,7 +1558,7 @@ pub mod bubblegum {
             delegate.key(),
             nonce,
             new_data_hash,
-            creator_hash,
+            new_creator_hash,
         );
 
         wrap_application_data_v1(new_leaf.to_event().try_to_vec()?, &ctx.accounts.log_wrapper)?;
