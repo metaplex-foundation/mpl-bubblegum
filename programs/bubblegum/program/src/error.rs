@@ -80,6 +80,8 @@ pub enum BubblegumError {
     MetadataArgsAmbiguous,
     #[msg("MetadataArgs Missing")]
     MetadataArgsMissing,
+    #[msg("Missing Collection Authority Signature")]
+    MissingCollectionAuthoritySignature,
 }
 
 // Converts certain Token Metadata errors into Bubblegum equivalents

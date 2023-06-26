@@ -716,41 +716,6 @@ fn process_creator_verification<'info>(
     )
 }
 
-// TODO sorend: simplify with the function below
-fn assert_signed_by_collection_authority<'info>(
-    collection_metadata: &Account<'info, TokenMetadata>,
-    collection_mint: &AccountInfo<'info>,
-    collection_authority: &AccountInfo<'info>,
-    collection_authority_record_pda: &AccountInfo<'info>,
-    token_metadata_program: &AccountInfo<'info>,
-) -> Result<()> {
-    // See if a collection authority record PDA was provided.
-    let collection_authority_record = if collection_authority_record_pda.key() == crate::id() {
-        None
-    } else {
-        Some(collection_authority_record_pda)
-    };
-
-    // Verify correct account ownerships.
-    require!(
-        *collection_metadata.to_account_info().owner == token_metadata_program.key(),
-        BubblegumError::IncorrectOwner
-    );
-    require!(
-        *collection_mint.owner == spl_token::id(),
-        BubblegumError::IncorrectOwner
-    );
-
-    // Collection authority assert from token-metadata.
-    assert_has_collection_authority(
-        collection_authority,
-        collection_metadata,
-        collection_mint.key,
-        collection_authority_record,
-    )?;
-    Ok(())
-}
-
 fn process_collection_verification_mpl_only<'info>(
     collection_metadata: &Account<'info, TokenMetadata>,
     collection_mint: &AccountInfo<'info>,
@@ -1446,6 +1411,7 @@ pub mod bubblegum {
             );
         }
 
+        // Determine how the user opted to pass in the old MetadataArgs
         let old_metadata = match old_metadata {
             Some(metadata) => {
                 require!(
@@ -1478,20 +1444,43 @@ pub mod bubblegum {
                     ctx.accounts.collection_mint.key() == collection.key,
                     BubblegumError::CollectionMismatch
                 );
-                let collection_metadata = &ctx.accounts.collection_metadata;
+
+                // Since this NFT is part of a verified collection, require that a CollectionAuthority signed
+                require!(
+                    ctx.accounts.collection_authority.is_signer,
+                    BubblegumError::MissingCollectionAuthoritySignature
+                );
+
                 let collection_mint = ctx.accounts.collection_mint.to_account_info();
-                let collection_authority = ctx.accounts.collection_authority.to_account_info();
                 let collection_authority_record_pda = ctx
                     .accounts
                     .collection_authority_record_pda
                     .to_account_info();
                 let token_metadata_program = ctx.accounts.token_metadata_program.to_account_info();
-                assert_signed_by_collection_authority(
-                    collection_metadata,
-                    &collection_mint,
-                    &collection_authority,
-                    &collection_authority_record_pda,
-                    &token_metadata_program,
+
+                // Verify correct account ownerships.
+                require!(
+                    *ctx.accounts.collection_metadata.to_account_info().owner == token_metadata_program.key(),
+                    BubblegumError::IncorrectOwner
+                );
+                require!(
+                    *collection_mint.owner == spl_token::id(),
+                    BubblegumError::IncorrectOwner
+                );
+
+                // Get collection_authority_record, if provided
+                let collection_authority_record = if collection_authority_record_pda.key() == crate::id() {
+                    None
+                } else {
+                    Some(&collection_authority_record_pda)
+                };
+
+                // Assert that the correct Collection Authority was provided using token-metadata
+                assert_has_collection_authority(
+                    &ctx.accounts.collection_authority.to_account_info(),
+                    &ctx.accounts.collection_metadata,
+                    collection_mint.key,
+                    collection_authority_record,
                 )?;
             }
         }
@@ -1538,7 +1527,6 @@ pub mod bubblegum {
             new_metadata.is_mutable = is_mutable;
         };
 
-        // ensure new metadata is mpl_compatible
         assert_metadata_is_mpl_compatible(&new_metadata)?;
         let new_data_hash = hash_metadata(&new_metadata)?;
         let new_creator_hash = hash_creators(&new_metadata.creators)?;
