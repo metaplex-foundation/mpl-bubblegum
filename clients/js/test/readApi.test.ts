@@ -10,7 +10,7 @@ import {
 } from '../src';
 
 const test = anyTest as TestFn<{ umi: Umi }>;
-const endpoint = process.env.READ_API_ENDPOINT_DEVNET;
+const endpoint = process.env.READ_API_RPC_DEVNET;
 
 test.before(async (t) => {
   t.context.umi = createUmi()

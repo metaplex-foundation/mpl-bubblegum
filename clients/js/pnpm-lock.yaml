@@ -33,6 +33,9 @@ devDependencies:
   ava:
     specifier: ^5.1.0
     version: 5.1.0(@ava/typescript@3.0.1)
+  dotenv:
+    specifier: ^16.3.1
+    version: 16.3.1
   eslint:
     specifier: ^8.0.1
     version: 8.30.0
@@ -1866,7 +1869,7 @@ packages:
       cacache: 15.3.0
       chalk: 4.1.2
       chokidar: 3.5.3
-      dotenv: 16.0.3
+      dotenv: 16.3.1
       esbuild: 0.16.3
       execa: 5.1.1
       exit-hook: 2.2.1
@@ -3562,8 +3565,8 @@ packages:
       esutils: 2.0.3
     dev: true
 
-  /dotenv@16.0.3:
-    resolution: {integrity: sha512-7GO6HghkA5fYG9TYnNxi14/7K9f5occMlp3zXAuSxn7CKCxt9xbNWG7yF8hTCSUchlfWSe3uLmlPfigevRItzQ==}
+  /dotenv@16.3.1:
+    resolution: {integrity: sha512-IPzF4w4/Rd94bA9imS68tZBaYyBWSCE47V1RGuMrB94iyTOIEwRmVL2x/4An+6mETpLrKJ5hQkB8W4kFAadeIQ==}
     engines: {node: '>=12'}
     dev: true
 
