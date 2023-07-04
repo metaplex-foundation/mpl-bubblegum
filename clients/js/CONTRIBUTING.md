@@ -30,6 +30,18 @@ pnpm format:fix
 
 When something changes in the program(s), make sure to run `pnpm generate` in the root directory, to re-generate the clients accordingly.
 
+## Set up local environment variables
+
+Some of the tests are using a devnet ReadAPI RPC to ensure the Read API client is working as expected. To run these tests locally, you'll need to set up the `READ_API_RPC_DEVNET` environment variable. Simply add a `.env` file in the `clients/js` directory and add the variable to it.
+
+```sh
+cd clients/js
+cp .env.example .env
+
+# Edit the .env file and add the following line.
+READ_API_RPC_DEVNET="INSERT_RPC_ENDPOINT_HERE"
+```
+
 ## Deploying the JavaScript client
 
 You can deploy a new version of the JavaScript client by manually dispatching the "Deploy JS Client" workflow in the GitHub Actions tab of the repository.
