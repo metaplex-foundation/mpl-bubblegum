@@ -41,6 +41,8 @@ jobs:
       - name: Test
         working-directory: ./clients/js
         run: pnpm test
+        env:
+          READ_API_RPC_DEVNET: ${{ secrets.READ_API_RPC_DEVNET }}
 
   lint:
     name: Lint
