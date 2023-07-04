@@ -8,6 +8,7 @@ import { ReadApiInterface, createReadApiDecorator } from './readApiDecorator';
 
 export const mplBubblegum = (): UmiPlugin => ({
   install(umi) {
+    umi.use(readApi());
     umi.programs.add(createMplBubblegumProgram(), false);
     umi.programs.add(createSplAccountCompressionProgram(), false);
     umi.programs.add(createSplNoopProgram(), false);
