@@ -1,6 +1,9 @@
 lockfileVersion: '6.0'
 
 dependencies:
+  '@metaplex-foundation/mpl-token-metadata':
+    specifier: 3.0.0-alpha.24
+    version: 3.0.0-alpha.24(@metaplex-foundation/umi@0.8.2)
   '@metaplex-foundation/mpl-toolbox':
     specifier: ^0.8.0
     version: 0.8.0(@metaplex-foundation/umi@0.8.2)
@@ -16,8 +19,8 @@ devDependencies:
     specifier: ^0.8.2
     version: 0.8.2
   '@metaplex-foundation/umi-bundle-tests':
-    specifier: ^0.8.2
-    version: 0.8.2(@metaplex-foundation/umi@0.8.2)(@solana/web3.js@1.73.0)
+    specifier: ^0.8.3
+    version: 0.8.3(@metaplex-foundation/umi@0.8.2)(@solana/web3.js@1.73.0)
   '@solana/web3.js':
     specifier: ^1.73.0
     version: 1.73.0
@@ -30,6 +33,9 @@ devDependencies:
   ava:
     specifier: ^5.1.0
     version: 5.1.0(@ava/typescript@3.0.1)
+  dotenv:
+    specifier: ^16.3.1
+    version: 16.3.1
   eslint:
     specifier: ^8.0.1
     version: 8.30.0
@@ -1621,6 +1627,15 @@ packages:
       - supports-color
     dev: true
 
+  /@metaplex-foundation/mpl-token-metadata@3.0.0-alpha.24(@metaplex-foundation/umi@0.8.2):
+    resolution: {integrity: sha512-1idZ+9yKGq58OaRQuAjJwPxtgEp62x2iWerMB0b5SRHvHHZc+vvjPX0jjPaiX2MjG1dq18Xua6FpSsIay3+Gjg==}
+    peerDependencies:
+      '@metaplex-foundation/umi': ^0.8.2
+    dependencies:
+      '@metaplex-foundation/mpl-toolbox': 0.8.0(@metaplex-foundation/umi@0.8.2)
+      '@metaplex-foundation/umi': 0.8.2
+    dev: false
+
   /@metaplex-foundation/mpl-toolbox@0.8.0(@metaplex-foundation/umi@0.8.2):
     resolution: {integrity: sha512-SK1VUPU4hCaL3sozgtoVjjbZxqx2gWiRt0YTFbwEt5LAHWOlCb7J7rcrrA5XwymX4iV2bIWygYs0yz7hYyx2rg==}
     peerDependencies:
@@ -1629,8 +1644,8 @@ packages:
       '@metaplex-foundation/umi': 0.8.2
     dev: false
 
-  /@metaplex-foundation/umi-bundle-tests@0.8.2(@metaplex-foundation/umi@0.8.2)(@solana/web3.js@1.73.0):
-    resolution: {integrity: sha512-FO8rXJw3ZBKE8YHW+4zOodJmB+Lh50kCMtAA+DfZ9x6JKKMtk1kbmz2186Gclrx3/bl7Ep5FwokSAmoBiOys0A==}
+  /@metaplex-foundation/umi-bundle-tests@0.8.3(@metaplex-foundation/umi@0.8.2)(@solana/web3.js@1.73.0):
+    resolution: {integrity: sha512-DwY6TtO/WaVDdHndkx/4YgpFVOey7xN+bGLomnr7ii0YxdZkgE1fgB9kfatsUsIo7wYedm8kk08TpSpOydeL3Q==}
     peerDependencies:
       '@metaplex-foundation/umi': ^0.8.2
       '@solana/web3.js': ^1.72.0
@@ -1639,7 +1654,7 @@ packages:
       '@metaplex-foundation/umi-eddsa-web3js': 0.8.2(@metaplex-foundation/umi@0.8.2)(@solana/web3.js@1.73.0)
       '@metaplex-foundation/umi-http-fetch': 0.8.2(@metaplex-foundation/umi@0.8.2)
       '@metaplex-foundation/umi-program-repository': 0.8.2(@metaplex-foundation/umi@0.8.2)
-      '@metaplex-foundation/umi-rpc-web3js': 0.8.2(@metaplex-foundation/umi@0.8.2)(@solana/web3.js@1.73.0)
+      '@metaplex-foundation/umi-rpc-web3js': 0.8.3(@metaplex-foundation/umi@0.8.2)(@solana/web3.js@1.73.0)
       '@metaplex-foundation/umi-serializer-data-view': 0.8.2(@metaplex-foundation/umi@0.8.2)
       '@metaplex-foundation/umi-storage-mock': 0.8.2(@metaplex-foundation/umi@0.8.2)
       '@metaplex-foundation/umi-transaction-factory-web3js': 0.8.2(@metaplex-foundation/umi@0.8.2)(@solana/web3.js@1.73.0)
@@ -1687,8 +1702,8 @@ packages:
     dependencies:
       '@metaplex-foundation/umi-serializers-encodings': 0.8.2
 
-  /@metaplex-foundation/umi-rpc-web3js@0.8.2(@metaplex-foundation/umi@0.8.2)(@solana/web3.js@1.73.0):
-    resolution: {integrity: sha512-PGOtG685xzIrPhd8zTsEqgOT1Cay1SOEnRbc0ZCd6j0wveOo+1R2/G0t0w6mRvpy6kMWUvgYbKHes9UfOEXaGg==}
+  /@metaplex-foundation/umi-rpc-web3js@0.8.3(@metaplex-foundation/umi@0.8.2)(@solana/web3.js@1.73.0):
+    resolution: {integrity: sha512-LUUdKm4pfQzWxGvL1ZHGMD+k//7z1aMiXTnq4/XxAwGEAoHcXWWifivQU+/tPtawKKr86LhXvUCygVlifbVY6A==}
     peerDependencies:
       '@metaplex-foundation/umi': ^0.8.2
       '@solana/web3.js': ^1.72.0
@@ -1854,7 +1869,7 @@ packages:
       cacache: 15.3.0
       chalk: 4.1.2
       chokidar: 3.5.3
-      dotenv: 16.0.3
+      dotenv: 16.3.1
       esbuild: 0.16.3
       execa: 5.1.1
       exit-hook: 2.2.1
@@ -3550,8 +3565,8 @@ packages:
       esutils: 2.0.3
     dev: true
 
-  /dotenv@16.0.3:
-    resolution: {integrity: sha512-7GO6HghkA5fYG9TYnNxi14/7K9f5occMlp3zXAuSxn7CKCxt9xbNWG7yF8hTCSUchlfWSe3uLmlPfigevRItzQ==}
+  /dotenv@16.3.1:
+    resolution: {integrity: sha512-IPzF4w4/Rd94bA9imS68tZBaYyBWSCE47V1RGuMrB94iyTOIEwRmVL2x/4An+6mETpLrKJ5hQkB8W4kFAadeIQ==}
     engines: {node: '>=12'}
     dev: true
 

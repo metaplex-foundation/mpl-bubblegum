@@ -3,6 +3,7 @@ import {
   Context,
   Pda,
   PublicKey,
+  SolAmount,
   generateSigner,
   none,
   publicKey,
@@ -18,8 +19,8 @@ import {
   mplBubblegum,
 } from '../src';
 
-export const createUmi = async () =>
-  (await baseCreateUmi()).use(mplBubblegum());
+export const createUmi = async (endpoint?: string, airdropAmount?: SolAmount) =>
+  (await baseCreateUmi(endpoint, undefined, airdropAmount)).use(mplBubblegum());
 
 export const createTree = async (
   context: Context,
