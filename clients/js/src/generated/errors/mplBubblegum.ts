@@ -391,6 +391,48 @@ export class CollectionMustBeSizedError extends ProgramError {
 codeToErrorMap.set(0x178a, CollectionMustBeSizedError);
 nameToErrorMap.set('CollectionMustBeSized', CollectionMustBeSizedError);
 
+/** MetadataMintMismatch: Metadata mint does not match collection mint */
+export class MetadataMintMismatchError extends ProgramError {
+  readonly name: string = 'MetadataMintMismatch';
+
+  readonly code: number = 0x178b; // 6027
+
+  constructor(program: Program, cause?: Error) {
+    super('Metadata mint does not match collection mint', program, cause);
+  }
+}
+codeToErrorMap.set(0x178b, MetadataMintMismatchError);
+nameToErrorMap.set('MetadataMintMismatch', MetadataMintMismatchError);
+
+/** InvalidCollectionAuthority: Invalid collection authority */
+export class InvalidCollectionAuthorityError extends ProgramError {
+  readonly name: string = 'InvalidCollectionAuthority';
+
+  readonly code: number = 0x178c; // 6028
+
+  constructor(program: Program, cause?: Error) {
+    super('Invalid collection authority', program, cause);
+  }
+}
+codeToErrorMap.set(0x178c, InvalidCollectionAuthorityError);
+nameToErrorMap.set(
+  'InvalidCollectionAuthority',
+  InvalidCollectionAuthorityError
+);
+
+/** InvalidDelegateRecord: Invalid delegate record pda derivation */
+export class InvalidDelegateRecordError extends ProgramError {
+  readonly name: string = 'InvalidDelegateRecord';
+
+  readonly code: number = 0x178d; // 6029
+
+  constructor(program: Program, cause?: Error) {
+    super('Invalid delegate record pda derivation', program, cause);
+  }
+}
+codeToErrorMap.set(0x178d, InvalidDelegateRecordError);
+nameToErrorMap.set('InvalidDelegateRecord', InvalidDelegateRecordError);
+
 /**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors

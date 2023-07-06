@@ -2167,6 +2167,21 @@
       "code": 6026,
       "name": "CollectionMustBeSized",
       "msg": "Collection Not Compatable with Compression, Must be Sized"
+    },
+    {
+      "code": 6027,
+      "name": "MetadataMintMismatch",
+      "msg": "Metadata mint does not match collection mint"
+    },
+    {
+      "code": 6028,
+      "name": "InvalidCollectionAuthority",
+      "msg": "Invalid collection authority"
+    },
+    {
+      "code": 6029,
+      "name": "InvalidDelegateRecord",
+      "msg": "Invalid delegate record pda derivation"
     }
   ],
   "metadata": {
