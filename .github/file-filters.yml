@@ -14,7 +14,7 @@ bubblegum: &bubblegum
   - "programs/bubblegum/**"
 
 programs: &programs
-  - *bubblegum_program
+  - *bubblegum
 
 # Clients.
 
