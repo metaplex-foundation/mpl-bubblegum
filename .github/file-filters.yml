@@ -9,12 +9,12 @@ program_common: &program_common
   - ".github/workflows/test-programs.yml"
   - ".github/workflows/main.yml"
 
-mpl_bubblegum: &mpl_bubblegum
+bubblegum: &bubblegum
   - *program_common
   - "programs/bubblegum/**"
 
 programs: &programs
-  - *mpl_bubblegum
+  - *bubblegum
 
 # Clients.
 
