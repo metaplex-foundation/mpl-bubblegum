@@ -1,14 +1,15 @@
+#![allow(clippy::too_many_arguments)]
+
 use mpl_token_metadata::{
     id,
     instruction::{
         self,
         builders::{
-            BurnBuilder, CreateBuilder, DelegateBuilder, LockBuilder, MigrateBuilder, MintBuilder,
-            RevokeBuilder, TransferBuilder, UnlockBuilder, UnverifyBuilder, UpdateBuilder,
-            VerifyBuilder,
+            BurnBuilder, CreateBuilder, DelegateBuilder, LockBuilder, MintBuilder, RevokeBuilder,
+            TransferBuilder, UnlockBuilder, UnverifyBuilder, UpdateBuilder, VerifyBuilder,
         },
         BurnArgs, CreateArgs, DelegateArgs, InstructionBuilder, LockArgs, MetadataDelegateRole,
-        MigrateArgs, MintArgs, RevokeArgs, TransferArgs, UnlockArgs, UpdateArgs, VerificationArgs,
+        MintArgs, RevokeArgs, TransferArgs, UnlockArgs, UpdateArgs, VerificationArgs,
     },
     pda::{
         find_master_edition_account, find_metadata_account, find_metadata_delegate_record_account,
@@ -36,6 +37,8 @@ use spl_associated_token_account::{
     get_associated_token_address, instruction::create_associated_token_account,
 };
 
+use super::DirtyClone;
+
 pub const DEFAULT_NAME: &str = "Digital Asset";
 pub const DEFAULT_SYMBOL: &str = "DA";
 pub const DEFAULT_URI: &str = "https://digital.asset.org";
@@ -45,6 +48,7 @@ pub const DEFAULT_URI: &str = "https://digital.asset.org";
 // Digital Asset. Since different asset types have different accounts, care
 // should be taken that appropriate handlers update appropriate accounts, such as when
 // transferring a DigitalAsset, the token account should be updated.
+#[derive(Debug)]
 pub struct DigitalAsset {
     pub metadata: Pubkey,
     pub mint: Keypair,
@@ -53,6 +57,20 @@ pub struct DigitalAsset {
     pub token_record: Option<Pubkey>,
     pub token_standard: Option<TokenStandard>,
     pub edition_num: Option<u64>,
+}
+
+impl DirtyClone for DigitalAsset {
+    fn dirty_clone(&self) -> Self {
+        Self {
+            metadata: self.metadata,
+            mint: self.mint.dirty_clone(),
+            token: self.token,
+            edition: self.edition,
+            token_record: self.token_record,
+            token_standard: self.token_standard,
+            edition_num: self.edition_num,
+        }
+    }
 }
 
 impl Default for DigitalAsset {
@@ -690,40 +708,6 @@ impl DigitalAsset {
 
         context.banks_client.process_transaction(tx).await?;
         Ok(delegate_or_token_record)
-    }
-
-    pub async fn migrate(
-        &mut self,
-        context: &mut ProgramTestContext,
-        authority: Keypair,
-        collection_metadata: Pubkey,
-        args: MigrateArgs,
-    ) -> Result<(), BanksClientError> {
-        let mut builder = MigrateBuilder::new();
-        builder
-            .mint(self.mint.pubkey())
-            .metadata(self.metadata)
-            .edition(self.edition.unwrap())
-            .token(self.token.unwrap())
-            .payer(authority.pubkey())
-            .collection_metadata(collection_metadata)
-            .authority(authority.pubkey());
-
-        let migrate_ix = builder.build(args.clone()).unwrap().instruction();
-
-        let tx = Transaction::new_signed_with_payer(
-            &[migrate_ix],
-            Some(&authority.pubkey()),
-            &[&authority],
-            context.last_blockhash,
-        );
-
-        context.banks_client.process_transaction(tx).await.unwrap();
-
-        let md = self.get_metadata(context).await;
-        self.token_standard = md.token_standard;
-
-        Ok(())
     }
 
     pub async fn print_edition(
