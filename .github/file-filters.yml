@@ -11,7 +11,7 @@ program_common: &program_common
 
 mpl_bubblegum: &mpl_bubblegum
   - *program_common
-  - "programs/mpl-bubblegum/**"
+  - "programs/bubblegum/**"
 
 programs: &programs
   - *mpl_bubblegum
