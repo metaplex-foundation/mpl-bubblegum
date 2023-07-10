@@ -8,7 +8,7 @@ use mpl_bubblegum::state::metaplex_adapter::{
 };
 use mpl_token_metadata::state::{CollectionDetails, TokenStandard};
 use solana_program::pubkey::Pubkey;
-use solana_program_test::{BanksClient, ProgramTestContext};
+use solana_program_test::{BanksClient, ProgramTestContext, ProgramTestError};
 use solana_sdk::{
     signature::{Keypair, Signer},
     system_instruction,
@@ -26,6 +26,10 @@ pub const DEFAULT_LAMPORTS_FUND_AMOUNT: u64 = 1_000_000_000;
 impl BubblegumTestContext {
     pub fn test_context(&self) -> &ProgramTestContext {
         &self.program_context
+    }
+
+    pub fn warp_to_slot(&mut self, slot: u64) -> std::result::Result<(), ProgramTestError> {
+        self.program_context.warp_to_slot(slot)
     }
 
     pub async fn new() -> Result<Self> {

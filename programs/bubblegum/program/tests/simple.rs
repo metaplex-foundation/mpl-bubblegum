@@ -118,6 +118,7 @@ async fn test_transfer_passes() {
 #[tokio::test]
 async fn test_delegated_transfer_passes() {
     let (mut context, mut tree, mut leaves) = context_tree_and_leaves().await.unwrap();
+    context.warp_to_slot(100).unwrap();
     let delegate = Keypair::new();
     let new_owner = Keypair::new();
 
@@ -125,8 +126,9 @@ async fn test_delegated_transfer_passes() {
         .fund_account(delegate.pubkey(), DEFAULT_LAMPORTS_FUND_AMOUNT)
         .await
         .unwrap();
+    context.warp_to_slot(200).unwrap();
 
-    for leaf in leaves.iter_mut() {
+    for (index, leaf) in leaves.iter_mut().enumerate() {
         // We need to explicitly set a new delegate, since by default the owner has both
         // roles right after minting.
         tree.delegate(leaf, &delegate).await.unwrap();
@@ -138,6 +140,7 @@ async fn test_delegated_transfer_passes() {
 
         // Also automatically checks the on-chain tree root matches the expected state.
         tx.execute().await.unwrap();
+        context.warp_to_slot(300 + index as u64 * 100).unwrap();
     }
 }
 
