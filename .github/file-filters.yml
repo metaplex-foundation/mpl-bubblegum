@@ -8,6 +8,8 @@ program_common: &program_common
   - ".github/workflows/build-programs.yml"
   - ".github/workflows/test-programs.yml"
   - ".github/workflows/main.yml"
+  - ".github/file-filters.yml"
+  - ".github/.env"
 
 bubblegum_program: &bubblegum_program
   - *program_common
@@ -22,6 +24,8 @@ client_common: &client_common
   - *programs
   - ".github/workflows/test-js.yml"
   - ".github/workflows/main.yml"
+  - ".github/file-filters.yml"
+  - ".github/.env"
   - "configs/shank.cjs"
   - "configs/kinobi.cjs"
 
