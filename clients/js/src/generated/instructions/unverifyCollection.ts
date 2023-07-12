@@ -47,7 +47,7 @@ export type UnverifyCollectionInstructionAccounts = {
   collectionAuthorityRecordPda: PublicKey | Pda;
   collectionMint: PublicKey | Pda;
   collectionMetadata?: PublicKey | Pda;
-  editionAccount: PublicKey | Pda;
+  collectionEdition: PublicKey | Pda;
   bubblegumSigner?: PublicKey | Pda;
   logWrapper?: PublicKey | Pda;
   compressionProgram?: PublicKey | Pda;
@@ -148,7 +148,7 @@ export function unverifyCollection(
       false,
     ] as const,
     collectionMint: [input.collectionMint, false] as const,
-    editionAccount: [input.editionAccount, false] as const,
+    collectionEdition: [input.collectionEdition, false] as const,
   };
   const resolvingArgs = {};
   addObjectProperty(
@@ -275,7 +275,7 @@ export function unverifyCollection(
   );
   addAccountMeta(keys, signers, resolvedAccounts.collectionMint, false);
   addAccountMeta(keys, signers, resolvedAccounts.collectionMetadata, false);
-  addAccountMeta(keys, signers, resolvedAccounts.editionAccount, false);
+  addAccountMeta(keys, signers, resolvedAccounts.collectionEdition, false);
   addAccountMeta(keys, signers, resolvedAccounts.bubblegumSigner, false);
   addAccountMeta(keys, signers, resolvedAccounts.logWrapper, false);
   addAccountMeta(keys, signers, resolvedAccounts.compressionProgram, false);

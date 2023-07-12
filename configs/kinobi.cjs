@@ -64,6 +64,14 @@ kinobi.update(
         });
       },
     },
+    {
+      // Rename `editionAccount` instruction account to `collectionEdition`.
+      selector: { kind: "instructionAccountNode", name: "editionAccount" },
+      transformer: (node) => {
+        k.assertInstructionAccountNode(node);
+        return k.instructionAccountNode({ ...node, name: "collectionEdition" });
+      },
+    },
   ])
 );
 
