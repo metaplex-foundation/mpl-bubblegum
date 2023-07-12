@@ -119,7 +119,6 @@ kinobi.update(
       ignoreIfOptional: true,
       ...k.publicKeyDefault("4ewWZC5gT6TGpm5LZNDs9wVonfUT2q5PP5sc9kVbwMAK"),
     },
-    // TODO: collectionAuthorityRecordPda, when new metadata delegates are supported to avoid breaking changes.
     {
       account: "collectionMetadata",
       ignoreIfOptional: true,
@@ -128,6 +127,15 @@ kinobi.update(
         seeds: { mint: k.accountDefault("collectionMint") },
       }),
     },
+    {
+      account: "collectionEdition",
+      ignoreIfOptional: true,
+      ...k.pdaDefault("masterEdition", {
+        importFrom: "mplTokenMetadata",
+        seeds: { mint: k.accountDefault("collectionMint") },
+      }),
+    },
+    // TODO: collectionAuthorityRecordPda, when new metadata delegates are supported to avoid breaking changes.
   ])
 );
 

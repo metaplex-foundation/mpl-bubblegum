@@ -6,7 +6,10 @@
  * @see https://github.com/metaplex-foundation/kinobi
  */
 
-import { findMetadataPda } from '@metaplex-foundation/mpl-token-metadata';
+import {
+  findMasterEditionPda,
+  findMetadataPda,
+} from '@metaplex-foundation/mpl-token-metadata';
 import {
   AccountMeta,
   Context,
@@ -48,7 +51,7 @@ export type SetAndVerifyCollectionInstructionAccounts = {
   collectionAuthorityRecordPda: PublicKey | Pda;
   collectionMint: PublicKey | Pda;
   collectionMetadata?: PublicKey | Pda;
-  collectionEdition: PublicKey | Pda;
+  collectionEdition?: PublicKey | Pda;
   bubblegumSigner?: PublicKey | Pda;
   logWrapper?: PublicKey | Pda;
   compressionProgram?: PublicKey | Pda;
@@ -152,7 +155,6 @@ export function setAndVerifyCollection(
       false,
     ] as const,
     collectionMint: [input.collectionMint, false] as const,
-    collectionEdition: [input.collectionEdition, false] as const,
   };
   const resolvingArgs = {};
   addObjectProperty(
@@ -198,6 +200,18 @@ export function setAndVerifyCollection(
             mint: publicKey(input.collectionMint, false),
           }),
           true,
+        ] as const)
+  );
+  addObjectProperty(
+    resolvedAccounts,
+    'collectionEdition',
+    input.collectionEdition
+      ? ([input.collectionEdition, false] as const)
+      : ([
+          findMasterEditionPda(context, {
+            mint: publicKey(input.collectionMint, false),
+          }),
+          false,
         ] as const)
   );
   addObjectProperty(
