@@ -31,7 +31,7 @@ import { addAccountMeta, addObjectProperty } from '../shared';
 
 // Accounts.
 export type BurnInstructionAccounts = {
-  treeAuthority?: PublicKey | Pda;
+  treeConfig?: PublicKey | Pda;
   leafOwner: PublicKey | Pda;
   leafDelegate: PublicKey | Pda;
   merkleTree: PublicKey | Pda;
@@ -114,9 +114,9 @@ export function burn(
   const resolvingArgs = {};
   addObjectProperty(
     resolvedAccounts,
-    'treeAuthority',
-    input.treeAuthority
-      ? ([input.treeAuthority, false] as const)
+    'treeConfig',
+    input.treeConfig
+      ? ([input.treeConfig, false] as const)
       : ([
           findTreeConfigPda(context, {
             merkleTree: publicKey(input.merkleTree, false),
@@ -165,7 +165,7 @@ export function burn(
   );
   const resolvedArgs = { ...input, ...resolvingArgs };
 
-  addAccountMeta(keys, signers, resolvedAccounts.treeAuthority, false);
+  addAccountMeta(keys, signers, resolvedAccounts.treeConfig, false);
   addAccountMeta(keys, signers, resolvedAccounts.leafOwner, false);
   addAccountMeta(keys, signers, resolvedAccounts.leafDelegate, false);
   addAccountMeta(keys, signers, resolvedAccounts.merkleTree, false);

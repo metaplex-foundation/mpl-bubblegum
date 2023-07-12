@@ -28,7 +28,7 @@ import { addAccountMeta, addObjectProperty } from '../shared';
 
 // Accounts.
 export type SetTreeDelegateInstructionAccounts = {
-  treeAuthority?: PublicKey | Pda;
+  treeConfig?: PublicKey | Pda;
   treeCreator?: Signer;
   newTreeDelegate: PublicKey | Pda;
   merkleTree: PublicKey | Pda;
@@ -97,9 +97,9 @@ export function setTreeDelegate(
   };
   addObjectProperty(
     resolvedAccounts,
-    'treeAuthority',
-    input.treeAuthority
-      ? ([input.treeAuthority, true] as const)
+    'treeConfig',
+    input.treeConfig
+      ? ([input.treeConfig, true] as const)
       : ([
           findTreeConfigPda(context, {
             merkleTree: publicKey(input.merkleTree, false),
@@ -128,7 +128,7 @@ export function setTreeDelegate(
         ] as const)
   );
 
-  addAccountMeta(keys, signers, resolvedAccounts.treeAuthority, false);
+  addAccountMeta(keys, signers, resolvedAccounts.treeConfig, false);
   addAccountMeta(keys, signers, resolvedAccounts.treeCreator, false);
   addAccountMeta(keys, signers, resolvedAccounts.newTreeDelegate, false);
   addAccountMeta(keys, signers, resolvedAccounts.merkleTree, false);

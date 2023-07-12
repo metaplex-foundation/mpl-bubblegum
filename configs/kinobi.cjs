@@ -42,6 +42,20 @@ kinobi.update(
   })
 );
 
+// Custom tree updates.
+kinobi.update(
+  new k.TransformNodesVisitor([
+    {
+      // Rename `treeAuthority` instruction account to `treeConfig`.
+      selector: { kind: "instructionAccountNode", name: "treeAuthority" },
+      transformer: (node) => {
+        k.assertInstructionAccountNode(node);
+        return k.instructionAccountNode({ ...node, name: "treeConfig" });
+      },
+    },
+  ])
+);
+
 // Set default account values accross multiple instructions.
 kinobi.update(
   new k.SetInstructionAccountDefaultValuesVisitor([
@@ -67,7 +81,7 @@ kinobi.update(
       ...k.identityDefault(),
     },
     {
-      account: "treeAuthority",
+      account: "treeConfig",
       ignoreIfOptional: true,
       ...k.pdaDefault("treeConfig"),
     },

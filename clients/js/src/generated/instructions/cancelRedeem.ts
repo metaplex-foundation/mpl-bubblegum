@@ -29,7 +29,7 @@ import { addAccountMeta, addObjectProperty } from '../shared';
 
 // Accounts.
 export type CancelRedeemInstructionAccounts = {
-  treeAuthority?: PublicKey | Pda;
+  treeConfig?: PublicKey | Pda;
   leafOwner: Signer;
   merkleTree: PublicKey | Pda;
   voucher: PublicKey | Pda;
@@ -102,9 +102,9 @@ export function cancelRedeem(
   const resolvingArgs = {};
   addObjectProperty(
     resolvedAccounts,
-    'treeAuthority',
-    input.treeAuthority
-      ? ([input.treeAuthority, false] as const)
+    'treeConfig',
+    input.treeConfig
+      ? ([input.treeConfig, false] as const)
       : ([
           findTreeConfigPda(context, {
             merkleTree: publicKey(input.merkleTree, false),
@@ -153,7 +153,7 @@ export function cancelRedeem(
   );
   const resolvedArgs = { ...input, ...resolvingArgs };
 
-  addAccountMeta(keys, signers, resolvedAccounts.treeAuthority, false);
+  addAccountMeta(keys, signers, resolvedAccounts.treeConfig, false);
   addAccountMeta(keys, signers, resolvedAccounts.leafOwner, false);
   addAccountMeta(keys, signers, resolvedAccounts.merkleTree, false);
   addAccountMeta(keys, signers, resolvedAccounts.voucher, false);
