@@ -42,6 +42,39 @@ kinobi.update(
   })
 );
 
+// Custom tree updates.
+kinobi.update(
+  new k.TransformNodesVisitor([
+    {
+      // Rename `treeAuthority` instruction account to `treeConfig`.
+      selector: { kind: "instructionAccountNode", name: "treeAuthority" },
+      transformer: (node) => {
+        k.assertInstructionAccountNode(node);
+        return k.instructionAccountNode({ ...node, name: "treeConfig" });
+      },
+    },
+    {
+      // Rename `treeDelegate` instruction account to `treeCreatorOrDelegate`.
+      selector: { kind: "instructionAccountNode", name: "treeDelegate" },
+      transformer: (node) => {
+        k.assertInstructionAccountNode(node);
+        return k.instructionAccountNode({
+          ...node,
+          name: "treeCreatorOrDelegate",
+        });
+      },
+    },
+    {
+      // Rename `editionAccount` instruction account to `collectionEdition`.
+      selector: { kind: "instructionAccountNode", name: "editionAccount" },
+      transformer: (node) => {
+        k.assertInstructionAccountNode(node);
+        return k.instructionAccountNode({ ...node, name: "collectionEdition" });
+      },
+    },
+  ])
+);
+
 // Set default account values accross multiple instructions.
 kinobi.update(
   new k.SetInstructionAccountDefaultValuesVisitor([
@@ -67,9 +100,50 @@ kinobi.update(
       ...k.identityDefault(),
     },
     {
-      account: "treeAuthority",
+      account: "treeCreatorOrDelegate",
+      ignoreIfOptional: true,
+      ...k.identityDefault(),
+    },
+    {
+      account: "leafDelegate",
+      ignoreIfOptional: true,
+      ...k.accountDefault("leafOwner"),
+    },
+    {
+      account: "treeConfig",
       ignoreIfOptional: true,
       ...k.pdaDefault("treeConfig"),
+    },
+    {
+      account: "bubblegumSigner",
+      ignoreIfOptional: true,
+      ...k.publicKeyDefault("4ewWZC5gT6TGpm5LZNDs9wVonfUT2q5PP5sc9kVbwMAK"),
+    },
+    {
+      account: "collectionMetadata",
+      ignoreIfOptional: true,
+      ...k.pdaDefault("metadata", {
+        importFrom: "mplTokenMetadata",
+        seeds: { mint: k.accountDefault("collectionMint") },
+      }),
+    },
+    {
+      account: "collectionEdition",
+      ignoreIfOptional: true,
+      ...k.pdaDefault("masterEdition", {
+        importFrom: "mplTokenMetadata",
+        seeds: { mint: k.accountDefault("collectionMint") },
+      }),
+    },
+    {
+      account: "collectionAuthorityRecordPda",
+      ignoreIfOptional: true,
+      ...k.programIdDefault(),
+    },
+    {
+      account: "collectionAuthority",
+      ignoreIfOptional: true,
+      ...k.identityDefault(),
     },
   ])
 );
@@ -81,22 +155,15 @@ kinobi.update(
       name: "createTreeConfig",
       bytesCreatedOnChain: k.bytesFromAccount("treeConfig"),
     },
-    mintV1: {
-      accounts: {
-        leafDelegate: { defaultsTo: k.accountDefault("leafOwner") },
-        treeDelegate: {
-          name: "treeCreatorOrDelegate",
-          defaultsTo: k.identityDefault(),
-        },
+    mintToCollectionV1: {
+      args: {
+        metadataArgs: { name: "message" },
       },
     },
     transfer: {
       accounts: {
         leafOwner: { isSigner: "either" },
-        leafDelegate: {
-          isSigner: "either",
-          defaultsTo: k.accountDefault("leafOwner"),
-        },
+        leafDelegate: { isSigner: "either" },
       },
     },
     decompressV1: {
@@ -186,4 +253,11 @@ kinobi.update(
 // Render JavaScript.
 const jsDir = path.join(clientDir, "js", "src", "generated");
 const prettier = require(path.join(clientDir, "js", ".prettierrc.json"));
-kinobi.accept(new k.RenderJavaScriptVisitor(jsDir, { prettier }));
+kinobi.accept(
+  new k.RenderJavaScriptVisitor(jsDir, {
+    prettier,
+    dependencyMap: {
+      mplTokenMetadata: "@metaplex-foundation/mpl-token-metadata",
+    },
+  })
+);

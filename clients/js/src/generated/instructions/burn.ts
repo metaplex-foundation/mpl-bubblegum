@@ -31,9 +31,9 @@ import { addAccountMeta, addObjectProperty } from '../shared';
 
 // Accounts.
 export type BurnInstructionAccounts = {
-  treeAuthority?: PublicKey | Pda;
+  treeConfig?: PublicKey | Pda;
   leafOwner: PublicKey | Pda;
-  leafDelegate: PublicKey | Pda;
+  leafDelegate?: PublicKey | Pda;
   merkleTree: PublicKey | Pda;
   logWrapper?: PublicKey | Pda;
   compressionProgram?: PublicKey | Pda;
@@ -108,21 +108,27 @@ export function burn(
   // Resolved inputs.
   const resolvedAccounts = {
     leafOwner: [input.leafOwner, false] as const,
-    leafDelegate: [input.leafDelegate, false] as const,
     merkleTree: [input.merkleTree, true] as const,
   };
   const resolvingArgs = {};
   addObjectProperty(
     resolvedAccounts,
-    'treeAuthority',
-    input.treeAuthority
-      ? ([input.treeAuthority, false] as const)
+    'treeConfig',
+    input.treeConfig
+      ? ([input.treeConfig, false] as const)
       : ([
           findTreeConfigPda(context, {
             merkleTree: publicKey(input.merkleTree, false),
           }),
           false,
         ] as const)
+  );
+  addObjectProperty(
+    resolvedAccounts,
+    'leafDelegate',
+    input.leafDelegate
+      ? ([input.leafDelegate, false] as const)
+      : ([input.leafOwner, false] as const)
   );
   addObjectProperty(
     resolvedAccounts,
@@ -165,7 +171,7 @@ export function burn(
   );
   const resolvedArgs = { ...input, ...resolvingArgs };
 
-  addAccountMeta(keys, signers, resolvedAccounts.treeAuthority, false);
+  addAccountMeta(keys, signers, resolvedAccounts.treeConfig, false);
   addAccountMeta(keys, signers, resolvedAccounts.leafOwner, false);
   addAccountMeta(keys, signers, resolvedAccounts.leafDelegate, false);
   addAccountMeta(keys, signers, resolvedAccounts.merkleTree, false);

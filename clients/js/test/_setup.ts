@@ -1,4 +1,5 @@
 /* eslint-disable import/no-extraneous-dependencies */
+import { mplTokenMetadata } from '@metaplex-foundation/mpl-token-metadata';
 import {
   Context,
   Pda,
@@ -20,7 +21,9 @@ import {
 } from '../src';
 
 export const createUmi = async (endpoint?: string, airdropAmount?: SolAmount) =>
-  (await baseCreateUmi(endpoint, undefined, airdropAmount)).use(mplBubblegum());
+  (await baseCreateUmi(endpoint, undefined, airdropAmount))
+    .use(mplTokenMetadata())
+    .use(mplBubblegum());
 
 export const createTree = async (
   context: Context,

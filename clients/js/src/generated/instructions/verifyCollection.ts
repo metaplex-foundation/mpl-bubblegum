@@ -7,6 +7,10 @@
  */
 
 import {
+  findMasterEditionPda,
+  findMetadataPda,
+} from '@metaplex-foundation/mpl-token-metadata';
+import {
   AccountMeta,
   Context,
   Pda,
@@ -36,18 +40,18 @@ import {
 
 // Accounts.
 export type VerifyCollectionInstructionAccounts = {
-  treeAuthority?: PublicKey | Pda;
+  treeConfig?: PublicKey | Pda;
   leafOwner: PublicKey | Pda;
-  leafDelegate: PublicKey | Pda;
+  leafDelegate?: PublicKey | Pda;
   merkleTree: PublicKey | Pda;
   payer?: Signer;
-  treeDelegate: PublicKey | Pda;
-  collectionAuthority: Signer;
-  collectionAuthorityRecordPda: PublicKey | Pda;
+  treeCreatorOrDelegate?: PublicKey | Pda;
+  collectionAuthority?: Signer;
+  collectionAuthorityRecordPda?: PublicKey | Pda;
   collectionMint: PublicKey | Pda;
-  collectionMetadata: PublicKey | Pda;
-  editionAccount: PublicKey | Pda;
-  bubblegumSigner: PublicKey | Pda;
+  collectionMetadata?: PublicKey | Pda;
+  collectionEdition?: PublicKey | Pda;
+  bubblegumSigner?: PublicKey | Pda;
   logWrapper?: PublicKey | Pda;
   compressionProgram?: PublicKey | Pda;
   tokenMetadataProgram?: PublicKey | Pda;
@@ -124,7 +128,7 @@ export type VerifyCollectionInstructionArgs =
 
 // Instruction.
 export function verifyCollection(
-  context: Pick<Context, 'programs' | 'eddsa' | 'payer'>,
+  context: Pick<Context, 'programs' | 'eddsa' | 'identity' | 'payer'>,
   input: VerifyCollectionInstructionAccounts & VerifyCollectionInstructionArgs
 ): TransactionBuilder {
   const signers: Signer[] = [];
@@ -139,25 +143,15 @@ export function verifyCollection(
   // Resolved inputs.
   const resolvedAccounts = {
     leafOwner: [input.leafOwner, false] as const,
-    leafDelegate: [input.leafDelegate, false] as const,
     merkleTree: [input.merkleTree, true] as const,
-    treeDelegate: [input.treeDelegate, false] as const,
-    collectionAuthority: [input.collectionAuthority, false] as const,
-    collectionAuthorityRecordPda: [
-      input.collectionAuthorityRecordPda,
-      false,
-    ] as const,
     collectionMint: [input.collectionMint, false] as const,
-    collectionMetadata: [input.collectionMetadata, true] as const,
-    editionAccount: [input.editionAccount, false] as const,
-    bubblegumSigner: [input.bubblegumSigner, false] as const,
   };
   const resolvingArgs = {};
   addObjectProperty(
     resolvedAccounts,
-    'treeAuthority',
-    input.treeAuthority
-      ? ([input.treeAuthority, false] as const)
+    'treeConfig',
+    input.treeConfig
+      ? ([input.treeConfig, false] as const)
       : ([
           findTreeConfigPda(context, {
             merkleTree: publicKey(input.merkleTree, false),
@@ -167,10 +161,72 @@ export function verifyCollection(
   );
   addObjectProperty(
     resolvedAccounts,
+    'leafDelegate',
+    input.leafDelegate
+      ? ([input.leafDelegate, false] as const)
+      : ([input.leafOwner, false] as const)
+  );
+  addObjectProperty(
+    resolvedAccounts,
     'payer',
     input.payer
       ? ([input.payer, false] as const)
       : ([context.payer, false] as const)
+  );
+  addObjectProperty(
+    resolvedAccounts,
+    'treeCreatorOrDelegate',
+    input.treeCreatorOrDelegate
+      ? ([input.treeCreatorOrDelegate, false] as const)
+      : ([context.identity.publicKey, false] as const)
+  );
+  addObjectProperty(
+    resolvedAccounts,
+    'collectionAuthority',
+    input.collectionAuthority
+      ? ([input.collectionAuthority, false] as const)
+      : ([context.identity, false] as const)
+  );
+  addObjectProperty(
+    resolvedAccounts,
+    'collectionAuthorityRecordPda',
+    input.collectionAuthorityRecordPda
+      ? ([input.collectionAuthorityRecordPda, false] as const)
+      : ([programId, false] as const)
+  );
+  addObjectProperty(
+    resolvedAccounts,
+    'collectionMetadata',
+    input.collectionMetadata
+      ? ([input.collectionMetadata, true] as const)
+      : ([
+          findMetadataPda(context, {
+            mint: publicKey(input.collectionMint, false),
+          }),
+          true,
+        ] as const)
+  );
+  addObjectProperty(
+    resolvedAccounts,
+    'collectionEdition',
+    input.collectionEdition
+      ? ([input.collectionEdition, false] as const)
+      : ([
+          findMasterEditionPda(context, {
+            mint: publicKey(input.collectionMint, false),
+          }),
+          false,
+        ] as const)
+  );
+  addObjectProperty(
+    resolvedAccounts,
+    'bubblegumSigner',
+    input.bubblegumSigner
+      ? ([input.bubblegumSigner, false] as const)
+      : ([
+          publicKey('4ewWZC5gT6TGpm5LZNDs9wVonfUT2q5PP5sc9kVbwMAK'),
+          false,
+        ] as const)
   );
   addObjectProperty(
     resolvedAccounts,
@@ -226,12 +282,12 @@ export function verifyCollection(
   );
   const resolvedArgs = { ...input, ...resolvingArgs };
 
-  addAccountMeta(keys, signers, resolvedAccounts.treeAuthority, false);
+  addAccountMeta(keys, signers, resolvedAccounts.treeConfig, false);
   addAccountMeta(keys, signers, resolvedAccounts.leafOwner, false);
   addAccountMeta(keys, signers, resolvedAccounts.leafDelegate, false);
   addAccountMeta(keys, signers, resolvedAccounts.merkleTree, false);
   addAccountMeta(keys, signers, resolvedAccounts.payer, false);
-  addAccountMeta(keys, signers, resolvedAccounts.treeDelegate, false);
+  addAccountMeta(keys, signers, resolvedAccounts.treeCreatorOrDelegate, false);
   addAccountMeta(keys, signers, resolvedAccounts.collectionAuthority, false);
   addAccountMeta(
     keys,
@@ -241,7 +297,7 @@ export function verifyCollection(
   );
   addAccountMeta(keys, signers, resolvedAccounts.collectionMint, false);
   addAccountMeta(keys, signers, resolvedAccounts.collectionMetadata, false);
-  addAccountMeta(keys, signers, resolvedAccounts.editionAccount, false);
+  addAccountMeta(keys, signers, resolvedAccounts.collectionEdition, false);
   addAccountMeta(keys, signers, resolvedAccounts.bubblegumSigner, false);
   addAccountMeta(keys, signers, resolvedAccounts.logWrapper, false);
   addAccountMeta(keys, signers, resolvedAccounts.compressionProgram, false);

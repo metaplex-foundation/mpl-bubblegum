@@ -7,6 +7,10 @@
  */
 
 import {
+  findMasterEditionPda,
+  findMetadataPda,
+} from '@metaplex-foundation/mpl-token-metadata';
+import {
   AccountMeta,
   Context,
   Pda,
@@ -33,18 +37,18 @@ import {
 
 // Accounts.
 export type MintToCollectionV1InstructionAccounts = {
-  treeAuthority?: PublicKey | Pda;
+  treeConfig?: PublicKey | Pda;
   leafOwner: PublicKey | Pda;
-  leafDelegate: PublicKey | Pda;
+  leafDelegate?: PublicKey | Pda;
   merkleTree: PublicKey | Pda;
   payer?: Signer;
-  treeDelegate: Signer;
-  collectionAuthority: Signer;
-  collectionAuthorityRecordPda: PublicKey | Pda;
+  treeCreatorOrDelegate?: Signer;
+  collectionAuthority?: Signer;
+  collectionAuthorityRecordPda?: PublicKey | Pda;
   collectionMint: PublicKey | Pda;
-  collectionMetadata: PublicKey | Pda;
-  editionAccount: PublicKey | Pda;
-  bubblegumSigner: PublicKey | Pda;
+  collectionMetadata?: PublicKey | Pda;
+  collectionEdition?: PublicKey | Pda;
+  bubblegumSigner?: PublicKey | Pda;
   logWrapper?: PublicKey | Pda;
   compressionProgram?: PublicKey | Pda;
   tokenMetadataProgram?: PublicKey | Pda;
@@ -54,11 +58,11 @@ export type MintToCollectionV1InstructionAccounts = {
 // Data.
 export type MintToCollectionV1InstructionData = {
   discriminator: Array<number>;
-  metadataArgs: MetadataArgs;
+  message: MetadataArgs;
 };
 
 export type MintToCollectionV1InstructionDataArgs = {
-  metadataArgs: MetadataArgsArgs;
+  message: MetadataArgsArgs;
 };
 
 /** @deprecated Use `getMintToCollectionV1InstructionDataSerializer()` without any argument instead. */
@@ -86,7 +90,7 @@ export function getMintToCollectionV1InstructionDataSerializer(
     struct<MintToCollectionV1InstructionData>(
       [
         ['discriminator', array(u8(), { size: 8 })],
-        ['metadataArgs', getMetadataArgsSerializer()],
+        ['message', getMetadataArgsSerializer()],
       ],
       { description: 'MintToCollectionV1InstructionData' }
     ),
@@ -106,7 +110,7 @@ export type MintToCollectionV1InstructionArgs =
 
 // Instruction.
 export function mintToCollectionV1(
-  context: Pick<Context, 'programs' | 'eddsa' | 'payer'>,
+  context: Pick<Context, 'programs' | 'eddsa' | 'identity' | 'payer'>,
   input: MintToCollectionV1InstructionAccounts &
     MintToCollectionV1InstructionArgs
 ): TransactionBuilder {
@@ -122,25 +126,15 @@ export function mintToCollectionV1(
   // Resolved inputs.
   const resolvedAccounts = {
     leafOwner: [input.leafOwner, false] as const,
-    leafDelegate: [input.leafDelegate, false] as const,
     merkleTree: [input.merkleTree, true] as const,
-    treeDelegate: [input.treeDelegate, false] as const,
-    collectionAuthority: [input.collectionAuthority, false] as const,
-    collectionAuthorityRecordPda: [
-      input.collectionAuthorityRecordPda,
-      false,
-    ] as const,
     collectionMint: [input.collectionMint, false] as const,
-    collectionMetadata: [input.collectionMetadata, true] as const,
-    editionAccount: [input.editionAccount, false] as const,
-    bubblegumSigner: [input.bubblegumSigner, false] as const,
   };
   const resolvingArgs = {};
   addObjectProperty(
     resolvedAccounts,
-    'treeAuthority',
-    input.treeAuthority
-      ? ([input.treeAuthority, true] as const)
+    'treeConfig',
+    input.treeConfig
+      ? ([input.treeConfig, true] as const)
       : ([
           findTreeConfigPda(context, {
             merkleTree: publicKey(input.merkleTree, false),
@@ -150,10 +144,72 @@ export function mintToCollectionV1(
   );
   addObjectProperty(
     resolvedAccounts,
+    'leafDelegate',
+    input.leafDelegate
+      ? ([input.leafDelegate, false] as const)
+      : ([input.leafOwner, false] as const)
+  );
+  addObjectProperty(
+    resolvedAccounts,
     'payer',
     input.payer
       ? ([input.payer, false] as const)
       : ([context.payer, false] as const)
+  );
+  addObjectProperty(
+    resolvedAccounts,
+    'treeCreatorOrDelegate',
+    input.treeCreatorOrDelegate
+      ? ([input.treeCreatorOrDelegate, false] as const)
+      : ([context.identity, false] as const)
+  );
+  addObjectProperty(
+    resolvedAccounts,
+    'collectionAuthority',
+    input.collectionAuthority
+      ? ([input.collectionAuthority, false] as const)
+      : ([context.identity, false] as const)
+  );
+  addObjectProperty(
+    resolvedAccounts,
+    'collectionAuthorityRecordPda',
+    input.collectionAuthorityRecordPda
+      ? ([input.collectionAuthorityRecordPda, false] as const)
+      : ([programId, false] as const)
+  );
+  addObjectProperty(
+    resolvedAccounts,
+    'collectionMetadata',
+    input.collectionMetadata
+      ? ([input.collectionMetadata, true] as const)
+      : ([
+          findMetadataPda(context, {
+            mint: publicKey(input.collectionMint, false),
+          }),
+          true,
+        ] as const)
+  );
+  addObjectProperty(
+    resolvedAccounts,
+    'collectionEdition',
+    input.collectionEdition
+      ? ([input.collectionEdition, false] as const)
+      : ([
+          findMasterEditionPda(context, {
+            mint: publicKey(input.collectionMint, false),
+          }),
+          false,
+        ] as const)
+  );
+  addObjectProperty(
+    resolvedAccounts,
+    'bubblegumSigner',
+    input.bubblegumSigner
+      ? ([input.bubblegumSigner, false] as const)
+      : ([
+          publicKey('4ewWZC5gT6TGpm5LZNDs9wVonfUT2q5PP5sc9kVbwMAK'),
+          false,
+        ] as const)
   );
   addObjectProperty(
     resolvedAccounts,
@@ -209,12 +265,12 @@ export function mintToCollectionV1(
   );
   const resolvedArgs = { ...input, ...resolvingArgs };
 
-  addAccountMeta(keys, signers, resolvedAccounts.treeAuthority, false);
+  addAccountMeta(keys, signers, resolvedAccounts.treeConfig, false);
   addAccountMeta(keys, signers, resolvedAccounts.leafOwner, false);
   addAccountMeta(keys, signers, resolvedAccounts.leafDelegate, false);
   addAccountMeta(keys, signers, resolvedAccounts.merkleTree, false);
   addAccountMeta(keys, signers, resolvedAccounts.payer, false);
-  addAccountMeta(keys, signers, resolvedAccounts.treeDelegate, false);
+  addAccountMeta(keys, signers, resolvedAccounts.treeCreatorOrDelegate, false);
   addAccountMeta(keys, signers, resolvedAccounts.collectionAuthority, false);
   addAccountMeta(
     keys,
@@ -224,7 +280,7 @@ export function mintToCollectionV1(
   );
   addAccountMeta(keys, signers, resolvedAccounts.collectionMint, false);
   addAccountMeta(keys, signers, resolvedAccounts.collectionMetadata, false);
-  addAccountMeta(keys, signers, resolvedAccounts.editionAccount, false);
+  addAccountMeta(keys, signers, resolvedAccounts.collectionEdition, false);
   addAccountMeta(keys, signers, resolvedAccounts.bubblegumSigner, false);
   addAccountMeta(keys, signers, resolvedAccounts.logWrapper, false);
   addAccountMeta(keys, signers, resolvedAccounts.compressionProgram, false);

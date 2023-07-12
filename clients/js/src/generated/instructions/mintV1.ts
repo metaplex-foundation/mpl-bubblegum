@@ -33,7 +33,7 @@ import {
 
 // Accounts.
 export type MintV1InstructionAccounts = {
-  treeAuthority?: PublicKey | Pda;
+  treeConfig?: PublicKey | Pda;
   leafOwner: PublicKey | Pda;
   leafDelegate?: PublicKey | Pda;
   merkleTree: PublicKey | Pda;
@@ -103,9 +103,9 @@ export function mintV1(
   const resolvingArgs = {};
   addObjectProperty(
     resolvedAccounts,
-    'treeAuthority',
-    input.treeAuthority
-      ? ([input.treeAuthority, true] as const)
+    'treeConfig',
+    input.treeConfig
+      ? ([input.treeConfig, true] as const)
       : ([
           findTreeConfigPda(context, {
             merkleTree: publicKey(input.merkleTree, false),
@@ -175,7 +175,7 @@ export function mintV1(
   );
   const resolvedArgs = { ...input, ...resolvingArgs };
 
-  addAccountMeta(keys, signers, resolvedAccounts.treeAuthority, false);
+  addAccountMeta(keys, signers, resolvedAccounts.treeConfig, false);
   addAccountMeta(keys, signers, resolvedAccounts.leafOwner, false);
   addAccountMeta(keys, signers, resolvedAccounts.leafDelegate, false);
   addAccountMeta(keys, signers, resolvedAccounts.merkleTree, false);

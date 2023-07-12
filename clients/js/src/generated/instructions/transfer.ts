@@ -31,7 +31,7 @@ import { addAccountMeta, addObjectProperty } from '../shared';
 
 // Accounts.
 export type TransferInstructionAccounts = {
-  treeAuthority?: PublicKey | Pda;
+  treeConfig?: PublicKey | Pda;
   leafOwner: PublicKey | Pda | Signer;
   leafDelegate?: PublicKey | Pda | Signer;
   newLeafOwner: PublicKey | Pda;
@@ -119,9 +119,9 @@ export function transfer(
   const resolvingArgs = {};
   addObjectProperty(
     resolvedAccounts,
-    'treeAuthority',
-    input.treeAuthority
-      ? ([input.treeAuthority, false] as const)
+    'treeConfig',
+    input.treeConfig
+      ? ([input.treeConfig, false] as const)
       : ([
           findTreeConfigPda(context, {
             merkleTree: publicKey(input.merkleTree, false),
@@ -177,7 +177,7 @@ export function transfer(
   );
   const resolvedArgs = { ...input, ...resolvingArgs };
 
-  addAccountMeta(keys, signers, resolvedAccounts.treeAuthority, false);
+  addAccountMeta(keys, signers, resolvedAccounts.treeConfig, false);
   addAccountMeta(keys, signers, resolvedAccounts.leafOwner, false);
   addAccountMeta(keys, signers, resolvedAccounts.leafDelegate, false);
   addAccountMeta(keys, signers, resolvedAccounts.newLeafOwner, false);

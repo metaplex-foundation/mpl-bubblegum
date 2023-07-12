@@ -31,9 +31,9 @@ import { addAccountMeta, addObjectProperty } from '../shared';
 
 // Accounts.
 export type RedeemInstructionAccounts = {
-  treeAuthority?: PublicKey | Pda;
+  treeConfig?: PublicKey | Pda;
   leafOwner: Signer;
-  leafDelegate: PublicKey | Pda;
+  leafDelegate?: PublicKey | Pda;
   merkleTree: PublicKey | Pda;
   voucher: PublicKey | Pda;
   logWrapper?: PublicKey | Pda;
@@ -109,22 +109,28 @@ export function redeem(
   // Resolved inputs.
   const resolvedAccounts = {
     leafOwner: [input.leafOwner, true] as const,
-    leafDelegate: [input.leafDelegate, false] as const,
     merkleTree: [input.merkleTree, true] as const,
     voucher: [input.voucher, true] as const,
   };
   const resolvingArgs = {};
   addObjectProperty(
     resolvedAccounts,
-    'treeAuthority',
-    input.treeAuthority
-      ? ([input.treeAuthority, false] as const)
+    'treeConfig',
+    input.treeConfig
+      ? ([input.treeConfig, false] as const)
       : ([
           findTreeConfigPda(context, {
             merkleTree: publicKey(input.merkleTree, false),
           }),
           false,
         ] as const)
+  );
+  addObjectProperty(
+    resolvedAccounts,
+    'leafDelegate',
+    input.leafDelegate
+      ? ([input.leafDelegate, false] as const)
+      : ([input.leafOwner, false] as const)
   );
   addObjectProperty(
     resolvedAccounts,
@@ -167,7 +173,7 @@ export function redeem(
   );
   const resolvedArgs = { ...input, ...resolvingArgs };
 
-  addAccountMeta(keys, signers, resolvedAccounts.treeAuthority, false);
+  addAccountMeta(keys, signers, resolvedAccounts.treeConfig, false);
   addAccountMeta(keys, signers, resolvedAccounts.leafOwner, false);
   addAccountMeta(keys, signers, resolvedAccounts.leafDelegate, false);
   addAccountMeta(keys, signers, resolvedAccounts.merkleTree, false);
