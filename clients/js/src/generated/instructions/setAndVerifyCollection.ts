@@ -6,6 +6,7 @@
  * @see https://github.com/metaplex-foundation/kinobi
  */
 
+import { findMetadataPda } from '@metaplex-foundation/mpl-token-metadata';
 import {
   AccountMeta,
   Context,
@@ -46,7 +47,7 @@ export type SetAndVerifyCollectionInstructionAccounts = {
   collectionAuthority: Signer;
   collectionAuthorityRecordPda: PublicKey | Pda;
   collectionMint: PublicKey | Pda;
-  collectionMetadata: PublicKey | Pda;
+  collectionMetadata?: PublicKey | Pda;
   editionAccount: PublicKey | Pda;
   bubblegumSigner?: PublicKey | Pda;
   logWrapper?: PublicKey | Pda;
@@ -151,7 +152,6 @@ export function setAndVerifyCollection(
       false,
     ] as const,
     collectionMint: [input.collectionMint, false] as const,
-    collectionMetadata: [input.collectionMetadata, true] as const,
     editionAccount: [input.editionAccount, false] as const,
   };
   const resolvingArgs = {};
@@ -187,6 +187,18 @@ export function setAndVerifyCollection(
     input.treeCreatorOrDelegate
       ? ([input.treeCreatorOrDelegate, false] as const)
       : ([context.identity.publicKey, false] as const)
+  );
+  addObjectProperty(
+    resolvedAccounts,
+    'collectionMetadata',
+    input.collectionMetadata
+      ? ([input.collectionMetadata, true] as const)
+      : ([
+          findMetadataPda(context, {
+            mint: publicKey(input.collectionMint, false),
+          }),
+          true,
+        ] as const)
   );
   addObjectProperty(
     resolvedAccounts,

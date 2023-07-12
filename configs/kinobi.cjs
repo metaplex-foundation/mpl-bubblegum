@@ -111,6 +111,15 @@ kinobi.update(
       ignoreIfOptional: true,
       ...k.publicKeyDefault("4ewWZC5gT6TGpm5LZNDs9wVonfUT2q5PP5sc9kVbwMAK"),
     },
+    // TODO: collectionAuthorityRecordPda, when new metadata delegates are supported to avoid breaking changes.
+    {
+      account: "collectionMetadata",
+      ignoreIfOptional: true,
+      ...k.pdaDefault("metadata", {
+        importFrom: "mplTokenMetadata",
+        seeds: { mint: k.accountDefault("collectionMint") },
+      }),
+    },
   ])
 );
 
@@ -219,4 +228,11 @@ kinobi.update(
 // Render JavaScript.
 const jsDir = path.join(clientDir, "js", "src", "generated");
 const prettier = require(path.join(clientDir, "js", ".prettierrc.json"));
-kinobi.accept(new k.RenderJavaScriptVisitor(jsDir, { prettier }));
+kinobi.accept(
+  new k.RenderJavaScriptVisitor(jsDir, {
+    prettier,
+    dependencyMap: {
+      mplTokenMetadata: "@metaplex-foundation/mpl-token-metadata",
+    },
+  })
+);
