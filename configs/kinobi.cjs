@@ -85,6 +85,11 @@ kinobi.update(
       ignoreIfOptional: true,
       ...k.pdaDefault("treeConfig"),
     },
+    {
+      account: "bubblegumSigner",
+      ignoreIfOptional: true,
+      ...k.publicKeyDefault("4ewWZC5gT6TGpm5LZNDs9wVonfUT2q5PP5sc9kVbwMAK"),
+    },
   ])
 );
 

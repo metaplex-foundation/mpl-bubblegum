@@ -44,7 +44,7 @@ export type MintToCollectionV1InstructionAccounts = {
   collectionMint: PublicKey | Pda;
   collectionMetadata: PublicKey | Pda;
   editionAccount: PublicKey | Pda;
-  bubblegumSigner: PublicKey | Pda;
+  bubblegumSigner?: PublicKey | Pda;
   logWrapper?: PublicKey | Pda;
   compressionProgram?: PublicKey | Pda;
   tokenMetadataProgram?: PublicKey | Pda;
@@ -133,7 +133,6 @@ export function mintToCollectionV1(
     collectionMint: [input.collectionMint, false] as const,
     collectionMetadata: [input.collectionMetadata, true] as const,
     editionAccount: [input.editionAccount, false] as const,
-    bubblegumSigner: [input.bubblegumSigner, false] as const,
   };
   const resolvingArgs = {};
   addObjectProperty(
@@ -154,6 +153,16 @@ export function mintToCollectionV1(
     input.payer
       ? ([input.payer, false] as const)
       : ([context.payer, false] as const)
+  );
+  addObjectProperty(
+    resolvedAccounts,
+    'bubblegumSigner',
+    input.bubblegumSigner
+      ? ([input.bubblegumSigner, false] as const)
+      : ([
+          publicKey('4ewWZC5gT6TGpm5LZNDs9wVonfUT2q5PP5sc9kVbwMAK'),
+          false,
+        ] as const)
   );
   addObjectProperty(
     resolvedAccounts,
