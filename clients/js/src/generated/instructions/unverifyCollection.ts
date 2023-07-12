@@ -41,7 +41,7 @@ export type UnverifyCollectionInstructionAccounts = {
   leafDelegate: PublicKey | Pda;
   merkleTree: PublicKey | Pda;
   payer?: Signer;
-  treeCreatorOrDelegate: PublicKey | Pda;
+  treeCreatorOrDelegate?: PublicKey | Pda;
   collectionAuthority: Signer;
   collectionAuthorityRecordPda: PublicKey | Pda;
   collectionMint: PublicKey | Pda;
@@ -124,7 +124,7 @@ export type UnverifyCollectionInstructionArgs =
 
 // Instruction.
 export function unverifyCollection(
-  context: Pick<Context, 'programs' | 'eddsa' | 'payer'>,
+  context: Pick<Context, 'programs' | 'eddsa' | 'identity' | 'payer'>,
   input: UnverifyCollectionInstructionAccounts &
     UnverifyCollectionInstructionArgs
 ): TransactionBuilder {
@@ -142,7 +142,6 @@ export function unverifyCollection(
     leafOwner: [input.leafOwner, false] as const,
     leafDelegate: [input.leafDelegate, false] as const,
     merkleTree: [input.merkleTree, true] as const,
-    treeCreatorOrDelegate: [input.treeCreatorOrDelegate, false] as const,
     collectionAuthority: [input.collectionAuthority, false] as const,
     collectionAuthorityRecordPda: [
       input.collectionAuthorityRecordPda,
@@ -171,6 +170,13 @@ export function unverifyCollection(
     input.payer
       ? ([input.payer, false] as const)
       : ([context.payer, false] as const)
+  );
+  addObjectProperty(
+    resolvedAccounts,
+    'treeCreatorOrDelegate',
+    input.treeCreatorOrDelegate
+      ? ([input.treeCreatorOrDelegate, false] as const)
+      : ([context.identity.publicKey, false] as const)
   );
   addObjectProperty(
     resolvedAccounts,

@@ -92,6 +92,11 @@ kinobi.update(
       ...k.identityDefault(),
     },
     {
+      account: "treeCreatorOrDelegate",
+      ignoreIfOptional: true,
+      ...k.identityDefault(),
+    },
+    {
       account: "treeConfig",
       ignoreIfOptional: true,
       ...k.pdaDefault("treeConfig"),
@@ -114,9 +119,6 @@ kinobi.update(
     mintV1: {
       accounts: {
         leafDelegate: { defaultsTo: k.accountDefault("leafOwner") },
-        treeCreatorOrDelegate: {
-          defaultsTo: k.identityDefault(),
-        },
       },
     },
     transfer: {

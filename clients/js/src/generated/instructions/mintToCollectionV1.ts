@@ -38,7 +38,7 @@ export type MintToCollectionV1InstructionAccounts = {
   leafDelegate: PublicKey | Pda;
   merkleTree: PublicKey | Pda;
   payer?: Signer;
-  treeCreatorOrDelegate: Signer;
+  treeCreatorOrDelegate?: Signer;
   collectionAuthority: Signer;
   collectionAuthorityRecordPda: PublicKey | Pda;
   collectionMint: PublicKey | Pda;
@@ -106,7 +106,7 @@ export type MintToCollectionV1InstructionArgs =
 
 // Instruction.
 export function mintToCollectionV1(
-  context: Pick<Context, 'programs' | 'eddsa' | 'payer'>,
+  context: Pick<Context, 'programs' | 'eddsa' | 'identity' | 'payer'>,
   input: MintToCollectionV1InstructionAccounts &
     MintToCollectionV1InstructionArgs
 ): TransactionBuilder {
@@ -124,7 +124,6 @@ export function mintToCollectionV1(
     leafOwner: [input.leafOwner, false] as const,
     leafDelegate: [input.leafDelegate, false] as const,
     merkleTree: [input.merkleTree, true] as const,
-    treeCreatorOrDelegate: [input.treeCreatorOrDelegate, false] as const,
     collectionAuthority: [input.collectionAuthority, false] as const,
     collectionAuthorityRecordPda: [
       input.collectionAuthorityRecordPda,
@@ -153,6 +152,13 @@ export function mintToCollectionV1(
     input.payer
       ? ([input.payer, false] as const)
       : ([context.payer, false] as const)
+  );
+  addObjectProperty(
+    resolvedAccounts,
+    'treeCreatorOrDelegate',
+    input.treeCreatorOrDelegate
+      ? ([input.treeCreatorOrDelegate, false] as const)
+      : ([context.identity, false] as const)
   );
   addObjectProperty(
     resolvedAccounts,

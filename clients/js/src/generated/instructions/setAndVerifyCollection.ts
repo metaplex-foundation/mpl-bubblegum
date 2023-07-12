@@ -42,7 +42,7 @@ export type SetAndVerifyCollectionInstructionAccounts = {
   leafDelegate: PublicKey | Pda;
   merkleTree: PublicKey | Pda;
   payer?: Signer;
-  treeCreatorOrDelegate: PublicKey | Pda;
+  treeCreatorOrDelegate?: PublicKey | Pda;
   collectionAuthority: Signer;
   collectionAuthorityRecordPda: PublicKey | Pda;
   collectionMint: PublicKey | Pda;
@@ -128,7 +128,7 @@ export type SetAndVerifyCollectionInstructionArgs =
 
 // Instruction.
 export function setAndVerifyCollection(
-  context: Pick<Context, 'programs' | 'eddsa' | 'payer'>,
+  context: Pick<Context, 'programs' | 'eddsa' | 'identity' | 'payer'>,
   input: SetAndVerifyCollectionInstructionAccounts &
     SetAndVerifyCollectionInstructionArgs
 ): TransactionBuilder {
@@ -146,7 +146,6 @@ export function setAndVerifyCollection(
     leafOwner: [input.leafOwner, false] as const,
     leafDelegate: [input.leafDelegate, false] as const,
     merkleTree: [input.merkleTree, true] as const,
-    treeCreatorOrDelegate: [input.treeCreatorOrDelegate, false] as const,
     collectionAuthority: [input.collectionAuthority, false] as const,
     collectionAuthorityRecordPda: [
       input.collectionAuthorityRecordPda,
@@ -175,6 +174,13 @@ export function setAndVerifyCollection(
     input.payer
       ? ([input.payer, false] as const)
       : ([context.payer, false] as const)
+  );
+  addObjectProperty(
+    resolvedAccounts,
+    'treeCreatorOrDelegate',
+    input.treeCreatorOrDelegate
+      ? ([input.treeCreatorOrDelegate, false] as const)
+      : ([context.identity.publicKey, false] as const)
   );
   addObjectProperty(
     resolvedAccounts,
