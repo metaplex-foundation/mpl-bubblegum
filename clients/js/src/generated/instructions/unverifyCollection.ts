@@ -41,7 +41,7 @@ export type UnverifyCollectionInstructionAccounts = {
   leafDelegate: PublicKey | Pda;
   merkleTree: PublicKey | Pda;
   payer?: Signer;
-  treeDelegate: PublicKey | Pda;
+  treeCreatorOrDelegate: PublicKey | Pda;
   collectionAuthority: Signer;
   collectionAuthorityRecordPda: PublicKey | Pda;
   collectionMint: PublicKey | Pda;
@@ -142,7 +142,7 @@ export function unverifyCollection(
     leafOwner: [input.leafOwner, false] as const,
     leafDelegate: [input.leafDelegate, false] as const,
     merkleTree: [input.merkleTree, true] as const,
-    treeDelegate: [input.treeDelegate, false] as const,
+    treeCreatorOrDelegate: [input.treeCreatorOrDelegate, false] as const,
     collectionAuthority: [input.collectionAuthority, false] as const,
     collectionAuthorityRecordPda: [
       input.collectionAuthorityRecordPda,
@@ -241,7 +241,7 @@ export function unverifyCollection(
   addAccountMeta(keys, signers, resolvedAccounts.leafDelegate, false);
   addAccountMeta(keys, signers, resolvedAccounts.merkleTree, false);
   addAccountMeta(keys, signers, resolvedAccounts.payer, false);
-  addAccountMeta(keys, signers, resolvedAccounts.treeDelegate, false);
+  addAccountMeta(keys, signers, resolvedAccounts.treeCreatorOrDelegate, false);
   addAccountMeta(keys, signers, resolvedAccounts.collectionAuthority, false);
   addAccountMeta(
     keys,

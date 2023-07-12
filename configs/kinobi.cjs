@@ -53,6 +53,17 @@ kinobi.update(
         return k.instructionAccountNode({ ...node, name: "treeConfig" });
       },
     },
+    {
+      // Rename `treeDelegate` instruction account to `treeCreatorOrDelegate`.
+      selector: { kind: "instructionAccountNode", name: "treeDelegate" },
+      transformer: (node) => {
+        k.assertInstructionAccountNode(node);
+        return k.instructionAccountNode({
+          ...node,
+          name: "treeCreatorOrDelegate",
+        });
+      },
+    },
   ])
 );
 
@@ -103,8 +114,7 @@ kinobi.update(
     mintV1: {
       accounts: {
         leafDelegate: { defaultsTo: k.accountDefault("leafOwner") },
-        treeDelegate: {
-          name: "treeCreatorOrDelegate",
+        treeCreatorOrDelegate: {
           defaultsTo: k.identityDefault(),
         },
       },
