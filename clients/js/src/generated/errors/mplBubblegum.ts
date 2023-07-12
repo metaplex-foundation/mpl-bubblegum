@@ -433,6 +433,51 @@ export class InvalidDelegateRecordError extends ProgramError {
 codeToErrorMap.set(0x178d, InvalidDelegateRecordError);
 nameToErrorMap.set('InvalidDelegateRecord', InvalidDelegateRecordError);
 
+/** CollectionMasterEditionAccountInvalid: Edition account doesnt match collection */
+export class CollectionMasterEditionAccountInvalidError extends ProgramError {
+  readonly name: string = 'CollectionMasterEditionAccountInvalid';
+
+  readonly code: number = 0x178e; // 6030
+
+  constructor(program: Program, cause?: Error) {
+    super('Edition account doesnt match collection', program, cause);
+  }
+}
+codeToErrorMap.set(0x178e, CollectionMasterEditionAccountInvalidError);
+nameToErrorMap.set(
+  'CollectionMasterEditionAccountInvalid',
+  CollectionMasterEditionAccountInvalidError
+);
+
+/** CollectionMustBeAUniqueMasterEdition: Collection Must Be a Unique Master Edition v2 */
+export class CollectionMustBeAUniqueMasterEditionError extends ProgramError {
+  readonly name: string = 'CollectionMustBeAUniqueMasterEdition';
+
+  readonly code: number = 0x178f; // 6031
+
+  constructor(program: Program, cause?: Error) {
+    super('Collection Must Be a Unique Master Edition v2', program, cause);
+  }
+}
+codeToErrorMap.set(0x178f, CollectionMustBeAUniqueMasterEditionError);
+nameToErrorMap.set(
+  'CollectionMustBeAUniqueMasterEdition',
+  CollectionMustBeAUniqueMasterEditionError
+);
+
+/** UnknownExternalError: Could not convert external error to BubblegumError */
+export class UnknownExternalErrorError extends ProgramError {
+  readonly name: string = 'UnknownExternalError';
+
+  readonly code: number = 0x1790; // 6032
+
+  constructor(program: Program, cause?: Error) {
+    super('Could not convert external error to BubblegumError', program, cause);
+  }
+}
+codeToErrorMap.set(0x1790, UnknownExternalErrorError);
+nameToErrorMap.set('UnknownExternalError', UnknownExternalErrorError);
+
 /**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors

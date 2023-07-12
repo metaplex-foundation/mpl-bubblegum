@@ -2182,6 +2182,21 @@
       "code": 6029,
       "name": "InvalidDelegateRecord",
       "msg": "Invalid delegate record pda derivation"
+    },
+    {
+      "code": 6030,
+      "name": "CollectionMasterEditionAccountInvalid",
+      "msg": "Edition account doesnt match collection"
+    },
+    {
+      "code": 6031,
+      "name": "CollectionMustBeAUniqueMasterEdition",
+      "msg": "Collection Must Be a Unique Master Edition v2"
+    },
+    {
+      "code": 6032,
+      "name": "UnknownExternalError",
+      "msg": "Could not convert external error to BubblegumError"
     }
   ],
   "metadata": {
