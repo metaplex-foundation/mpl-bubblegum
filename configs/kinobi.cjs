@@ -121,6 +121,11 @@ kinobi.update(
       name: "createTreeConfig",
       bytesCreatedOnChain: k.bytesFromAccount("treeConfig"),
     },
+    mintToCollectionV1: {
+      args: {
+        metadataArgs: { name: "message" },
+      },
+    },
     transfer: {
       accounts: {
         leafOwner: { isSigner: "either" },
