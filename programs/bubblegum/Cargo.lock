@@ -2051,6 +2051,7 @@ dependencies = [
  "bytemuck",
  "mpl-token-auth-rules",
  "mpl-token-metadata",
+ "num-traits",
  "solana-program",
  "solana-program-test",
  "solana-sdk",

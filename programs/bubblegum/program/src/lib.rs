@@ -2,7 +2,7 @@
 #![allow(clippy::too_many_arguments)]
 
 use crate::{
-    error::BubblegumError,
+    error::{metadata_error_into_bubblegum, BubblegumError},
     state::{
         leaf_schema::LeafSchema,
         metaplex_adapter::{self, Creator, MetadataArgs, TokenProgramVersion},
@@ -731,9 +731,9 @@ fn process_collection_verification_mpl_only<'info>(
             collection_metadata,
             collection_mint,
             edition_account,
-        )?;
+        )
+        .map_err(metadata_error_into_bubblegum)?;
 
-        // Collection authority assert from token-metadata.
         assert_has_collection_authority(
             collection_metadata,
             collection_mint.key,
