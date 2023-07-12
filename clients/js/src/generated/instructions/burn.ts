@@ -33,7 +33,7 @@ import { addAccountMeta, addObjectProperty } from '../shared';
 export type BurnInstructionAccounts = {
   treeConfig?: PublicKey | Pda;
   leafOwner: PublicKey | Pda;
-  leafDelegate: PublicKey | Pda;
+  leafDelegate?: PublicKey | Pda;
   merkleTree: PublicKey | Pda;
   logWrapper?: PublicKey | Pda;
   compressionProgram?: PublicKey | Pda;
@@ -108,7 +108,6 @@ export function burn(
   // Resolved inputs.
   const resolvedAccounts = {
     leafOwner: [input.leafOwner, false] as const,
-    leafDelegate: [input.leafDelegate, false] as const,
     merkleTree: [input.merkleTree, true] as const,
   };
   const resolvingArgs = {};
@@ -123,6 +122,13 @@ export function burn(
           }),
           false,
         ] as const)
+  );
+  addObjectProperty(
+    resolvedAccounts,
+    'leafDelegate',
+    input.leafDelegate
+      ? ([input.leafDelegate, false] as const)
+      : ([input.leafOwner, false] as const)
   );
   addObjectProperty(
     resolvedAccounts,

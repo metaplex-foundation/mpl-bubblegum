@@ -35,7 +35,7 @@ import {
 export type MintToCollectionV1InstructionAccounts = {
   treeConfig?: PublicKey | Pda;
   leafOwner: PublicKey | Pda;
-  leafDelegate: PublicKey | Pda;
+  leafDelegate?: PublicKey | Pda;
   merkleTree: PublicKey | Pda;
   payer?: Signer;
   treeCreatorOrDelegate?: Signer;
@@ -122,7 +122,6 @@ export function mintToCollectionV1(
   // Resolved inputs.
   const resolvedAccounts = {
     leafOwner: [input.leafOwner, false] as const,
-    leafDelegate: [input.leafDelegate, false] as const,
     merkleTree: [input.merkleTree, true] as const,
     collectionAuthority: [input.collectionAuthority, false] as const,
     collectionAuthorityRecordPda: [
@@ -145,6 +144,13 @@ export function mintToCollectionV1(
           }),
           true,
         ] as const)
+  );
+  addObjectProperty(
+    resolvedAccounts,
+    'leafDelegate',
+    input.leafDelegate
+      ? ([input.leafDelegate, false] as const)
+      : ([input.leafOwner, false] as const)
   );
   addObjectProperty(
     resolvedAccounts,

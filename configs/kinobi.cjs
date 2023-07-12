@@ -97,6 +97,11 @@ kinobi.update(
       ...k.identityDefault(),
     },
     {
+      account: "leafDelegate",
+      ignoreIfOptional: true,
+      ...k.accountDefault("leafOwner"),
+    },
+    {
       account: "treeConfig",
       ignoreIfOptional: true,
       ...k.pdaDefault("treeConfig"),
@@ -116,18 +121,10 @@ kinobi.update(
       name: "createTreeConfig",
       bytesCreatedOnChain: k.bytesFromAccount("treeConfig"),
     },
-    mintV1: {
-      accounts: {
-        leafDelegate: { defaultsTo: k.accountDefault("leafOwner") },
-      },
-    },
     transfer: {
       accounts: {
         leafOwner: { isSigner: "either" },
-        leafDelegate: {
-          isSigner: "either",
-          defaultsTo: k.accountDefault("leafOwner"),
-        },
+        leafDelegate: { isSigner: "either" },
       },
     },
     decompressV1: {

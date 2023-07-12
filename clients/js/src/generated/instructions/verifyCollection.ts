@@ -38,7 +38,7 @@ import {
 export type VerifyCollectionInstructionAccounts = {
   treeConfig?: PublicKey | Pda;
   leafOwner: PublicKey | Pda;
-  leafDelegate: PublicKey | Pda;
+  leafDelegate?: PublicKey | Pda;
   merkleTree: PublicKey | Pda;
   payer?: Signer;
   treeCreatorOrDelegate?: PublicKey | Pda;
@@ -139,7 +139,6 @@ export function verifyCollection(
   // Resolved inputs.
   const resolvedAccounts = {
     leafOwner: [input.leafOwner, false] as const,
-    leafDelegate: [input.leafDelegate, false] as const,
     merkleTree: [input.merkleTree, true] as const,
     collectionAuthority: [input.collectionAuthority, false] as const,
     collectionAuthorityRecordPda: [
@@ -162,6 +161,13 @@ export function verifyCollection(
           }),
           false,
         ] as const)
+  );
+  addObjectProperty(
+    resolvedAccounts,
+    'leafDelegate',
+    input.leafDelegate
+      ? ([input.leafDelegate, false] as const)
+      : ([input.leafOwner, false] as const)
   );
   addObjectProperty(
     resolvedAccounts,

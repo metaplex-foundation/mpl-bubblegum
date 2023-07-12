@@ -33,7 +33,7 @@ import { addAccountMeta, addObjectProperty } from '../shared';
 export type RedeemInstructionAccounts = {
   treeConfig?: PublicKey | Pda;
   leafOwner: Signer;
-  leafDelegate: PublicKey | Pda;
+  leafDelegate?: PublicKey | Pda;
   merkleTree: PublicKey | Pda;
   voucher: PublicKey | Pda;
   logWrapper?: PublicKey | Pda;
@@ -109,7 +109,6 @@ export function redeem(
   // Resolved inputs.
   const resolvedAccounts = {
     leafOwner: [input.leafOwner, true] as const,
-    leafDelegate: [input.leafDelegate, false] as const,
     merkleTree: [input.merkleTree, true] as const,
     voucher: [input.voucher, true] as const,
   };
@@ -125,6 +124,13 @@ export function redeem(
           }),
           false,
         ] as const)
+  );
+  addObjectProperty(
+    resolvedAccounts,
+    'leafDelegate',
+    input.leafDelegate
+      ? ([input.leafDelegate, false] as const)
+      : ([input.leafOwner, false] as const)
   );
   addObjectProperty(
     resolvedAccounts,
