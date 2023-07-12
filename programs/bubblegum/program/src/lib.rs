@@ -1,7 +1,8 @@
 #![allow(clippy::result_large_err)]
+#![allow(clippy::too_many_arguments)]
 
 use crate::{
-    error::BubblegumError,
+    error::{metadata_error_into_bubblegum, BubblegumError},
     state::{
         leaf_schema::LeafSchema,
         metaplex_adapter::{self, Creator, MetadataArgs, TokenProgramVersion},
@@ -10,8 +11,8 @@ use crate::{
         VOUCHER_PREFIX, VOUCHER_SIZE,
     },
     utils::{
-        append_leaf, assert_metadata_is_mpl_compatible, assert_pubkey_equal, cmp_bytes,
-        cmp_pubkeys, get_asset_id, replace_leaf,
+        append_leaf, assert_has_collection_authority, assert_metadata_is_mpl_compatible,
+        assert_pubkey_equal, cmp_bytes, cmp_pubkeys, get_asset_id, replace_leaf,
     },
 };
 use anchor_lang::{
@@ -27,8 +28,7 @@ use anchor_lang::{
     system_program::System,
 };
 use mpl_token_metadata::{
-    assertions::collection::{assert_collection_verify_is_valid, assert_has_collection_authority},
-    state::CollectionDetails,
+    assertions::collection::assert_collection_verify_is_valid, state::CollectionDetails,
 };
 use spl_account_compression::{
     program::SplAccountCompression, wrap_application_data_v1, Node, Noop,
@@ -153,7 +153,7 @@ pub struct CreatorVerification<'info> {
     pub tree_authority: Account<'info, TreeConfig>,
     /// CHECK: This account is checked in the instruction
     pub leaf_owner: UncheckedAccount<'info>,
-    /// CHECK: This account is chekced in the instruction
+    /// CHECK: This account is checked in the instruction
     pub leaf_delegate: UncheckedAccount<'info>,
     #[account(mut)]
     /// CHECK: This account is modified in the downstream program
@@ -731,13 +731,13 @@ fn process_collection_verification_mpl_only<'info>(
             collection_metadata,
             collection_mint,
             edition_account,
-        )?;
+        )
+        .map_err(metadata_error_into_bubblegum)?;
 
-        // Collection authority assert from token-metadata.
         assert_has_collection_authority(
-            collection_authority,
             collection_metadata,
             collection_mint.key,
+            collection_authority.key,
             collection_authority_record,
         )?;
 

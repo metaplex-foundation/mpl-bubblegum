@@ -2167,6 +2167,36 @@
       "code": 6026,
       "name": "CollectionMustBeSized",
       "msg": "Collection Not Compatable with Compression, Must be Sized"
+    },
+    {
+      "code": 6027,
+      "name": "MetadataMintMismatch",
+      "msg": "Metadata mint does not match collection mint"
+    },
+    {
+      "code": 6028,
+      "name": "InvalidCollectionAuthority",
+      "msg": "Invalid collection authority"
+    },
+    {
+      "code": 6029,
+      "name": "InvalidDelegateRecord",
+      "msg": "Invalid delegate record pda derivation"
+    },
+    {
+      "code": 6030,
+      "name": "CollectionMasterEditionAccountInvalid",
+      "msg": "Edition account doesnt match collection"
+    },
+    {
+      "code": 6031,
+      "name": "CollectionMustBeAUniqueMasterEdition",
+      "msg": "Collection Must Be a Unique Master Edition v2"
+    },
+    {
+      "code": 6032,
+      "name": "UnknownExternalError",
+      "msg": "Could not convert external error to BubblegumError"
     }
   ],
   "metadata": {
