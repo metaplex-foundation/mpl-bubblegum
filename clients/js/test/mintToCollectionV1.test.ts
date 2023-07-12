@@ -8,7 +8,6 @@ import {
 } from '@metaplex-foundation/umi';
 import test from 'ava';
 import {
-  MPL_BUBBLEGUM_PROGRAM_ID,
   MetadataArgsArgs,
   fetchMerkleTree,
   hashLeaf,
@@ -54,8 +53,6 @@ test('it can mint an NFT from a collection', async (t) => {
     merkleTree,
     message: metadata,
     collectionMint: collectionMint.publicKey,
-    collectionAuthority: umi.identity,
-    collectionAuthorityRecordPda: MPL_BUBBLEGUM_PROGRAM_ID,
   }).sendAndConfirm(umi);
 
   // Then a new leaf was added to the merkle tree.

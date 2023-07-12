@@ -135,7 +135,16 @@ kinobi.update(
         seeds: { mint: k.accountDefault("collectionMint") },
       }),
     },
-    // TODO: collectionAuthorityRecordPda, when new metadata delegates are supported to avoid breaking changes.
+    {
+      account: "collectionAuthorityRecordPda",
+      ignoreIfOptional: true,
+      ...k.programIdDefault(),
+    },
+    {
+      account: "collectionAuthority",
+      ignoreIfOptional: true,
+      ...k.identityDefault(),
+    },
   ])
 );
 

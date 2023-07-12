@@ -43,8 +43,8 @@ export type MintToCollectionV1InstructionAccounts = {
   merkleTree: PublicKey | Pda;
   payer?: Signer;
   treeCreatorOrDelegate?: Signer;
-  collectionAuthority: Signer;
-  collectionAuthorityRecordPda: PublicKey | Pda;
+  collectionAuthority?: Signer;
+  collectionAuthorityRecordPda?: PublicKey | Pda;
   collectionMint: PublicKey | Pda;
   collectionMetadata?: PublicKey | Pda;
   collectionEdition?: PublicKey | Pda;
@@ -127,11 +127,6 @@ export function mintToCollectionV1(
   const resolvedAccounts = {
     leafOwner: [input.leafOwner, false] as const,
     merkleTree: [input.merkleTree, true] as const,
-    collectionAuthority: [input.collectionAuthority, false] as const,
-    collectionAuthorityRecordPda: [
-      input.collectionAuthorityRecordPda,
-      false,
-    ] as const,
     collectionMint: [input.collectionMint, false] as const,
   };
   const resolvingArgs = {};
@@ -167,6 +162,20 @@ export function mintToCollectionV1(
     input.treeCreatorOrDelegate
       ? ([input.treeCreatorOrDelegate, false] as const)
       : ([context.identity, false] as const)
+  );
+  addObjectProperty(
+    resolvedAccounts,
+    'collectionAuthority',
+    input.collectionAuthority
+      ? ([input.collectionAuthority, false] as const)
+      : ([context.identity, false] as const)
+  );
+  addObjectProperty(
+    resolvedAccounts,
+    'collectionAuthorityRecordPda',
+    input.collectionAuthorityRecordPda
+      ? ([input.collectionAuthorityRecordPda, false] as const)
+      : ([programId, false] as const)
   );
   addObjectProperty(
     resolvedAccounts,
