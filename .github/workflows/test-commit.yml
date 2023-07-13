@@ -1,0 +1,28 @@
+name: Test commit
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test_commit:
+    name: Test commit
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.SVC_TOKEN }}
+
+      - name: Load environment variables
+        run: cat .github/.env >> $GITHUB_ENV
+
+      - name: Append to file
+        run: |
+          echo "Some text" >> ./.github/test.txt
+
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: Test commit
