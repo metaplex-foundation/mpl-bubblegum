@@ -83,7 +83,7 @@ test('it can mint an NFT from a collection', async (t) => {
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(leaf));
 });
 
-test.skip('it can mint an NFT from a collection using a collection delegate', async (t) => {
+test('it can mint an NFT from a collection using a collection delegate', async (t) => {
   // Given an empty Bubblegum tree.
   const umi = await createUmi();
   const merkleTree = await createTree(umi);
