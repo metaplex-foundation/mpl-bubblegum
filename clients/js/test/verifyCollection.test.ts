@@ -19,8 +19,10 @@ test('it can verify the collection of a minted compressed NFT', async (t) => {
   // Given a Collection NFT.
   const umi = await createUmi();
   const collectionMint = generateSigner(umi);
+  const collectionAuthority = generateSigner(umi);
   await createNft(umi, {
     mint: collectionMint,
+    authority: collectionAuthority,
     name: 'My Collection',
     uri: 'https://example.com/my-collection.json',
     sellerFeeBasisPoints: percentAmount(5.5), // 5.5%
@@ -42,10 +44,11 @@ test('it can verify the collection of a minted compressed NFT', async (t) => {
     },
   });
 
-  // When the tree authority verifies the collection.
+  // When the collection authority verifies the collection.
   await verifyCollection(umi, {
     leafOwner,
     collectionMint: collectionMint.publicKey,
+    collectionAuthority,
     merkleTree,
     root: getCurrentRoot(merkleTreeAccount.tree),
     dataHash: hashMetadataData(metadata),
