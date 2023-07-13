@@ -171,6 +171,13 @@ kinobi.update(
         metadata: { name: "message" },
       },
     },
+    setAndVerifyCollection: {
+      args: {
+        collection: {
+          defaultsTo: k.accountDefault("collectionMint"),
+        },
+      },
+    },
     // Remove unnecessary spl_account_compression instructions.
     append: { delete: true },
     closeEmptyTree: { delete: true },

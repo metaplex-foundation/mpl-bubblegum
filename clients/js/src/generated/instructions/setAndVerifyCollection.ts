@@ -32,7 +32,7 @@ import {
   u8,
 } from '@metaplex-foundation/umi/serializers';
 import { findTreeConfigPda } from '../accounts';
-import { addAccountMeta, addObjectProperty } from '../shared';
+import { PickPartial, addAccountMeta, addObjectProperty } from '../shared';
 import {
   MetadataArgs,
   MetadataArgsArgs,
@@ -127,8 +127,10 @@ export function getSetAndVerifyCollectionInstructionDataSerializer(
 }
 
 // Args.
-export type SetAndVerifyCollectionInstructionArgs =
-  SetAndVerifyCollectionInstructionDataArgs;
+export type SetAndVerifyCollectionInstructionArgs = PickPartial<
+  SetAndVerifyCollectionInstructionDataArgs,
+  'collection'
+>;
 
 // Instruction.
 export function setAndVerifyCollection(
@@ -284,6 +286,11 @@ export function setAndVerifyCollection(
           ),
           false,
         ] as const)
+  );
+  addObjectProperty(
+    resolvingArgs,
+    'collection',
+    input.collection ?? publicKey(input.collectionMint, false)
   );
   const resolvedArgs = { ...input, ...resolvingArgs };
 
