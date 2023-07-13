@@ -6,7 +6,7 @@ Create and interact with compressed Metaplex NFTs
 
 This project contains the following programs:
 
-- [Mpl Bubblegum](./programs/mpl-bubblegum/README.md) `BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY`
+- [Mpl Bubblegum](./programs/bubblegum/README.md) `BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY`
 
 You will need a Rust version compatible with BPF to compile the program, currently we recommend using Rust 1.65.0.
 
