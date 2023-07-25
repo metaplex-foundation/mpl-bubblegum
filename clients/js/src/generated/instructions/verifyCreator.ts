@@ -26,8 +26,9 @@ import {
   u64,
   u8,
 } from '@metaplex-foundation/umi/serializers';
+import { resolveCreatorHash, resolveDataHash } from '../../hooked';
 import { findTreeConfigPda } from '../accounts';
-import { addAccountMeta, addObjectProperty } from '../shared';
+import { PickPartial, addAccountMeta, addObjectProperty } from '../shared';
 import {
   MetadataArgs,
   MetadataArgsArgs,
@@ -103,11 +104,14 @@ export function getVerifyCreatorInstructionDataSerializer(
 }
 
 // Args.
-export type VerifyCreatorInstructionArgs = VerifyCreatorInstructionDataArgs;
+export type VerifyCreatorInstructionArgs = PickPartial<
+  VerifyCreatorInstructionDataArgs,
+  'dataHash' | 'creatorHash'
+>;
 
 // Instruction.
 export function verifyCreator(
-  context: Pick<Context, 'programs' | 'eddsa' | 'payer'>,
+  context: Pick<Context, 'programs' | 'eddsa' | 'identity' | 'payer'>,
   input: VerifyCreatorInstructionAccounts & VerifyCreatorInstructionArgs
 ): TransactionBuilder {
   const signers: Signer[] = [];
@@ -190,6 +194,30 @@ export function verifyCreator(
           ),
           false,
         ] as const)
+  );
+  addObjectProperty(
+    resolvingArgs,
+    'dataHash',
+    input.dataHash ??
+      resolveDataHash(
+        context,
+        { ...input, ...resolvedAccounts },
+        { ...input, ...resolvingArgs },
+        programId,
+        false
+      )
+  );
+  addObjectProperty(
+    resolvingArgs,
+    'creatorHash',
+    input.creatorHash ??
+      resolveCreatorHash(
+        context,
+        { ...input, ...resolvedAccounts },
+        { ...input, ...resolvingArgs },
+        programId,
+        false
+      )
   );
   const resolvedArgs = { ...input, ...resolvingArgs };
 
