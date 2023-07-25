@@ -1035,7 +1035,7 @@ pub mod bubblegum {
 
         // Create a HashSet to store signers to use with creator validation.  Any signer can be
         // counted as a validated creator.
-          let mut metadata_auth = HashSet::<Pubkey>::new();
+        let mut metadata_auth = HashSet::<Pubkey>::new();
         metadata_auth.insert(payer);
         metadata_auth.insert(tree_delegate);
 
