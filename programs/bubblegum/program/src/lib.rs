@@ -174,6 +174,8 @@ pub struct AddCreator<'info> {
     )]
     pub tree_authority: Account<'info, TreeConfig>,
     pub tree_delegate: Signer<'info>,
+    /// CHECK: The new creator being added
+    pub creator: AccountInfo<'info>,
     /// CHECK: This account is checked in the instruction
     pub leaf_owner: UncheckedAccount<'info>,
     /// CHECK: This account is checked in the instruction
@@ -1105,11 +1107,11 @@ pub mod bubblegum {
         ctx: Context<'_, '_, '_, 'info, AddCreator<'info>>,
         root: [u8; 32],
         metadata: MetadataArgs,
-        new_creator: Creator,
         nonce: u64,
         index: u32,
     ) -> Result<()> {
-      let creator_opt = ctx.remaining_accounts.get(0);
+      require!(metadata.is_mutable, BubblegumError::MetadataMustBeMutable);
+
       let owner = ctx.accounts.leaf_owner.to_account_info();
       let delegate = ctx.accounts.leaf_delegate.to_account_info();
       let merkle_tree = ctx.accounts.merkle_tree.to_account_info();
@@ -1119,16 +1121,13 @@ pub mod bubblegum {
 
       // Calculate new creator Vec with `verified` set to true for signing creator.
       let mut updated_creator_vec = old_creators.clone();
-      let verified = match creator_opt {
-        Some(creator) if creator.key() == new_creator.address && creator.is_signer => 
-          true,
-        _ => false,
-      };
       updated_creator_vec.push(
         Creator {
-            address: new_creator.address,
-            verified,
-            share: new_creator.share,
+            address: ctx.accounts.creator.key(),
+            verified: ctx.accounts.creator.is_signer,
+            // TODO: Need to add a rebalance shares endpoint to allow setting these shares,
+            // and ensuring they all balance to 100
+            share: 0,
         }
       );
 

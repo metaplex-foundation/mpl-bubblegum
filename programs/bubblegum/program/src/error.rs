@@ -70,6 +70,8 @@ pub enum BubblegumError {
     CollectionMustBeAUniqueMasterEdition,
     #[msg("Could not convert external error to BubblegumError")]
     UnknownExternalError,
+    #[msg("Metadata must be mutable to make this change")]
+    MetadataMustBeMutable,
 }
 
 // Converts certain Token Metadata errors into Bubblegum equivalents
