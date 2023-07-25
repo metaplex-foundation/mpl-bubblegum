@@ -68,7 +68,7 @@ test('it can unverify the creator of a minted compressed NFT', async (t) => {
     ...metadata,
     creators: [
       { address: creatorA.publicKey, verified: true, share: 60 },
-      { address: creatorB.publicKey, verified: false, share: 40 },
+      { address: creatorB.publicKey, verified: true, share: 40 },
     ],
   };
   await unverifyCreator(umi, {
