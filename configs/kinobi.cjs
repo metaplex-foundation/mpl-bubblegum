@@ -149,6 +149,18 @@ kinobi.update(
 );
 
 // Update instructions.
+const hashDefaults = {
+  dataHash: {
+    defaultsTo: k.resolverDefault("resolveDataHash", [
+      k.dependsOnArg("message"),
+    ]),
+  },
+  creatorHash: {
+    defaultsTo: k.resolverDefault("resolveCreatorHash", [
+      k.dependsOnArg("message"),
+    ]),
+  },
+};
 kinobi.update(
   new k.UpdateInstructionsVisitor({
     createTree: {
@@ -173,11 +185,16 @@ kinobi.update(
     },
     setAndVerifyCollection: {
       args: {
+        ...hashDefaults,
         collection: {
           defaultsTo: k.accountDefault("collectionMint"),
         },
       },
     },
+    verifyCollection: { args: { ...hashDefaults } },
+    unverifyCollection: { args: { ...hashDefaults } },
+    verifyCreator: { args: { ...hashDefaults } },
+    unverifyCreator: { args: { ...hashDefaults } },
     // Remove unnecessary spl_account_compression instructions.
     append: { delete: true },
     closeEmptyTree: { delete: true },

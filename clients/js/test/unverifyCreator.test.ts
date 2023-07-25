@@ -4,8 +4,6 @@ import {
   fetchMerkleTree,
   getCurrentRoot,
   hashLeaf,
-  hashMetadataCreators,
-  hashMetadataData,
   unverifyCreator,
   verifyCreator,
 } from '../src';
@@ -48,16 +46,12 @@ test('it can unverify the creator of a minted compressed NFT', async (t) => {
   await verifyCreator(umi, {
     ...commonArgs,
     creator: creatorA,
-    dataHash: hashMetadataData(metadata),
-    creatorHash: hashMetadataCreators(metadata.creators),
     message: metadata,
   })
     .add(
       verifyCreator(umi, {
         ...commonArgs,
         creator: creatorB,
-        dataHash: hashMetadataData(partiallyVerifiedMetadata),
-        creatorHash: hashMetadataCreators(partiallyVerifiedMetadata.creators),
         message: partiallyVerifiedMetadata,
       })
     )
@@ -74,8 +68,6 @@ test('it can unverify the creator of a minted compressed NFT', async (t) => {
   await unverifyCreator(umi, {
     ...commonArgs,
     creator: creatorA,
-    dataHash: hashMetadataData(verifiedMetadata),
-    creatorHash: hashMetadataCreators(verifiedMetadata.creators),
     message: verifiedMetadata,
   })
     .addRemainingAccounts([]) // <- Proof nodes would be added as remaining accounts.

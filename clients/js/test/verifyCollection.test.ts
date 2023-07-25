@@ -9,8 +9,6 @@ import {
   fetchMerkleTree,
   getCurrentRoot,
   hashLeaf,
-  hashMetadataCreators,
-  hashMetadataData,
   verifyCollection,
 } from '../src';
 import { createTree, createUmi, mint } from './_setup';
@@ -51,8 +49,6 @@ test('it can verify the collection of a minted compressed NFT', async (t) => {
     collectionAuthority,
     merkleTree,
     root: getCurrentRoot(merkleTreeAccount.tree),
-    dataHash: hashMetadataData(metadata),
-    creatorHash: hashMetadataCreators(metadata.creators),
     nonce: leafIndex,
     index: leafIndex,
     message: metadata,

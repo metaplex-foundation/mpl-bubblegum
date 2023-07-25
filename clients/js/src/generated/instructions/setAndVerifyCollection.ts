@@ -31,6 +31,7 @@ import {
   u64,
   u8,
 } from '@metaplex-foundation/umi/serializers';
+import { resolveCreatorHash, resolveDataHash } from '../../hooked';
 import { findTreeConfigPda } from '../accounts';
 import { PickPartial, addAccountMeta, addObjectProperty } from '../shared';
 import {
@@ -129,7 +130,7 @@ export function getSetAndVerifyCollectionInstructionDataSerializer(
 // Args.
 export type SetAndVerifyCollectionInstructionArgs = PickPartial<
   SetAndVerifyCollectionInstructionDataArgs,
-  'collection'
+  'dataHash' | 'creatorHash' | 'collection'
 >;
 
 // Instruction.
@@ -286,6 +287,30 @@ export function setAndVerifyCollection(
           ),
           false,
         ] as const)
+  );
+  addObjectProperty(
+    resolvingArgs,
+    'dataHash',
+    input.dataHash ??
+      resolveDataHash(
+        context,
+        { ...input, ...resolvedAccounts },
+        { ...input, ...resolvingArgs },
+        programId,
+        false
+      )
+  );
+  addObjectProperty(
+    resolvingArgs,
+    'creatorHash',
+    input.creatorHash ??
+      resolveCreatorHash(
+        context,
+        { ...input, ...resolvedAccounts },
+        { ...input, ...resolvingArgs },
+        programId,
+        false
+      )
   );
   addObjectProperty(
     resolvingArgs,
