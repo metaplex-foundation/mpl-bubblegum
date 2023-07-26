@@ -49,10 +49,7 @@ test('it can decompress a redeemed compressed NFT', async (t) => {
   t.true(await umi.rpc.accountExists(voucher));
 
   // When we decompress the NFT.
-  const [decompressedMint] = findLeafAssetIdPda(umi, {
-    tree: merkleTree,
-    leafIndex,
-  });
+  const [decompressedMint] = findLeafAssetIdPda(umi, { merkleTree, leafIndex });
   await decompressV1(umi, {
     leafOwner,
     voucher,

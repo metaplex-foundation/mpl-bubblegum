@@ -54,7 +54,7 @@ test('it can redeem a compressed NFT', async (t) => {
     index: leafIndex,
     leafSchema: <LeafSchema>{
       __kind: 'V1',
-      id: findLeafAssetIdPda(umi, { tree: merkleTree, leafIndex })[0],
+      id: findLeafAssetIdPda(umi, { merkleTree, leafIndex })[0],
       owner: leafOwner.publicKey,
       delegate: leafOwner.publicKey,
       nonce: BigInt(leafIndex),

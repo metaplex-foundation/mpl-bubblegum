@@ -73,7 +73,7 @@ export const mint = async (
 
   return {
     metadata,
-    assetId: findLeafAssetIdPda(context, { tree: merkleTree, leafIndex }),
+    assetId: findLeafAssetIdPda(context, { merkleTree, leafIndex }),
     leafIndex,
     leaf: publicKey(
       hashLeaf(context, {
