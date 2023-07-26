@@ -26,7 +26,7 @@ import {
   u64,
   u8,
 } from '@metaplex-foundation/umi/serializers';
-import { findTreeConfigPda } from '../accounts';
+import { findTreeConfigPda, findVoucherPda } from '../accounts';
 import { addAccountMeta, addObjectProperty } from '../shared';
 
 // Accounts.
@@ -35,7 +35,7 @@ export type RedeemInstructionAccounts = {
   leafOwner: Signer;
   leafDelegate?: PublicKey | Pda;
   merkleTree: PublicKey | Pda;
-  voucher: PublicKey | Pda;
+  voucher?: PublicKey | Pda;
   logWrapper?: PublicKey | Pda;
   compressionProgram?: PublicKey | Pda;
   systemProgram?: PublicKey | Pda;
@@ -110,7 +110,6 @@ export function redeem(
   const resolvedAccounts = {
     leafOwner: [input.leafOwner, true] as const,
     merkleTree: [input.merkleTree, true] as const,
-    voucher: [input.voucher, true] as const,
   };
   const resolvingArgs = {};
   addObjectProperty(
@@ -131,6 +130,19 @@ export function redeem(
     input.leafDelegate
       ? ([input.leafDelegate, false] as const)
       : ([input.leafOwner, false] as const)
+  );
+  addObjectProperty(
+    resolvedAccounts,
+    'voucher',
+    input.voucher
+      ? ([input.voucher, true] as const)
+      : ([
+          findVoucherPda(context, {
+            merkleTree: publicKey(input.merkleTree, false),
+            nonce: input.nonce,
+          }),
+          true,
+        ] as const)
   );
   addObjectProperty(
     resolvedAccounts,

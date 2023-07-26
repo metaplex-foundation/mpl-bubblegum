@@ -26,6 +26,13 @@ kinobi.update(
       seeds: [k.publicKeySeed("merkleTree")],
       size: 96,
     },
+    voucher: {
+      seeds: [
+        k.stringConstantSeed("voucher"),
+        k.publicKeySeed("merkleTree"),
+        k.variableSeed("nonce", k.numberTypeNode("u64")),
+      ],
+    },
   })
 );
 
@@ -176,6 +183,18 @@ kinobi.update(
       accounts: {
         leafOwner: { isSigner: "either" },
         leafDelegate: { isSigner: "either" },
+      },
+    },
+    redeem: {
+      accounts: {
+        voucher: {
+          defaultsTo: k.pdaDefault("voucher", {
+            seeds: {
+              merkleTree: k.accountDefault("merkleTree"),
+              nonce: k.argDefault("nonce"),
+            },
+          }),
+        },
       },
     },
     decompressV1: {

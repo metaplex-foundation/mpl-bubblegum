@@ -24,8 +24,10 @@ import {
   array,
   mapSerializer,
   publicKey as publicKeySerializer,
+  string,
   struct,
   u32,
+  u64,
   u8,
 } from '@metaplex-foundation/umi/serializers';
 import { LeafSchema, LeafSchemaArgs, getLeafSchemaSerializer } from '../types';
@@ -168,4 +170,39 @@ export function getVoucherGpaBuilder(
 
 export function getVoucherSize(): number {
   return 213;
+}
+
+export function findVoucherPda(
+  context: Pick<Context, 'eddsa' | 'programs'>,
+  seeds: {
+    merkleTree: PublicKey;
+
+    nonce: number | bigint;
+  }
+): Pda {
+  const programId = context.programs.getPublicKey(
+    'mplBubblegum',
+    'BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'
+  );
+  return context.eddsa.findPda(programId, [
+    string({ size: 'variable' }).serialize('voucher'),
+    publicKeySerializer().serialize(seeds.merkleTree),
+    u64().serialize(seeds.nonce),
+  ]);
+}
+
+export async function fetchVoucherFromSeeds(
+  context: Pick<Context, 'eddsa' | 'programs' | 'rpc'>,
+  seeds: Parameters<typeof findVoucherPda>[1],
+  options?: RpcGetAccountOptions
+): Promise<Voucher> {
+  return fetchVoucher(context, findVoucherPda(context, seeds), options);
+}
+
+export async function safeFetchVoucherFromSeeds(
+  context: Pick<Context, 'eddsa' | 'programs' | 'rpc'>,
+  seeds: Parameters<typeof findVoucherPda>[1],
+  options?: RpcGetAccountOptions
+): Promise<Voucher | null> {
+  return safeFetchVoucher(context, findVoucherPda(context, seeds), options);
 }
