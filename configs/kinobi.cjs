@@ -193,6 +193,12 @@ kinobi.update(
         leafDelegate: { isSigner: "either" },
       },
     },
+    burn: {
+      accounts: {
+        leafOwner: { isSigner: "either" },
+        leafDelegate: { isSigner: "either" },
+      },
+    },
     redeem: {
       accounts: {
         voucher: {
