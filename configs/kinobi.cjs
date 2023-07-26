@@ -86,6 +86,14 @@ kinobi.update(
 kinobi.update(
   new k.SetInstructionAccountDefaultValuesVisitor([
     {
+      account: "associatedTokenProgram",
+      ignoreIfOptional: true,
+      ...k.programDefault(
+        "splAssociatedToken",
+        "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+      ),
+    },
+    {
       account: "logWrapper",
       ignoreIfOptional: true,
       ...k.programDefault(
@@ -198,6 +206,35 @@ kinobi.update(
       },
     },
     decompressV1: {
+      accounts: {
+        metadata: {
+          defaultsTo: k.pdaDefault("metadata", {
+            importFrom: "mplTokenMetadata",
+            seeds: { mint: k.accountDefault("mint") },
+          }),
+        },
+        masterEdition: {
+          defaultsTo: k.pdaDefault("masterEdition", {
+            importFrom: "mplTokenMetadata",
+            seeds: { mint: k.accountDefault("mint") },
+          }),
+        },
+        tokenAccount: {
+          defaultsTo: k.pdaDefault("associatedToken", {
+            importFrom: "mplToolbox",
+            seeds: {
+              mint: k.accountDefault("mint"),
+              owner: k.accountDefault("leafOwner"),
+            },
+          }),
+        },
+        mintAuthority: {
+          defaultsTo: k.pdaDefault("mintAuthority", {
+            importFrom: "hooked",
+            seeds: { mint: k.accountDefault("mint") },
+          }),
+        },
+      },
       args: {
         metadata: { name: "message" },
       },

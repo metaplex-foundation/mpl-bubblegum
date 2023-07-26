@@ -25,14 +25,12 @@ test('it can cancel the redemption of a compressed NFT', async (t) => {
   });
 
   // And given that NFT was redeemed.
-  const dataHash = hashMetadataData(metadata);
-  const creatorHash = hashMetadataCreators(metadata.creators);
   await redeem(umi, {
     leafOwner,
     merkleTree,
     root: getCurrentRoot(merkleTreeAccount.tree),
-    dataHash,
-    creatorHash,
+    dataHash: hashMetadataData(metadata),
+    creatorHash: hashMetadataCreators(metadata.creators),
     nonce: leafIndex,
     index: leafIndex,
   }).sendAndConfirm(umi);
