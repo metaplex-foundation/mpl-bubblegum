@@ -5,7 +5,7 @@ import { MPL_BUBBLEGUM_PROGRAM_ID } from './generated';
 export function findLeafAssetIdPda(
   context: Pick<Context, 'programs' | 'eddsa'>,
   seeds: {
-    tree: PublicKey;
+    merkleTree: PublicKey;
     leafIndex: number | bigint;
   }
 ): Pda {
@@ -15,7 +15,7 @@ export function findLeafAssetIdPda(
   );
   return context.eddsa.findPda(programId, [
     string({ size: 'variable' }).serialize('asset'),
-    publicKey().serialize(seeds.tree),
+    publicKey().serialize(seeds.merkleTree),
     u64().serialize(seeds.leafIndex),
   ]);
 }

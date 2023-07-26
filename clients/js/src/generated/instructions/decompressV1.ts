@@ -7,6 +7,11 @@
  */
 
 import {
+  findMasterEditionPda,
+  findMetadataPda,
+} from '@metaplex-foundation/mpl-token-metadata';
+import { findAssociatedTokenPda } from '@metaplex-foundation/mpl-toolbox';
+import {
   AccountMeta,
   Context,
   Pda,
@@ -23,6 +28,7 @@ import {
   struct,
   u8,
 } from '@metaplex-foundation/umi/serializers';
+import { findMintAuthorityPda } from '../../hooked';
 import { addAccountMeta, addObjectProperty } from '../shared';
 import {
   MetadataArgs,
@@ -34,16 +40,16 @@ import {
 export type DecompressV1InstructionAccounts = {
   voucher: PublicKey | Pda;
   leafOwner: Signer;
-  tokenAccount: PublicKey | Pda;
+  tokenAccount?: PublicKey | Pda;
   mint: PublicKey | Pda;
-  mintAuthority: PublicKey | Pda;
-  metadata: PublicKey | Pda;
-  masterEdition: PublicKey | Pda;
+  mintAuthority?: PublicKey | Pda;
+  metadata?: PublicKey | Pda;
+  masterEdition?: PublicKey | Pda;
   systemProgram?: PublicKey | Pda;
   sysvarRent?: PublicKey | Pda;
   tokenMetadataProgram?: PublicKey | Pda;
   tokenProgram?: PublicKey | Pda;
-  associatedTokenProgram: PublicKey | Pda;
+  associatedTokenProgram?: PublicKey | Pda;
   logWrapper?: PublicKey | Pda;
 };
 
@@ -90,7 +96,7 @@ export type DecompressV1InstructionArgs = DecompressV1InstructionDataArgs;
 
 // Instruction.
 export function decompressV1(
-  context: Pick<Context, 'programs'>,
+  context: Pick<Context, 'programs' | 'eddsa'>,
   input: DecompressV1InstructionAccounts & DecompressV1InstructionArgs
 ): TransactionBuilder {
   const signers: Signer[] = [];
@@ -106,14 +112,52 @@ export function decompressV1(
   const resolvedAccounts = {
     voucher: [input.voucher, true] as const,
     leafOwner: [input.leafOwner, true] as const,
-    tokenAccount: [input.tokenAccount, true] as const,
     mint: [input.mint, true] as const,
-    mintAuthority: [input.mintAuthority, true] as const,
-    metadata: [input.metadata, true] as const,
-    masterEdition: [input.masterEdition, true] as const,
-    associatedTokenProgram: [input.associatedTokenProgram, false] as const,
   };
   const resolvingArgs = {};
+  addObjectProperty(
+    resolvedAccounts,
+    'tokenAccount',
+    input.tokenAccount
+      ? ([input.tokenAccount, true] as const)
+      : ([
+          findAssociatedTokenPda(context, {
+            mint: publicKey(input.mint, false),
+            owner: publicKey(input.leafOwner, false),
+          }),
+          true,
+        ] as const)
+  );
+  addObjectProperty(
+    resolvedAccounts,
+    'mintAuthority',
+    input.mintAuthority
+      ? ([input.mintAuthority, true] as const)
+      : ([
+          findMintAuthorityPda(context, { mint: publicKey(input.mint, false) }),
+          true,
+        ] as const)
+  );
+  addObjectProperty(
+    resolvedAccounts,
+    'metadata',
+    input.metadata
+      ? ([input.metadata, true] as const)
+      : ([
+          findMetadataPda(context, { mint: publicKey(input.mint, false) }),
+          true,
+        ] as const)
+  );
+  addObjectProperty(
+    resolvedAccounts,
+    'masterEdition',
+    input.masterEdition
+      ? ([input.masterEdition, true] as const)
+      : ([
+          findMasterEditionPda(context, { mint: publicKey(input.mint, false) }),
+          true,
+        ] as const)
+  );
   addObjectProperty(
     resolvedAccounts,
     'systemProgram',
@@ -159,6 +203,19 @@ export function decompressV1(
           context.programs.getPublicKey(
             'splToken',
             'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'
+          ),
+          false,
+        ] as const)
+  );
+  addObjectProperty(
+    resolvedAccounts,
+    'associatedTokenProgram',
+    input.associatedTokenProgram
+      ? ([input.associatedTokenProgram, false] as const)
+      : ([
+          context.programs.getPublicKey(
+            'splAssociatedToken',
+            'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'
           ),
           false,
         ] as const)

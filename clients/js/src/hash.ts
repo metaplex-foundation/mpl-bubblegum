@@ -33,7 +33,7 @@ export function hashLeaf(
   const delegate = input.delegate ?? input.owner;
   const nftVersion = input.nftVersion ?? 1;
   const [leafAssetId] = findLeafAssetIdPda(context, {
-    tree: input.merkleTree,
+    merkleTree: input.merkleTree,
     leafIndex: input.leafIndex,
   });
 

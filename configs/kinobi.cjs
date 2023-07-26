@@ -26,6 +26,13 @@ kinobi.update(
       seeds: [k.publicKeySeed("merkleTree")],
       size: 96,
     },
+    voucher: {
+      seeds: [
+        k.stringConstantSeed("voucher"),
+        k.publicKeySeed("merkleTree"),
+        k.variableSeed("nonce", k.numberTypeNode("u64")),
+      ],
+    },
   })
 );
 
@@ -78,6 +85,14 @@ kinobi.update(
 // Set default account values accross multiple instructions.
 kinobi.update(
   new k.SetInstructionAccountDefaultValuesVisitor([
+    {
+      account: "associatedTokenProgram",
+      ignoreIfOptional: true,
+      ...k.programDefault(
+        "splAssociatedToken",
+        "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+      ),
+    },
     {
       account: "logWrapper",
       ignoreIfOptional: true,
@@ -178,7 +193,48 @@ kinobi.update(
         leafDelegate: { isSigner: "either" },
       },
     },
+    redeem: {
+      accounts: {
+        voucher: {
+          defaultsTo: k.pdaDefault("voucher", {
+            seeds: {
+              merkleTree: k.accountDefault("merkleTree"),
+              nonce: k.argDefault("nonce"),
+            },
+          }),
+        },
+      },
+    },
     decompressV1: {
+      accounts: {
+        metadata: {
+          defaultsTo: k.pdaDefault("metadata", {
+            importFrom: "mplTokenMetadata",
+            seeds: { mint: k.accountDefault("mint") },
+          }),
+        },
+        masterEdition: {
+          defaultsTo: k.pdaDefault("masterEdition", {
+            importFrom: "mplTokenMetadata",
+            seeds: { mint: k.accountDefault("mint") },
+          }),
+        },
+        tokenAccount: {
+          defaultsTo: k.pdaDefault("associatedToken", {
+            importFrom: "mplToolbox",
+            seeds: {
+              mint: k.accountDefault("mint"),
+              owner: k.accountDefault("leafOwner"),
+            },
+          }),
+        },
+        mintAuthority: {
+          defaultsTo: k.pdaDefault("mintAuthority", {
+            importFrom: "hooked",
+            seeds: { mint: k.accountDefault("mint") },
+          }),
+        },
+      },
       args: {
         metadata: { name: "message" },
       },
