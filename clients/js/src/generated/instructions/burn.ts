@@ -32,8 +32,8 @@ import { addAccountMeta, addObjectProperty } from '../shared';
 // Accounts.
 export type BurnInstructionAccounts = {
   treeConfig?: PublicKey | Pda;
-  leafOwner: PublicKey | Pda;
-  leafDelegate?: PublicKey | Pda;
+  leafOwner: PublicKey | Pda | Signer;
+  leafDelegate?: PublicKey | Pda | Signer;
   merkleTree: PublicKey | Pda;
   logWrapper?: PublicKey | Pda;
   compressionProgram?: PublicKey | Pda;
