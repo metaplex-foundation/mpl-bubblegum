@@ -109,6 +109,12 @@ impl LeafSchema {
         }
     }
 
+    pub fn creator_hash(&self) -> [u8; 32] {
+        match self {
+            LeafSchema::V1 { creator_hash, .. } => *creator_hash,
+        }
+    }
+
     pub fn to_event(&self) -> LeafSchemaEvent {
         LeafSchemaEvent::new(self.version(), self.clone(), self.to_node())
     }
