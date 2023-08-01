@@ -1,4 +1,4 @@
-#![cfg(feature = "test-bpf")]
+#![cfg(feature = "test-sbf")]
 pub mod utils;
 
 use solana_program::native_token::LAMPORTS_PER_SOL;
