@@ -42,9 +42,17 @@ jobs:
     uses: ./.github/workflows/build-programs.yml
     secrets: inherit
 
+  test_programs:
+    name: Programs
+    needs: build_programs
+    uses: ./.github/workflows/test-programs.yml
+    secrets: inherit
+    with:
+      program_matrix: '["${{ inputs.program }}"]'
+
   test_js:
     name: JS client
-    needs: build_programs
+    needs: test_programs
     uses: ./.github/workflows/test-js.yml
     secrets: inherit
 
@@ -94,7 +102,7 @@ jobs:
             echo RPC=${{ secrets.MAINNET_RPC }} >> $GITHUB_ENV
           fi
 
-      - name: Identify Program
+      - name: Identify program
         run: |
           if [ "${{ inputs.program }}" == "bubblegum" ]; then
             echo ${{ secrets.BUBBLEGUM_DEPLOY_KEY }} > ./deploy-key.json 
@@ -102,7 +110,7 @@ jobs:
             echo PROGRAM_NAME="mpl_bubblegum" >> $GITHUB_ENV
           fi
 
-      - name: Bump Program Version
+      - name: Bump program version
         run: |
           IDL_NAME=`echo "${{ inputs.program }}" | tr - _`
           VERSION=`jq '.version' ./idls/${IDL_NAME}.json | sed 's/"//g'`
@@ -129,7 +137,7 @@ jobs:
 
           echo PROGRAM_VERSION="${PROGRAM_VERSION}" >> $GITHUB_ENV
 
-      - name: Download Program Builds
+      - name: Download program builds
         uses: actions/download-artifact@v3
         with:
           name: program-builds
