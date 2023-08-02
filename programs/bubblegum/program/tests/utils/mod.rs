@@ -39,6 +39,7 @@ pub fn program_test() -> ProgramTest {
         None,
     );
     test.add_program("mpl_token_metadata", mpl_token_metadata::id(), None);
+    test.set_compute_max_units(1_400_000);
     test
 }
 
