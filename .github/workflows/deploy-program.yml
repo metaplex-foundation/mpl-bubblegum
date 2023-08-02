@@ -142,7 +142,7 @@ jobs:
         with:
           name: program-builds
 
-      - name: Deploy Program
+      - name: Deploy program
         run: |
           echo "Deploying ${{ inputs.program }} to ${{ inputs.cluster }}"
 
