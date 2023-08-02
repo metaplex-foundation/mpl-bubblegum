@@ -32,7 +32,6 @@ pub type BanksResult<T> = std::result::Result<T, BanksClientError>;
 
 pub fn program_test() -> ProgramTest {
     let mut test = ProgramTest::new("mpl_bubblegum", mpl_bubblegum::id(), None);
-    test.prefer_bpf(true);
     test.add_program("spl_noop", spl_noop::id(), None);
     test.add_program(
         "spl_account_compression",
@@ -40,7 +39,7 @@ pub fn program_test() -> ProgramTest {
         None,
     );
     test.add_program("mpl_token_metadata", mpl_token_metadata::id(), None);
-    test.set_compute_max_units(u64::MAX);
+    test.set_compute_max_units(1_400_000);
     test
 }
 

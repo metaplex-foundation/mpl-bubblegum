@@ -4,9 +4,11 @@
 > at your own risk.**
 
 ## Testing
+From the repository root:
 ```bash
-cargo build
-cargo test-bpf --bpf-out-dir ../../test-programs
+pnpm install
+pnpm programs:build
+pnpm programs:test
 ```
 
 
