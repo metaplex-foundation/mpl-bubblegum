@@ -42,7 +42,7 @@ test('it can set and verify the collection of a minted compressed NFT', async (t
     root: getCurrentRoot(merkleTreeAccount.tree),
     nonce: leafIndex,
     index: leafIndex,
-    message: metadata,
+    metadata,
   })
     .addRemainingAccounts([]) // <- Proof nodes would be added as remaining accounts.
     .sendAndConfirm(umi);

@@ -79,6 +79,14 @@ kinobi.update(
         return k.instructionAccountNode({ ...node, name: "collectionEdition" });
       },
     },
+    {
+      // Rename `message` arg to `metadata`.
+      selector: { kind: "structFieldTypeNode", name: "message" },
+      transformer: (node) => {
+        k.assertStructFieldTypeNode(node);
+        return k.structFieldTypeNode({ ...node, name: "metadata" });
+      },
+    },
   ])
 );
 
@@ -167,12 +175,12 @@ kinobi.update(
 const hashDefaults = {
   dataHash: {
     defaultsTo: k.resolverDefault("resolveDataHash", [
-      k.dependsOnArg("message"),
+      k.dependsOnArg("metadata"),
     ]),
   },
   creatorHash: {
     defaultsTo: k.resolverDefault("resolveCreatorHash", [
-      k.dependsOnArg("message"),
+      k.dependsOnArg("metadata"),
     ]),
   },
 };
@@ -184,7 +192,7 @@ kinobi.update(
     },
     mintToCollectionV1: {
       args: {
-        metadataArgs: { name: "message" },
+        metadataArgs: { name: "metadata" },
       },
     },
     transfer: {
@@ -214,6 +222,7 @@ kinobi.update(
     decompressV1: {
       accounts: {
         metadata: {
+          name: "metadataAccount",
           defaultsTo: k.pdaDefault("metadata", {
             importFrom: "mplTokenMetadata",
             seeds: { mint: k.accountDefault("mint") },
@@ -240,9 +249,6 @@ kinobi.update(
             seeds: { mint: k.accountDefault("mint") },
           }),
         },
-      },
-      args: {
-        metadata: { name: "message" },
       },
     },
     setAndVerifyCollection: {

@@ -43,7 +43,7 @@ export type DecompressV1InstructionAccounts = {
   tokenAccount?: PublicKey | Pda;
   mint: PublicKey | Pda;
   mintAuthority?: PublicKey | Pda;
-  metadata?: PublicKey | Pda;
+  metadataAccount?: PublicKey | Pda;
   masterEdition?: PublicKey | Pda;
   systemProgram?: PublicKey | Pda;
   sysvarRent?: PublicKey | Pda;
@@ -56,10 +56,10 @@ export type DecompressV1InstructionAccounts = {
 // Data.
 export type DecompressV1InstructionData = {
   discriminator: Array<number>;
-  message: MetadataArgs;
+  metadata: MetadataArgs;
 };
 
-export type DecompressV1InstructionDataArgs = { message: MetadataArgsArgs };
+export type DecompressV1InstructionDataArgs = { metadata: MetadataArgsArgs };
 
 /** @deprecated Use `getDecompressV1InstructionDataSerializer()` without any argument instead. */
 export function getDecompressV1InstructionDataSerializer(
@@ -80,7 +80,7 @@ export function getDecompressV1InstructionDataSerializer(
     struct<DecompressV1InstructionData>(
       [
         ['discriminator', array(u8(), { size: 8 })],
-        ['message', getMetadataArgsSerializer()],
+        ['metadata', getMetadataArgsSerializer()],
       ],
       { description: 'DecompressV1InstructionData' }
     ),
@@ -140,9 +140,9 @@ export function decompressV1(
   );
   addObjectProperty(
     resolvedAccounts,
-    'metadata',
-    input.metadata
-      ? ([input.metadata, true] as const)
+    'metadataAccount',
+    input.metadataAccount
+      ? ([input.metadataAccount, true] as const)
       : ([
           findMetadataPda(context, { mint: publicKey(input.mint, false) }),
           true,
@@ -240,7 +240,7 @@ export function decompressV1(
   addAccountMeta(keys, signers, resolvedAccounts.tokenAccount, false);
   addAccountMeta(keys, signers, resolvedAccounts.mint, false);
   addAccountMeta(keys, signers, resolvedAccounts.mintAuthority, false);
-  addAccountMeta(keys, signers, resolvedAccounts.metadata, false);
+  addAccountMeta(keys, signers, resolvedAccounts.metadataAccount, false);
   addAccountMeta(keys, signers, resolvedAccounts.masterEdition, false);
   addAccountMeta(keys, signers, resolvedAccounts.systemProgram, false);
   addAccountMeta(keys, signers, resolvedAccounts.sysvarRent, false);

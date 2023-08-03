@@ -41,7 +41,7 @@ test('it can unverify the collection of a minted compressed NFT', async (t) => {
     root: getCurrentRoot(merkleTreeAccount.tree),
     nonce: leafIndex,
     index: leafIndex,
-    message: metadata,
+    metadata,
   }).sendAndConfirm(umi);
   const verifiedMetadata = {
     ...metadata,
@@ -60,7 +60,7 @@ test('it can unverify the collection of a minted compressed NFT', async (t) => {
     root: getCurrentRoot(merkleTreeAccount.tree),
     nonce: leafIndex,
     index: leafIndex,
-    message: verifiedMetadata,
+    metadata: verifiedMetadata,
   })
     .addRemainingAccounts([]) // <- Proof nodes would be added as remaining accounts.
     .sendAndConfirm(umi);

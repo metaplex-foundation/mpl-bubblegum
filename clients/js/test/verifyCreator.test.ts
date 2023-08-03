@@ -19,7 +19,7 @@ test('it can verify the creator of a minted compressed NFT', async (t) => {
   const { metadata, leafIndex } = await mint(umi, {
     merkleTree,
     leafOwner,
-    message: {
+    metadata: {
       creators: [
         { address: creatorA.publicKey, verified: false, share: 60 },
         { address: creatorB.publicKey, verified: false, share: 40 },
@@ -35,7 +35,7 @@ test('it can verify the creator of a minted compressed NFT', async (t) => {
     root: getCurrentRoot(merkleTreeAccount.tree),
     nonce: leafIndex,
     index: leafIndex,
-    message: metadata,
+    metadata,
   })
     .addRemainingAccounts([]) // <- Proof nodes would be added as remaining accounts.
     .sendAndConfirm(umi);

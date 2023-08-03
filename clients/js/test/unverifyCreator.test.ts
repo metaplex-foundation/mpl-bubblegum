@@ -20,7 +20,7 @@ test('it can unverify the creator of a minted compressed NFT', async (t) => {
   const { metadata, leafIndex } = await mint(umi, {
     merkleTree,
     leafOwner,
-    message: {
+    metadata: {
       creators: [
         { address: creatorA.publicKey, verified: false, share: 60 },
         { address: creatorB.publicKey, verified: false, share: 40 },
@@ -46,13 +46,13 @@ test('it can unverify the creator of a minted compressed NFT', async (t) => {
   await verifyCreator(umi, {
     ...commonArgs,
     creator: creatorA,
-    message: metadata,
+    metadata,
   })
     .add(
       verifyCreator(umi, {
         ...commonArgs,
         creator: creatorB,
-        message: partiallyVerifiedMetadata,
+        metadata: partiallyVerifiedMetadata,
       })
     )
     .sendAndConfirm(umi);
@@ -68,7 +68,7 @@ test('it can unverify the creator of a minted compressed NFT', async (t) => {
   await unverifyCreator(umi, {
     ...commonArgs,
     creator: creatorA,
-    message: verifiedMetadata,
+    metadata: verifiedMetadata,
   })
     .addRemainingAccounts([]) // <- Proof nodes would be added as remaining accounts.
     .sendAndConfirm(umi);

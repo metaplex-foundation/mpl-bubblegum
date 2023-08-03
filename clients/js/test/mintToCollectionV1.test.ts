@@ -59,7 +59,7 @@ test('it can mint an NFT from a collection', async (t) => {
   await mintToCollectionV1(umi, {
     leafOwner,
     merkleTree,
-    message: metadata,
+    metadata,
     collectionMint: collectionMint.publicKey,
   }).sendAndConfirm(umi);
 
@@ -124,7 +124,7 @@ test('it can mint an NFT from a collection using a collection delegate', async (
   await mintToCollectionV1(umi, {
     leafOwner,
     merkleTree,
-    message: metadata,
+    metadata,
     collectionMint: collectionMint.publicKey,
     collectionAuthority: collectionDelegate,
     collectionAuthorityRecordPda: findMetadataDelegateRecordPda(umi, {
@@ -197,7 +197,7 @@ test('it can mint an NFT from a collection using a legacy collection delegate', 
   await mintToCollectionV1(umi, {
     leafOwner,
     merkleTree,
-    message: metadata,
+    metadata,
     collectionMint: collectionMint.publicKey,
     collectionAuthority: collectionDelegate,
     collectionAuthorityRecordPda,

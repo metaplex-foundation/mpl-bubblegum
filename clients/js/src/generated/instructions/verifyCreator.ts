@@ -56,7 +56,7 @@ export type VerifyCreatorInstructionData = {
   creatorHash: Uint8Array;
   nonce: bigint;
   index: number;
-  message: MetadataArgs;
+  metadata: MetadataArgs;
 };
 
 export type VerifyCreatorInstructionDataArgs = {
@@ -65,7 +65,7 @@ export type VerifyCreatorInstructionDataArgs = {
   creatorHash: Uint8Array;
   nonce: number | bigint;
   index: number;
-  message: MetadataArgsArgs;
+  metadata: MetadataArgsArgs;
 };
 
 /** @deprecated Use `getVerifyCreatorInstructionDataSerializer()` without any argument instead. */
@@ -92,7 +92,7 @@ export function getVerifyCreatorInstructionDataSerializer(
         ['creatorHash', bytes({ size: 32 })],
         ['nonce', u64()],
         ['index', u32()],
-        ['message', getMetadataArgsSerializer()],
+        ['metadata', getMetadataArgsSerializer()],
       ],
       { description: 'VerifyCreatorInstructionData' }
     ),

@@ -28,11 +28,7 @@ test('it can mint an NFT from a Bubblegum tree', async (t) => {
     collection: none(),
     creators: [],
   };
-  await mintV1(umi, {
-    leafOwner,
-    merkleTree,
-    message: metadata,
-  }).sendAndConfirm(umi);
+  await mintV1(umi, { leafOwner, merkleTree, metadata }).sendAndConfirm(umi);
 
   // Then a new leaf was added to the merkle tree.
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);

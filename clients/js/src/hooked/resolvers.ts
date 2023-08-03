@@ -4,15 +4,15 @@ import { hashMetadataCreators, hashMetadataData } from '../hash';
 export const resolveDataHash = (
   context: any,
   accounts: any,
-  args: { message: MetadataArgsArgs },
+  args: { metadata: MetadataArgsArgs },
   programId: any,
   isWritable: boolean
-): Uint8Array => hashMetadataData(args.message);
+): Uint8Array => hashMetadataData(args.metadata);
 
 export const resolveCreatorHash = (
   context: any,
   accounts: any,
-  args: { message: MetadataArgsArgs },
+  args: { metadata: MetadataArgsArgs },
   programId: any,
   isWritable: boolean
-): Uint8Array => hashMetadataCreators(args.message.creators);
+): Uint8Array => hashMetadataCreators(args.metadata.creators);

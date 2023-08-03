@@ -47,10 +47,10 @@ export type MintV1InstructionAccounts = {
 // Data.
 export type MintV1InstructionData = {
   discriminator: Array<number>;
-  message: MetadataArgs;
+  metadata: MetadataArgs;
 };
 
-export type MintV1InstructionDataArgs = { message: MetadataArgsArgs };
+export type MintV1InstructionDataArgs = { metadata: MetadataArgsArgs };
 
 /** @deprecated Use `getMintV1InstructionDataSerializer()` without any argument instead. */
 export function getMintV1InstructionDataSerializer(
@@ -67,7 +67,7 @@ export function getMintV1InstructionDataSerializer(
     struct<MintV1InstructionData>(
       [
         ['discriminator', array(u8(), { size: 8 })],
-        ['message', getMetadataArgsSerializer()],
+        ['metadata', getMetadataArgsSerializer()],
       ],
       { description: 'MintV1InstructionData' }
     ),
