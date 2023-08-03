@@ -79,6 +79,14 @@ kinobi.update(
         return k.instructionAccountNode({ ...node, name: "collectionEdition" });
       },
     },
+    {
+      // Rename `message` arg to `metadata`.
+      selector: { kind: "structFieldTypeNode", name: "message" },
+      transformer: (node) => {
+        k.assertStructFieldTypeNode(node);
+        return k.structFieldTypeNode({ ...node, name: "metadata" });
+      },
+    },
   ])
 );
 

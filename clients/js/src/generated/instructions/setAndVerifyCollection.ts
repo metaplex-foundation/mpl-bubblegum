@@ -68,7 +68,7 @@ export type SetAndVerifyCollectionInstructionData = {
   creatorHash: Uint8Array;
   nonce: bigint;
   index: number;
-  message: MetadataArgs;
+  metadata: MetadataArgs;
   collection: PublicKey;
 };
 
@@ -78,7 +78,7 @@ export type SetAndVerifyCollectionInstructionDataArgs = {
   creatorHash: Uint8Array;
   nonce: number | bigint;
   index: number;
-  message: MetadataArgsArgs;
+  metadata: MetadataArgsArgs;
   collection: PublicKey;
 };
 
@@ -112,7 +112,7 @@ export function getSetAndVerifyCollectionInstructionDataSerializer(
         ['creatorHash', bytes({ size: 32 })],
         ['nonce', u64()],
         ['index', u32()],
-        ['message', getMetadataArgsSerializer()],
+        ['metadata', getMetadataArgsSerializer()],
         ['collection', publicKeySerializer()],
       ],
       { description: 'SetAndVerifyCollectionInstructionData' }

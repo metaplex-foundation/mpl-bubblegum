@@ -42,9 +42,9 @@ export const createTree = async (
 
 export const mint = async (
   context: Context,
-  input: Omit<Parameters<typeof baseMintV1>[1], 'message'> & {
+  input: Omit<Parameters<typeof baseMintV1>[1], 'metadata'> & {
     leafIndex?: number | bigint;
-    message?: Partial<Parameters<typeof baseMintV1>[1]['message']>;
+    metadata?: Partial<Parameters<typeof baseMintV1>[1]['metadata']>;
   }
 ): Promise<{
   metadata: MetadataArgsArgs;
@@ -63,12 +63,12 @@ export const mint = async (
     sellerFeeBasisPoints: 500, // 5%
     collection: none(),
     creators: [],
-    ...input.message,
+    ...input.metadata,
   };
 
   await baseMintV1(context, {
     ...input,
-    message: metadata,
+    metadata: metadata,
   }).sendAndConfirm(context);
 
   return {
