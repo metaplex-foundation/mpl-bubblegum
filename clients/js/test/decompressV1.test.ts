@@ -53,7 +53,7 @@ test('it can decompress a redeemed compressed NFT', async (t) => {
   await decompressV1(umi, {
     leafOwner,
     voucher,
-    message: metadata,
+    metadata,
     mint: decompressedMint,
   }).sendAndConfirm(umi);
 
