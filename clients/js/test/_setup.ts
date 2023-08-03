@@ -68,7 +68,7 @@ export const mint = async (
 
   await baseMintV1(context, {
     ...input,
-    metadata: metadata,
+    metadata,
   }).sendAndConfirm(context);
 
   return {
