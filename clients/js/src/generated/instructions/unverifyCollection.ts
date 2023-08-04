@@ -349,6 +349,14 @@ export function unverifyCollection(
   addAccountMeta(keys, signers, resolvedAccounts.tokenMetadataProgram, false);
   addAccountMeta(keys, signers, resolvedAccounts.systemProgram, false);
 
+  // Remaining Accounts.
+  const remainingAccounts = resolvedArgs.proof.map(
+    (address) => [address, false] as const
+  );
+  remainingAccounts.forEach((remainingAccount) =>
+    addAccountMeta(keys, signers, remainingAccount, false)
+  );
+
   // Data.
   const data =
     getUnverifyCollectionInstructionDataSerializer().serialize(resolvedArgs);

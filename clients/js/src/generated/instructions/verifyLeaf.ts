@@ -110,6 +110,14 @@ export function verifyLeaf(
 
   addAccountMeta(keys, signers, resolvedAccounts.merkleTree, false);
 
+  // Remaining Accounts.
+  const remainingAccounts = resolvedArgs.proof.map(
+    (address) => [address, false] as const
+  );
+  remainingAccounts.forEach((remainingAccount) =>
+    addAccountMeta(keys, signers, remainingAccount, false)
+  );
+
   // Data.
   const data = getVerifyLeafInstructionDataSerializer().serialize(resolvedArgs);
 

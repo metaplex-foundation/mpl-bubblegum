@@ -351,6 +351,7 @@ kinobi.update(
         k.assertInstructionNode(node);
         return k.instructionNode({
           ...node,
+          remainingAccounts: k.remainingAccountsFromArg("proof"),
           argDefaults: {
             ...node.argDefaults,
             proof: k.valueDefault(k.vList([])),
