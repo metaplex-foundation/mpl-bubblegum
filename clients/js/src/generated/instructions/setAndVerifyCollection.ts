@@ -137,10 +137,16 @@ export function getSetAndVerifyCollectionInstructionDataSerializer(
   >;
 }
 
+// Extra Args.
+export type SetAndVerifyCollectionInstructionExtraArgs = {
+  proof: Array<PublicKey>;
+};
+
 // Args.
 export type SetAndVerifyCollectionInstructionArgs = PickPartial<
-  SetAndVerifyCollectionInstructionDataArgs,
-  'dataHash' | 'creatorHash' | 'collection'
+  SetAndVerifyCollectionInstructionDataArgs &
+    SetAndVerifyCollectionInstructionExtraArgs,
+  'dataHash' | 'creatorHash' | 'collection' | 'proof'
 >;
 
 // Instruction.
@@ -327,6 +333,7 @@ export function setAndVerifyCollection(
     'collection',
     input.collection ?? publicKey(input.collectionMint, false)
   );
+  addObjectProperty(resolvingArgs, 'proof', input.proof ?? []);
   const resolvedArgs = { ...input, ...resolvingArgs };
 
   addAccountMeta(keys, signers, resolvedAccounts.treeConfig, false);

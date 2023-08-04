@@ -103,10 +103,13 @@ export function getVerifyCreatorInstructionDataSerializer(
   >;
 }
 
+// Extra Args.
+export type VerifyCreatorInstructionExtraArgs = { proof: Array<PublicKey> };
+
 // Args.
 export type VerifyCreatorInstructionArgs = PickPartial<
-  VerifyCreatorInstructionDataArgs,
-  'dataHash' | 'creatorHash'
+  VerifyCreatorInstructionDataArgs & VerifyCreatorInstructionExtraArgs,
+  'dataHash' | 'creatorHash' | 'proof'
 >;
 
 // Instruction.
@@ -219,6 +222,7 @@ export function verifyCreator(
         false
       )
   );
+  addObjectProperty(resolvingArgs, 'proof', input.proof ?? []);
   const resolvedArgs = { ...input, ...resolvingArgs };
 
   addAccountMeta(keys, signers, resolvedAccounts.treeConfig, false);

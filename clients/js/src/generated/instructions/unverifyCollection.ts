@@ -133,10 +133,16 @@ export function getUnverifyCollectionInstructionDataSerializer(
   >;
 }
 
+// Extra Args.
+export type UnverifyCollectionInstructionExtraArgs = {
+  proof: Array<PublicKey>;
+};
+
 // Args.
 export type UnverifyCollectionInstructionArgs = PickPartial<
-  UnverifyCollectionInstructionDataArgs,
-  'dataHash' | 'creatorHash'
+  UnverifyCollectionInstructionDataArgs &
+    UnverifyCollectionInstructionExtraArgs,
+  'dataHash' | 'creatorHash' | 'proof'
 >;
 
 // Instruction.
@@ -318,6 +324,7 @@ export function unverifyCollection(
         false
       )
   );
+  addObjectProperty(resolvingArgs, 'proof', input.proof ?? []);
   const resolvedArgs = { ...input, ...resolvingArgs };
 
   addAccountMeta(keys, signers, resolvedAccounts.treeConfig, false);

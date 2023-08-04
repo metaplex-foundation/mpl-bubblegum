@@ -133,10 +133,13 @@ export function getVerifyCollectionInstructionDataSerializer(
   >;
 }
 
+// Extra Args.
+export type VerifyCollectionInstructionExtraArgs = { proof: Array<PublicKey> };
+
 // Args.
 export type VerifyCollectionInstructionArgs = PickPartial<
-  VerifyCollectionInstructionDataArgs,
-  'dataHash' | 'creatorHash'
+  VerifyCollectionInstructionDataArgs & VerifyCollectionInstructionExtraArgs,
+  'dataHash' | 'creatorHash' | 'proof'
 >;
 
 // Instruction.
@@ -317,6 +320,7 @@ export function verifyCollection(
         false
       )
   );
+  addObjectProperty(resolvingArgs, 'proof', input.proof ?? []);
   const resolvedArgs = { ...input, ...resolvingArgs };
 
   addAccountMeta(keys, signers, resolvedAccounts.treeConfig, false);

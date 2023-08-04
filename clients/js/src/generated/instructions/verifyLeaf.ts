@@ -24,7 +24,7 @@ import {
   u32,
   u8,
 } from '@metaplex-foundation/umi/serializers';
-import { addAccountMeta } from '../shared';
+import { PickPartial, addAccountMeta, addObjectProperty } from '../shared';
 
 // Accounts.
 export type VerifyLeafInstructionAccounts = {
@@ -77,8 +77,14 @@ export function getVerifyLeafInstructionDataSerializer(
   ) as Serializer<VerifyLeafInstructionDataArgs, VerifyLeafInstructionData>;
 }
 
+// Extra Args.
+export type VerifyLeafInstructionExtraArgs = { proof: Array<PublicKey> };
+
 // Args.
-export type VerifyLeafInstructionArgs = VerifyLeafInstructionDataArgs;
+export type VerifyLeafInstructionArgs = PickPartial<
+  VerifyLeafInstructionDataArgs & VerifyLeafInstructionExtraArgs,
+  'proof'
+>;
 
 // Instruction.
 export function verifyLeaf(
@@ -99,6 +105,7 @@ export function verifyLeaf(
     merkleTree: [input.merkleTree, false] as const,
   };
   const resolvingArgs = {};
+  addObjectProperty(resolvingArgs, 'proof', input.proof ?? []);
   const resolvedArgs = { ...input, ...resolvingArgs };
 
   addAccountMeta(keys, signers, resolvedAccounts.merkleTree, false);

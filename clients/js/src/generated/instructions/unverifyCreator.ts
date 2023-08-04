@@ -112,10 +112,13 @@ export function getUnverifyCreatorInstructionDataSerializer(
   >;
 }
 
+// Extra Args.
+export type UnverifyCreatorInstructionExtraArgs = { proof: Array<PublicKey> };
+
 // Args.
 export type UnverifyCreatorInstructionArgs = PickPartial<
-  UnverifyCreatorInstructionDataArgs,
-  'dataHash' | 'creatorHash'
+  UnverifyCreatorInstructionDataArgs & UnverifyCreatorInstructionExtraArgs,
+  'dataHash' | 'creatorHash' | 'proof'
 >;
 
 // Instruction.
@@ -228,6 +231,7 @@ export function unverifyCreator(
         false
       )
   );
+  addObjectProperty(resolvingArgs, 'proof', input.proof ?? []);
   const resolvedArgs = { ...input, ...resolvingArgs };
 
   addAccountMeta(keys, signers, resolvedAccounts.treeConfig, false);

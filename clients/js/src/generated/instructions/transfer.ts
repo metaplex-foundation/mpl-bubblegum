@@ -27,7 +27,7 @@ import {
   u8,
 } from '@metaplex-foundation/umi/serializers';
 import { findTreeConfigPda } from '../accounts';
-import { addAccountMeta, addObjectProperty } from '../shared';
+import { PickPartial, addAccountMeta, addObjectProperty } from '../shared';
 
 // Accounts.
 export type TransferInstructionAccounts = {
@@ -93,8 +93,14 @@ export function getTransferInstructionDataSerializer(
   ) as Serializer<TransferInstructionDataArgs, TransferInstructionData>;
 }
 
+// Extra Args.
+export type TransferInstructionExtraArgs = { proof: Array<PublicKey> };
+
 // Args.
-export type TransferInstructionArgs = TransferInstructionDataArgs;
+export type TransferInstructionArgs = PickPartial<
+  TransferInstructionDataArgs & TransferInstructionExtraArgs,
+  'proof'
+>;
 
 // Instruction.
 export function transfer(
@@ -175,6 +181,7 @@ export function transfer(
           false,
         ] as const)
   );
+  addObjectProperty(resolvingArgs, 'proof', input.proof ?? []);
   const resolvedArgs = { ...input, ...resolvingArgs };
 
   addAccountMeta(keys, signers, resolvedAccounts.treeConfig, false);
