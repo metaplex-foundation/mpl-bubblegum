@@ -44,6 +44,11 @@ export type MintToCollectionV1InstructionAccounts = {
   payer?: Signer;
   treeCreatorOrDelegate?: Signer;
   collectionAuthority?: Signer;
+  /**
+   * If there is no collecton authority record PDA then
+   * this must be the Bubblegum program address.
+   */
+
   collectionAuthorityRecordPda?: PublicKey | Pda;
   collectionMint: PublicKey | Pda;
   collectionMetadata?: PublicKey | Pda;

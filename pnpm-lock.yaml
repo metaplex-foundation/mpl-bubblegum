@@ -5,11 +5,11 @@ devDependencies:
     specifier: ^0.12.1
     version: 0.12.1(typescript@4.9.5)
   '@metaplex-foundation/kinobi':
-    specifier: ^0.11.1
-    version: 0.11.1
+    specifier: ^0.12.2
+    version: 0.12.2
   '@metaplex-foundation/shank-js':
-    specifier: ^0.1.0
-    version: 0.1.0
+    specifier: ^0.1.1
+    version: 0.1.1
   typescript:
     specifier: ^4.9.4
     version: 4.9.5
@@ -85,8 +85,8 @@ packages:
     resolution: {integrity: sha512-S9RulC2fFCFOQraz61bij+5YCHhSO9llJegK8c8Y6731fSi6snUSQJdCUqYS8AIgR0TKbQvdvgSyIIdbDFZbBA==}
     dev: true
 
-  /@metaplex-foundation/kinobi@0.11.1:
-    resolution: {integrity: sha512-khRJA/2I9Capfj9vMrsPTFOTHWN9H1YPv8EOyELXgLkLRVlVZH0z88Ge/zzl2JqCTZpz1IOWJU1XfJYwiDamjQ==}
+  /@metaplex-foundation/kinobi@0.12.2:
+    resolution: {integrity: sha512-WWCXRHlhiLh2wWbrPandAdn7wr5dXX4gBGRxpTK+U9n6SFbTzO8DRxSbQfWhMWu7Seqh6y/GAKQJho31cNcRAg==}
     dependencies:
       '@noble/hashes': 1.3.0
       chalk: 4.1.2
@@ -107,8 +107,8 @@ packages:
       - supports-color
     dev: true
 
-  /@metaplex-foundation/shank-js@0.1.0:
-    resolution: {integrity: sha512-ExTOIIZFJw8WNHfv+anJifP6/Al9gcWJaUXMifGOB6BxV/J0+jfMg13sm0uMlovU7/tiZSPboS09HXnKaykETg==}
+  /@metaplex-foundation/shank-js@0.1.1:
+    resolution: {integrity: sha512-po19xwO8v3JTVnfY674F2YzGnwA6kc2nHodVEfStbQezfeA6enetwPP956ZKwHaH3/XVKyxT3PLD/ynFcKb7oA==}
     dependencies:
       '@metaplex-foundation/rustbin': 0.3.1
       ansi-colors: 4.1.3

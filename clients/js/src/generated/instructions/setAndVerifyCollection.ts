@@ -47,8 +47,18 @@ export type SetAndVerifyCollectionInstructionAccounts = {
   leafDelegate?: PublicKey | Pda;
   merkleTree: PublicKey | Pda;
   payer?: Signer;
+  /**
+   * the case of `set_and_verify_collection` where
+   * we are actually changing the NFT metadata.
+   */
+
   treeCreatorOrDelegate?: PublicKey | Pda;
   collectionAuthority?: Signer;
+  /**
+   * If there is no collecton authority record PDA then
+   * this must be the Bubblegum program address.
+   */
+
   collectionAuthorityRecordPda?: PublicKey | Pda;
   collectionMint: PublicKey | Pda;
   collectionMetadata?: PublicKey | Pda;
