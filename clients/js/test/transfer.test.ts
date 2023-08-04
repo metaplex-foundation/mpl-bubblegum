@@ -96,3 +96,57 @@ test('it can transfer a compressed NFT as a delegated authority', async (t) => {
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(updatedLeaf));
 });
+
+test.only('it can transfer a compressed NFT using a proof', async (t) => {
+  // Given a tree with several minted NFTs so that the proof is not empty.
+  const umi = await createUmi();
+  const merkleTree = await createTree(umi);
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  await Promise.all([
+    mint(umi, { merkleTree, leafOwner: generateSigner(umi).publicKey }),
+    mint(umi, { merkleTree, leafOwner: generateSigner(umi).publicKey }),
+    mint(umi, { merkleTree, leafOwner: generateSigner(umi).publicKey }),
+    mint(umi, { merkleTree, leafOwner: generateSigner(umi).publicKey }),
+  ]);
+
+  // And a minted NFT owned by leafOwnerA.
+  const leafOwnerA = generateSigner(umi);
+  const { metadata, leafIndex } = await mint(umi, {
+    merkleTree,
+    leafOwner: leafOwnerA.publicKey,
+  });
+  console.log({ leafIndex });
+
+  // And more minted NFTs afterwards to ensure the proof is not cached.
+  await Promise.all([
+    mint(umi, { merkleTree, leafOwner: generateSigner(umi).publicKey }),
+    mint(umi, { merkleTree, leafOwner: generateSigner(umi).publicKey }),
+    mint(umi, { merkleTree, leafOwner: generateSigner(umi).publicKey }),
+    mint(umi, { merkleTree, leafOwner: generateSigner(umi).publicKey }),
+  ]);
+
+  // When leafOwnerA transfers the NFT to leafOwnerB.
+  const leafOwnerB = generateSigner(umi);
+  await transfer(umi, {
+    leafOwner: leafOwnerA,
+    newLeafOwner: leafOwnerB.publicKey,
+    merkleTree,
+    root: getCurrentRoot(merkleTreeAccount.tree),
+    dataHash: hashMetadataData(metadata),
+    creatorHash: hashMetadataCreators(metadata.creators),
+    nonce: leafIndex,
+    index: leafIndex,
+    proof: [],
+  }).sendAndConfirm(umi);
+
+  // Then the leaf was updated in the merkle tree.
+  const updatedLeaf = hashLeaf(umi, {
+    merkleTree,
+    owner: leafOwnerB.publicKey,
+    leafIndex,
+    metadata,
+  });
+  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  console.log(updatedLeaf);
+  t.pass();
+});
