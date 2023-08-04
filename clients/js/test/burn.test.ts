@@ -30,9 +30,8 @@ test('it can burn a compressed NFT', async (t) => {
     creatorHash: hashMetadataCreators(metadata.creators),
     nonce: leafIndex,
     index: leafIndex,
-  })
-    .addRemainingAccounts([]) // <- Proof nodes would be added as remaining accounts.
-    .sendAndConfirm(umi);
+    proof: [],
+  }).sendAndConfirm(umi);
 
   // Then the leaf was deleted in the merkle tree.
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
@@ -72,9 +71,8 @@ test('it can burn a compressed NFT as a delegated authority', async (t) => {
     creatorHash: hashMetadataCreators(metadata.creators),
     nonce: leafIndex,
     index: leafIndex,
-  })
-    .addRemainingAccounts([]) // <- Proof nodes would be added as remaining accounts.
-    .sendAndConfirm(umi);
+    proof: [],
+  }).sendAndConfirm(umi);
 
   // Then the leaf was deleted in the merkle tree.
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);

@@ -33,9 +33,8 @@ test('it can transfer a compressed NFT', async (t) => {
     creatorHash: hashMetadataCreators(metadata.creators),
     nonce: leafIndex,
     index: leafIndex,
-  })
-    .addRemainingAccounts([]) // <- Proof nodes would be added as remaining accounts.
-    .sendAndConfirm(umi);
+    proof: [],
+  }).sendAndConfirm(umi);
 
   // Then the leaf was updated in the merkle tree.
   const updatedLeaf = hashLeaf(umi, {
@@ -83,9 +82,8 @@ test('it can transfer a compressed NFT as a delegated authority', async (t) => {
     creatorHash: hashMetadataCreators(metadata.creators),
     nonce: leafIndex,
     index: leafIndex,
-  })
-    .addRemainingAccounts([]) // <- Proof nodes would be added as remaining accounts.
-    .sendAndConfirm(umi);
+    proof: [],
+  }).sendAndConfirm(umi);
 
   // Then the leaf was updated in the merkle tree.
   const updatedLeaf = hashLeaf(umi, {

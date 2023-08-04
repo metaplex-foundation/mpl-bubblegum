@@ -27,7 +27,7 @@ import {
   u8,
 } from '@metaplex-foundation/umi/serializers';
 import { findTreeConfigPda } from '../accounts';
-import { addAccountMeta, addObjectProperty } from '../shared';
+import { PickPartial, addAccountMeta, addObjectProperty } from '../shared';
 
 // Accounts.
 export type DelegateInstructionAccounts = {
@@ -90,8 +90,14 @@ export function getDelegateInstructionDataSerializer(
   ) as Serializer<DelegateInstructionDataArgs, DelegateInstructionData>;
 }
 
+// Extra Args.
+export type DelegateInstructionExtraArgs = { proof: Array<PublicKey> };
+
 // Args.
-export type DelegateInstructionArgs = DelegateInstructionDataArgs;
+export type DelegateInstructionArgs = PickPartial<
+  DelegateInstructionDataArgs & DelegateInstructionExtraArgs,
+  'proof'
+>;
 
 // Instruction.
 export function delegate(
@@ -166,6 +172,7 @@ export function delegate(
           false,
         ] as const)
   );
+  addObjectProperty(resolvingArgs, 'proof', input.proof ?? []);
   const resolvedArgs = { ...input, ...resolvingArgs };
 
   addAccountMeta(keys, signers, resolvedAccounts.treeConfig, false);
@@ -176,6 +183,14 @@ export function delegate(
   addAccountMeta(keys, signers, resolvedAccounts.logWrapper, false);
   addAccountMeta(keys, signers, resolvedAccounts.compressionProgram, false);
   addAccountMeta(keys, signers, resolvedAccounts.systemProgram, false);
+
+  // Remaining Accounts.
+  const remainingAccounts = resolvedArgs.proof.map(
+    (address) => [address, false] as const
+  );
+  remainingAccounts.forEach((remainingAccount) =>
+    addAccountMeta(keys, signers, remainingAccount, false)
+  );
 
   // Data.
   const data = getDelegateInstructionDataSerializer().serialize(resolvedArgs);

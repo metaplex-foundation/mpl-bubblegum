@@ -340,6 +340,7 @@ kinobi.update(
           "burn",
           "transfer",
           "redeem",
+          "delegate",
           "setAndVerifyCollection",
           "verifyCollection",
           "unverifyCollection",
