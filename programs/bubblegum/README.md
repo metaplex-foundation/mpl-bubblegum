@@ -174,6 +174,43 @@ This instruction mints a compressed NFT.  Note that Merkle proofs are *not* requ
 
 </details>
 
+### 📄 `mint_to_collection_v1`
+
+This instruction mints a compressed NFT.  Note that Merkle proofs are *not* required for minting.
+
+<details>
+  <summary>Accounts</summary>
+
+| Name                              | Writable | Signer | Description
+| -----------------------------     | :------: | :----: | --
+| `tree_authority`                  |    ✅    |        | The [`TreeConfig`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/mod.rs#L17) PDA account previously initialized by `create_tree`.
+| `leaf_owner`                      |          |        | The wallet that will be the NFT owner.
+| `leaf_delegate`                   |          |        | The wallet that will be the NFT delegate.
+| `merkle_tree`                     |    ✅    |        | The account that contains the Merkle tree, initialized by `create_tree`.
+| `payer`                           |          |   ✅   | Payer of the transaction.
+| `tree_delegate`                   |          |   ✅   | The owner or delegate authority of the Merkle tree.
+
+| `collection_authority`            |          |   ✅   | Either the true collection authority a delegated collection authority (if delegated then a Collection Authority Record PDA must be provided).
+| `collection_authority_record_pda` |          |        | In the case of a delegated collection authority, this is the collection authority record PDA.  See the Metaplex documentation on [`Certified Collections`](https://docs.metaplex.com/programs/token-metadata/certified-collections) for more information on verifying collections.  If there is no collecton authority record PDA then this must be the Bubblegum program address.
+| `collection_mint`                 |          |        | Mint account of the collection.
+| `collection_metadata`             |   ❓✅   |        | Metadata account of the collection.  Modified in the case of a sized collection.
+| `edition_account`                 |          |        | Master Edition account of the collection.
+| `bubblegum_signer`                |          |        | Signing PDA used when doing a CPI into token-metadata to update the collection information.
+| `log_wrapper`                     |          |        | The Solana Program Library Wrapper (spl-noop) program ID.
+| `compression_program`             |          |        | The Solana Program Library spl-account-compression program ID.
+
+</details>
+
+<details>
+  <summary>Arguments</summary>
+
+| Argument                          | Offset | Size | Description
+| --------------------------------- | ------ | ---- | --
+| `data`                            | 0      | ~    | [`MetadataArgs`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/metaplex_adapter.rs#L81) object.
+
+</details>
+
+
 ### 📄 `verify_creator` and `unverify_creator`
 
 Verify or unverify a creator that exists in the NFT's creators array.
@@ -249,7 +286,7 @@ Verify or unverify an NFT as a member of a Metaplex [`Certified Collection`](htt
 | `nonce`                           | 96     | 8    | A nonce ("number used once") value used to make the Merkle tree leaves unique.  This is the value of `num_minted` for the tree stored in the [`TreeConfig`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/mod.rs#L17) account at the time the NFT was minted.  The unique value for each asset can be retrieved from off-chain data store.
 | `index`                           | 104    | 4    | The index of the leaf node in the Merkle tree.  Can be retrieved from off-chain data store.
 | `data`                            | 108    | ~    | [`MetadataArgs`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/metaplex_adapter.rs#L81) object (**without** the `verified` flag for the collection changed).  Can be retrieved from off-chain data store.
-| `collection`                      | ~      | 32   | Mint address of a new Collection NFT.
+| _collection_                      | ~      | 32   | Mint address of a new Collection NFT.  **Note this is only an argument for `set_and_verify_collection`**
 
 </details>
 
