@@ -13,10 +13,7 @@ const getMerkleTree = (leaves: PublicKey[], maxDepth: number): MerkleTree =>
         .fill(0)
         .map(() => new Uint8Array(32).fill(0)),
     ],
-    keccak_256,
-    {
-      sortPairs: true,
-    }
+    keccak_256
   );
 
 /**
