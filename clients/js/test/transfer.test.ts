@@ -9,6 +9,7 @@ import {
   hashMetadataCreators,
   hashMetadataData,
   transfer,
+  verifyLeaf,
 } from '../src';
 import { createTree, createUmi, mint } from './_setup';
 
@@ -98,8 +99,11 @@ test('it can transfer a compressed NFT as a delegated authority', async (t) => {
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(updatedLeaf));
 });
 
-test.only('it can transfer a compressed NFT using a proof', async (t) => {
-  // Given a tree with several minted NFTs so that the proof is required.
+test('it can transfer a compressed NFT using a proof', async (t) => {
+  // Given we increase the timeout for this test.
+  t.timeout(20000);
+
+  // And given a tree with several minted NFTs so that the proof is required.
   const umi = await createUmi();
   const merkleTree = await createTree(umi, {
     maxDepth: 5,
@@ -149,7 +153,18 @@ test.only('it can transfer a compressed NFT using a proof', async (t) => {
     leafIndex,
     metadata,
   });
+  const updatedProof = getMerkleProof(
+    [...preMints.map((m) => m.leaf), publicKey(updatedLeaf)],
+    5,
+    publicKey(updatedLeaf)
+  );
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
-  console.log(updatedLeaf);
+  await verifyLeaf(umi, {
+    merkleTree,
+    root: getCurrentRoot(merkleTreeAccount.tree),
+    leaf: updatedLeaf,
+    index: leafIndex,
+    proof: updatedProof,
+  }).sendAndConfirm(umi);
   t.pass();
 });
