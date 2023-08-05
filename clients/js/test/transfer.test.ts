@@ -4,6 +4,7 @@ import {
   delegate,
   fetchMerkleTree,
   getCurrentRoot,
+  getMerkleProof,
   hashLeaf,
   hashMetadataCreators,
   hashMetadataData,
@@ -98,32 +99,35 @@ test('it can transfer a compressed NFT as a delegated authority', async (t) => {
 });
 
 test.only('it can transfer a compressed NFT using a proof', async (t) => {
-  // Given a tree with several minted NFTs so that the proof is not empty.
+  // Given a tree with several minted NFTs so that the proof is required.
   const umi = await createUmi();
-  const merkleTree = await createTree(umi);
+  const merkleTree = await createTree(umi, {
+    maxDepth: 5,
+    maxBufferSize: 8,
+  });
   let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
-  await Promise.all([
-    mint(umi, { merkleTree, leafOwner: generateSigner(umi).publicKey }),
-    mint(umi, { merkleTree, leafOwner: generateSigner(umi).publicKey }),
-    mint(umi, { merkleTree, leafOwner: generateSigner(umi).publicKey }),
-    mint(umi, { merkleTree, leafOwner: generateSigner(umi).publicKey }),
-  ]);
+  const preMints = [
+    await mint(umi, { merkleTree, leafOwner: generateSigner(umi).publicKey }),
+    await mint(umi, { merkleTree, leafOwner: generateSigner(umi).publicKey }),
+    await mint(umi, { merkleTree, leafOwner: generateSigner(umi).publicKey }),
+    await mint(umi, { merkleTree, leafOwner: generateSigner(umi).publicKey }),
+    await mint(umi, { merkleTree, leafOwner: generateSigner(umi).publicKey }),
+    await mint(umi, { merkleTree, leafOwner: generateSigner(umi).publicKey }),
+    await mint(umi, { merkleTree, leafOwner: generateSigner(umi).publicKey }),
+    await mint(umi, { merkleTree, leafOwner: generateSigner(umi).publicKey }),
+  ];
 
-  // And a minted NFT owned by leafOwnerA.
+  // And a 9th minted NFT owned by leafOwnerA.
   const leafOwnerA = generateSigner(umi);
-  const { metadata, leafIndex } = await mint(umi, {
+  const { metadata, leafIndex, leaf } = await mint(umi, {
     merkleTree,
     leafOwner: leafOwnerA.publicKey,
   });
-  console.log({ leafIndex });
 
-  // And more minted NFTs afterwards to ensure the proof is not cached.
-  await Promise.all([
-    mint(umi, { merkleTree, leafOwner: generateSigner(umi).publicKey }),
-    mint(umi, { merkleTree, leafOwner: generateSigner(umi).publicKey }),
-    mint(umi, { merkleTree, leafOwner: generateSigner(umi).publicKey }),
-    mint(umi, { merkleTree, leafOwner: generateSigner(umi).publicKey }),
-  ]);
+  // And a proof for the 9th minted NFT.
+  const allLeaves = [...preMints.map((m) => m.leaf), leaf];
+  const proof = getMerkleProof(allLeaves, 5, leaf);
+  console.log({ leafIndex, proof, allLeaves });
 
   // When leafOwnerA transfers the NFT to leafOwnerB.
   const leafOwnerB = generateSigner(umi);
@@ -136,7 +140,7 @@ test.only('it can transfer a compressed NFT using a proof', async (t) => {
     creatorHash: hashMetadataCreators(metadata.creators),
     nonce: leafIndex,
     index: leafIndex,
-    proof: [],
+    proof,
   }).sendAndConfirm(umi);
 
   // Then the leaf was updated in the merkle tree.
