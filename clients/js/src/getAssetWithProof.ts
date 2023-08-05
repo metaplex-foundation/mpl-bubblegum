@@ -35,7 +35,7 @@ export const getAssetWithProof = async (
     dataHash: publicKeyBytes(rpcAsset.compression.data_hash),
     creatorHash: publicKeyBytes(rpcAsset.compression.creator_hash),
     nonce: rpcAsset.compression.leaf_id,
-    index: rpcAssetProof.node_index, // TODO: convert to index
+    index: rpcAsset.compression.leaf_id, // TODO: convert rpcAssetProof.node_index to leaf_index using: leaf_index = node_index - 2^tree_height
     proof: rpcAssetProof.proof,
     rpcAsset,
     rpcAssetProof,
