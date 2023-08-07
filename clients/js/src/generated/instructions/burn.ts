@@ -27,7 +27,7 @@ import {
   u8,
 } from '@metaplex-foundation/umi/serializers';
 import { findTreeConfigPda } from '../accounts';
-import { addAccountMeta, addObjectProperty } from '../shared';
+import { PickPartial, addAccountMeta, addObjectProperty } from '../shared';
 
 // Accounts.
 export type BurnInstructionAccounts = {
@@ -88,8 +88,14 @@ export function getBurnInstructionDataSerializer(
   ) as Serializer<BurnInstructionDataArgs, BurnInstructionData>;
 }
 
+// Extra Args.
+export type BurnInstructionExtraArgs = { proof: Array<PublicKey> };
+
 // Args.
-export type BurnInstructionArgs = BurnInstructionDataArgs;
+export type BurnInstructionArgs = PickPartial<
+  BurnInstructionDataArgs & BurnInstructionExtraArgs,
+  'proof'
+>;
 
 // Instruction.
 export function burn(
@@ -169,6 +175,7 @@ export function burn(
           false,
         ] as const)
   );
+  addObjectProperty(resolvingArgs, 'proof', input.proof ?? []);
   const resolvedArgs = { ...input, ...resolvingArgs };
 
   addAccountMeta(keys, signers, resolvedAccounts.treeConfig, false);
@@ -178,6 +185,14 @@ export function burn(
   addAccountMeta(keys, signers, resolvedAccounts.logWrapper, false);
   addAccountMeta(keys, signers, resolvedAccounts.compressionProgram, false);
   addAccountMeta(keys, signers, resolvedAccounts.systemProgram, false);
+
+  // Remaining Accounts.
+  const remainingAccounts = resolvedArgs.proof.map(
+    (address) => [address, false] as const
+  );
+  remainingAccounts.forEach((remainingAccount) =>
+    addAccountMeta(keys, signers, remainingAccount, false)
+  );
 
   // Data.
   const data = getBurnInstructionDataSerializer().serialize(resolvedArgs);

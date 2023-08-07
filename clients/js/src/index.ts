@@ -4,6 +4,7 @@ export * from './generated';
 export * from './hash';
 export * from './hooked';
 export * from './leafAssetId';
+export * from './merkle';
 export * from './plugin';
 export * from './readApiDecorator';
 export * from './readApiTypes';

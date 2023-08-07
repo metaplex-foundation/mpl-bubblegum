@@ -42,9 +42,10 @@ export const createTree = async (
 
 export const mint = async (
   context: Context,
-  input: Omit<Parameters<typeof baseMintV1>[1], 'metadata'> & {
+  input: Omit<Parameters<typeof baseMintV1>[1], 'metadata' | 'leafOwner'> & {
     leafIndex?: number | bigint;
     metadata?: Partial<Parameters<typeof baseMintV1>[1]['metadata']>;
+    leafOwner?: PublicKey;
   }
 ): Promise<{
   metadata: MetadataArgsArgs;
@@ -53,6 +54,7 @@ export const mint = async (
   leafIndex: number;
 }> => {
   const merkleTree = publicKey(input.merkleTree, false);
+  const leafOwner = input.leafOwner ?? context.identity.publicKey;
   const leafIndex = Number(
     input.leafIndex ??
       (await fetchMerkleTree(context, merkleTree)).tree.activeIndex
@@ -69,6 +71,7 @@ export const mint = async (
   await baseMintV1(context, {
     ...input,
     metadata,
+    leafOwner,
   }).sendAndConfirm(context);
 
   return {
@@ -78,8 +81,8 @@ export const mint = async (
     leaf: publicKey(
       hashLeaf(context, {
         merkleTree,
-        owner: publicKey(input.leafOwner, false),
-        delegate: publicKey(input.leafDelegate ?? input.leafOwner, false),
+        owner: publicKey(leafOwner, false),
+        delegate: publicKey(input.leafDelegate ?? leafOwner, false),
         leafIndex,
         metadata,
       })

@@ -61,9 +61,8 @@ test('it can unverify the collection of a minted compressed NFT', async (t) => {
     nonce: leafIndex,
     index: leafIndex,
     metadata: verifiedMetadata,
-  })
-    .addRemainingAccounts([]) // <- Proof nodes would be added as remaining accounts.
-    .sendAndConfirm(umi);
+    proof: [],
+  }).sendAndConfirm(umi);
 
   // Then the leaf was updated in the merkle tree.
   const updatedLeaf = hashLeaf(umi, {

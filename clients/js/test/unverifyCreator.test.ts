@@ -69,9 +69,8 @@ test('it can unverify the creator of a minted compressed NFT', async (t) => {
     ...commonArgs,
     creator: creatorA,
     metadata: verifiedMetadata,
-  })
-    .addRemainingAccounts([]) // <- Proof nodes would be added as remaining accounts.
-    .sendAndConfirm(umi);
+    proof: [],
+  }).sendAndConfirm(umi);
 
   // Then the leaf was updated in the merkle tree.
   const updatedLeaf = hashLeaf(umi, {

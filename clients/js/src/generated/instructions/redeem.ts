@@ -27,7 +27,7 @@ import {
   u8,
 } from '@metaplex-foundation/umi/serializers';
 import { findTreeConfigPda, findVoucherPda } from '../accounts';
-import { addAccountMeta, addObjectProperty } from '../shared';
+import { PickPartial, addAccountMeta, addObjectProperty } from '../shared';
 
 // Accounts.
 export type RedeemInstructionAccounts = {
@@ -89,8 +89,14 @@ export function getRedeemInstructionDataSerializer(
   ) as Serializer<RedeemInstructionDataArgs, RedeemInstructionData>;
 }
 
+// Extra Args.
+export type RedeemInstructionExtraArgs = { proof: Array<PublicKey> };
+
 // Args.
-export type RedeemInstructionArgs = RedeemInstructionDataArgs;
+export type RedeemInstructionArgs = PickPartial<
+  RedeemInstructionDataArgs & RedeemInstructionExtraArgs,
+  'proof'
+>;
 
 // Instruction.
 export function redeem(
@@ -183,6 +189,7 @@ export function redeem(
           false,
         ] as const)
   );
+  addObjectProperty(resolvingArgs, 'proof', input.proof ?? []);
   const resolvedArgs = { ...input, ...resolvingArgs };
 
   addAccountMeta(keys, signers, resolvedAccounts.treeConfig, false);
@@ -193,6 +200,14 @@ export function redeem(
   addAccountMeta(keys, signers, resolvedAccounts.logWrapper, false);
   addAccountMeta(keys, signers, resolvedAccounts.compressionProgram, false);
   addAccountMeta(keys, signers, resolvedAccounts.systemProgram, false);
+
+  // Remaining Accounts.
+  const remainingAccounts = resolvedArgs.proof.map(
+    (address) => [address, false] as const
+  );
+  remainingAccounts.forEach((remainingAccount) =>
+    addAccountMeta(keys, signers, remainingAccount, false)
+  );
 
   // Data.
   const data = getRedeemInstructionDataSerializer().serialize(resolvedArgs);

@@ -17,9 +17,8 @@ test('it can verify a leaf on the merkle tree', async (t) => {
     root: getCurrentRoot(merkleTreeAccount.tree),
     leaf: publicKeyBytes(leaf),
     index: leafIndex,
-  })
-    .addRemainingAccounts([]) // <- Proof nodes would be added as remaining accounts.
-    .sendAndConfirm(umi);
+    proof: [],
+  }).sendAndConfirm(umi);
 
   // Then the transaction was successful.
   t.pass();

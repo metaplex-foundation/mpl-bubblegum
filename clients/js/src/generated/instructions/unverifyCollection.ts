@@ -46,8 +46,18 @@ export type UnverifyCollectionInstructionAccounts = {
   leafDelegate?: PublicKey | Pda;
   merkleTree: PublicKey | Pda;
   payer?: Signer;
+  /**
+   * the case of `set_and_verify_collection` where
+   * we are actually changing the NFT metadata.
+   */
+
   treeCreatorOrDelegate?: PublicKey | Pda;
   collectionAuthority?: Signer;
+  /**
+   * If there is no collecton authority record PDA then
+   * this must be the Bubblegum program address.
+   */
+
   collectionAuthorityRecordPda?: PublicKey | Pda;
   collectionMint: PublicKey | Pda;
   collectionMetadata?: PublicKey | Pda;
@@ -123,10 +133,16 @@ export function getUnverifyCollectionInstructionDataSerializer(
   >;
 }
 
+// Extra Args.
+export type UnverifyCollectionInstructionExtraArgs = {
+  proof: Array<PublicKey>;
+};
+
 // Args.
 export type UnverifyCollectionInstructionArgs = PickPartial<
-  UnverifyCollectionInstructionDataArgs,
-  'dataHash' | 'creatorHash'
+  UnverifyCollectionInstructionDataArgs &
+    UnverifyCollectionInstructionExtraArgs,
+  'dataHash' | 'creatorHash' | 'proof'
 >;
 
 // Instruction.
@@ -308,6 +324,7 @@ export function unverifyCollection(
         false
       )
   );
+  addObjectProperty(resolvingArgs, 'proof', input.proof ?? []);
   const resolvedArgs = { ...input, ...resolvingArgs };
 
   addAccountMeta(keys, signers, resolvedAccounts.treeConfig, false);
@@ -331,6 +348,14 @@ export function unverifyCollection(
   addAccountMeta(keys, signers, resolvedAccounts.compressionProgram, false);
   addAccountMeta(keys, signers, resolvedAccounts.tokenMetadataProgram, false);
   addAccountMeta(keys, signers, resolvedAccounts.systemProgram, false);
+
+  // Remaining Accounts.
+  const remainingAccounts = resolvedArgs.proof.map(
+    (address) => [address, false] as const
+  );
+  remainingAccounts.forEach((remainingAccount) =>
+    addAccountMeta(keys, signers, remainingAccount, false)
+  );
 
   // Data.
   const data =

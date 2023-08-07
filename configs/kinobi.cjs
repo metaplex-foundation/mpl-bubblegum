@@ -332,6 +332,44 @@ kinobi.update(
         });
       },
     },
+    {
+      // Use extra "proof" arg as remaining accounts.
+      selector: (node) =>
+        k.isInstructionNode(node) &&
+        [
+          "burn",
+          "transfer",
+          "redeem",
+          "delegate",
+          "setAndVerifyCollection",
+          "verifyCollection",
+          "unverifyCollection",
+          "verifyCreator",
+          "unverifyCreator",
+          "verifyLeaf",
+        ].includes(node.name),
+      transformer: (node) => {
+        k.assertInstructionNode(node);
+        return k.instructionNode({
+          ...node,
+          remainingAccounts: k.remainingAccountsFromArg("proof"),
+          argDefaults: {
+            ...node.argDefaults,
+            proof: k.valueDefault(k.vList([])),
+          },
+          extraArgs: k.instructionExtraArgsNode({
+            ...node.extraArgs,
+            struct: k.structTypeNode([
+              ...node.extraArgs.struct.fields,
+              k.structFieldTypeNode({
+                name: "proof",
+                child: k.arrayTypeNode(k.publicKeyTypeNode()),
+              }),
+            ]),
+          }),
+        });
+      },
+    },
   ])
 );
 

@@ -36,9 +36,8 @@ test('it can redeem a compressed NFT', async (t) => {
     creatorHash,
     nonce: leafIndex,
     index: leafIndex,
-  })
-    .addRemainingAccounts([]) // <- Proof nodes would be added as remaining accounts.
-    .sendAndConfirm(umi);
+    proof: [],
+  }).sendAndConfirm(umi);
 
   // Then the leaf was removed from the merkle tree.
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
