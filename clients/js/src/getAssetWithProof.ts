@@ -35,18 +35,18 @@ export const getAssetWithProof = async (
     context.rpc.getAssetProof(assetId),
   ]);
 
-  const collectionString = rpcAsset.grouping.find(
+  const collectionString = (rpcAsset.grouping ?? []).find(
     (group) => group.group_key === 'collection'
   )?.group_value;
 
   const metadata: MetadataArgs = {
-    name: rpcAsset.content.metadata.name ?? '',
-    symbol: rpcAsset.content.metadata.symbol ?? '',
-    uri: rpcAsset.content.json_uri,
-    sellerFeeBasisPoints: rpcAsset.royalty.basis_points,
-    primarySaleHappened: rpcAsset.royalty.primary_sale_happened,
+    name: rpcAsset.content?.metadata?.name ?? '',
+    symbol: rpcAsset.content?.metadata?.symbol ?? '',
+    uri: rpcAsset.content?.json_uri,
+    sellerFeeBasisPoints: rpcAsset.royalty?.basis_points,
+    primarySaleHappened: rpcAsset.royalty?.primary_sale_happened,
     isMutable: rpcAsset.mutable,
-    editionNonce: wrapNullable(rpcAsset.supply.edition_nonce),
+    editionNonce: wrapNullable(rpcAsset.supply?.edition_nonce),
     tokenStandard: some(TokenStandard.NonFungible),
     collection: collectionString
       ? some({ key: publicKey(collectionString), verified: true })
