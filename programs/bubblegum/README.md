@@ -189,7 +189,6 @@ This instruction mints a compressed NFT.  Note that Merkle proofs are *not* requ
 | `merkle_tree`                     |    ✅    |        | The account that contains the Merkle tree, initialized by `create_tree`.
 | `payer`                           |          |   ✅   | Payer of the transaction.
 | `tree_delegate`                   |          |   ✅   | The owner or delegate authority of the Merkle tree.
-
 | `collection_authority`            |          |   ✅   | Either the true collection authority a delegated collection authority (if delegated then a Collection Authority Record PDA must be provided).
 | `collection_authority_record_pda` |          |        | In the case of a delegated collection authority, this is the collection authority record PDA.  See the Metaplex documentation on [`Certified Collections`](https://docs.metaplex.com/programs/token-metadata/certified-collections) for more information on verifying collections.  If there is no collecton authority record PDA then this must be the Bubblegum program address.
 | `collection_mint`                 |          |        | Mint account of the collection.
