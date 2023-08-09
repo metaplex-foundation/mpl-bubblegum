@@ -1,4 +1,13 @@
-import { Context, PublicKey, publicKeyBytes } from '@metaplex-foundation/umi';
+import {
+  Context,
+  PublicKey,
+  none,
+  publicKey,
+  publicKeyBytes,
+  some,
+  wrapNullable,
+} from '@metaplex-foundation/umi';
+import { MetadataArgs, TokenProgramVersion, TokenStandard } from './generated';
 import { ReadApiInterface } from './readApiDecorator';
 import { GetAssetProofRpcResponse, ReadApiAsset } from './readApiTypes';
 
@@ -12,6 +21,7 @@ export type AssetWithProof = {
   nonce: number;
   index: number;
   proof: PublicKey[];
+  metadata: MetadataArgs;
   rpcAsset: ReadApiAsset;
   rpcAssetProof: GetAssetProofRpcResponse;
 };
@@ -25,6 +35,27 @@ export const getAssetWithProof = async (
     context.rpc.getAssetProof(assetId),
   ]);
 
+  const collectionString = (rpcAsset.grouping ?? []).find(
+    (group) => group.group_key === 'collection'
+  )?.group_value;
+
+  const metadata: MetadataArgs = {
+    name: rpcAsset.content?.metadata?.name ?? '',
+    symbol: rpcAsset.content?.metadata?.symbol ?? '',
+    uri: rpcAsset.content?.json_uri,
+    sellerFeeBasisPoints: rpcAsset.royalty?.basis_points,
+    primarySaleHappened: rpcAsset.royalty?.primary_sale_happened,
+    isMutable: rpcAsset.mutable,
+    editionNonce: wrapNullable(rpcAsset.supply?.edition_nonce),
+    tokenStandard: some(TokenStandard.NonFungible),
+    collection: collectionString
+      ? some({ key: publicKey(collectionString), verified: true })
+      : none(),
+    uses: none(),
+    tokenProgramVersion: TokenProgramVersion.Original,
+    creators: rpcAsset.creators,
+  };
+
   return {
     leafOwner: rpcAsset.ownership.owner,
     leafDelegate: rpcAsset.ownership.delegate
@@ -37,6 +68,7 @@ export const getAssetWithProof = async (
     nonce: rpcAsset.compression.leaf_id,
     index: rpcAssetProof.node_index - 2 ** rpcAssetProof.proof.length,
     proof: rpcAssetProof.proof,
+    metadata,
     rpcAsset,
     rpcAssetProof,
   };
