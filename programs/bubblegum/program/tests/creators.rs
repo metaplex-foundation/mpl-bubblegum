@@ -7,28 +7,10 @@ use solana_program_test::{tokio, BanksClientError};
 use solana_sdk::{signature::Keypair, signer::Signer, transaction::TransactionError};
 use utils::context::BubblegumTestContext;
 
-// Test for multiple combinations?
 const MAX_DEPTH: usize = 14;
 const MAX_BUF_SIZE: usize = 64;
 
-// Minting too many leaves takes quite a long time (in these tests at least).
-const DEFAULT_NUM_MINTS: u64 = 10;
-
-#[tokio::test]
-async fn verify_creator() {
-    let context = BubblegumTestContext::new().await.unwrap();
-
-    let (mut tree, mut leaves) = context
-        .default_create_and_mint::<MAX_DEPTH, MAX_BUF_SIZE>(DEFAULT_NUM_MINTS)
-        .await
-        .unwrap();
-
-    for leaf in leaves.iter_mut() {
-        tree.verify_creator(leaf, &context.default_creators[0])
-            .await
-            .unwrap();
-    }
-}
+// See simple.rs for basic verify/unverify creator test.
 
 #[tokio::test]
 async fn mint_with_verified_creator() {
