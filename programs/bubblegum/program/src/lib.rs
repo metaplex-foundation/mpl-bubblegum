@@ -982,8 +982,6 @@ pub mod bubblegum {
         let owner = ctx.accounts.leaf_owner.key();
         let delegate = ctx.accounts.leaf_delegate.key();
         let authority = &mut ctx.accounts.tree_authority;
-        let tree_creator = authority.tree_creator;
-        let tree_delegate = authority.tree_delegate;
         let merkle_tree = &ctx.accounts.merkle_tree;
 
         let collection_metadata = &ctx.accounts.collection_metadata;
@@ -999,7 +997,8 @@ pub mod bubblegum {
 
         if !authority.is_public {
             require!(
-                incoming_tree_delegate == tree_creator || incoming_tree_delegate == tree_delegate,
+                incoming_tree_delegate == authority.tree_creator
+                    || incoming_tree_delegate == authority.tree_delegate,
                 BubblegumError::TreeAuthorityIncorrect,
             );
         }
@@ -1012,7 +1011,7 @@ pub mod bubblegum {
         // counted as a validated creator.
         let mut metadata_auth = HashSet::<Pubkey>::new();
         metadata_auth.insert(payer);
-        metadata_auth.insert(tree_delegate);
+        metadata_auth.insert(incoming_tree_delegate);
 
         // If there are any remaining accounts that are also signers, they can also be used for
         // creator validation.

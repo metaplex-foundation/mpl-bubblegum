@@ -170,6 +170,35 @@ impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExe
     }
 }
 
+pub type MintToCollectionV1Builder<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> =
+    TxBuilder<
+        'a,
+        mpl_bubblegum::accounts::MintToCollectionV1,
+        mpl_bubblegum::instruction::MintToCollectionV1,
+        &'a mut LeafArgs,
+        MAX_DEPTH,
+        MAX_BUFFER_SIZE,
+    >;
+
+impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExec
+    for MintToCollectionV1Builder<'a, MAX_DEPTH, MAX_BUFFER_SIZE>
+{
+    fn on_successful_execute(&mut self) -> Result<()> {
+        // Set the index and nonce for the leaf. We're effectively using `self.num_minted` as
+        // the next index to simplify things. Just panic if the conversion fails, as it normally
+        // shouldn't during the tests.
+        self.inner.index = u32::try_from(self.tree.num_minted()).unwrap();
+        self.inner.nonce = self.tree.num_minted();
+        self.tree.inc_num_minted();
+
+        // Update the collection verified flag.
+        let collection = self.inner.metadata.collection.as_mut().unwrap();
+        collection.verified = true;
+
+        self.tree.update_leaf(self.inner)
+    }
+}
+
 pub type BurnBuilder<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> = TxBuilder<
     'a,
     mpl_bubblegum::accounts::Burn,
