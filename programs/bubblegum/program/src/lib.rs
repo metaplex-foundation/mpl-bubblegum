@@ -1480,10 +1480,10 @@ pub mod bubblegum {
                             ctx.accounts.sysvar_rent.to_account_info(),
                         ],
                     )?;
+                } else {
+                    // SPL-token will check that account is initialized.
+                    assert_owned_by(&ctx.accounts.token_account, &spl_token::ID)?;
                 }
-                // TODO: I could just only check owner if the account wasn't just created.
-                ctx.accounts.token_account.reload()?;
-                assert_owned_by(&ctx.accounts.token_account, &spl_token::ID)?;
 
                 invoke_signed(
                     &spl_token::instruction::mint_to(
