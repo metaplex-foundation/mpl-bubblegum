@@ -12,7 +12,7 @@ use crate::{
     },
     utils::{
         append_leaf, assert_has_collection_authority, assert_metadata_is_mpl_compatible,
-        assert_owned_by, assert_pubkey_equal, cmp_bytes, cmp_pubkeys, get_asset_id, replace_leaf,
+        assert_pubkey_equal, cmp_bytes, cmp_pubkeys, get_asset_id, replace_leaf,
     },
 };
 use anchor_lang::{
@@ -1479,10 +1479,10 @@ pub mod bubblegum {
                             ctx.accounts.sysvar_rent.to_account_info(),
                         ],
                     )?;
-                } else {
-                    // SPL-token will check that account is initialized.
-                    assert_owned_by(&ctx.accounts.token_account, &spl_token::ID)?;
                 }
+                // SPL token will check that the associated token account is initialized, that it
+                // has the correct owner, and that the mint (which is a PDA of this program)
+                // matches.
 
                 invoke_signed(
                     &spl_token::instruction::mint_to(
