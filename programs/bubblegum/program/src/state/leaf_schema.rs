@@ -22,15 +22,10 @@ impl LeafSchemaEvent {
     }
 }
 
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, Default)]
 pub enum Version {
+    #[default]
     V1,
-}
-
-impl Default for Version {
-    fn default() -> Self {
-        Version::V1
-    }
 }
 
 impl Version {
