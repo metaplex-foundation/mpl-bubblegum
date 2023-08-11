@@ -27,6 +27,7 @@ use anchor_lang::{
     },
     system_program::System,
 };
+use anchor_spl::{associated_token::AssociatedToken, token::Token};
 use mpl_token_metadata::{
     assertions::collection::assert_collection_verify_is_valid, state::CollectionDetails,
 };
@@ -364,10 +365,8 @@ pub struct DecompressV1<'info> {
     pub sysvar_rent: Sysvar<'info, Rent>,
     /// CHECK:
     pub token_metadata_program: Program<'info, MplTokenMetadata>,
-    /// CHECK: versioning is handled in the instruction
-    pub token_program: UncheckedAccount<'info>,
-    /// CHECK:
-    pub associated_token_program: UncheckedAccount<'info>,
+    pub token_program: Program<'info, Token>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
     pub log_wrapper: Program<'info, Noop>,
 }
 
@@ -926,12 +925,11 @@ pub mod bubblegum {
         let owner = ctx.accounts.leaf_owner.key();
         let delegate = ctx.accounts.leaf_delegate.key();
         let authority = &mut ctx.accounts.tree_authority;
-        let tree_creator = authority.tree_creator;
-        let tree_delegate = authority.tree_delegate;
         let merkle_tree = &ctx.accounts.merkle_tree;
         if !authority.is_public {
             require!(
-                incoming_tree_delegate == tree_creator || incoming_tree_delegate == tree_delegate,
+                incoming_tree_delegate == authority.tree_creator
+                    || incoming_tree_delegate == authority.tree_delegate,
                 BubblegumError::TreeAuthorityIncorrect,
             );
         }
@@ -944,7 +942,7 @@ pub mod bubblegum {
         // counted as a validated creator.
         let mut metadata_auth = HashSet::<Pubkey>::new();
         metadata_auth.insert(payer);
-        metadata_auth.insert(tree_delegate);
+        metadata_auth.insert(incoming_tree_delegate);
 
         // If there are any remaining accounts that are also signers, they can also be used for
         // creator validation.
@@ -984,8 +982,6 @@ pub mod bubblegum {
         let owner = ctx.accounts.leaf_owner.key();
         let delegate = ctx.accounts.leaf_delegate.key();
         let authority = &mut ctx.accounts.tree_authority;
-        let tree_creator = authority.tree_creator;
-        let tree_delegate = authority.tree_delegate;
         let merkle_tree = &ctx.accounts.merkle_tree;
 
         let collection_metadata = &ctx.accounts.collection_metadata;
@@ -1001,7 +997,8 @@ pub mod bubblegum {
 
         if !authority.is_public {
             require!(
-                incoming_tree_delegate == tree_creator || incoming_tree_delegate == tree_delegate,
+                incoming_tree_delegate == authority.tree_creator
+                    || incoming_tree_delegate == authority.tree_delegate,
                 BubblegumError::TreeAuthorityIncorrect,
             );
         }
@@ -1014,7 +1011,7 @@ pub mod bubblegum {
         // counted as a validated creator.
         let mut metadata_auth = HashSet::<Pubkey>::new();
         metadata_auth.insert(payer);
-        metadata_auth.insert(tree_delegate);
+        metadata_auth.insert(incoming_tree_delegate);
 
         // If there are any remaining accounts that are also signers, they can also be used for
         // creator validation.
@@ -1483,6 +1480,10 @@ pub mod bubblegum {
                         ],
                     )?;
                 }
+                // SPL token will check that the associated token account is initialized, that it
+                // has the correct owner, and that the mint (which is a PDA of this program)
+                // matches.
+
                 invoke_signed(
                     &spl_token::instruction::mint_to(
                         &spl_token::id(),

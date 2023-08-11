@@ -2,9 +2,9 @@ use super::{
     clone_keypair, compute_metadata_hashes,
     tx_builder::{
         BurnBuilder, CancelRedeemBuilder, CollectionVerificationInner, CreateBuilder,
-        CreatorVerificationInner, DelegateBuilder, DelegateInner, MintV1Builder, RedeemBuilder,
-        SetTreeDelegateBuilder, TransferBuilder, TransferInner, TxBuilder, UnverifyCreatorBuilder,
-        VerifyCollectionBuilder, VerifyCreatorBuilder,
+        CreatorVerificationInner, DelegateBuilder, DelegateInner, MintToCollectionV1Builder,
+        MintV1Builder, RedeemBuilder, SetTreeDelegateBuilder, TransferBuilder, TransferInner,
+        TxBuilder, UnverifyCreatorBuilder, VerifyCollectionBuilder, VerifyCreatorBuilder,
     },
     Error, LeafArgs, Result,
 };
@@ -323,6 +323,74 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         self.mint_v1_non_owner_tx(tree_delegate, args)
             .execute()
             .await
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub fn mint_to_collection_v1_tx<'a>(
+        &'a mut self,
+        tree_delegate: &Keypair,
+        args: &'a mut LeafArgs,
+        collection_authority: &Keypair,
+        collection_mint: Pubkey,
+        collection_metadata: Pubkey,
+        edition_account: Pubkey,
+        collection_record: Option<Pubkey>,
+    ) -> MintToCollectionV1Builder<MAX_DEPTH, MAX_BUFFER_SIZE> {
+        let accounts = mpl_bubblegum::accounts::MintToCollectionV1 {
+            tree_authority: self.authority(),
+            leaf_owner: args.owner.pubkey(),
+            leaf_delegate: args.delegate.pubkey(),
+            merkle_tree: self.tree_pubkey(),
+            payer: args.owner.pubkey(),
+            tree_delegate: tree_delegate.pubkey(),
+            collection_authority: collection_authority.pubkey(),
+            collection_authority_record_pda: collection_record.unwrap_or(mpl_bubblegum::ID),
+            collection_mint,
+            collection_metadata,
+            edition_account,
+            bubblegum_signer: pubkey!("4ewWZC5gT6TGpm5LZNDs9wVonfUT2q5PP5sc9kVbwMAK"),
+            log_wrapper: spl_noop::id(),
+            compression_program: spl_account_compression::id(),
+            token_metadata_program: mpl_token_metadata::id(),
+            system_program: system_program::id(),
+        };
+
+        let data = mpl_bubblegum::instruction::MintToCollectionV1 {
+            metadata_args: args.metadata.clone(),
+        };
+
+        let owner = clone_keypair(&args.owner);
+
+        self.tx_builder(
+            accounts,
+            data,
+            None,
+            args,
+            owner.pubkey(),
+            &[tree_delegate, &owner, collection_authority],
+        )
+    }
+
+    pub async fn mint_to_collection_v1(
+        &mut self,
+        tree_delegate: &Keypair,
+        args: &mut LeafArgs,
+        collection_authority: &Keypair,
+        collection_mint: Pubkey,
+        collection_metadata: Pubkey,
+        edition_account: Pubkey,
+    ) -> Result<()> {
+        self.mint_to_collection_v1_tx(
+            tree_delegate,
+            args,
+            collection_authority,
+            collection_mint,
+            collection_metadata,
+            edition_account,
+            None,
+        )
+        .execute()
+        .await
     }
 
     pub async fn decode_root(&mut self) -> Result<[u8; 32]> {

@@ -37,6 +37,6 @@ for p in ${PROGRAMS[@]}; do
     if [ ! "$(command -v $SOLFMT)" = "" ]; then
         CARGO_TERM_COLOR=always cargo test-sbf --sbf-out-dir ${WORKING_DIR}/${OUTPUT} ${ARGS} 2>&1 | ${SOLFMT}
     else
-        cargo test-sbf --sbf-out-dir ${WORKING_DIR}/${OUTPUT} ${ARGS}
+        RUST_LOG=error cargo test-sbf --sbf-out-dir ${WORKING_DIR}/${OUTPUT} ${ARGS}
     fi
 done
