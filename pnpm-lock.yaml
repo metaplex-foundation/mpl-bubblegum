@@ -8,8 +8,8 @@ devDependencies:
     specifier: ^0.12.3
     version: 0.12.3
   '@metaplex-foundation/shank-js':
-    specifier: ^0.1.3
-    version: 0.1.3
+    specifier: ^0.1.4
+    version: 0.1.4
   typescript:
     specifier: ^4.9.4
     version: 4.9.5
@@ -96,8 +96,8 @@ packages:
       - chokidar
     dev: true
 
-  /@metaplex-foundation/rustbin@0.3.3:
-    resolution: {integrity: sha512-WNyfYlKEyHPgtIAw6O/XvSUcOk28XVOvE17SZRYqQzrgM43dTlNT1WdWb9KyzPlDL9rWQNc1HVuIzPKNLW6Vsg==}
+  /@metaplex-foundation/rustbin@0.3.4:
+    resolution: {integrity: sha512-WekksU7V+seZ1u6SQk+/isgt3ScWLiRn40xxQOKL1AzRnfWOOXeQRxvudkwBDts9bzZyJHs6RXhWHvcSFN3Udw==}
     dependencies:
       debug: 4.3.4
       semver: 7.5.0
@@ -107,10 +107,10 @@ packages:
       - supports-color
     dev: true
 
-  /@metaplex-foundation/shank-js@0.1.3:
-    resolution: {integrity: sha512-kbMnOe6ir/7gcpfwNKrJwIHFCgwtcomrqRjZxnfOe6H0pm+34zPY+opyv4wOleMcnQyboBr5Z3+1cOSczCn3Fg==}
+  /@metaplex-foundation/shank-js@0.1.4:
+    resolution: {integrity: sha512-j35VKhWEWyNQmB+91NTqiE/aO2lNlQCd1fg5eoG9NC8OawefcBs2TVi5pmcInsrTU4pBs5OXp4jWhvMf+jEpDw==}
     dependencies:
-      '@metaplex-foundation/rustbin': 0.3.3
+      '@metaplex-foundation/rustbin': 0.3.4
       ansi-colors: 4.1.3
       debug: 4.3.4
     transitivePeerDependencies:
