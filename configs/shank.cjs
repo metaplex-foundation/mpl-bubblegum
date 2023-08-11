@@ -12,5 +12,8 @@ generateIdl({
   idlDir,
   binaryInstallDir,
   programDir: path.join(programDir, "bubblegum", "program"),
-  rustbin: { locked: true },
+  rustbin: {
+    locked: true,
+    versionRangeFallback: "0.27.0",
+  },
 });

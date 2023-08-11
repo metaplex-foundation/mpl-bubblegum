@@ -85,7 +85,7 @@ jobs:
       - name: Install Anchor CLI
         uses: metaplex-foundation/actions/install-anchor-cli@v1
         with:
-          version: ${{ env.ANCHOR_CLI_VERSION }}
+          version: ${{ env.ANCHOR_VERSION }}
           cache: ${{ env.CACHE }}
           
       - name: Install cargo-release
