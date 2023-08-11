@@ -14,6 +14,24 @@ generateIdl({
   programDir: path.join(programDir, "bubblegum", "program"),
   rustbin: {
     locked: true,
-    versionRangeFallback: "0.27.0"
+    versionRangeFallback: "0.27.0",
   },
+});
+
+console.log("===================");
+console.log("Trying some regexes");
+console.log("===================");
+
+const msg =
+  "error: could not find `anchor-cli` in registry `crates-io` with version `=0.28.0`";
+const regex1 = /error: could not find.+in registry/;
+const regex2 = /error\: could not find.+in registry/;
+const regex3 = new RegExp("error: could not find.+in registry");
+const regex4 = new RegExp("error\\: could not find.+in registry");
+
+console.log({
+  regex1: regex1.test(msg),
+  regex2: regex2.test(msg),
+  regex3: regex3.test(msg),
+  regex4: regex4.test(msg),
 });
