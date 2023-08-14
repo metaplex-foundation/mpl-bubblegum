@@ -252,6 +252,9 @@ kinobi.update(
       },
     },
     setAndVerifyCollection: {
+      accounts: {
+        treeCreatorOrDelegate: { isSigner: "either" },
+      },
       args: {
         ...hashDefaults,
         collection: {

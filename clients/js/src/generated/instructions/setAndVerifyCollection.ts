@@ -52,7 +52,7 @@ export type SetAndVerifyCollectionInstructionAccounts = {
    * we are actually changing the NFT metadata.
    */
 
-  treeCreatorOrDelegate?: PublicKey | Pda;
+  treeCreatorOrDelegate?: PublicKey | Pda | Signer;
   collectionAuthority?: Signer;
   /**
    * If there is no collecton authority record PDA then
@@ -202,7 +202,7 @@ export function setAndVerifyCollection(
     'treeCreatorOrDelegate',
     input.treeCreatorOrDelegate
       ? ([input.treeCreatorOrDelegate, false] as const)
-      : ([context.identity.publicKey, false] as const)
+      : ([context.identity, false] as const)
   );
   addObjectProperty(
     resolvedAccounts,
