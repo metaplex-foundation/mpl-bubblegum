@@ -167,6 +167,30 @@ pub struct CreatorVerification<'info> {
 }
 
 #[derive(Accounts)]
+pub struct AddCreator<'info> {
+    #[account(
+        seeds = [merkle_tree.key().as_ref()],
+        bump,
+        has_one = tree_delegate
+    )]
+    pub tree_authority: Account<'info, TreeConfig>,
+    pub tree_delegate: Signer<'info>,
+    /// CHECK: The new creator being added
+    pub creator: AccountInfo<'info>,
+    /// CHECK: This account is checked in the instruction
+    pub leaf_owner: UncheckedAccount<'info>,
+    /// CHECK: This account is checked in the instruction
+    pub leaf_delegate: UncheckedAccount<'info>,
+    #[account(mut)]
+    /// CHECK: This account is modified in the downstream program
+    pub merkle_tree: UncheckedAccount<'info>,
+    pub payer: Signer<'info>,
+    pub log_wrapper: Program<'info, Noop>,
+    pub compression_program: Program<'info, SplAccountCompression>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
 pub struct CollectionVerification<'info> {
     #[account(
         seeds = [merkle_tree.key().as_ref()],
@@ -467,6 +491,7 @@ pub enum InstructionName {
     UnverifyCollection,
     SetAndVerifyCollection,
     MintToCollectionV1,
+    AddCreator,
 }
 
 pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
@@ -1072,6 +1097,76 @@ pub mod bubblegum {
             index,
             message,
             true,
+        )
+    }
+
+    pub fn add_creator<'info>(
+        ctx: Context<'_, '_, '_, 'info, AddCreator<'info>>,
+        root: [u8; 32],
+        metadata: MetadataArgs,
+        nonce: u64,
+        index: u32,
+    ) -> Result<()> {
+        require!(metadata.is_mutable, BubblegumError::MetadataMustBeMutable);
+
+        let owner = ctx.accounts.leaf_owner.to_account_info();
+        let delegate = ctx.accounts.leaf_delegate.to_account_info();
+        let merkle_tree = ctx.accounts.merkle_tree.to_account_info();
+        let mut new_metadata = metadata.clone();
+
+        let old_creators = new_metadata.creators;
+
+        // Calculate new creator Vec with `verified` set to true for signing creator.
+        let mut updated_creator_vec = old_creators.clone();
+        updated_creator_vec.push(Creator {
+            address: ctx.accounts.creator.key(),
+            verified: ctx.accounts.creator.is_signer,
+            // TODO: Need to add a rebalance shares endpoint to allow setting these shares,
+            // and ensuring they all balance to 100
+            share: 0,
+        });
+
+        new_metadata.creators = updated_creator_vec;
+
+        // Calculate new creator hash.
+        let updated_creator_hash = hash_creators(&new_metadata.creators)?;
+
+        // Calculate new data hash.
+        let updated_data_hash = hash_metadata(&new_metadata)?;
+
+        // Build previous leaf struct, new leaf struct, and replace the leaf in the tree.
+        let asset_id = get_asset_id(&merkle_tree.key(), nonce);
+        let previous_leaf = LeafSchema::new_v0(
+            asset_id,
+            owner.key(),
+            delegate.key(),
+            nonce,
+            hash_metadata(&metadata)?,
+            hash_creators(&old_creators)?,
+        );
+        let new_leaf = LeafSchema::new_v0(
+            asset_id,
+            owner.key(),
+            delegate.key(),
+            nonce,
+            updated_data_hash,
+            updated_creator_hash,
+        );
+
+        wrap_application_data_v1(new_leaf.to_event().try_to_vec()?, &ctx.accounts.log_wrapper)?;
+
+        replace_leaf(
+            &merkle_tree.key(),
+            *ctx.bumps.get("tree_authority").unwrap(),
+            &ctx.accounts.compression_program.to_account_info(),
+            &ctx.accounts.tree_authority.to_account_info(),
+            &ctx.accounts.merkle_tree.to_account_info(),
+            &ctx.accounts.log_wrapper.to_account_info(),
+            ctx.remaining_accounts,
+            root,
+            previous_leaf.to_node(),
+            new_leaf.to_node(),
+            index,
         )
     }
 
