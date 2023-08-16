@@ -1,5 +1,7 @@
 # Bubblegum - Compressed Metaplex NFTs
 
+In case you missed it, you can access [the official Bubblegum documentation on the Developer Hub](https://developers.metaplex.com/bubblegum).
+
 > ⚠️ **Bubblegum is currently experimental and has not been formally audited. Use in production
 > at your own risk.**
 
