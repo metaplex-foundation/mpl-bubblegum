@@ -30,8 +30,6 @@ and then update the wrapper code and tests.
 pushd ../program/
 cargo build-bpf
 popd
-yarn run start-validator
-
 yarn test
 ```
 

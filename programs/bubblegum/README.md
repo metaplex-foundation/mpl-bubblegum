@@ -2,10 +2,9 @@
 
 In case you missed it, you can access [the official Bubblegum documentation on the Developer Hub](https://developers.metaplex.com/bubblegum).
 
-> ⚠️ **Bubblegum is currently experimental and has not been formally audited. Use in production
-> at your own risk.**
-
 ## Testing
+
+### BPF testing
 From the repository root:
 ```bash
 pnpm install
@@ -13,6 +12,11 @@ pnpm programs:build
 pnpm programs:test
 ```
 
+### JS client testing
+See [CONTRIBUTING.md](https://github.com/metaplex-foundation/mpl-bubblegum/blob/main/clients/js/CONTRIBUTING.md).
+
+### Legacy Solita JS client testing
+See [README.md](https://github.com/metaplex-foundation/mpl-bubblegum/blob/main/clients/js-solita/README.md).
 
 ## Overview
 
