@@ -22,7 +22,7 @@ default = []
 [dependencies]
 anchor-lang = { version = "0.26.0", features = ["init-if-needed"] }
 bytemuck = "1.13.0"
-mpl-token-metadata = { version = "1.11", features = ["no-entrypoint"] }
+mpl-token-metadata = { version = "1.8.3", features = ["no-entrypoint"] }
 num-traits = "0.2.15"
 solana-program = "~1.14.13"
 spl-account-compression = { version="0.1.8", features = ["cpi"] }
