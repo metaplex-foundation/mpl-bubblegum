@@ -1865,6 +1865,9 @@
           },
           {
             "name": "SetDecompressionPermission"
+          },
+          {
+            "name": "CreateTreeV2"
           }
         ]
       }
