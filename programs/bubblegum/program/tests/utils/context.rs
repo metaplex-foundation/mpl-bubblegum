@@ -172,6 +172,29 @@ impl BubblegumTestContext {
         Ok(tree)
     }
 
+    pub async fn default_create_tree_v2<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize>(
+        &self,
+    ) -> Result<Tree<MAX_DEPTH, MAX_BUFFER_SIZE>> {
+        let payer = self.payer();
+        let mut tree = Tree::<MAX_DEPTH, MAX_BUFFER_SIZE>::with_creator(&payer, self.client());
+        tree.alloc(&payer).await?;
+        tree.create_v2(&payer).await?;
+        Ok(tree)
+    }
+
+    pub async fn create_decompressable_tree_v2<
+        const MAX_DEPTH: usize,
+        const MAX_BUFFER_SIZE: usize,
+    >(
+        &self,
+    ) -> Result<Tree<MAX_DEPTH, MAX_BUFFER_SIZE>> {
+        let payer = self.payer();
+        let mut tree = Tree::<MAX_DEPTH, MAX_BUFFER_SIZE>::with_creator(&payer, self.client());
+        tree.alloc(&payer).await?;
+        tree.create_decompressable_v2(&payer).await?;
+        Ok(tree)
+    }
+
     pub async fn create_public_tree<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize>(
         &self,
     ) -> Result<Tree<MAX_DEPTH, MAX_BUFFER_SIZE>> {
@@ -189,6 +212,68 @@ impl BubblegumTestContext {
     ) -> Result<(Tree<MAX_DEPTH, MAX_BUFFER_SIZE>, Vec<LeafArgs>)> {
         let mut tree = self
             .default_create_tree::<MAX_DEPTH, MAX_BUFFER_SIZE>()
+            .await?;
+
+        let payer = self.payer();
+
+        let mut leaves = Vec::new();
+
+        for i in 0..num_mints {
+            let name = format!("test{}", i);
+            let symbol = format!("tst{}", i);
+            let mut args = LeafArgs::new(&payer, self.default_metadata_args(name, symbol));
+
+            tree.mint_v1(&payer, &mut args).await?;
+            assert_eq!(args.index, u32::try_from(i).unwrap());
+            assert_eq!(args.nonce, i);
+
+            leaves.push(args);
+        }
+
+        Ok((tree, leaves))
+    }
+
+    // The owner of the tree and leaves is `self.payer()`.
+    pub async fn default_create_v2_and_mint<
+        const MAX_DEPTH: usize,
+        const MAX_BUFFER_SIZE: usize,
+    >(
+        &self,
+        num_mints: u64,
+    ) -> Result<(Tree<MAX_DEPTH, MAX_BUFFER_SIZE>, Vec<LeafArgs>)> {
+        let mut tree = self
+            .default_create_tree_v2::<MAX_DEPTH, MAX_BUFFER_SIZE>()
+            .await?;
+
+        let payer = self.payer();
+
+        let mut leaves = Vec::new();
+
+        for i in 0..num_mints {
+            let name = format!("test{}", i);
+            let symbol = format!("tst{}", i);
+            let mut args = LeafArgs::new(&payer, self.default_metadata_args(name, symbol));
+
+            tree.mint_v1(&payer, &mut args).await?;
+            assert_eq!(args.index, u32::try_from(i).unwrap());
+            assert_eq!(args.nonce, i);
+
+            leaves.push(args);
+        }
+
+        Ok((tree, leaves))
+    }
+
+    // The owner of the tree and leaves is `self.payer()`.
+    pub async fn create_decompressable_v2_and_mint<
+        const MAX_DEPTH: usize,
+        const MAX_BUFFER_SIZE: usize,
+    >(
+        &self,
+        num_mints: u64,
+    ) -> Result<(Tree<MAX_DEPTH, MAX_BUFFER_SIZE>, Vec<LeafArgs>)> {
+        let mut tree: Tree<MAX_DEPTH, MAX_BUFFER_SIZE> = self
+            .create_decompressable_tree_v2::<MAX_DEPTH, MAX_BUFFER_SIZE>()
             .await?;
 
         let payer = self.payer();

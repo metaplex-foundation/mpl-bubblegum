@@ -177,8 +177,9 @@ async fn test_set_tree_delegate_passes() {
 }
 
 #[tokio::test]
-async fn test_reedem_and_cancel_passes() {
+async fn test_redeem_and_cancel_passes() {
     let (_, mut tree, leaves) = context_tree_and_leaves().await.unwrap();
+    tree.enable_decompression().await.unwrap();
 
     // `redeem` and `cancel_redeem` also validate the on-chain tree root
     // always has the expected value via the inner `TxBuilder::execute` call.
@@ -198,6 +199,7 @@ async fn test_reedem_and_cancel_passes() {
 #[tokio::test]
 async fn test_decompress_passes() {
     let (ctx, mut tree, mut leaves) = context_tree_and_leaves().await.unwrap();
+    tree.enable_decompression().await.unwrap();
 
     for leaf in leaves.iter_mut() {
         tree.verify_creator(leaf, &ctx.default_creators[0])

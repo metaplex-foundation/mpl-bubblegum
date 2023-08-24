@@ -147,6 +147,27 @@ impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExe
     }
 }
 
+// The types below have "builder" in their names because we're essentially
+// implementing a lightweight builder patter to instantiate, customize, and
+// execute transactions.
+pub type CreateV2Builder<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> = TxBuilder<
+    'a,
+    mpl_bubblegum::accounts::CreateTree,
+    mpl_bubblegum::instruction::CreateTreeV2,
+    (),
+    MAX_DEPTH,
+    MAX_BUFFER_SIZE,
+>;
+
+impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExec
+    for CreateV2Builder<'a, MAX_DEPTH, MAX_BUFFER_SIZE>
+{
+    fn on_successful_execute(&mut self) -> Result<()> {
+        // Do nothing here.
+        Ok(())
+    }
+}
+
 pub type MintV1Builder<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> = TxBuilder<
     'a,
     mpl_bubblegum::accounts::MintV1,
@@ -380,6 +401,27 @@ pub type DecompressV1Builder<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: 
 
 impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExec
     for DecompressV1Builder<'a, MAX_DEPTH, MAX_BUFFER_SIZE>
+{
+    fn on_successful_execute(&mut self) -> Result<()> {
+        Ok(())
+    }
+}
+
+pub type SetDecompressionPermissionBuilder<
+    'a,
+    const MAX_DEPTH: usize,
+    const MAX_BUFFER_SIZE: usize,
+> = TxBuilder<
+    'a,
+    mpl_bubblegum::accounts::SetDecompressionPermission,
+    mpl_bubblegum::instruction::SetDecompressionPermission,
+    (),
+    MAX_DEPTH,
+    MAX_BUFFER_SIZE,
+>;
+
+impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExec
+    for SetDecompressionPermissionBuilder<'a, MAX_DEPTH, MAX_BUFFER_SIZE>
 {
     fn on_successful_execute(&mut self) -> Result<()> {
         Ok(())
