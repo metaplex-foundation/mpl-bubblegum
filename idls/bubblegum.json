@@ -59,6 +59,68 @@
       ]
     },
     {
+      "name": "createTreeV2",
+      "accounts": [
+        {
+          "name": "treeAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "merkleTree",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "treeCreator",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "logWrapper",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "compressionProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "maxDepth",
+          "type": "u32"
+        },
+        {
+          "name": "maxBufferSize",
+          "type": "u32"
+        },
+        {
+          "name": "public",
+          "type": {
+            "option": "bool"
+          }
+        },
+        {
+          "name": "decompression",
+          "type": {
+            "defined": "DecompressionPermission"
+          }
+        }
+      ]
+    },
+    {
       "name": "setTreeDelegate",
       "accounts": [
         {
@@ -1369,6 +1431,29 @@
         }
       ],
       "args": []
+    },
+    {
+      "name": "setDecompressionPermission",
+      "accounts": [
+        {
+          "name": "treeAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "treeCreator",
+          "isMut": false,
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "permission",
+          "type": {
+            "defined": "DecompressionPermission"
+          }
+        }
+      ]
     }
   ],
   "accounts": [
@@ -1396,6 +1481,12 @@
           {
             "name": "isPublic",
             "type": "bool"
+          },
+          {
+            "name": "decompression",
+            "type": {
+              "defined": "DecompressionPermission"
+            }
           }
         ]
       }
@@ -1706,6 +1797,20 @@
       }
     },
     {
+      "name": "DecompressionPermission",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Enabled"
+          },
+          {
+            "name": "Disabled"
+          }
+        ]
+      }
+    },
+    {
       "name": "InstructionName",
       "type": {
         "kind": "enum",
@@ -1757,6 +1862,9 @@
           },
           {
             "name": "MintToCollectionV1"
+          },
+          {
+            "name": "SetDecompressionPermission"
           }
         ]
       }
@@ -1927,6 +2035,11 @@
       "code": 6032,
       "name": "UnknownExternalError",
       "msg": "Could not convert external error to BubblegumError"
+    },
+    {
+      "code": 6033,
+      "name": "DecompressionDisabled",
+      "msg": "Decompression is disabled for this tree."
     }
   ],
   "metadata": {
