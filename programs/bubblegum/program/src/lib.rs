@@ -475,6 +475,7 @@ pub enum InstructionName {
     SetAndVerifyCollection,
     MintToCollectionV1,
     SetDecompressionPermission,
+    CreateTreeV2,
 }
 
 pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
@@ -500,6 +501,7 @@ pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
         [250, 251, 42, 106, 41, 137, 186, 168] => InstructionName::UnverifyCollection,
         [235, 242, 121, 216, 158, 234, 180, 234] => InstructionName::SetAndVerifyCollection,
         [37, 232, 198, 199, 64, 102, 128, 49] => InstructionName::SetDecompressionPermission,
+        [55, 99, 95, 215, 142, 203, 227, 205] => InstructionName::CreateTreeV2,
 
         _ => InstructionName::Unknown,
     }
