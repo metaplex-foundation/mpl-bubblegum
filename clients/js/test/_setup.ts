@@ -11,13 +11,16 @@ import {
 } from '@metaplex-foundation/umi';
 import { createUmi as baseCreateUmi } from '@metaplex-foundation/umi-bundle-tests';
 import {
+  DecompressionPermission,
   MetadataArgsArgs,
   createTree as baseCreateTree,
   mintV1 as baseMintV1,
   fetchMerkleTree,
   findLeafAssetIdPda,
+  findTreeConfigPda,
   hashLeaf,
   mplBubblegum,
+  setDecompressionPermission,
 } from '../src';
 
 export const createUmi = async (endpoint?: string, airdropAmount?: SolAmount) =>
@@ -30,12 +33,19 @@ export const createTree = async (
   input: Partial<Parameters<typeof baseCreateTree>[1]> = {}
 ): Promise<PublicKey> => {
   const merkleTree = generateSigner(context);
-  const builder = await baseCreateTree(context, {
+  let builder = await baseCreateTree(context, {
     merkleTree,
     maxDepth: 14,
     maxBufferSize: 64,
     ...input,
   });
+  builder = builder.append(
+    setDecompressionPermission(context, {
+      treeConfig: input.treeConfig ?? findTreeConfigPda(context, {merkleTree: merkleTree.publicKey}),
+      treeCreator: input.treeCreator ?? context.identity,
+      permission: DecompressionPermission.Enabled,
+    })
+  )
   await builder.sendAndConfirm(context);
   return merkleTree.publicKey;
 };
