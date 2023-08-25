@@ -59,68 +59,6 @@
       ]
     },
     {
-      "name": "createTreeV2",
-      "accounts": [
-        {
-          "name": "treeAuthority",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "merkleTree",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "treeCreator",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "logWrapper",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "compressionProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "maxDepth",
-          "type": "u32"
-        },
-        {
-          "name": "maxBufferSize",
-          "type": "u32"
-        },
-        {
-          "name": "public",
-          "type": {
-            "option": "bool"
-          }
-        },
-        {
-          "name": "decompression",
-          "type": {
-            "defined": "DecompressionPermission"
-          }
-        }
-      ]
-    },
-    {
       "name": "setTreeDelegate",
       "accounts": [
         {
@@ -1865,9 +1803,6 @@
           },
           {
             "name": "SetDecompressionPermission"
-          },
-          {
-            "name": "CreateTreeV2"
           }
         ]
       }
