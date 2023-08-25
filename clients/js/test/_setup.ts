@@ -41,11 +41,13 @@ export const createTree = async (
   });
   builder = builder.append(
     setDecompressionPermission(context, {
-      treeConfig: input.treeConfig ?? findTreeConfigPda(context, {merkleTree: merkleTree.publicKey}),
+      treeConfig:
+        input.treeConfig ??
+        findTreeConfigPda(context, { merkleTree: merkleTree.publicKey }),
       treeCreator: input.treeCreator ?? context.identity,
       permission: DecompressionPermission.Enabled,
     })
-  )
+  );
   await builder.sendAndConfirm(context);
   return merkleTree.publicKey;
 };
