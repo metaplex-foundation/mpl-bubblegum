@@ -475,7 +475,6 @@ pub enum InstructionName {
     SetAndVerifyCollection,
     MintToCollectionV1,
     SetDecompressionPermission,
-    CreateTreeV2,
 }
 
 pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
@@ -501,7 +500,6 @@ pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
         [250, 251, 42, 106, 41, 137, 186, 168] => InstructionName::UnverifyCollection,
         [235, 242, 121, 216, 158, 234, 180, 234] => InstructionName::SetAndVerifyCollection,
         [37, 232, 198, 199, 64, 102, 128, 49] => InstructionName::SetDecompressionPermission,
-        [55, 99, 95, 215, 142, 203, 227, 205] => InstructionName::CreateTreeV2,
 
         _ => InstructionName::Unknown,
     }
@@ -896,10 +894,6 @@ pub mod bubblegum {
 
     use super::*;
 
-    #[deprecated(
-        since = "0.11.0",
-        note = "This instruction has been deprecated in favor of create_tree_v2, which requires the creator to explicitly declare if the NFTs in the tree are decompressable."
-    )]
     pub fn create_tree(
         ctx: Context<CreateTree>,
         max_depth: u32,
@@ -917,38 +911,6 @@ pub mod bubblegum {
             num_minted: 0,
             is_public: public.unwrap_or(false),
             decompression: DecompressionPermission::Disabled,
-        });
-        let authority_pda_signer = &[&seeds[..]];
-        let cpi_ctx = CpiContext::new_with_signer(
-            ctx.accounts.compression_program.to_account_info(),
-            spl_account_compression::cpi::accounts::Initialize {
-                authority: ctx.accounts.tree_authority.to_account_info(),
-                merkle_tree,
-                noop: ctx.accounts.log_wrapper.to_account_info(),
-            },
-            authority_pda_signer,
-        );
-        spl_account_compression::cpi::init_empty_merkle_tree(cpi_ctx, max_depth, max_buffer_size)
-    }
-
-    pub fn create_tree_v2(
-        ctx: Context<CreateTree>,
-        max_depth: u32,
-        max_buffer_size: u32,
-        public: Option<bool>,
-        decompression: DecompressionPermission,
-    ) -> Result<()> {
-        let merkle_tree = ctx.accounts.merkle_tree.to_account_info();
-        let seed = merkle_tree.key();
-        let seeds = &[seed.as_ref(), &[*ctx.bumps.get("tree_authority").unwrap()]];
-        let authority = &mut ctx.accounts.tree_authority;
-        authority.set_inner(TreeConfig {
-            tree_creator: ctx.accounts.tree_creator.key(),
-            tree_delegate: ctx.accounts.tree_creator.key(),
-            total_mint_capacity: 1 << max_depth,
-            num_minted: 0,
-            is_public: public.unwrap_or(false),
-            decompression,
         });
         let authority_pda_signer = &[&seeds[..]];
         let cpi_ctx = CpiContext::new_with_signer(

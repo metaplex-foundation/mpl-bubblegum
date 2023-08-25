@@ -2,10 +2,10 @@ use super::{
     clone_keypair, compute_metadata_hashes,
     tx_builder::{
         BurnBuilder, CancelRedeemBuilder, CollectionVerificationInner, CreateBuilder,
-        CreateV2Builder, CreatorVerificationInner, DelegateBuilder, DelegateInner,
-        MintToCollectionV1Builder, MintV1Builder, RedeemBuilder, SetDecompressionPermissionBuilder,
-        SetTreeDelegateBuilder, TransferBuilder, TransferInner, TxBuilder, UnverifyCreatorBuilder,
-        VerifyCollectionBuilder, VerifyCreatorBuilder,
+        CreatorVerificationInner, DelegateBuilder, DelegateInner, MintToCollectionV1Builder,
+        MintV1Builder, RedeemBuilder, SetDecompressionPermissionBuilder, SetTreeDelegateBuilder,
+        TransferBuilder, TransferInner, TxBuilder, UnverifyCreatorBuilder, VerifyCollectionBuilder,
+        VerifyCreatorBuilder,
     },
     Error, LeafArgs, Result,
 };
@@ -238,55 +238,10 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         self.tx_builder(accounts, data, None, (), payer.pubkey(), &[payer])
     }
 
-    // The `operation_tx` method instantiate a default builder object for a
-    // transaction that can be used to execute that particular operation (tree
-    // create in this case). The object can be modified (i.e. to use a
-    // different signer, payer, accounts, data, etc.) before execution.
-    // Moreover executions don't consume the builder, which can be modified
-    // some more and executed again etc.
-    pub fn create_tree_v2_tx(
-        &mut self,
-        payer: &Keypair,
-        public: bool,
-        decompression_permission: DecompressionPermission,
-    ) -> CreateV2Builder<MAX_DEPTH, MAX_BUFFER_SIZE> {
-        let accounts = mpl_bubblegum::accounts::CreateTree {
-            tree_authority: self.authority(),
-            payer: payer.pubkey(),
-            tree_creator: self.creator_pubkey(),
-            log_wrapper: spl_noop::id(),
-            system_program: system_program::id(),
-            compression_program: spl_account_compression::id(),
-            merkle_tree: self.tree_pubkey(),
-        };
-
-        // The conversions below should not fail.
-        let data = mpl_bubblegum::instruction::CreateTreeV2 {
-            max_depth: u32::try_from(MAX_DEPTH).unwrap(),
-            max_buffer_size: u32::try_from(MAX_BUFFER_SIZE).unwrap(),
-            public: Some(public),
-            decompression: decompression_permission,
-        };
-
-        self.tx_builder(accounts, data, None, (), payer.pubkey(), &[payer])
-    }
-
     // Shorthand method for executing a create tree tx with the default config
     // defined in the `_tx` method.
     pub async fn create(&mut self, payer: &Keypair) -> Result<()> {
         self.create_tree_tx(payer, false).execute().await
-    }
-
-    pub async fn create_decompressable_v2(&mut self, payer: &Keypair) -> Result<()> {
-        self.create_tree_v2_tx(payer, false, DecompressionPermission::Enabled)
-            .execute()
-            .await
-    }
-
-    pub async fn create_v2(&mut self, payer: &Keypair) -> Result<()> {
-        self.create_tree_v2_tx(payer, false, DecompressionPermission::Disabled)
-            .execute()
-            .await
     }
 
     pub async fn create_public(&mut self, payer: &Keypair) -> Result<()> {
