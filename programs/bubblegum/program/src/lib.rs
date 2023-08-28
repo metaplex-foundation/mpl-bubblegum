@@ -7,8 +7,8 @@ use crate::{
         leaf_schema::LeafSchema,
         metaplex_adapter::{self, Creator, MetadataArgs, TokenProgramVersion},
         metaplex_anchor::{MasterEdition, MplTokenMetadata, TokenMetadata},
-        TreeConfig, Voucher, ASSET_PREFIX, COLLECTION_CPI_PREFIX, TREE_AUTHORITY_SIZE,
-        VOUCHER_PREFIX, VOUCHER_SIZE,
+        DecompressableState, TreeConfig, Voucher, ASSET_PREFIX, COLLECTION_CPI_PREFIX,
+        TREE_AUTHORITY_SIZE, VOUCHER_PREFIX, VOUCHER_SIZE,
     },
     utils::{
         append_leaf, assert_has_collection_authority, assert_metadata_is_mpl_compatible,
@@ -423,6 +423,13 @@ pub struct SetTreeDelegate<'info> {
     pub system_program: Program<'info, System>,
 }
 
+#[derive(Accounts)]
+pub struct SetDecompressableState<'info> {
+    #[account(mut, has_one = tree_creator)]
+    pub tree_authority: Account<'info, TreeConfig>,
+    pub tree_creator: Signer<'info>,
+}
+
 pub fn hash_creators(creators: &[Creator]) -> Result<[u8; 32]> {
     // Convert creator Vec to bytes Vec.
     let creator_data = creators
@@ -467,6 +474,7 @@ pub enum InstructionName {
     UnverifyCollection,
     SetAndVerifyCollection,
     MintToCollectionV1,
+    SetDecompressableState,
 }
 
 pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
@@ -491,6 +499,7 @@ pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
         [56, 113, 101, 253, 79, 55, 122, 169] => InstructionName::VerifyCollection,
         [250, 251, 42, 106, 41, 137, 186, 168] => InstructionName::UnverifyCollection,
         [235, 242, 121, 216, 158, 234, 180, 234] => InstructionName::SetAndVerifyCollection,
+        [37, 232, 198, 199, 64, 102, 128, 49] => InstructionName::SetDecompressableState,
 
         _ => InstructionName::Unknown,
     }
@@ -881,6 +890,8 @@ fn process_collection_verification<'info>(
 
 #[program]
 pub mod bubblegum {
+    use state::DecompressableState;
+
     use super::*;
 
     pub fn create_tree(
@@ -899,6 +910,7 @@ pub mod bubblegum {
             total_mint_capacity: 1 << max_depth,
             num_minted: 0,
             is_public: public.unwrap_or(false),
+            is_decompressable: DecompressableState::Disabled,
         });
         let authority_pda_signer = &[&seeds[..]];
         let cpi_ctx = CpiContext::new_with_signer(
@@ -1344,6 +1356,10 @@ pub mod bubblegum {
         nonce: u64,
         index: u32,
     ) -> Result<()> {
+        if ctx.accounts.tree_authority.is_decompressable == DecompressableState::Disabled {
+            return Err(BubblegumError::DecompressionDisabled.into());
+        }
+
         let owner = ctx.accounts.leaf_owner.key();
         let delegate = ctx.accounts.leaf_delegate.key();
         let merkle_tree = ctx.accounts.merkle_tree.to_account_info();
@@ -1599,6 +1615,15 @@ pub mod bubblegum {
 
     pub fn compress(_ctx: Context<Compress>) -> Result<()> {
         // TODO
+        Ok(())
+    }
+
+    pub fn set_decompressable_state(
+        ctx: Context<SetDecompressableState>,
+        decompressable_state: DecompressableState,
+    ) -> Result<()> {
+        ctx.accounts.tree_authority.is_decompressable = decompressable_state;
+
         Ok(())
     }
 }

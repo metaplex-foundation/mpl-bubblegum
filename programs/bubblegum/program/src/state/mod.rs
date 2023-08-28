@@ -6,7 +6,7 @@ use anchor_lang::prelude::*;
 use borsh::{BorshDeserialize, BorshSerialize};
 use leaf_schema::LeafSchema;
 
-pub const TREE_AUTHORITY_SIZE: usize = 8 + 32 + 32 + 8 + 8 + 1 + 7; // 7 bytes padding
+pub const TREE_AUTHORITY_SIZE: usize = 8 + 32 + 32 + 8 + 8 + 1 + 1 + 6; // 6 bytes padding
 pub const VOUCHER_SIZE: usize = 8 + 1 + 32 + 32 + 32 + 8 + 32 + 32 + 4 + 32;
 pub const VOUCHER_PREFIX: &str = "voucher";
 pub const ASSET_PREFIX: &str = "asset";
@@ -20,6 +20,7 @@ pub struct TreeConfig {
     pub total_mint_capacity: u64,
     pub num_minted: u64,
     pub is_public: bool,
+    pub is_decompressable: DecompressableState,
 }
 
 impl TreeConfig {
@@ -78,4 +79,11 @@ pub enum BubblegumEventType {
     Uninitialized,
     /// Leaf schema event.
     LeafSchemaEvent,
+}
+
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, Copy)]
+#[repr(u8)]
+pub enum DecompressableState {
+    Enabled = 0,
+    Disabled = 1,
 }

@@ -1,6 +1,7 @@
 export * from './BubblegumEventType';
 export * from './Collection';
 export * from './Creator';
+export * from './DecompressableState';
 export * from './InstructionName';
 export * from './LeafSchema';
 export * from './MetadataArgs';

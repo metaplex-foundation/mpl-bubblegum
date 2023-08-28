@@ -478,6 +478,19 @@ export class UnknownExternalErrorError extends ProgramError {
 codeToErrorMap.set(0x1790, UnknownExternalErrorError);
 nameToErrorMap.set('UnknownExternalError', UnknownExternalErrorError);
 
+/** DecompressionDisabled: Decompression is disabled for this tree. */
+export class DecompressionDisabledError extends ProgramError {
+  readonly name: string = 'DecompressionDisabled';
+
+  readonly code: number = 0x1791; // 6033
+
+  constructor(program: Program, cause?: Error) {
+    super('Decompression is disabled for this tree.', program, cause);
+  }
+}
+codeToErrorMap.set(0x1791, DecompressionDisabledError);
+nameToErrorMap.set('DecompressionDisabled', DecompressionDisabledError);
+
 /**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
