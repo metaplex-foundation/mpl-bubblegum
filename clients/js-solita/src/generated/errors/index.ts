@@ -570,6 +570,155 @@ createErrorFromCodeLookup.set(0x178a, () => new CollectionMustBeSizedError());
 createErrorFromNameLookup.set('CollectionMustBeSized', () => new CollectionMustBeSizedError());
 
 /**
+ * MetadataMintMismatch: 'Metadata mint does not match collection mint'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MetadataMintMismatchError extends Error {
+  readonly code: number = 0x178b;
+  readonly name: string = 'MetadataMintMismatch';
+  constructor() {
+    super('Metadata mint does not match collection mint');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MetadataMintMismatchError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x178b, () => new MetadataMintMismatchError());
+createErrorFromNameLookup.set('MetadataMintMismatch', () => new MetadataMintMismatchError());
+
+/**
+ * InvalidCollectionAuthority: 'Invalid collection authority'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidCollectionAuthorityError extends Error {
+  readonly code: number = 0x178c;
+  readonly name: string = 'InvalidCollectionAuthority';
+  constructor() {
+    super('Invalid collection authority');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidCollectionAuthorityError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x178c, () => new InvalidCollectionAuthorityError());
+createErrorFromNameLookup.set(
+  'InvalidCollectionAuthority',
+  () => new InvalidCollectionAuthorityError(),
+);
+
+/**
+ * InvalidDelegateRecord: 'Invalid delegate record pda derivation'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidDelegateRecordError extends Error {
+  readonly code: number = 0x178d;
+  readonly name: string = 'InvalidDelegateRecord';
+  constructor() {
+    super('Invalid delegate record pda derivation');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidDelegateRecordError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x178d, () => new InvalidDelegateRecordError());
+createErrorFromNameLookup.set('InvalidDelegateRecord', () => new InvalidDelegateRecordError());
+
+/**
+ * CollectionMasterEditionAccountInvalid: 'Edition account doesnt match collection'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class CollectionMasterEditionAccountInvalidError extends Error {
+  readonly code: number = 0x178e;
+  readonly name: string = 'CollectionMasterEditionAccountInvalid';
+  constructor() {
+    super('Edition account doesnt match collection');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, CollectionMasterEditionAccountInvalidError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x178e, () => new CollectionMasterEditionAccountInvalidError());
+createErrorFromNameLookup.set(
+  'CollectionMasterEditionAccountInvalid',
+  () => new CollectionMasterEditionAccountInvalidError(),
+);
+
+/**
+ * CollectionMustBeAUniqueMasterEdition: 'Collection Must Be a Unique Master Edition v2'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class CollectionMustBeAUniqueMasterEditionError extends Error {
+  readonly code: number = 0x178f;
+  readonly name: string = 'CollectionMustBeAUniqueMasterEdition';
+  constructor() {
+    super('Collection Must Be a Unique Master Edition v2');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, CollectionMustBeAUniqueMasterEditionError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x178f, () => new CollectionMustBeAUniqueMasterEditionError());
+createErrorFromNameLookup.set(
+  'CollectionMustBeAUniqueMasterEdition',
+  () => new CollectionMustBeAUniqueMasterEditionError(),
+);
+
+/**
+ * UnknownExternalError: 'Could not convert external error to BubblegumError'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class UnknownExternalErrorError extends Error {
+  readonly code: number = 0x1790;
+  readonly name: string = 'UnknownExternalError';
+  constructor() {
+    super('Could not convert external error to BubblegumError');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, UnknownExternalErrorError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1790, () => new UnknownExternalErrorError());
+createErrorFromNameLookup.set('UnknownExternalError', () => new UnknownExternalErrorError());
+
+/**
+ * DecompressionDisabled: 'Decompression is disabled for this tree.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class DecompressionDisabledError extends Error {
+  readonly code: number = 0x1791;
+  readonly name: string = 'DecompressionDisabled';
+  constructor() {
+    super('Decompression is disabled for this tree.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, DecompressionDisabledError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1791, () => new DecompressionDisabledError());
+createErrorFromNameLookup.set('DecompressionDisabled', () => new DecompressionDisabledError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated
