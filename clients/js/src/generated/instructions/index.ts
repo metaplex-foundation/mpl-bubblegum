@@ -15,7 +15,7 @@ export * from './mintToCollectionV1';
 export * from './mintV1';
 export * from './redeem';
 export * from './setAndVerifyCollection';
-export * from './setDecompressionPermission';
+export * from './setDecompressableState';
 export * from './setTreeDelegate';
 export * from './transfer';
 export * from './unverifyCollection';

@@ -386,21 +386,18 @@ impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExe
     }
 }
 
-pub type SetDecompressionPermissionBuilder<
-    'a,
-    const MAX_DEPTH: usize,
-    const MAX_BUFFER_SIZE: usize,
-> = TxBuilder<
-    'a,
-    mpl_bubblegum::accounts::SetDecompressionPermission,
-    mpl_bubblegum::instruction::SetDecompressionPermission,
-    (),
-    MAX_DEPTH,
-    MAX_BUFFER_SIZE,
->;
+pub type SetDecompressableStateBuilder<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> =
+    TxBuilder<
+        'a,
+        mpl_bubblegum::accounts::SetDecompressableState,
+        mpl_bubblegum::instruction::SetDecompressableState,
+        (),
+        MAX_DEPTH,
+        MAX_BUFFER_SIZE,
+    >;
 
 impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExec
-    for SetDecompressionPermissionBuilder<'a, MAX_DEPTH, MAX_BUFFER_SIZE>
+    for SetDecompressableStateBuilder<'a, MAX_DEPTH, MAX_BUFFER_SIZE>
 {
     fn on_successful_execute(&mut self) -> Result<()> {
         Ok(())

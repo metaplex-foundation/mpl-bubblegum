@@ -30,9 +30,9 @@ import {
   u8,
 } from '@metaplex-foundation/umi/serializers';
 import {
-  DecompressionPermission,
-  DecompressionPermissionArgs,
-  getDecompressionPermissionSerializer,
+  DecompressableState,
+  DecompressableStateArgs,
+  getDecompressableStateSerializer,
 } from '../types';
 
 export type TreeConfig = Account<TreeConfigAccountData>;
@@ -44,7 +44,7 @@ export type TreeConfigAccountData = {
   totalMintCapacity: bigint;
   numMinted: bigint;
   isPublic: boolean;
-  decompression: DecompressionPermission;
+  isDecompressable: DecompressableState;
 };
 
 export type TreeConfigAccountDataArgs = {
@@ -53,7 +53,7 @@ export type TreeConfigAccountDataArgs = {
   totalMintCapacity: number | bigint;
   numMinted: number | bigint;
   isPublic: boolean;
-  decompression: DecompressionPermissionArgs;
+  isDecompressable: DecompressableStateArgs;
 };
 
 /** @deprecated Use `getTreeConfigAccountDataSerializer()` without any argument instead. */
@@ -76,7 +76,7 @@ export function getTreeConfigAccountDataSerializer(
         ['totalMintCapacity', u64()],
         ['numMinted', u64()],
         ['isPublic', bool()],
-        ['decompression', getDecompressionPermissionSerializer()],
+        ['isDecompressable', getDecompressableStateSerializer()],
       ],
       { description: 'TreeConfigAccountData' }
     ),
@@ -172,7 +172,7 @@ export function getTreeConfigGpaBuilder(
       totalMintCapacity: number | bigint;
       numMinted: number | bigint;
       isPublic: boolean;
-      decompression: DecompressionPermissionArgs;
+      isDecompressable: DecompressableStateArgs;
     }>({
       discriminator: [0, array(u8(), { size: 8 })],
       treeCreator: [8, publicKeySerializer()],
@@ -180,7 +180,7 @@ export function getTreeConfigGpaBuilder(
       totalMintCapacity: [72, u64()],
       numMinted: [80, u64()],
       isPublic: [88, bool()],
-      decompression: [89, getDecompressionPermissionSerializer()],
+      isDecompressable: [89, getDecompressableStateSerializer()],
     })
     .deserializeUsing<TreeConfig>((account) => deserializeTreeConfig(account))
     .whereField('discriminator', [122, 245, 175, 248, 171, 34, 0, 207]);

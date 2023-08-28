@@ -20,7 +20,7 @@ pub struct TreeConfig {
     pub total_mint_capacity: u64,
     pub num_minted: u64,
     pub is_public: bool,
-    pub decompression: DecompressionPermission,
+    pub is_decompressable: DecompressableState,
 }
 
 impl TreeConfig {
@@ -83,7 +83,7 @@ pub enum BubblegumEventType {
 
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, Copy)]
 #[repr(u8)]
-pub enum DecompressionPermission {
+pub enum DecompressableState {
     Enabled = 0,
     Disabled = 1,
 }

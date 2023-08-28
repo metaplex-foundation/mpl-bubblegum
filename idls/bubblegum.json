@@ -1371,7 +1371,7 @@
       "args": []
     },
     {
-      "name": "setDecompressionPermission",
+      "name": "setDecompressableState",
       "accounts": [
         {
           "name": "treeAuthority",
@@ -1386,9 +1386,9 @@
       ],
       "args": [
         {
-          "name": "permission",
+          "name": "decompressableState",
           "type": {
-            "defined": "DecompressionPermission"
+            "defined": "DecompressableState"
           }
         }
       ]
@@ -1421,9 +1421,9 @@
             "type": "bool"
           },
           {
-            "name": "decompression",
+            "name": "isDecompressable",
             "type": {
-              "defined": "DecompressionPermission"
+              "defined": "DecompressableState"
             }
           }
         ]
@@ -1735,7 +1735,7 @@
       }
     },
     {
-      "name": "DecompressionPermission",
+      "name": "DecompressableState",
       "type": {
         "kind": "enum",
         "variants": [
@@ -1802,7 +1802,7 @@
             "name": "MintToCollectionV1"
           },
           {
-            "name": "SetDecompressionPermission"
+            "name": "SetDecompressableState"
           }
         ]
       }

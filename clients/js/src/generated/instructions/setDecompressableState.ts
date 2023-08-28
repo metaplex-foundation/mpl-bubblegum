@@ -24,75 +24,75 @@ import {
 } from '@metaplex-foundation/umi/serializers';
 import { addAccountMeta, addObjectProperty } from '../shared';
 import {
-  DecompressionPermission,
-  DecompressionPermissionArgs,
-  getDecompressionPermissionSerializer,
+  DecompressableState,
+  DecompressableStateArgs,
+  getDecompressableStateSerializer,
 } from '../types';
 
 // Accounts.
-export type SetDecompressionPermissionInstructionAccounts = {
+export type SetDecompressableStateInstructionAccounts = {
   treeConfig: PublicKey | Pda;
   treeCreator?: Signer;
 };
 
 // Data.
-export type SetDecompressionPermissionInstructionData = {
+export type SetDecompressableStateInstructionData = {
   discriminator: Array<number>;
-  permission: DecompressionPermission;
+  decompressableState: DecompressableState;
 };
 
-export type SetDecompressionPermissionInstructionDataArgs = {
-  permission: DecompressionPermissionArgs;
+export type SetDecompressableStateInstructionDataArgs = {
+  decompressableState: DecompressableStateArgs;
 };
 
-/** @deprecated Use `getSetDecompressionPermissionInstructionDataSerializer()` without any argument instead. */
-export function getSetDecompressionPermissionInstructionDataSerializer(
+/** @deprecated Use `getSetDecompressableStateInstructionDataSerializer()` without any argument instead. */
+export function getSetDecompressableStateInstructionDataSerializer(
   _context: object
 ): Serializer<
-  SetDecompressionPermissionInstructionDataArgs,
-  SetDecompressionPermissionInstructionData
+  SetDecompressableStateInstructionDataArgs,
+  SetDecompressableStateInstructionData
 >;
-export function getSetDecompressionPermissionInstructionDataSerializer(): Serializer<
-  SetDecompressionPermissionInstructionDataArgs,
-  SetDecompressionPermissionInstructionData
+export function getSetDecompressableStateInstructionDataSerializer(): Serializer<
+  SetDecompressableStateInstructionDataArgs,
+  SetDecompressableStateInstructionData
 >;
-export function getSetDecompressionPermissionInstructionDataSerializer(
+export function getSetDecompressableStateInstructionDataSerializer(
   _context: object = {}
 ): Serializer<
-  SetDecompressionPermissionInstructionDataArgs,
-  SetDecompressionPermissionInstructionData
+  SetDecompressableStateInstructionDataArgs,
+  SetDecompressableStateInstructionData
 > {
   return mapSerializer<
-    SetDecompressionPermissionInstructionDataArgs,
+    SetDecompressableStateInstructionDataArgs,
     any,
-    SetDecompressionPermissionInstructionData
+    SetDecompressableStateInstructionData
   >(
-    struct<SetDecompressionPermissionInstructionData>(
+    struct<SetDecompressableStateInstructionData>(
       [
         ['discriminator', array(u8(), { size: 8 })],
-        ['permission', getDecompressionPermissionSerializer()],
+        ['decompressableState', getDecompressableStateSerializer()],
       ],
-      { description: 'SetDecompressionPermissionInstructionData' }
+      { description: 'SetDecompressableStateInstructionData' }
     ),
     (value) => ({
       ...value,
-      discriminator: [37, 232, 198, 199, 64, 102, 128, 49],
+      discriminator: [18, 135, 238, 168, 246, 195, 61, 115],
     })
   ) as Serializer<
-    SetDecompressionPermissionInstructionDataArgs,
-    SetDecompressionPermissionInstructionData
+    SetDecompressableStateInstructionDataArgs,
+    SetDecompressableStateInstructionData
   >;
 }
 
 // Args.
-export type SetDecompressionPermissionInstructionArgs =
-  SetDecompressionPermissionInstructionDataArgs;
+export type SetDecompressableStateInstructionArgs =
+  SetDecompressableStateInstructionDataArgs;
 
 // Instruction.
-export function setDecompressionPermission(
+export function setDecompressableState(
   context: Pick<Context, 'programs' | 'identity'>,
-  input: SetDecompressionPermissionInstructionAccounts &
-    SetDecompressionPermissionInstructionArgs
+  input: SetDecompressableStateInstructionAccounts &
+    SetDecompressableStateInstructionArgs
 ): TransactionBuilder {
   const signers: Signer[] = [];
   const keys: AccountMeta[] = [];
@@ -122,7 +122,7 @@ export function setDecompressionPermission(
 
   // Data.
   const data =
-    getSetDecompressionPermissionInstructionDataSerializer().serialize(
+    getSetDecompressableStateInstructionDataSerializer().serialize(
       resolvedArgs
     );
 

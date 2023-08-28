@@ -7,7 +7,7 @@ use crate::{
         leaf_schema::LeafSchema,
         metaplex_adapter::{self, Creator, MetadataArgs, TokenProgramVersion},
         metaplex_anchor::{MasterEdition, MplTokenMetadata, TokenMetadata},
-        DecompressionPermission, TreeConfig, Voucher, ASSET_PREFIX, COLLECTION_CPI_PREFIX,
+        DecompressableState, TreeConfig, Voucher, ASSET_PREFIX, COLLECTION_CPI_PREFIX,
         TREE_AUTHORITY_SIZE, VOUCHER_PREFIX, VOUCHER_SIZE,
     },
     utils::{
@@ -424,7 +424,7 @@ pub struct SetTreeDelegate<'info> {
 }
 
 #[derive(Accounts)]
-pub struct SetDecompressionPermission<'info> {
+pub struct SetDecompressableState<'info> {
     #[account(mut, has_one = tree_creator)]
     pub tree_authority: Account<'info, TreeConfig>,
     pub tree_creator: Signer<'info>,
@@ -474,7 +474,7 @@ pub enum InstructionName {
     UnverifyCollection,
     SetAndVerifyCollection,
     MintToCollectionV1,
-    SetDecompressionPermission,
+    SetDecompressableState,
 }
 
 pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
@@ -499,7 +499,7 @@ pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
         [56, 113, 101, 253, 79, 55, 122, 169] => InstructionName::VerifyCollection,
         [250, 251, 42, 106, 41, 137, 186, 168] => InstructionName::UnverifyCollection,
         [235, 242, 121, 216, 158, 234, 180, 234] => InstructionName::SetAndVerifyCollection,
-        [37, 232, 198, 199, 64, 102, 128, 49] => InstructionName::SetDecompressionPermission,
+        [37, 232, 198, 199, 64, 102, 128, 49] => InstructionName::SetDecompressableState,
 
         _ => InstructionName::Unknown,
     }
@@ -890,7 +890,7 @@ fn process_collection_verification<'info>(
 
 #[program]
 pub mod bubblegum {
-    use state::DecompressionPermission;
+    use state::DecompressableState;
 
     use super::*;
 
@@ -910,7 +910,7 @@ pub mod bubblegum {
             total_mint_capacity: 1 << max_depth,
             num_minted: 0,
             is_public: public.unwrap_or(false),
-            decompression: DecompressionPermission::Disabled,
+            is_decompressable: DecompressableState::Disabled,
         });
         let authority_pda_signer = &[&seeds[..]];
         let cpi_ctx = CpiContext::new_with_signer(
@@ -1356,7 +1356,7 @@ pub mod bubblegum {
         nonce: u64,
         index: u32,
     ) -> Result<()> {
-        if ctx.accounts.tree_authority.decompression == DecompressionPermission::Disabled {
+        if ctx.accounts.tree_authority.is_decompressable == DecompressableState::Disabled {
             return Err(BubblegumError::DecompressionDisabled.into());
         }
 
@@ -1618,11 +1618,11 @@ pub mod bubblegum {
         Ok(())
     }
 
-    pub fn set_decompression_permission(
-        ctx: Context<SetDecompressionPermission>,
-        permission: DecompressionPermission,
+    pub fn set_decompressable_state(
+        ctx: Context<SetDecompressableState>,
+        decompressable_state: DecompressableState,
     ) -> Result<()> {
-        ctx.accounts.tree_authority.decompression = permission;
+        ctx.accounts.tree_authority.is_decompressable = decompressable_state;
 
         Ok(())
     }

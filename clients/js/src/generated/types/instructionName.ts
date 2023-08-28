@@ -25,7 +25,7 @@ export enum InstructionName {
   UnverifyCollection,
   SetAndVerifyCollection,
   MintToCollectionV1,
-  SetDecompressionPermission,
+  SetDecompressableState,
 }
 
 export type InstructionNameArgs = InstructionName;
