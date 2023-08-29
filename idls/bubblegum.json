@@ -1239,35 +1239,23 @@
         {
           "name": "collectionAuthority",
           "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "This account is only required if the NFT is part of a collection"
-          ]
+          "isSigner": true
         },
         {
           "name": "collectionMint",
           "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "This account is only required if the NFT is part of a collection"
-          ]
+          "isSigner": false
         },
         {
           "name": "collectionMetadata",
           "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "This account is only required if the NFT is part of a collection"
-          ]
+          "isSigner": false
         },
         {
           "name": "collectionAuthorityRecordPda",
           "isMut": false,
           "isSigner": false,
-          "isOptional": true,
-          "docs": [
-            "This account is only required if the NFT is part of a collection"
-          ]
+          "isOptional": true
         },
         {
           "name": "leafOwner",
@@ -2289,7 +2277,7 @@
     {
       "code": 6034,
       "name": "MetadataImmutable",
-      "msg": "Metadata Not Mutable"
+      "msg": "Metadata not mutable"
     },
     {
       "code": 6035,
@@ -2299,12 +2287,12 @@
     {
       "code": 6036,
       "name": "MetadataArgsAmbiguous",
-      "msg": "MetadataArgs Ambiguous"
+      "msg": "MetadataArgs ambiguous"
     },
     {
       "code": 6037,
       "name": "MetadataArgsMissing",
-      "msg": "MetadataArgs Missing"
+      "msg": "MetadataArgs missing"
     },
     {
       "code": 6038,

@@ -719,7 +719,7 @@ createErrorFromCodeLookup.set(0x1791, () => new DecompressionDisabledError());
 createErrorFromNameLookup.set('DecompressionDisabled', () => new DecompressionDisabledError());
 
 /**
- * MetadataImmutable: 'Metadata Not Mutable'
+ * MetadataImmutable: 'Metadata not mutable'
  *
  * @category Errors
  * @category generated
@@ -728,7 +728,7 @@ export class MetadataImmutableError extends Error {
   readonly code: number = 0x1792;
   readonly name: string = 'MetadataImmutable';
   constructor() {
-    super('Metadata Not Mutable');
+    super('Metadata not mutable');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, MetadataImmutableError);
     }
@@ -759,7 +759,7 @@ createErrorFromCodeLookup.set(0x1793, () => new CollectionMismatchError());
 createErrorFromNameLookup.set('CollectionMismatch', () => new CollectionMismatchError());
 
 /**
- * MetadataArgsAmbiguous: 'MetadataArgs Ambiguous'
+ * MetadataArgsAmbiguous: 'MetadataArgs ambiguous'
  *
  * @category Errors
  * @category generated
@@ -768,7 +768,7 @@ export class MetadataArgsAmbiguousError extends Error {
   readonly code: number = 0x1794;
   readonly name: string = 'MetadataArgsAmbiguous';
   constructor() {
-    super('MetadataArgs Ambiguous');
+    super('MetadataArgs ambiguous');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, MetadataArgsAmbiguousError);
     }
@@ -779,7 +779,7 @@ createErrorFromCodeLookup.set(0x1794, () => new MetadataArgsAmbiguousError());
 createErrorFromNameLookup.set('MetadataArgsAmbiguous', () => new MetadataArgsAmbiguousError());
 
 /**
- * MetadataArgsMissing: 'MetadataArgs Missing'
+ * MetadataArgsMissing: 'MetadataArgs missing'
  *
  * @category Errors
  * @category generated
@@ -788,7 +788,7 @@ export class MetadataArgsMissingError extends Error {
   readonly code: number = 0x1795;
   readonly name: string = 'MetadataArgsMissing';
   constructor() {
-    super('MetadataArgs Missing');
+    super('MetadataArgs missing');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, MetadataArgsMissingError);
     }

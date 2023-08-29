@@ -5,7 +5,7 @@ use crate::{
     error::{metadata_error_into_bubblegum, BubblegumError},
     state::{
         leaf_schema::LeafSchema,
-        metaplex_adapter::{self, Creator, MetadataArgs, TokenProgramVersion, Collection},
+        metaplex_adapter::{self, Collection, Creator, MetadataArgs, TokenProgramVersion},
         metaplex_anchor::{MasterEdition, MplTokenMetadata, TokenMetadata},
         DecompressableState, TreeConfig, Voucher, ASSET_PREFIX, COLLECTION_CPI_PREFIX,
         TREE_AUTHORITY_SIZE, VOUCHER_PREFIX, VOUCHER_SIZE,
@@ -289,15 +289,10 @@ pub struct UpdateMetadataCollectionNFT<'info> {
     /// CHECK: This account is neither written to nor read from.
     pub tree_authority: Account<'info, TreeConfig>,
     pub tree_delegate: Signer<'info>,
-    /// This account is only required if the NFT is part of a collection
-    /// CHECK: This account is checked in the instruction
-    pub collection_authority: UncheckedAccount<'info>,
-    /// This account is only required if the NFT is part of a collection
+    pub collection_authority: Signer<'info>,
     /// CHECK: This account is checked in the instruction
     pub collection_mint: UncheckedAccount<'info>,
-    /// This account is only required if the NFT is part of a collection
     pub collection_metadata: Box<Account<'info, TokenMetadata>>,
-    /// This account is only required if the NFT is part of a collection
     /// CHECK: This account is checked in the instruction
     pub collection_authority_record_pda: Option<UncheckedAccount<'info>>,
     /// CHECK: This account is checked in the instruction
@@ -539,7 +534,7 @@ pub enum InstructionName {
     MintToCollectionV1,
     SetDecompressableState,
     UpdateMetadata,
-    UpdateMetadataCollectionNft
+    UpdateMetadataCollectionNft,
 }
 
 pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
@@ -956,15 +951,16 @@ fn process_collection_verification<'info>(
 
 fn assert_signed_by_tree_delegate<'info>(
     tree_config: &TreeConfig,
-    incoming_signer: &Signer<'info> 
+    incoming_signer: &Signer<'info>,
 ) -> Result<()> {
     if !tree_config.is_public {
         require!(
-            incoming_signer.key() == tree_config.tree_creator || incoming_signer.key() == tree_config.tree_delegate,
+            incoming_signer.key() == tree_config.tree_creator
+                || incoming_signer.key() == tree_config.tree_delegate,
             BubblegumError::TreeAuthorityIncorrect,
         );
     }
-    return Ok(())
+    return Ok(());
 }
 
 fn fetch_old_metadata_args<'info>(
@@ -993,19 +989,15 @@ fn fetch_old_metadata_args<'info>(
     Ok(old_metadata)
 }
 
-fn assert_collection_authority_signed_if_required<'info>(
+fn assert_collection_authority_signed<'info>(
     collection: &Collection,
     collection_authority: &AccountInfo<'info>,
     collection_authority_record_pda: &Option<UncheckedAccount<'info>>,
     collection_mint: &AccountInfo<'info>,
     collection_metadata_account_info: &AccountInfo,
     collection_metadata: &TokenMetadata,
-    token_metadata_program: &Program<'info, MplTokenMetadata>
+    token_metadata_program: &Program<'info, MplTokenMetadata>,
 ) -> Result<()> {
-    // NFTs linked to unverified collections do not require collection authority signatures
-    if !collection.verified {
-        return Ok(())
-    }
     // Mint account must match Collection mint
     require!(
         collection_mint.key() == collection.key,
@@ -1024,9 +1016,7 @@ fn assert_collection_authority_signed_if_required<'info>(
 
     let collection_authority_record = match &collection_authority_record_pda {
         None => None,
-        Some(authority_record_pda) => {
-            Some(authority_record_pda.to_account_info())
-        }
+        Some(authority_record_pda) => Some(authority_record_pda.to_account_info()),
     };
 
     // Assert that the correct Collection Authority was provided using token-metadata
@@ -1036,7 +1026,7 @@ fn assert_collection_authority_signed_if_required<'info>(
         collection_authority.key,
         collection_authority_record.as_ref(),
     )?;
-    
+
     Ok(())
 }
 
@@ -1624,8 +1614,12 @@ pub mod bubblegum {
         // Determine how the user opted to pass in the old MetadataArgs
         let old_metadata = fetch_old_metadata_args(old_metadata, &ctx.accounts.old_metadata_acct)?;
 
-        // NFTs which are linked to collections cannot be updated through this instruction
-        require!(old_metadata.collection.is_none(), BubblegumError::NFTLinkedToCollection);
+        // NFTs which are linked to verified collections cannot be updated through this instruction
+        require!(
+            old_metadata.collection.is_none()
+                || !old_metadata.collection.as_ref().unwrap().verified,
+            BubblegumError::NFTLinkedToCollection
+        );
 
         process_update_metadata(
             &ctx.accounts.merkle_tree.to_account_info(),
@@ -1646,7 +1640,8 @@ pub mod bubblegum {
             new_primary_sale_happened,
             new_is_mutable,
             nonce,
-            index)
+            index,
+        )
     }
 
     pub fn update_metadata_collection_nft<'info, 'a>(
@@ -1669,16 +1664,17 @@ pub mod bubblegum {
         let old_metadata = fetch_old_metadata_args(old_metadata, &ctx.accounts.old_metadata_acct)?;
 
         // NFTs updated through this instruction must be linked to a collection,
-        // and the collection authority for that collection must sign
+        // so a collection authority for that collection must sign
         let collection = old_metadata.collection.as_ref().unwrap();
-        assert_collection_authority_signed_if_required(
+        assert_collection_authority_signed(
             &collection,
             &ctx.accounts.collection_authority.to_account_info(),
             &ctx.accounts.collection_authority_record_pda,
             &ctx.accounts.collection_mint,
             &ctx.accounts.collection_metadata.to_account_info(),
             &ctx.accounts.collection_metadata,
-            &ctx.accounts.token_metadata_program)?;
+            &ctx.accounts.token_metadata_program,
+        )?;
 
         process_update_metadata(
             &ctx.accounts.merkle_tree.to_account_info(),
@@ -1699,7 +1695,8 @@ pub mod bubblegum {
             new_primary_sale_happened,
             new_is_mutable,
             nonce,
-            index)
+            index,
+        )
     }
 
     pub fn redeem<'info>(

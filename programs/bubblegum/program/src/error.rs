@@ -72,13 +72,13 @@ pub enum BubblegumError {
     UnknownExternalError,
     #[msg("Decompression is disabled for this tree.")]
     DecompressionDisabled,
-    #[msg("Metadata Not Mutable")]
+    #[msg("Metadata not mutable")]
     MetadataImmutable,
     #[msg("Collection mismatch")]
     CollectionMismatch,
-    #[msg("MetadataArgs Ambiguous")]
+    #[msg("MetadataArgs ambiguous")]
     MetadataArgsAmbiguous,
-    #[msg("MetadataArgs Missing")]
+    #[msg("MetadataArgs missing")]
     MetadataArgsMissing,
     #[msg("NFT linked to collection")]
     NFTLinkedToCollection,

@@ -60,7 +60,7 @@ export const updateMetadataCollectionNftStruct = new beet.FixableBeetArgsStruct<
  * @property [] oldMetadataAcct
  * @property [] treeAuthority
  * @property [**signer**] treeDelegate
- * @property [] collectionAuthority
+ * @property [**signer**] collectionAuthority
  * @property [] collectionMint
  * @property [] collectionMetadata
  * @property [] collectionAuthorityRecordPda
@@ -136,7 +136,7 @@ export function createUpdateMetadataCollectionNftInstruction(
     {
       pubkey: accounts.collectionAuthority,
       isWritable: false,
-      isSigner: false,
+      isSigner: true,
     },
     {
       pubkey: accounts.collectionMint,
