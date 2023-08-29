@@ -7,80 +7,86 @@
 
 import * as beet from '@metaplex-foundation/beet'
 import * as web3 from '@solana/web3.js'
-import * as beetSolana from '@metaplex-foundation/beet-solana'
 import { MetadataArgs, metadataArgsBeet } from '../types/MetadataArgs'
+import { Creator, creatorBeet } from '../types/Creator'
 
 /**
  * @category Instructions
- * @category SetAndVerifyCollection
+ * @category UpdateMetadataCollectionNft
  * @category generated
  */
-export type SetAndVerifyCollectionInstructionArgs = {
+export type UpdateMetadataCollectionNftInstructionArgs = {
   root: number[] /* size: 32 */
-  dataHash: number[] /* size: 32 */
-  creatorHash: number[] /* size: 32 */
+  oldMetadata: beet.COption<MetadataArgs>
+  newName: beet.COption<string>
+  newSymbol: beet.COption<string>
+  newUri: beet.COption<string>
+  newCreators: beet.COption<Creator[]>
+  newSellerFeeBasisPoints: beet.COption<number>
+  newPrimarySaleHappened: beet.COption<boolean>
+  newIsMutable: beet.COption<boolean>
   nonce: beet.bignum
   index: number
-  message: MetadataArgs
-  collection: web3.PublicKey
 }
 /**
  * @category Instructions
- * @category SetAndVerifyCollection
+ * @category UpdateMetadataCollectionNft
  * @category generated
  */
-export const setAndVerifyCollectionStruct = new beet.FixableBeetArgsStruct<
-  SetAndVerifyCollectionInstructionArgs & {
+export const updateMetadataCollectionNftStruct = new beet.FixableBeetArgsStruct<
+  UpdateMetadataCollectionNftInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */
   }
 >(
   [
     ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
     ['root', beet.uniformFixedSizeArray(beet.u8, 32)],
-    ['dataHash', beet.uniformFixedSizeArray(beet.u8, 32)],
-    ['creatorHash', beet.uniformFixedSizeArray(beet.u8, 32)],
+    ['oldMetadata', beet.coption(metadataArgsBeet)],
+    ['newName', beet.coption(beet.utf8String)],
+    ['newSymbol', beet.coption(beet.utf8String)],
+    ['newUri', beet.coption(beet.utf8String)],
+    ['newCreators', beet.coption(beet.array(creatorBeet))],
+    ['newSellerFeeBasisPoints', beet.coption(beet.u16)],
+    ['newPrimarySaleHappened', beet.coption(beet.bool)],
+    ['newIsMutable', beet.coption(beet.bool)],
     ['nonce', beet.u64],
     ['index', beet.u32],
-    ['message', metadataArgsBeet],
-    ['collection', beetSolana.publicKey],
   ],
-  'SetAndVerifyCollectionInstructionArgs'
+  'UpdateMetadataCollectionNftInstructionArgs'
 )
 /**
- * Accounts required by the _setAndVerifyCollection_ instruction
+ * Accounts required by the _updateMetadataCollectionNft_ instruction
  *
+ * @property [] oldMetadataAcct
  * @property [] treeAuthority
+ * @property [**signer**] treeDelegate
+ * @property [] collectionAuthority
+ * @property [] collectionMint
+ * @property [] collectionMetadata
+ * @property [] collectionAuthorityRecordPda
  * @property [] leafOwner
  * @property [] leafDelegate
- * @property [_writable_] merkleTree
  * @property [**signer**] payer
- * @property [] treeDelegate
- * @property [**signer**] collectionAuthority
- * @property [] collectionAuthorityRecordPda
- * @property [] collectionMint
- * @property [_writable_] collectionMetadata
- * @property [] editionAccount
- * @property [] bubblegumSigner
+ * @property [_writable_] merkleTree
  * @property [] logWrapper
  * @property [] compressionProgram
  * @property [] tokenMetadataProgram
  * @category Instructions
- * @category SetAndVerifyCollection
+ * @category UpdateMetadataCollectionNft
  * @category generated
  */
-export type SetAndVerifyCollectionInstructionAccounts = {
+export type UpdateMetadataCollectionNftInstructionAccounts = {
+  oldMetadataAcct: web3.PublicKey
   treeAuthority: web3.PublicKey
-  leafOwner: web3.PublicKey
-  leafDelegate: web3.PublicKey
-  merkleTree: web3.PublicKey
-  payer: web3.PublicKey
   treeDelegate: web3.PublicKey
   collectionAuthority: web3.PublicKey
-  collectionAuthorityRecordPda: web3.PublicKey
   collectionMint: web3.PublicKey
   collectionMetadata: web3.PublicKey
-  editionAccount: web3.PublicKey
-  bubblegumSigner: web3.PublicKey
+  collectionAuthorityRecordPda: web3.PublicKey
+  leafOwner: web3.PublicKey
+  leafDelegate: web3.PublicKey
+  payer: web3.PublicKey
+  merkleTree: web3.PublicKey
   logWrapper: web3.PublicKey
   compressionProgram: web3.PublicKey
   tokenMetadataProgram: web3.PublicKey
@@ -88,32 +94,63 @@ export type SetAndVerifyCollectionInstructionAccounts = {
   anchorRemainingAccounts?: web3.AccountMeta[]
 }
 
-export const setAndVerifyCollectionInstructionDiscriminator = [
-  235, 242, 121, 216, 158, 234, 180, 234,
+export const updateMetadataCollectionNftInstructionDiscriminator = [
+  244, 12, 175, 194, 227, 28, 102, 215,
 ]
 
 /**
- * Creates a _SetAndVerifyCollection_ instruction.
+ * Creates a _UpdateMetadataCollectionNft_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @param args to provide as instruction data to the program
  *
  * @category Instructions
- * @category SetAndVerifyCollection
+ * @category UpdateMetadataCollectionNft
  * @category generated
  */
-export function createSetAndVerifyCollectionInstruction(
-  accounts: SetAndVerifyCollectionInstructionAccounts,
-  args: SetAndVerifyCollectionInstructionArgs,
+export function createUpdateMetadataCollectionNftInstruction(
+  accounts: UpdateMetadataCollectionNftInstructionAccounts,
+  args: UpdateMetadataCollectionNftInstructionArgs,
   programId = new web3.PublicKey('BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY')
 ) {
-  const [data] = setAndVerifyCollectionStruct.serialize({
-    instructionDiscriminator: setAndVerifyCollectionInstructionDiscriminator,
+  const [data] = updateMetadataCollectionNftStruct.serialize({
+    instructionDiscriminator:
+      updateMetadataCollectionNftInstructionDiscriminator,
     ...args,
   })
   const keys: web3.AccountMeta[] = [
     {
+      pubkey: accounts.oldMetadataAcct,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
       pubkey: accounts.treeAuthority,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.treeDelegate,
+      isWritable: false,
+      isSigner: true,
+    },
+    {
+      pubkey: accounts.collectionAuthority,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.collectionMint,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.collectionMetadata,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.collectionAuthorityRecordPda,
       isWritable: false,
       isSigner: false,
     },
@@ -128,48 +165,13 @@ export function createSetAndVerifyCollectionInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.merkleTree,
-      isWritable: true,
-      isSigner: false,
-    },
-    {
       pubkey: accounts.payer,
       isWritable: false,
       isSigner: true,
     },
     {
-      pubkey: accounts.treeDelegate,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.collectionAuthority,
-      isWritable: false,
-      isSigner: true,
-    },
-    {
-      pubkey: accounts.collectionAuthorityRecordPda,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.collectionMint,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.collectionMetadata,
+      pubkey: accounts.merkleTree,
       isWritable: true,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.editionAccount,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.bubblegumSigner,
-      isWritable: false,
       isSigner: false,
     },
     {

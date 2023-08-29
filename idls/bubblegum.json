@@ -1087,7 +1087,150 @@
       "name": "updateMetadata",
       "accounts": [
         {
+          "name": "oldMetadataAcct",
+          "isMut": false,
+          "isSigner": false,
+          "isOptional": true
+        },
+        {
+          "name": "treeAuthority",
+          "isMut": false,
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "merkle_tree"
+              }
+            ]
+          }
+        },
+        {
+          "name": "treeDelegate",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "leafOwner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "leafDelegate",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "merkleTree",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "logWrapper",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "compressionProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMetadataProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "root",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
           "name": "oldMetadata",
+          "type": {
+            "option": {
+              "defined": "MetadataArgs"
+            }
+          }
+        },
+        {
+          "name": "newName",
+          "type": {
+            "option": "string"
+          }
+        },
+        {
+          "name": "newSymbol",
+          "type": {
+            "option": "string"
+          }
+        },
+        {
+          "name": "newUri",
+          "type": {
+            "option": "string"
+          }
+        },
+        {
+          "name": "newCreators",
+          "type": {
+            "option": {
+              "vec": {
+                "defined": "Creator"
+              }
+            }
+          }
+        },
+        {
+          "name": "newSellerFeeBasisPoints",
+          "type": {
+            "option": "u16"
+          }
+        },
+        {
+          "name": "newPrimarySaleHappened",
+          "type": {
+            "option": "bool"
+          }
+        },
+        {
+          "name": "newIsMutable",
+          "type": {
+            "option": "bool"
+          }
+        },
+        {
+          "name": "nonce",
+          "type": "u64"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "name": "updateMetadataCollectionNft",
+      "accounts": [
+        {
+          "name": "oldMetadataAcct",
           "isMut": false,
           "isSigner": false,
           "isOptional": true
@@ -1114,22 +1257,35 @@
         {
           "name": "collectionAuthority",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "This account is only required if the NFT is part of a collection"
+          ]
         },
         {
           "name": "collectionMint",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "This account is only required if the NFT is part of a collection"
+          ]
         },
         {
           "name": "collectionMetadata",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "This account is only required if the NFT is part of a collection"
+          ]
         },
         {
           "name": "collectionAuthorityRecordPda",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "isOptional": true,
+          "docs": [
+            "This account is only required if the NFT is part of a collection"
+          ]
         },
         {
           "name": "leafOwner",
@@ -2169,6 +2325,11 @@
       "code": 6038,
       "name": "MissingCollectionAuthoritySignature",
       "msg": "Missing Collection Authority Signature"
+    },
+    {
+      "code": 6039,
+      "name": "NFTLinkedToCollection",
+      "msg": "NFT linked to collection"
     }
   ],
   "metadata": {

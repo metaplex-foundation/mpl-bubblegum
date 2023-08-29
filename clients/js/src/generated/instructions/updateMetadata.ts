@@ -45,7 +45,7 @@ import {
 
 // Accounts.
 export type UpdateMetadataInstructionAccounts = {
-  oldMetadata?: PublicKey | Pda;
+  oldMetadataAcct?: PublicKey | Pda;
   treeAuthority?: PublicKey | Pda;
   treeDelegate: Signer;
   collectionAuthority: PublicKey | Pda;
@@ -144,8 +144,7 @@ export type UpdateMetadataInstructionArgs = UpdateMetadataInstructionDataArgs;
 // Instruction.
 export function updateMetadata(
   context: Pick<Context, 'programs' | 'eddsa' | 'payer'>,
-  accounts: UpdateMetadataInstructionAccounts,
-  args: UpdateMetadataInstructionArgs
+  input: UpdateMetadataInstructionAccounts & UpdateMetadataInstructionArgs
 ): TransactionBuilder {
   const signers: Signer[] = [];
   const keys: AccountMeta[] = [];
@@ -158,34 +157,34 @@ export function updateMetadata(
 
   // Resolved inputs.
   const resolvedAccounts = {
-    treeDelegate: [accounts.treeDelegate, false] as const,
-    collectionAuthority: [accounts.collectionAuthority, false] as const,
-    collectionMint: [accounts.collectionMint, false] as const,
-    collectionMetadata: [accounts.collectionMetadata, false] as const,
+    treeDelegate: [input.treeDelegate, false] as const,
+    collectionAuthority: [input.collectionAuthority, false] as const,
+    collectionMint: [input.collectionMint, false] as const,
+    collectionMetadata: [input.collectionMetadata, false] as const,
     collectionAuthorityRecordPda: [
-      accounts.collectionAuthorityRecordPda,
+      input.collectionAuthorityRecordPda,
       false,
     ] as const,
-    leafOwner: [accounts.leafOwner, false] as const,
-    leafDelegate: [accounts.leafDelegate, false] as const,
-    merkleTree: [accounts.merkleTree, true] as const,
+    leafOwner: [input.leafOwner, false] as const,
+    leafDelegate: [input.leafDelegate, false] as const,
+    merkleTree: [input.merkleTree, true] as const,
   };
   const resolvingArgs = {};
   addObjectProperty(
     resolvedAccounts,
-    'oldMetadata',
-    accounts.oldMetadata
-      ? ([accounts.oldMetadata, false] as const)
+    'oldMetadataAcct',
+    input.oldMetadataAcct
+      ? ([input.oldMetadataAcct, false] as const)
       : ([programId, false] as const)
   );
   addObjectProperty(
     resolvedAccounts,
     'treeAuthority',
-    accounts.treeAuthority
-      ? ([accounts.treeAuthority, false] as const)
+    input.treeAuthority
+      ? ([input.treeAuthority, false] as const)
       : ([
           findTreeConfigPda(context, {
-            merkleTree: publicKey(accounts.merkleTree, false),
+            merkleTree: publicKey(input.merkleTree, false),
           }),
           false,
         ] as const)
@@ -193,15 +192,15 @@ export function updateMetadata(
   addObjectProperty(
     resolvedAccounts,
     'payer',
-    accounts.payer
-      ? ([accounts.payer, false] as const)
+    input.payer
+      ? ([input.payer, false] as const)
       : ([context.payer, false] as const)
   );
   addObjectProperty(
     resolvedAccounts,
     'logWrapper',
-    accounts.logWrapper
-      ? ([accounts.logWrapper, false] as const)
+    input.logWrapper
+      ? ([input.logWrapper, false] as const)
       : ([
           context.programs.getPublicKey(
             'splNoop',
@@ -213,8 +212,8 @@ export function updateMetadata(
   addObjectProperty(
     resolvedAccounts,
     'compressionProgram',
-    accounts.compressionProgram
-      ? ([accounts.compressionProgram, false] as const)
+    input.compressionProgram
+      ? ([input.compressionProgram, false] as const)
       : ([
           context.programs.getPublicKey(
             'splAccountCompression',
@@ -226,8 +225,8 @@ export function updateMetadata(
   addObjectProperty(
     resolvedAccounts,
     'tokenMetadataProgram',
-    accounts.tokenMetadataProgram
-      ? ([accounts.tokenMetadataProgram, false] as const)
+    input.tokenMetadataProgram
+      ? ([input.tokenMetadataProgram, false] as const)
       : ([
           context.programs.getPublicKey(
             'mplTokenMetadata',
@@ -239,8 +238,8 @@ export function updateMetadata(
   addObjectProperty(
     resolvedAccounts,
     'systemProgram',
-    accounts.systemProgram
-      ? ([accounts.systemProgram, false] as const)
+    input.systemProgram
+      ? ([input.systemProgram, false] as const)
       : ([
           context.programs.getPublicKey(
             'splSystem',
@@ -249,9 +248,9 @@ export function updateMetadata(
           false,
         ] as const)
   );
-  const resolvedArgs = { ...args, ...resolvingArgs };
+  const resolvedArgs = { ...input, ...resolvingArgs };
 
-  addAccountMeta(keys, signers, resolvedAccounts.oldMetadata, false);
+  addAccountMeta(keys, signers, resolvedAccounts.oldMetadataAcct, false);
   addAccountMeta(keys, signers, resolvedAccounts.treeAuthority, false);
   addAccountMeta(keys, signers, resolvedAccounts.treeDelegate, false);
   addAccountMeta(keys, signers, resolvedAccounts.collectionAuthority, false);

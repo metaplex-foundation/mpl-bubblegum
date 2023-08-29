@@ -7,89 +7,123 @@
 
 import * as beet from '@metaplex-foundation/beet'
 import * as web3 from '@solana/web3.js'
+import { MetadataArgs, metadataArgsBeet } from '../types/MetadataArgs'
+import { Creator, creatorBeet } from '../types/Creator'
 
 /**
  * @category Instructions
- * @category Burn
+ * @category UpdateMetadata
  * @category generated
  */
-export type BurnInstructionArgs = {
+export type UpdateMetadataInstructionArgs = {
   root: number[] /* size: 32 */
-  dataHash: number[] /* size: 32 */
-  creatorHash: number[] /* size: 32 */
+  oldMetadata: beet.COption<MetadataArgs>
+  newName: beet.COption<string>
+  newSymbol: beet.COption<string>
+  newUri: beet.COption<string>
+  newCreators: beet.COption<Creator[]>
+  newSellerFeeBasisPoints: beet.COption<number>
+  newPrimarySaleHappened: beet.COption<boolean>
+  newIsMutable: beet.COption<boolean>
   nonce: beet.bignum
   index: number
 }
 /**
  * @category Instructions
- * @category Burn
+ * @category UpdateMetadata
  * @category generated
  */
-export const burnStruct = new beet.BeetArgsStruct<
-  BurnInstructionArgs & {
+export const updateMetadataStruct = new beet.FixableBeetArgsStruct<
+  UpdateMetadataInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */
   }
 >(
   [
     ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
     ['root', beet.uniformFixedSizeArray(beet.u8, 32)],
-    ['dataHash', beet.uniformFixedSizeArray(beet.u8, 32)],
-    ['creatorHash', beet.uniformFixedSizeArray(beet.u8, 32)],
+    ['oldMetadata', beet.coption(metadataArgsBeet)],
+    ['newName', beet.coption(beet.utf8String)],
+    ['newSymbol', beet.coption(beet.utf8String)],
+    ['newUri', beet.coption(beet.utf8String)],
+    ['newCreators', beet.coption(beet.array(creatorBeet))],
+    ['newSellerFeeBasisPoints', beet.coption(beet.u16)],
+    ['newPrimarySaleHappened', beet.coption(beet.bool)],
+    ['newIsMutable', beet.coption(beet.bool)],
     ['nonce', beet.u64],
     ['index', beet.u32],
   ],
-  'BurnInstructionArgs'
+  'UpdateMetadataInstructionArgs'
 )
 /**
- * Accounts required by the _burn_ instruction
+ * Accounts required by the _updateMetadata_ instruction
  *
+ * @property [] oldMetadataAcct
  * @property [] treeAuthority
+ * @property [**signer**] treeDelegate
  * @property [] leafOwner
  * @property [] leafDelegate
+ * @property [**signer**] payer
  * @property [_writable_] merkleTree
  * @property [] logWrapper
  * @property [] compressionProgram
+ * @property [] tokenMetadataProgram
  * @category Instructions
- * @category Burn
+ * @category UpdateMetadata
  * @category generated
  */
-export type BurnInstructionAccounts = {
+export type UpdateMetadataInstructionAccounts = {
+  oldMetadataAcct: web3.PublicKey
   treeAuthority: web3.PublicKey
+  treeDelegate: web3.PublicKey
   leafOwner: web3.PublicKey
   leafDelegate: web3.PublicKey
+  payer: web3.PublicKey
   merkleTree: web3.PublicKey
   logWrapper: web3.PublicKey
   compressionProgram: web3.PublicKey
+  tokenMetadataProgram: web3.PublicKey
   systemProgram?: web3.PublicKey
   anchorRemainingAccounts?: web3.AccountMeta[]
 }
 
-export const burnInstructionDiscriminator = [116, 110, 29, 56, 107, 219, 42, 93]
+export const updateMetadataInstructionDiscriminator = [
+  170, 182, 43, 239, 97, 78, 225, 186,
+]
 
 /**
- * Creates a _Burn_ instruction.
+ * Creates a _UpdateMetadata_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @param args to provide as instruction data to the program
  *
  * @category Instructions
- * @category Burn
+ * @category UpdateMetadata
  * @category generated
  */
-export function createBurnInstruction(
-  accounts: BurnInstructionAccounts,
-  args: BurnInstructionArgs,
+export function createUpdateMetadataInstruction(
+  accounts: UpdateMetadataInstructionAccounts,
+  args: UpdateMetadataInstructionArgs,
   programId = new web3.PublicKey('BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY')
 ) {
-  const [data] = burnStruct.serialize({
-    instructionDiscriminator: burnInstructionDiscriminator,
+  const [data] = updateMetadataStruct.serialize({
+    instructionDiscriminator: updateMetadataInstructionDiscriminator,
     ...args,
   })
   const keys: web3.AccountMeta[] = [
     {
+      pubkey: accounts.oldMetadataAcct,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
       pubkey: accounts.treeAuthority,
       isWritable: false,
       isSigner: false,
+    },
+    {
+      pubkey: accounts.treeDelegate,
+      isWritable: false,
+      isSigner: true,
     },
     {
       pubkey: accounts.leafOwner,
@@ -100,6 +134,11 @@ export function createBurnInstruction(
       pubkey: accounts.leafDelegate,
       isWritable: false,
       isSigner: false,
+    },
+    {
+      pubkey: accounts.payer,
+      isWritable: false,
+      isSigner: true,
     },
     {
       pubkey: accounts.merkleTree,
@@ -113,6 +152,11 @@ export function createBurnInstruction(
     },
     {
       pubkey: accounts.compressionProgram,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.tokenMetadataProgram,
       isWritable: false,
       isSigner: false,
     },
