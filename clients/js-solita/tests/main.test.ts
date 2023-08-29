@@ -237,7 +237,6 @@ describe('Bubblegum tests', () => {
     await setupTreeWithCompressedNFT(connection, payerKeypair, compressedNFT, { maxDepth: 14, maxBufferSize: 64 });
   });
 
-  // TODO sorend: move to bottom of file
   describe('Unit test compressed NFT instructions', () => {
     const MAX_DEPTH = 14;
     let creators: Creator[] = [
@@ -266,6 +265,12 @@ describe('Bubblegum tests', () => {
       );
       merkleTree = result.merkleTree;
     });
+
+    it('Can verify existence of a compressed NFT', async () => {
+      const updateSuccess = await verifyLeaf(connection, payerKeypair, payerKeypair.publicKey, payerKeypair.publicKey, 0, merkleTree, originalCompressedNFT);
+      assert(updateSuccess.success === true, "Failed to verify leaf");
+    });
+
     it('Non-collection NFT Update', async () => {
       const merkleAccountInfo = await connection.getAccountInfo(merkleTree, { commitment: 'confirmed' });
       const merkleAccount = ConcurrentMerkleTreeAccount.fromBuffer(merkleAccountInfo!.data!);
@@ -402,123 +407,8 @@ describe('Bubblegum tests', () => {
       // We should now be able to verify the new leaf with the metadata replaced
       await verifyLeaf(connection, payerKeypair, payerKeypair.publicKey, payerKeypair.publicKey, 1, merkleTree, newMetadataArgs);
     });
-  })
 
-  describe.skip('Unit test compressed NFT collection instructions', () => {
-    const MAX_DEPTH = 14;
-    let merkleTree: PublicKey;
-    let originalCompressedNFT: MetadataArgs;
-    let collection: CreateCompressedNftOutput;
-    beforeEach(async () => {
-      await connection.requestAirdrop(payer, LAMPORTS_PER_SOL);
-      console.log(await connection.getBalance(payer));
-      collection = await setupCertifiedCollection(connection, 'ColName', 'ColSymbol', 'https://mycollection.com', payerKeypair)
-      originalCompressedNFT = makeCompressedCollectionNFT("cname", "csymbol", "https://myuri.com", collection.mintAddress);
-      const result = await setupTreeWithCompressedNFT(
-        connection,
-        payerKeypair,
-        originalCompressedNFT,
-        {
-          maxDepth: MAX_DEPTH,
-          maxBufferSize: 64,
-        }
-      );
-      merkleTree = result.merkleTree;
-    });
-
-    // TODO sorend: remove this test
-    it('Can verify existence of a compressed NFT', async () => {
-      const updateSuccess = await verifyLeaf(connection, payerKeypair, payerKeypair.publicKey, payerKeypair.publicKey, 0, merkleTree, originalCompressedNFT);
-      assert(updateSuccess.success === true, "Failed to verify leaf");
-    });
-
-    it.skip('Collection NFT Update', async () => {
-      const collection = await setupCertifiedCollection(connection, 'ColName', 'ColSymbol', 'https://mycollection.com', payerKeypair)
-      const [bubblegumSigner] = PublicKey.findProgramAddressSync([Buffer.from("collection_cpi")], BUBBLEGUM_PROGRAM_ID);
-      const [treeAuthority] = PublicKey.findProgramAddressSync(
-        [merkleTree.toBuffer()],
-        BUBBLEGUM_PROGRAM_ID,
-      );
-      const metadataArgs = makeCompressedCollectionNFT("cname", "csymbol", "https://myuri.com", collection.mintAddress);
-
-      // Mint a New NFT to a Collection
-      const mintToCollectionIx = createMintToCollectionV1Instruction({
-        treeAuthority,
-        leafOwner: payer,
-        leafDelegate: payer,
-        merkleTree,
-        payer,
-        treeDelegate: payer,
-        collectionAuthority: payer,
-        collectionAuthorityRecordPda: BUBBLEGUM_PROGRAM_ID,
-        collectionMint: collection.mintAddress,
-        collectionMetadata: collection.metadataAddress,
-        editionAccount: collection.masterEditionAddress,
-        bubblegumSigner,
-        logWrapper: SPL_NOOP_PROGRAM_ID,
-        compressionProgram: SPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
-        tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
-      }, {
-        metadataArgs 
-      })
-
-      const mintToCollectionTxId = await sendAndConfirmTransaction(connection, new Transaction().add(mintToCollectionIx), [payerKeypair], {
-        commitment: 'confirmed',
-        skipPreflight: true,
-      });
-
-      console.log("Mint to Collection Success:", mintToCollectionTxId)
-
-      // Update the NFT in the collection
-      const merkleAccountInfo = await connection.getAccountInfo(merkleTree, { commitment: 'confirmed' });
-      const merkleAccount = ConcurrentMerkleTreeAccount.fromBuffer(merkleAccountInfo!.data!);
-      const updateMetadataIx = createUpdateMetadataCollectionNftInstruction(
-        {
-          oldMetadataAcct: BUBBLEGUM_PROGRAM_ID,
-          collectionAuthority: payer,
-          collectionMint: collection.mintAddress,
-          collectionMetadata: collection.metadataAddress,
-          collectionAuthorityRecordPda: BUBBLEGUM_PROGRAM_ID,
-          treeAuthority,
-          treeDelegate: payer,
-          leafOwner: payer,
-          leafDelegate: payer,
-          payer,
-          merkleTree,
-          logWrapper: SPL_NOOP_PROGRAM_ID,
-          compressionProgram: SPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
-          tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID, 
-        },
-        {
-          root: Array.from(merkleAccount.getCurrentRoot()),
-          oldMetadata: metadataArgs,
-          newName: 'NewName',
-          newSymbol: 'NewSymbol',
-          newUri: 'https://foobar.com',
-          newCreators: null,
-          newSellerFeeBasisPoints: null,
-          newPrimarySaleHappened: null,
-          newIsMutable: null,
-          nonce: 0,
-          index: 1
-        },
-      );
-
-      const updateMetadataTx = new Transaction().add(updateMetadataIx);
-      const updateMetadataTxId = await sendAndConfirmTransaction(connection, updateMetadataTx, [payerKeypair], {
-        commitment: 'confirmed',
-        skipPreflight: true,
-      });
-
-      console.log("Update metadata tx success:", updateMetadataTxId)
-
-      const newMetadataArgs: MetadataArgs = { ...metadataArgs, name: 'NewName', symbol: 'NewSymbol', uri: 'https://foobar.com'};
-
-      // We should now be able to verify the new leaf with the metadata replaced
-      await verifyLeaf(connection, payerKeypair, payerKeypair.publicKey, payerKeypair.publicKey, 1, merkleTree, newMetadataArgs);
-    });
-
-    it.skip('Can transfer and burn a compressed NFT', async () => {
+    it('Can transfer and burn a compressed NFT', async () => {
       // Transfer.
       const accountInfo = await connection.getAccountInfo(merkleTree, { commitment: 'confirmed' });
       const account = ConcurrentMerkleTreeAccount.fromBuffer(accountInfo!.data!);
@@ -586,7 +476,7 @@ describe('Bubblegum tests', () => {
       console.log('NFT burn tx:', burnTxId);
     });
 
-    it.skip('Can redeem and decompress compressed NFT', async () => {
+    it('Can redeem and decompress compressed NFT', async () => {
       // Redeem.
       const accountInfo = await connection.getAccountInfo(merkleTree, { commitment: 'confirmed' });
       const account = ConcurrentMerkleTreeAccount.fromBuffer(accountInfo!.data!);
@@ -678,7 +568,5 @@ describe('Bubblegum tests', () => {
 
       console.log('NFT decompress tx:', decompressTxId);
     });
-
-    // TODO(@metaplex): add collection tests here
-  });
+  })
 });
