@@ -72,6 +72,14 @@ pub enum BubblegumError {
     UnknownExternalError,
     #[msg("Decompression is disabled for this tree.")]
     DecompressionDisabled,
+    #[msg("Metadata Not Mutable")]
+    MetadataImmutable,
+    #[msg("Collection mismatch")]
+    CollectionMismatch,
+    #[msg("MetadataArgs Ambiguous")]
+    MetadataArgsAmbiguous,
+    #[msg("MetadataArgs Missing")]
+    MetadataArgsMissing,
 }
 
 // Converts certain Token Metadata errors into Bubblegum equivalents
