@@ -1084,6 +1084,169 @@
       ]
     },
     {
+      "name": "updateMetadata",
+      "accounts": [
+        {
+          "name": "oldMetadata",
+          "isMut": false,
+          "isSigner": false,
+          "isOptional": true
+        },
+        {
+          "name": "treeAuthority",
+          "isMut": false,
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "merkle_tree"
+              }
+            ]
+          }
+        },
+        {
+          "name": "treeDelegate",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "collectionAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "collectionMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "collectionMetadata",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "collectionAuthorityRecordPda",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "leafOwner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "leafDelegate",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "merkleTree",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "logWrapper",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "compressionProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMetadataProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "root",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "oldMetadata",
+          "type": {
+            "option": {
+              "defined": "MetadataArgs"
+            }
+          }
+        },
+        {
+          "name": "newName",
+          "type": {
+            "option": "string"
+          }
+        },
+        {
+          "name": "newSymbol",
+          "type": {
+            "option": "string"
+          }
+        },
+        {
+          "name": "newUri",
+          "type": {
+            "option": "string"
+          }
+        },
+        {
+          "name": "newCreators",
+          "type": {
+            "option": {
+              "vec": {
+                "defined": "Creator"
+              }
+            }
+          }
+        },
+        {
+          "name": "newSellerFeeBasisPoints",
+          "type": {
+            "option": "u16"
+          }
+        },
+        {
+          "name": "newPrimarySaleHappened",
+          "type": {
+            "option": "bool"
+          }
+        },
+        {
+          "name": "newIsMutable",
+          "type": {
+            "option": "bool"
+          }
+        },
+        {
+          "name": "nonce",
+          "type": "u64"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        }
+      ]
+    },
+    {
       "name": "redeem",
       "accounts": [
         {
@@ -1803,6 +1966,9 @@
           },
           {
             "name": "SetDecompressableState"
+          },
+          {
+            "name": "UpdateMetadata"
           }
         ]
       }
@@ -1978,6 +2144,31 @@
       "code": 6033,
       "name": "DecompressionDisabled",
       "msg": "Decompression is disabled for this tree."
+    },
+    {
+      "code": 6034,
+      "name": "MetadataImmutable",
+      "msg": "Metadata Not Mutable"
+    },
+    {
+      "code": 6035,
+      "name": "CollectionMismatch",
+      "msg": "Collection mismatch"
+    },
+    {
+      "code": 6036,
+      "name": "MetadataArgsAmbiguous",
+      "msg": "MetadataArgs Ambiguous"
+    },
+    {
+      "code": 6037,
+      "name": "MetadataArgsMissing",
+      "msg": "MetadataArgs Missing"
+    },
+    {
+      "code": 6038,
+      "name": "MissingCollectionAuthoritySignature",
+      "msg": "Missing Collection Authority Signature"
     }
   ],
   "metadata": {
