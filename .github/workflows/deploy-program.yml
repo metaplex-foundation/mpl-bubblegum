@@ -74,7 +74,7 @@ jobs:
       - name: Install Rust
         uses: metaplex-foundation/actions/install-rust@v1
         with:
-          toolchain: ${{ env.RUST_VERSION }}
+          toolchain: "1.70.0"
 
       - name: Install Solana
         uses: metaplex-foundation/actions/install-solana@v1
