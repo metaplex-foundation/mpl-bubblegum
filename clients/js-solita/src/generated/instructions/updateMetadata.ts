@@ -5,10 +5,10 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
-import * as web3 from '@solana/web3.js'
-import { MetadataArgs, metadataArgsBeet } from '../types/MetadataArgs'
-import { Creator, creatorBeet } from '../types/Creator'
+import * as beet from '@metaplex-foundation/beet';
+import * as web3 from '@solana/web3.js';
+import { MetadataArgs, metadataArgsBeet } from '../types/MetadataArgs';
+import { Creator, creatorBeet } from '../types/Creator';
 
 /**
  * @category Instructions
@@ -16,18 +16,18 @@ import { Creator, creatorBeet } from '../types/Creator'
  * @category generated
  */
 export type UpdateMetadataInstructionArgs = {
-  root: number[] /* size: 32 */
-  oldMetadata: beet.COption<MetadataArgs>
-  newName: beet.COption<string>
-  newSymbol: beet.COption<string>
-  newUri: beet.COption<string>
-  newCreators: beet.COption<Creator[]>
-  newSellerFeeBasisPoints: beet.COption<number>
-  newPrimarySaleHappened: beet.COption<boolean>
-  newIsMutable: beet.COption<boolean>
-  nonce: beet.bignum
-  index: number
-}
+  root: number[] /* size: 32 */;
+  oldMetadata: beet.COption<MetadataArgs>;
+  newName: beet.COption<string>;
+  newSymbol: beet.COption<string>;
+  newUri: beet.COption<string>;
+  newCreators: beet.COption<Creator[]>;
+  newSellerFeeBasisPoints: beet.COption<number>;
+  newPrimarySaleHappened: beet.COption<boolean>;
+  newIsMutable: beet.COption<boolean>;
+  nonce: beet.bignum;
+  index: number;
+};
 /**
  * @category Instructions
  * @category UpdateMetadata
@@ -35,7 +35,7 @@ export type UpdateMetadataInstructionArgs = {
  */
 export const updateMetadataStruct = new beet.FixableBeetArgsStruct<
   UpdateMetadataInstructionArgs & {
-    instructionDiscriminator: number[] /* size: 8 */
+    instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
@@ -52,8 +52,8 @@ export const updateMetadataStruct = new beet.FixableBeetArgsStruct<
     ['nonce', beet.u64],
     ['index', beet.u32],
   ],
-  'UpdateMetadataInstructionArgs'
-)
+  'UpdateMetadataInstructionArgs',
+);
 /**
  * Accounts required by the _updateMetadata_ instruction
  *
@@ -72,23 +72,21 @@ export const updateMetadataStruct = new beet.FixableBeetArgsStruct<
  * @category generated
  */
 export type UpdateMetadataInstructionAccounts = {
-  oldMetadataAcct: web3.PublicKey
-  treeAuthority: web3.PublicKey
-  treeDelegate: web3.PublicKey
-  leafOwner: web3.PublicKey
-  leafDelegate: web3.PublicKey
-  payer: web3.PublicKey
-  merkleTree: web3.PublicKey
-  logWrapper: web3.PublicKey
-  compressionProgram: web3.PublicKey
-  tokenMetadataProgram: web3.PublicKey
-  systemProgram?: web3.PublicKey
-  anchorRemainingAccounts?: web3.AccountMeta[]
-}
+  oldMetadataAcct: web3.PublicKey;
+  treeAuthority: web3.PublicKey;
+  treeDelegate: web3.PublicKey;
+  leafOwner: web3.PublicKey;
+  leafDelegate: web3.PublicKey;
+  payer: web3.PublicKey;
+  merkleTree: web3.PublicKey;
+  logWrapper: web3.PublicKey;
+  compressionProgram: web3.PublicKey;
+  tokenMetadataProgram: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
+};
 
-export const updateMetadataInstructionDiscriminator = [
-  170, 182, 43, 239, 97, 78, 225, 186,
-]
+export const updateMetadataInstructionDiscriminator = [170, 182, 43, 239, 97, 78, 225, 186];
 
 /**
  * Creates a _UpdateMetadata_ instruction.
@@ -103,12 +101,12 @@ export const updateMetadataInstructionDiscriminator = [
 export function createUpdateMetadataInstruction(
   accounts: UpdateMetadataInstructionAccounts,
   args: UpdateMetadataInstructionArgs,
-  programId = new web3.PublicKey('BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY')
+  programId = new web3.PublicKey('BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'),
 ) {
   const [data] = updateMetadataStruct.serialize({
     instructionDiscriminator: updateMetadataInstructionDiscriminator,
     ...args,
-  })
+  });
   const keys: web3.AccountMeta[] = [
     {
       pubkey: accounts.oldMetadataAcct,
@@ -165,11 +163,11 @@ export function createUpdateMetadataInstruction(
       isWritable: false,
       isSigner: false,
     },
-  ]
+  ];
 
   if (accounts.anchorRemainingAccounts != null) {
     for (const acc of accounts.anchorRemainingAccounts) {
-      keys.push(acc)
+      keys.push(acc);
     }
   }
 
@@ -177,6 +175,6 @@ export function createUpdateMetadataInstruction(
     programId,
     keys,
     data,
-  })
-  return ix
+  });
+  return ix;
 }

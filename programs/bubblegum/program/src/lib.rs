@@ -1031,9 +1031,9 @@ fn assert_collection_authority_signed_if_required<'info>(
 
     // Assert that the correct Collection Authority was provided using token-metadata
     assert_has_collection_authority(
-        &collection_authority,
         &collection_metadata,
         collection_mint.key,
+        collection_authority.key,
         collection_authority_record.as_ref(),
     )?;
     

@@ -5,10 +5,10 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
-import * as web3 from '@solana/web3.js'
-import { MetadataArgs, metadataArgsBeet } from '../types/MetadataArgs'
-import { Creator, creatorBeet } from '../types/Creator'
+import * as beet from '@metaplex-foundation/beet';
+import * as web3 from '@solana/web3.js';
+import { MetadataArgs, metadataArgsBeet } from '../types/MetadataArgs';
+import { Creator, creatorBeet } from '../types/Creator';
 
 /**
  * @category Instructions
@@ -16,18 +16,18 @@ import { Creator, creatorBeet } from '../types/Creator'
  * @category generated
  */
 export type UpdateMetadataCollectionNftInstructionArgs = {
-  root: number[] /* size: 32 */
-  oldMetadata: beet.COption<MetadataArgs>
-  newName: beet.COption<string>
-  newSymbol: beet.COption<string>
-  newUri: beet.COption<string>
-  newCreators: beet.COption<Creator[]>
-  newSellerFeeBasisPoints: beet.COption<number>
-  newPrimarySaleHappened: beet.COption<boolean>
-  newIsMutable: beet.COption<boolean>
-  nonce: beet.bignum
-  index: number
-}
+  root: number[] /* size: 32 */;
+  oldMetadata: beet.COption<MetadataArgs>;
+  newName: beet.COption<string>;
+  newSymbol: beet.COption<string>;
+  newUri: beet.COption<string>;
+  newCreators: beet.COption<Creator[]>;
+  newSellerFeeBasisPoints: beet.COption<number>;
+  newPrimarySaleHappened: beet.COption<boolean>;
+  newIsMutable: beet.COption<boolean>;
+  nonce: beet.bignum;
+  index: number;
+};
 /**
  * @category Instructions
  * @category UpdateMetadataCollectionNft
@@ -35,7 +35,7 @@ export type UpdateMetadataCollectionNftInstructionArgs = {
  */
 export const updateMetadataCollectionNftStruct = new beet.FixableBeetArgsStruct<
   UpdateMetadataCollectionNftInstructionArgs & {
-    instructionDiscriminator: number[] /* size: 8 */
+    instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
@@ -52,8 +52,8 @@ export const updateMetadataCollectionNftStruct = new beet.FixableBeetArgsStruct<
     ['nonce', beet.u64],
     ['index', beet.u32],
   ],
-  'UpdateMetadataCollectionNftInstructionArgs'
-)
+  'UpdateMetadataCollectionNftInstructionArgs',
+);
 /**
  * Accounts required by the _updateMetadataCollectionNft_ instruction
  *
@@ -76,27 +76,27 @@ export const updateMetadataCollectionNftStruct = new beet.FixableBeetArgsStruct<
  * @category generated
  */
 export type UpdateMetadataCollectionNftInstructionAccounts = {
-  oldMetadataAcct: web3.PublicKey
-  treeAuthority: web3.PublicKey
-  treeDelegate: web3.PublicKey
-  collectionAuthority: web3.PublicKey
-  collectionMint: web3.PublicKey
-  collectionMetadata: web3.PublicKey
-  collectionAuthorityRecordPda: web3.PublicKey
-  leafOwner: web3.PublicKey
-  leafDelegate: web3.PublicKey
-  payer: web3.PublicKey
-  merkleTree: web3.PublicKey
-  logWrapper: web3.PublicKey
-  compressionProgram: web3.PublicKey
-  tokenMetadataProgram: web3.PublicKey
-  systemProgram?: web3.PublicKey
-  anchorRemainingAccounts?: web3.AccountMeta[]
-}
+  oldMetadataAcct: web3.PublicKey;
+  treeAuthority: web3.PublicKey;
+  treeDelegate: web3.PublicKey;
+  collectionAuthority: web3.PublicKey;
+  collectionMint: web3.PublicKey;
+  collectionMetadata: web3.PublicKey;
+  collectionAuthorityRecordPda: web3.PublicKey;
+  leafOwner: web3.PublicKey;
+  leafDelegate: web3.PublicKey;
+  payer: web3.PublicKey;
+  merkleTree: web3.PublicKey;
+  logWrapper: web3.PublicKey;
+  compressionProgram: web3.PublicKey;
+  tokenMetadataProgram: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
+};
 
 export const updateMetadataCollectionNftInstructionDiscriminator = [
   244, 12, 175, 194, 227, 28, 102, 215,
-]
+];
 
 /**
  * Creates a _UpdateMetadataCollectionNft_ instruction.
@@ -111,13 +111,12 @@ export const updateMetadataCollectionNftInstructionDiscriminator = [
 export function createUpdateMetadataCollectionNftInstruction(
   accounts: UpdateMetadataCollectionNftInstructionAccounts,
   args: UpdateMetadataCollectionNftInstructionArgs,
-  programId = new web3.PublicKey('BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY')
+  programId = new web3.PublicKey('BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'),
 ) {
   const [data] = updateMetadataCollectionNftStruct.serialize({
-    instructionDiscriminator:
-      updateMetadataCollectionNftInstructionDiscriminator,
+    instructionDiscriminator: updateMetadataCollectionNftInstructionDiscriminator,
     ...args,
-  })
+  });
   const keys: web3.AccountMeta[] = [
     {
       pubkey: accounts.oldMetadataAcct,
@@ -194,11 +193,11 @@ export function createUpdateMetadataCollectionNftInstruction(
       isWritable: false,
       isSigner: false,
     },
-  ]
+  ];
 
   if (accounts.anchorRemainingAccounts != null) {
     for (const acc of accounts.anchorRemainingAccounts) {
-      keys.push(acc)
+      keys.push(acc);
     }
   }
 
@@ -206,6 +205,6 @@ export function createUpdateMetadataCollectionNftInstruction(
     programId,
     keys,
     data,
-  })
-  return ix
+  });
+  return ix;
 }

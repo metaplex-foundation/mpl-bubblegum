@@ -1095,16 +1095,7 @@
         {
           "name": "treeAuthority",
           "isMut": false,
-          "isSigner": false,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "type": "publicKey",
-                "path": "merkle_tree"
-              }
-            ]
-          }
+          "isSigner": false
         },
         {
           "name": "treeDelegate",
@@ -1238,16 +1229,7 @@
         {
           "name": "treeAuthority",
           "isMut": false,
-          "isSigner": false,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "type": "publicKey",
-                "path": "merkle_tree"
-              }
-            ]
-          }
+          "isSigner": false
         },
         {
           "name": "treeDelegate",
@@ -2125,6 +2107,9 @@
           },
           {
             "name": "UpdateMetadata"
+          },
+          {
+            "name": "UpdateMetadataCollectionNft"
           }
         ]
       }
@@ -2323,11 +2308,6 @@
     },
     {
       "code": 6038,
-      "name": "MissingCollectionAuthoritySignature",
-      "msg": "Missing Collection Authority Signature"
-    },
-    {
-      "code": 6039,
       "name": "NFTLinkedToCollection",
       "msg": "NFT linked to collection"
     }
