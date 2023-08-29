@@ -267,8 +267,8 @@ describe('Bubblegum tests', () => {
     });
 
     it('Can verify existence of a compressed NFT', async () => {
-      const updateSuccess = await verifyLeaf(connection, payerKeypair, payerKeypair.publicKey, payerKeypair.publicKey, 0, merkleTree, originalCompressedNFT);
-      assert(updateSuccess.success === true, "Failed to verify leaf");
+      const result = await verifyLeaf(connection, payerKeypair, payerKeypair.publicKey, payerKeypair.publicKey, 0, merkleTree, originalCompressedNFT);
+      assert(result.success, "Failed to verify leaf");
     });
 
     it('Non-collection NFT Update', async () => {
