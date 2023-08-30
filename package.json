@@ -12,9 +12,9 @@
     "validator:stop": "amman stop"
   },
   "devDependencies": {
-    "@metaplex-foundation/kinobi": "^0.12.3",
-    "@metaplex-foundation/shank-js": "^0.1.5",
     "@metaplex-foundation/amman": "^0.12.1",
+    "@metaplex-foundation/kinobi": "link:/Users/febo/Developer/metaplex-foundation/kinobi",
+    "@metaplex-foundation/shank-js": "^0.1.5",
     "typescript": "^4.9.4"
   },
   "packageManager": "pnpm@8.2.0"
