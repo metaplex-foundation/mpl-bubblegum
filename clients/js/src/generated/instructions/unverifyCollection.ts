@@ -164,6 +164,10 @@ export function unverifyCollection(
   const resolvedAccounts = {
     leafOwner: [input.leafOwner, false] as const,
     merkleTree: [input.merkleTree, true] as const,
+    collectionAuthorityRecordPda: [
+      input.collectionAuthorityRecordPda,
+      false,
+    ] as const,
     collectionMint: [input.collectionMint, false] as const,
   };
   const resolvingArgs = {};
@@ -206,13 +210,6 @@ export function unverifyCollection(
     input.collectionAuthority
       ? ([input.collectionAuthority, false] as const)
       : ([context.identity, false] as const)
-  );
-  addObjectProperty(
-    resolvedAccounts,
-    'collectionAuthorityRecordPda',
-    input.collectionAuthorityRecordPda
-      ? ([input.collectionAuthorityRecordPda, false] as const)
-      : ([programId, false] as const)
   );
   addObjectProperty(
     resolvedAccounts,
@@ -338,7 +335,7 @@ export function unverifyCollection(
     keys,
     signers,
     resolvedAccounts.collectionAuthorityRecordPda,
-    false
+    true
   );
   addAccountMeta(keys, signers, resolvedAccounts.collectionMint, false);
   addAccountMeta(keys, signers, resolvedAccounts.collectionMetadata, false);
