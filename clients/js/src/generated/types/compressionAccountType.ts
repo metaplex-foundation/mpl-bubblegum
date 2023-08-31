@@ -15,17 +15,10 @@ export enum CompressionAccountType {
 
 export type CompressionAccountTypeArgs = CompressionAccountType;
 
-/** @deprecated Use `getCompressionAccountTypeSerializer()` without any argument instead. */
-export function getCompressionAccountTypeSerializer(
-  _context: object
-): Serializer<CompressionAccountTypeArgs, CompressionAccountType>;
 export function getCompressionAccountTypeSerializer(): Serializer<
   CompressionAccountTypeArgs,
   CompressionAccountType
->;
-export function getCompressionAccountTypeSerializer(
-  _context: object = {}
-): Serializer<CompressionAccountTypeArgs, CompressionAccountType> {
+> {
   return scalarEnum<CompressionAccountType>(CompressionAccountType, {
     description: 'CompressionAccountType',
   }) as Serializer<CompressionAccountTypeArgs, CompressionAccountType>;

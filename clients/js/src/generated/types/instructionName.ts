@@ -30,17 +30,10 @@ export enum InstructionName {
 
 export type InstructionNameArgs = InstructionName;
 
-/** @deprecated Use `getInstructionNameSerializer()` without any argument instead. */
-export function getInstructionNameSerializer(
-  _context: object
-): Serializer<InstructionNameArgs, InstructionName>;
 export function getInstructionNameSerializer(): Serializer<
   InstructionNameArgs,
   InstructionName
->;
-export function getInstructionNameSerializer(
-  _context: object = {}
-): Serializer<InstructionNameArgs, InstructionName> {
+> {
   return scalarEnum<InstructionName>(InstructionName, {
     description: 'InstructionName',
   }) as Serializer<InstructionNameArgs, InstructionName>;

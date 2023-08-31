@@ -14,14 +14,7 @@ export enum Version {
 
 export type VersionArgs = Version;
 
-/** @deprecated Use `getVersionSerializer()` without any argument instead. */
-export function getVersionSerializer(
-  _context: object
-): Serializer<VersionArgs, Version>;
-export function getVersionSerializer(): Serializer<VersionArgs, Version>;
-export function getVersionSerializer(
-  _context: object = {}
-): Serializer<VersionArgs, Version> {
+export function getVersionSerializer(): Serializer<VersionArgs, Version> {
   return scalarEnum<Version>(Version, { description: 'Version' }) as Serializer<
     VersionArgs,
     Version

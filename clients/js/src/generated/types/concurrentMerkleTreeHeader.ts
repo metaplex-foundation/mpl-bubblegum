@@ -45,17 +45,10 @@ export type ConcurrentMerkleTreeHeaderArgs = {
   header: ConcurrentMerkleTreeHeaderDataArgs;
 };
 
-/** @deprecated Use `getConcurrentMerkleTreeHeaderSerializer()` without any argument instead. */
-export function getConcurrentMerkleTreeHeaderSerializer(
-  _context: object
-): Serializer<ConcurrentMerkleTreeHeaderArgs, ConcurrentMerkleTreeHeader>;
 export function getConcurrentMerkleTreeHeaderSerializer(): Serializer<
   ConcurrentMerkleTreeHeaderArgs,
   ConcurrentMerkleTreeHeader
->;
-export function getConcurrentMerkleTreeHeaderSerializer(
-  _context: object = {}
-): Serializer<ConcurrentMerkleTreeHeaderArgs, ConcurrentMerkleTreeHeader> {
+> {
   return struct<ConcurrentMerkleTreeHeader>(
     [
       ['accountType', getCompressionAccountTypeSerializer()],

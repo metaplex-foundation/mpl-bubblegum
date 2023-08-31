@@ -15,17 +15,10 @@ export enum DecompressableState {
 
 export type DecompressableStateArgs = DecompressableState;
 
-/** @deprecated Use `getDecompressableStateSerializer()` without any argument instead. */
-export function getDecompressableStateSerializer(
-  _context: object
-): Serializer<DecompressableStateArgs, DecompressableState>;
 export function getDecompressableStateSerializer(): Serializer<
   DecompressableStateArgs,
   DecompressableState
->;
-export function getDecompressableStateSerializer(
-  _context: object = {}
-): Serializer<DecompressableStateArgs, DecompressableState> {
+> {
   return scalarEnum<DecompressableState>(DecompressableState, {
     description: 'DecompressableState',
   }) as Serializer<DecompressableStateArgs, DecompressableState>;

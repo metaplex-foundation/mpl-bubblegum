@@ -11,7 +11,6 @@ import {
   findMetadataPda,
 } from '@metaplex-foundation/mpl-token-metadata';
 import {
-  AccountMeta,
   Context,
   Pda,
   PublicKey,
@@ -33,7 +32,14 @@ import {
 } from '@metaplex-foundation/umi/serializers';
 import { resolveCreatorHash, resolveDataHash } from '../../hooked';
 import { findTreeConfigPda } from '../accounts';
-import { PickPartial, addAccountMeta, addObjectProperty } from '../shared';
+import {
+  PickPartial,
+  ResolvedAccount,
+  ResolvedAccountsWithIndices,
+  expectPublicKey,
+  expectSome,
+  getAccountMetasAndSigners,
+} from '../shared';
 import {
   MetadataArgs,
   MetadataArgsArgs,
@@ -92,20 +98,7 @@ export type SetAndVerifyCollectionInstructionDataArgs = {
   collection: PublicKey;
 };
 
-/** @deprecated Use `getSetAndVerifyCollectionInstructionDataSerializer()` without any argument instead. */
-export function getSetAndVerifyCollectionInstructionDataSerializer(
-  _context: object
-): Serializer<
-  SetAndVerifyCollectionInstructionDataArgs,
-  SetAndVerifyCollectionInstructionData
->;
 export function getSetAndVerifyCollectionInstructionDataSerializer(): Serializer<
-  SetAndVerifyCollectionInstructionDataArgs,
-  SetAndVerifyCollectionInstructionData
->;
-export function getSetAndVerifyCollectionInstructionDataSerializer(
-  _context: object = {}
-): Serializer<
   SetAndVerifyCollectionInstructionDataArgs,
   SetAndVerifyCollectionInstructionData
 > {
@@ -151,226 +144,209 @@ export type SetAndVerifyCollectionInstructionArgs = PickPartial<
 
 // Instruction.
 export function setAndVerifyCollection(
-  context: Pick<Context, 'programs' | 'eddsa' | 'identity' | 'payer'>,
+  context: Pick<Context, 'eddsa' | 'identity' | 'payer' | 'programs'>,
   input: SetAndVerifyCollectionInstructionAccounts &
     SetAndVerifyCollectionInstructionArgs
 ): TransactionBuilder {
-  const signers: Signer[] = [];
-  const keys: AccountMeta[] = [];
-
   // Program ID.
   const programId = context.programs.getPublicKey(
     'mplBubblegum',
     'BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'
   );
 
-  // Resolved inputs.
-  const resolvedAccounts = {
-    leafOwner: [input.leafOwner, false] as const,
-    merkleTree: [input.merkleTree, true] as const,
-    collectionMint: [input.collectionMint, false] as const,
+  // Accounts.
+  const resolvedAccounts: ResolvedAccountsWithIndices = {
+    treeConfig: {
+      index: 0,
+      isWritable: false,
+      value: input.treeConfig ?? null,
+    },
+    leafOwner: { index: 1, isWritable: false, value: input.leafOwner ?? null },
+    leafDelegate: {
+      index: 2,
+      isWritable: false,
+      value: input.leafDelegate ?? null,
+    },
+    merkleTree: { index: 3, isWritable: true, value: input.merkleTree ?? null },
+    payer: { index: 4, isWritable: false, value: input.payer ?? null },
+    treeCreatorOrDelegate: {
+      index: 5,
+      isWritable: false,
+      value: input.treeCreatorOrDelegate ?? null,
+    },
+    collectionAuthority: {
+      index: 6,
+      isWritable: false,
+      value: input.collectionAuthority ?? null,
+    },
+    collectionAuthorityRecordPda: {
+      index: 7,
+      isWritable: false,
+      value: input.collectionAuthorityRecordPda ?? null,
+    },
+    collectionMint: {
+      index: 8,
+      isWritable: false,
+      value: input.collectionMint ?? null,
+    },
+    collectionMetadata: {
+      index: 9,
+      isWritable: true,
+      value: input.collectionMetadata ?? null,
+    },
+    collectionEdition: {
+      index: 10,
+      isWritable: false,
+      value: input.collectionEdition ?? null,
+    },
+    bubblegumSigner: {
+      index: 11,
+      isWritable: false,
+      value: input.bubblegumSigner ?? null,
+    },
+    logWrapper: {
+      index: 12,
+      isWritable: false,
+      value: input.logWrapper ?? null,
+    },
+    compressionProgram: {
+      index: 13,
+      isWritable: false,
+      value: input.compressionProgram ?? null,
+    },
+    tokenMetadataProgram: {
+      index: 14,
+      isWritable: false,
+      value: input.tokenMetadataProgram ?? null,
+    },
+    systemProgram: {
+      index: 15,
+      isWritable: false,
+      value: input.systemProgram ?? null,
+    },
   };
-  const resolvingArgs = {};
-  addObjectProperty(
-    resolvedAccounts,
-    'treeConfig',
-    input.treeConfig
-      ? ([input.treeConfig, false] as const)
-      : ([
-          findTreeConfigPda(context, {
-            merkleTree: publicKey(input.merkleTree, false),
-          }),
-          false,
-        ] as const)
-  );
-  addObjectProperty(
-    resolvedAccounts,
-    'leafDelegate',
-    input.leafDelegate
-      ? ([input.leafDelegate, false] as const)
-      : ([input.leafOwner, false] as const)
-  );
-  addObjectProperty(
-    resolvedAccounts,
-    'payer',
-    input.payer
-      ? ([input.payer, false] as const)
-      : ([context.payer, false] as const)
-  );
-  addObjectProperty(
-    resolvedAccounts,
-    'treeCreatorOrDelegate',
-    input.treeCreatorOrDelegate
-      ? ([input.treeCreatorOrDelegate, false] as const)
-      : ([context.identity, false] as const)
-  );
-  addObjectProperty(
-    resolvedAccounts,
-    'collectionAuthority',
-    input.collectionAuthority
-      ? ([input.collectionAuthority, false] as const)
-      : ([context.identity, false] as const)
-  );
-  addObjectProperty(
-    resolvedAccounts,
-    'collectionAuthorityRecordPda',
-    input.collectionAuthorityRecordPda
-      ? ([input.collectionAuthorityRecordPda, false] as const)
-      : ([programId, false] as const)
-  );
-  addObjectProperty(
-    resolvedAccounts,
-    'collectionMetadata',
-    input.collectionMetadata
-      ? ([input.collectionMetadata, true] as const)
-      : ([
-          findMetadataPda(context, {
-            mint: publicKey(input.collectionMint, false),
-          }),
-          true,
-        ] as const)
-  );
-  addObjectProperty(
-    resolvedAccounts,
-    'collectionEdition',
-    input.collectionEdition
-      ? ([input.collectionEdition, false] as const)
-      : ([
-          findMasterEditionPda(context, {
-            mint: publicKey(input.collectionMint, false),
-          }),
-          false,
-        ] as const)
-  );
-  addObjectProperty(
-    resolvedAccounts,
-    'bubblegumSigner',
-    input.bubblegumSigner
-      ? ([input.bubblegumSigner, false] as const)
-      : ([
-          publicKey('4ewWZC5gT6TGpm5LZNDs9wVonfUT2q5PP5sc9kVbwMAK'),
-          false,
-        ] as const)
-  );
-  addObjectProperty(
-    resolvedAccounts,
-    'logWrapper',
-    input.logWrapper
-      ? ([input.logWrapper, false] as const)
-      : ([
-          context.programs.getPublicKey(
-            'splNoop',
-            'noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV'
-          ),
-          false,
-        ] as const)
-  );
-  addObjectProperty(
-    resolvedAccounts,
-    'compressionProgram',
-    input.compressionProgram
-      ? ([input.compressionProgram, false] as const)
-      : ([
-          context.programs.getPublicKey(
-            'splAccountCompression',
-            'cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK'
-          ),
-          false,
-        ] as const)
-  );
-  addObjectProperty(
-    resolvedAccounts,
-    'tokenMetadataProgram',
-    input.tokenMetadataProgram
-      ? ([input.tokenMetadataProgram, false] as const)
-      : ([
-          context.programs.getPublicKey(
-            'mplTokenMetadata',
-            'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'
-          ),
-          false,
-        ] as const)
-  );
-  addObjectProperty(
-    resolvedAccounts,
-    'systemProgram',
-    input.systemProgram
-      ? ([input.systemProgram, false] as const)
-      : ([
-          context.programs.getPublicKey(
-            'splSystem',
-            '11111111111111111111111111111111'
-          ),
-          false,
-        ] as const)
-  );
-  addObjectProperty(
-    resolvingArgs,
-    'dataHash',
-    input.dataHash ??
-      resolveDataHash(
-        context,
-        { ...input, ...resolvedAccounts },
-        { ...input, ...resolvingArgs },
-        programId,
-        false
-      )
-  );
-  addObjectProperty(
-    resolvingArgs,
-    'creatorHash',
-    input.creatorHash ??
-      resolveCreatorHash(
-        context,
-        { ...input, ...resolvedAccounts },
-        { ...input, ...resolvingArgs },
-        programId,
-        false
-      )
-  );
-  addObjectProperty(
-    resolvingArgs,
-    'collection',
-    input.collection ?? publicKey(input.collectionMint, false)
-  );
-  addObjectProperty(resolvingArgs, 'proof', input.proof ?? []);
-  const resolvedArgs = { ...input, ...resolvingArgs };
 
-  addAccountMeta(keys, signers, resolvedAccounts.treeConfig, false);
-  addAccountMeta(keys, signers, resolvedAccounts.leafOwner, false);
-  addAccountMeta(keys, signers, resolvedAccounts.leafDelegate, false);
-  addAccountMeta(keys, signers, resolvedAccounts.merkleTree, false);
-  addAccountMeta(keys, signers, resolvedAccounts.payer, false);
-  addAccountMeta(keys, signers, resolvedAccounts.treeCreatorOrDelegate, false);
-  addAccountMeta(keys, signers, resolvedAccounts.collectionAuthority, false);
-  addAccountMeta(
-    keys,
-    signers,
-    resolvedAccounts.collectionAuthorityRecordPda,
-    false
-  );
-  addAccountMeta(keys, signers, resolvedAccounts.collectionMint, false);
-  addAccountMeta(keys, signers, resolvedAccounts.collectionMetadata, false);
-  addAccountMeta(keys, signers, resolvedAccounts.collectionEdition, false);
-  addAccountMeta(keys, signers, resolvedAccounts.bubblegumSigner, false);
-  addAccountMeta(keys, signers, resolvedAccounts.logWrapper, false);
-  addAccountMeta(keys, signers, resolvedAccounts.compressionProgram, false);
-  addAccountMeta(keys, signers, resolvedAccounts.tokenMetadataProgram, false);
-  addAccountMeta(keys, signers, resolvedAccounts.systemProgram, false);
+  // Arguments.
+  const resolvedArgs: SetAndVerifyCollectionInstructionArgs = { ...input };
+
+  // Default values.
+  if (!resolvedAccounts.treeConfig.value) {
+    resolvedAccounts.treeConfig.value = findTreeConfigPda(context, {
+      merkleTree: expectPublicKey(resolvedAccounts.merkleTree.value),
+    });
+  }
+  if (!resolvedAccounts.leafDelegate.value) {
+    resolvedAccounts.leafDelegate.value = expectSome(
+      resolvedAccounts.leafOwner.value
+    );
+  }
+  if (!resolvedAccounts.payer.value) {
+    resolvedAccounts.payer.value = context.payer;
+  }
+  if (!resolvedAccounts.treeCreatorOrDelegate.value) {
+    resolvedAccounts.treeCreatorOrDelegate.value = context.identity;
+  }
+  if (!resolvedAccounts.collectionAuthority.value) {
+    resolvedAccounts.collectionAuthority.value = context.identity;
+  }
+  if (!resolvedAccounts.collectionAuthorityRecordPda.value) {
+    resolvedAccounts.collectionAuthorityRecordPda.value = programId;
+    resolvedAccounts.collectionAuthorityRecordPda.isWritable = false;
+  }
+  if (!resolvedAccounts.collectionMetadata.value) {
+    resolvedAccounts.collectionMetadata.value = findMetadataPda(context, {
+      mint: expectPublicKey(resolvedAccounts.collectionMint.value),
+    });
+  }
+  if (!resolvedAccounts.collectionEdition.value) {
+    resolvedAccounts.collectionEdition.value = findMasterEditionPda(context, {
+      mint: expectPublicKey(resolvedAccounts.collectionMint.value),
+    });
+  }
+  if (!resolvedAccounts.bubblegumSigner.value) {
+    resolvedAccounts.bubblegumSigner.value = publicKey(
+      '4ewWZC5gT6TGpm5LZNDs9wVonfUT2q5PP5sc9kVbwMAK'
+    );
+  }
+  if (!resolvedAccounts.logWrapper.value) {
+    resolvedAccounts.logWrapper.value = context.programs.getPublicKey(
+      'splNoop',
+      'noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV'
+    );
+    resolvedAccounts.logWrapper.isWritable = false;
+  }
+  if (!resolvedAccounts.compressionProgram.value) {
+    resolvedAccounts.compressionProgram.value = context.programs.getPublicKey(
+      'splAccountCompression',
+      'cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK'
+    );
+    resolvedAccounts.compressionProgram.isWritable = false;
+  }
+  if (!resolvedAccounts.tokenMetadataProgram.value) {
+    resolvedAccounts.tokenMetadataProgram.value = context.programs.getPublicKey(
+      'mplTokenMetadata',
+      'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'
+    );
+    resolvedAccounts.tokenMetadataProgram.isWritable = false;
+  }
+  if (!resolvedAccounts.systemProgram.value) {
+    resolvedAccounts.systemProgram.value = context.programs.getPublicKey(
+      'splSystem',
+      '11111111111111111111111111111111'
+    );
+    resolvedAccounts.systemProgram.isWritable = false;
+  }
+  if (!resolvedArgs.dataHash) {
+    resolvedArgs.dataHash = resolveDataHash(
+      context,
+      resolvedAccounts,
+      resolvedArgs,
+      programId,
+      false
+    );
+  }
+  if (!resolvedArgs.creatorHash) {
+    resolvedArgs.creatorHash = resolveCreatorHash(
+      context,
+      resolvedAccounts,
+      resolvedArgs,
+      programId,
+      false
+    );
+  }
+  if (!resolvedArgs.collection) {
+    resolvedArgs.collection = expectPublicKey(
+      resolvedAccounts.collectionMint.value
+    );
+  }
+  if (!resolvedArgs.proof) {
+    resolvedArgs.proof = [];
+  }
+
+  // Accounts in order.
+  const orderedAccounts: ResolvedAccount[] = Object.values(
+    resolvedAccounts
+  ).sort((a, b) => a.index - b.index);
 
   // Remaining Accounts.
-  const remainingAccounts = resolvedArgs.proof.map(
-    (address) => [address, false] as const
-  );
-  remainingAccounts.forEach((remainingAccount) =>
-    addAccountMeta(keys, signers, remainingAccount, false)
+  const remainingAccounts = resolvedArgs.proof.map((value, index) => ({
+    index,
+    value,
+    isWritable: false,
+  }));
+  orderedAccounts.push(...remainingAccounts);
+
+  // Keys and Signers.
+  const [keys, signers] = getAccountMetasAndSigners(
+    orderedAccounts,
+    'programId',
+    programId
   );
 
   // Data.
-  const data =
-    getSetAndVerifyCollectionInstructionDataSerializer().serialize(
-      resolvedArgs
-    );
+  const data = getSetAndVerifyCollectionInstructionDataSerializer().serialize(
+    resolvedArgs as SetAndVerifyCollectionInstructionDataArgs
+  );
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 0;

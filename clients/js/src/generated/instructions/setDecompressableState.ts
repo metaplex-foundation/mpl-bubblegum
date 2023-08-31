@@ -7,7 +7,6 @@
  */
 
 import {
-  AccountMeta,
   Context,
   Pda,
   PublicKey,
@@ -22,7 +21,11 @@ import {
   struct,
   u8,
 } from '@metaplex-foundation/umi/serializers';
-import { addAccountMeta, addObjectProperty } from '../shared';
+import {
+  ResolvedAccount,
+  ResolvedAccountsWithIndices,
+  getAccountMetasAndSigners,
+} from '../shared';
 import {
   DecompressableState,
   DecompressableStateArgs,
@@ -45,20 +48,7 @@ export type SetDecompressableStateInstructionDataArgs = {
   decompressableState: DecompressableStateArgs;
 };
 
-/** @deprecated Use `getSetDecompressableStateInstructionDataSerializer()` without any argument instead. */
-export function getSetDecompressableStateInstructionDataSerializer(
-  _context: object
-): Serializer<
-  SetDecompressableStateInstructionDataArgs,
-  SetDecompressableStateInstructionData
->;
 export function getSetDecompressableStateInstructionDataSerializer(): Serializer<
-  SetDecompressableStateInstructionDataArgs,
-  SetDecompressableStateInstructionData
->;
-export function getSetDecompressableStateInstructionDataSerializer(
-  _context: object = {}
-): Serializer<
   SetDecompressableStateInstructionDataArgs,
   SetDecompressableStateInstructionData
 > {
@@ -90,41 +80,50 @@ export type SetDecompressableStateInstructionArgs =
 
 // Instruction.
 export function setDecompressableState(
-  context: Pick<Context, 'programs' | 'identity'>,
+  context: Pick<Context, 'identity' | 'programs'>,
   input: SetDecompressableStateInstructionAccounts &
     SetDecompressableStateInstructionArgs
 ): TransactionBuilder {
-  const signers: Signer[] = [];
-  const keys: AccountMeta[] = [];
-
   // Program ID.
   const programId = context.programs.getPublicKey(
     'mplBubblegum',
     'BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'
   );
 
-  // Resolved inputs.
-  const resolvedAccounts = {
-    treeConfig: [input.treeConfig, true] as const,
+  // Accounts.
+  const resolvedAccounts: ResolvedAccountsWithIndices = {
+    treeConfig: { index: 0, isWritable: true, value: input.treeConfig ?? null },
+    treeCreator: {
+      index: 1,
+      isWritable: false,
+      value: input.treeCreator ?? null,
+    },
   };
-  const resolvingArgs = {};
-  addObjectProperty(
-    resolvedAccounts,
-    'treeCreator',
-    input.treeCreator
-      ? ([input.treeCreator, false] as const)
-      : ([context.identity, false] as const)
-  );
-  const resolvedArgs = { ...input, ...resolvingArgs };
 
-  addAccountMeta(keys, signers, resolvedAccounts.treeConfig, false);
-  addAccountMeta(keys, signers, resolvedAccounts.treeCreator, false);
+  // Arguments.
+  const resolvedArgs: SetDecompressableStateInstructionArgs = { ...input };
+
+  // Default values.
+  if (!resolvedAccounts.treeCreator.value) {
+    resolvedAccounts.treeCreator.value = context.identity;
+  }
+
+  // Accounts in order.
+  const orderedAccounts: ResolvedAccount[] = Object.values(
+    resolvedAccounts
+  ).sort((a, b) => a.index - b.index);
+
+  // Keys and Signers.
+  const [keys, signers] = getAccountMetasAndSigners(
+    orderedAccounts,
+    'programId',
+    programId
+  );
 
   // Data.
-  const data =
-    getSetDecompressableStateInstructionDataSerializer().serialize(
-      resolvedArgs
-    );
+  const data = getSetDecompressableStateInstructionDataSerializer().serialize(
+    resolvedArgs as SetDecompressableStateInstructionDataArgs
+  );
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 0;

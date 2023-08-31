@@ -15,17 +15,10 @@ export enum BubblegumEventType {
 
 export type BubblegumEventTypeArgs = BubblegumEventType;
 
-/** @deprecated Use `getBubblegumEventTypeSerializer()` without any argument instead. */
-export function getBubblegumEventTypeSerializer(
-  _context: object
-): Serializer<BubblegumEventTypeArgs, BubblegumEventType>;
 export function getBubblegumEventTypeSerializer(): Serializer<
   BubblegumEventTypeArgs,
   BubblegumEventType
->;
-export function getBubblegumEventTypeSerializer(
-  _context: object = {}
-): Serializer<BubblegumEventTypeArgs, BubblegumEventType> {
+> {
   return scalarEnum<BubblegumEventType>(BubblegumEventType, {
     description: 'BubblegumEventType',
   }) as Serializer<BubblegumEventTypeArgs, BubblegumEventType>;

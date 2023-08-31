@@ -56,17 +56,10 @@ export type TreeConfigAccountDataArgs = {
   isDecompressable: DecompressableStateArgs;
 };
 
-/** @deprecated Use `getTreeConfigAccountDataSerializer()` without any argument instead. */
-export function getTreeConfigAccountDataSerializer(
-  _context: object
-): Serializer<TreeConfigAccountDataArgs, TreeConfigAccountData>;
 export function getTreeConfigAccountDataSerializer(): Serializer<
   TreeConfigAccountDataArgs,
   TreeConfigAccountData
->;
-export function getTreeConfigAccountDataSerializer(
-  _context: object = {}
-): Serializer<TreeConfigAccountDataArgs, TreeConfigAccountData> {
+> {
   return mapSerializer<TreeConfigAccountDataArgs, any, TreeConfigAccountData>(
     struct<TreeConfigAccountData>(
       [
@@ -87,20 +80,8 @@ export function getTreeConfigAccountDataSerializer(
   ) as Serializer<TreeConfigAccountDataArgs, TreeConfigAccountData>;
 }
 
-/** @deprecated Use `deserializeTreeConfig(rawAccount)` without any context instead. */
-export function deserializeTreeConfig(
-  context: object,
-  rawAccount: RpcAccount
-): TreeConfig;
-export function deserializeTreeConfig(rawAccount: RpcAccount): TreeConfig;
-export function deserializeTreeConfig(
-  context: RpcAccount | object,
-  rawAccount?: RpcAccount
-): TreeConfig {
-  return deserializeAccount(
-    rawAccount ?? (context as RpcAccount),
-    getTreeConfigAccountDataSerializer()
-  );
+export function deserializeTreeConfig(rawAccount: RpcAccount): TreeConfig {
+  return deserializeAccount(rawAccount, getTreeConfigAccountDataSerializer());
 }
 
 export async function fetchTreeConfig(

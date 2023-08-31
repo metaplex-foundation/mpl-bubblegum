@@ -82,17 +82,10 @@ export type MetadataArgsArgs = {
   creators: Array<CreatorArgs>;
 };
 
-/** @deprecated Use `getMetadataArgsSerializer()` without any argument instead. */
-export function getMetadataArgsSerializer(
-  _context: object
-): Serializer<MetadataArgsArgs, MetadataArgs>;
 export function getMetadataArgsSerializer(): Serializer<
   MetadataArgsArgs,
   MetadataArgs
->;
-export function getMetadataArgsSerializer(
-  _context: object = {}
-): Serializer<MetadataArgsArgs, MetadataArgs> {
+> {
   return mapSerializer<MetadataArgsArgs, any, MetadataArgs>(
     struct<MetadataArgs>(
       [
