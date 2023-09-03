@@ -949,23 +949,21 @@ fn process_collection_verification<'info>(
     )
 }
 
-fn assert_signed_by_tree_delegate<'info>(
+fn assert_signed_by_tree_delegate(
     tree_config: &TreeConfig,
-    incoming_signer: &Signer<'info>,
+    incoming_signer: &Signer,
 ) -> Result<()> {
-    if !tree_config.is_public {
-        require!(
-            incoming_signer.key() == tree_config.tree_creator
-                || incoming_signer.key() == tree_config.tree_delegate,
-            BubblegumError::TreeAuthorityIncorrect,
-        );
-    }
-    return Ok(());
+    require!(
+        incoming_signer.key() == tree_config.tree_creator
+            || incoming_signer.key() == tree_config.tree_delegate,
+        BubblegumError::TreeAuthorityIncorrect,
+    );
+    Ok(())
 }
 
-fn fetch_old_metadata_args<'info>(
+fn fetch_old_metadata_args(
     old_metadata_arg: Option<MetadataArgs>,
-    old_metadata_acct: &Option<UncheckedAccount<'info>>,
+    old_metadata_acct: &Option<UncheckedAccount>,
 ) -> Result<MetadataArgs> {
     let old_metadata = match old_metadata_arg {
         Some(metadata) => {
@@ -976,20 +974,17 @@ fn fetch_old_metadata_args<'info>(
             metadata
         }
         None => {
-            require!(
-                old_metadata_acct.is_some(),
-                BubblegumError::MetadataArgsMissing
-            );
-            let old_metadata_account = old_metadata_acct.as_ref().unwrap();
-            let old_metadata_data = old_metadata_account.try_borrow_mut_data()?;
-            let mut old_metadata_data_slice = old_metadata_data.as_ref();
-            MetadataArgs::deserialize(&mut old_metadata_data_slice)?
+            let old_metadata_account = old_metadata_acct
+                .as_ref()
+                .ok_or(BubblegumError::MetadataArgsMissing)?;
+            let old_metadata_data = old_metadata_account.try_borrow_data()?;
+            MetadataArgs::deserialize(&mut old_metadata_data.as_ref())?
         }
     };
     Ok(old_metadata)
 }
 
-fn assert_collection_authority_signed<'info>(
+fn assert_authority_matches_collection<'info>(
     collection: &Collection,
     collection_authority: &AccountInfo<'info>,
     collection_authority_record_pda: &Option<UncheckedAccount<'info>>,
@@ -1003,6 +998,11 @@ fn assert_collection_authority_signed<'info>(
         collection_mint.key() == collection.key,
         BubblegumError::CollectionMismatch
     );
+    // Metadata mint must match Collection mint
+    require!(
+        collection_metadata.mint == collection.key,
+        BubblegumError::CollectionMismatch
+    );
     // Verify correct account ownerships.
     require!(
         *collection_metadata_account_info.owner == token_metadata_program.key(),
@@ -1014,14 +1014,13 @@ fn assert_collection_authority_signed<'info>(
         BubblegumError::IncorrectOwner
     );
 
-    let collection_authority_record = match &collection_authority_record_pda {
-        None => None,
-        Some(authority_record_pda) => Some(authority_record_pda.to_account_info()),
-    };
+    let collection_authority_record = collection_authority_record_pda
+        .as_ref()
+        .map(|authority_record_pda| authority_record_pda.to_account_info());
 
     // Assert that the correct Collection Authority was provided using token-metadata
     assert_has_collection_authority(
-        &collection_metadata,
+        collection_metadata,
         collection_mint.key,
         collection_authority.key,
         collection_authority_record.as_ref(),
@@ -1030,7 +1029,7 @@ fn assert_collection_authority_signed<'info>(
     Ok(())
 }
 
-fn process_update_metadata<'info, 'a>(
+fn process_update_metadata<'info>(
     merkle_tree: &AccountInfo<'info>,
     owner: &AccountInfo<'info>,
     delegate: &AccountInfo<'info>,
@@ -1038,7 +1037,7 @@ fn process_update_metadata<'info, 'a>(
     tree_authority: &AccountInfo<'info>,
     tree_authority_bump: u8,
     log_wrapper: &Program<'info, Noop>,
-    remaining_accounts: &'a [AccountInfo<'info>],
+    remaining_accounts: &[AccountInfo<'info>],
     root: [u8; 32],
     old_metadata: MetadataArgs,
     new_name: Option<String>,
@@ -1088,9 +1087,12 @@ fn process_update_metadata<'info, 'a>(
         new_metadata.seller_fee_basis_points = seller_fee_basis_points
     };
     if let Some(primary_sale_happened) = new_primary_sale_happened {
-        if !new_metadata.primary_sale_happened {
-            new_metadata.primary_sale_happened = primary_sale_happened
-        }
+        // a new value of primary_sale_happened should only be specified if primary_sale_happened was false in the original metadata
+        require!(
+            !new_metadata.primary_sale_happened,
+            BubblegumError::PrimarySaleCanOnlyBeFlippedToTrue
+        );
+        new_metadata.primary_sale_happened = primary_sale_happened;
     };
     if let Some(is_mutable) = new_is_mutable {
         new_metadata.is_mutable = is_mutable;
@@ -1595,9 +1597,11 @@ pub mod bubblegum {
         )
     }
 
-    pub fn update_metadata<'info, 'a>(
-        ctx: Context<'_, '_, 'a, 'info, UpdateMetadata<'info>>,
+    pub fn update_metadata<'info>(
+        ctx: Context<'_, '_, '_, 'info, UpdateMetadata<'info>>,
         root: [u8; 32],
+        nonce: u64,
+        index: u32,
         old_metadata: Option<MetadataArgs>,
         new_name: Option<String>,
         new_symbol: Option<String>,
@@ -1606,8 +1610,6 @@ pub mod bubblegum {
         new_seller_fee_basis_points: Option<u16>,
         new_primary_sale_happened: Option<bool>,
         new_is_mutable: Option<bool>,
-        nonce: u64,
-        index: u32,
     ) -> Result<()> {
         assert_signed_by_tree_delegate(&ctx.accounts.tree_authority, &ctx.accounts.tree_delegate)?;
 
@@ -1629,7 +1631,7 @@ pub mod bubblegum {
             &ctx.accounts.tree_authority.to_account_info(),
             *ctx.bumps.get("tree_authority").unwrap(),
             &ctx.accounts.log_wrapper,
-            &ctx.remaining_accounts,
+            ctx.remaining_accounts,
             root,
             old_metadata,
             new_name,
@@ -1644,9 +1646,11 @@ pub mod bubblegum {
         )
     }
 
-    pub fn update_metadata_collection_nft<'info, 'a>(
-        ctx: Context<'_, '_, 'a, 'info, UpdateMetadataCollectionNFT<'info>>,
+    pub fn update_metadata_collection_nft<'info>(
+        ctx: Context<'_, '_, '_, 'info, UpdateMetadataCollectionNFT<'info>>,
         root: [u8; 32],
+        nonce: u64,
+        index: u32,
         old_metadata: Option<MetadataArgs>,
         new_name: Option<String>,
         new_symbol: Option<String>,
@@ -1655,8 +1659,6 @@ pub mod bubblegum {
         new_seller_fee_basis_points: Option<u16>,
         new_primary_sale_happened: Option<bool>,
         new_is_mutable: Option<bool>,
-        nonce: u64,
-        index: u32,
     ) -> Result<()> {
         assert_signed_by_tree_delegate(&ctx.accounts.tree_authority, &ctx.accounts.tree_delegate)?;
 
@@ -1665,9 +1667,12 @@ pub mod bubblegum {
 
         // NFTs updated through this instruction must be linked to a collection,
         // so a collection authority for that collection must sign
-        let collection = old_metadata.collection.as_ref().unwrap();
-        assert_collection_authority_signed(
-            &collection,
+        let collection = old_metadata
+            .collection
+            .as_ref()
+            .ok_or(BubblegumError::NFTNotLinkedToVerifiedCollection)?;
+        assert_authority_matches_collection(
+            collection,
             &ctx.accounts.collection_authority.to_account_info(),
             &ctx.accounts.collection_authority_record_pda,
             &ctx.accounts.collection_mint,
@@ -1684,7 +1689,7 @@ pub mod bubblegum {
             &ctx.accounts.tree_authority.to_account_info(),
             *ctx.bumps.get("tree_authority").unwrap(),
             &ctx.accounts.log_wrapper,
-            &ctx.remaining_accounts,
+            ctx.remaining_accounts,
             root,
             old_metadata,
             new_name,

@@ -1154,6 +1154,14 @@
           }
         },
         {
+          "name": "nonce",
+          "type": "u64"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        },
+        {
           "name": "oldMetadata",
           "type": {
             "option": {
@@ -1206,14 +1214,6 @@
           "type": {
             "option": "bool"
           }
-        },
-        {
-          "name": "nonce",
-          "type": "u64"
-        },
-        {
-          "name": "index",
-          "type": "u32"
         }
       ]
     },
@@ -1309,6 +1309,14 @@
           }
         },
         {
+          "name": "nonce",
+          "type": "u64"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        },
+        {
           "name": "oldMetadata",
           "type": {
             "option": {
@@ -1361,14 +1369,6 @@
           "type": {
             "option": "bool"
           }
-        },
-        {
-          "name": "nonce",
-          "type": "u64"
-        },
-        {
-          "name": "index",
-          "type": "u32"
         }
       ]
     },
@@ -2298,6 +2298,16 @@
       "code": 6038,
       "name": "NFTLinkedToCollection",
       "msg": "NFT linked to collection"
+    },
+    {
+      "code": 6039,
+      "name": "NFTNotLinkedToVerifiedCollection",
+      "msg": "NFT not linked to verified collection"
+    },
+    {
+      "code": 6040,
+      "name": "PrimarySaleCanOnlyBeFlippedToTrue",
+      "msg": "Can only update primary sale to true"
     }
   ],
   "metadata": {

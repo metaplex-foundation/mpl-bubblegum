@@ -82,6 +82,10 @@ pub enum BubblegumError {
     MetadataArgsMissing,
     #[msg("NFT linked to collection")]
     NFTLinkedToCollection,
+    #[msg("NFT not linked to verified collection")]
+    NFTNotLinkedToVerifiedCollection,
+    #[msg("Can only update primary sale to true")]
+    PrimarySaleCanOnlyBeFlippedToTrue,
 }
 
 // Converts certain Token Metadata errors into Bubblegum equivalents

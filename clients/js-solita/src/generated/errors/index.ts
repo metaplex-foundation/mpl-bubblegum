@@ -819,6 +819,52 @@ createErrorFromCodeLookup.set(0x1796, () => new NFTLinkedToCollectionError());
 createErrorFromNameLookup.set('NFTLinkedToCollection', () => new NFTLinkedToCollectionError());
 
 /**
+ * NFTNotLinkedToVerifiedCollection: 'NFT not linked to verified collection'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class NFTNotLinkedToVerifiedCollectionError extends Error {
+  readonly code: number = 0x1797;
+  readonly name: string = 'NFTNotLinkedToVerifiedCollection';
+  constructor() {
+    super('NFT not linked to verified collection');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, NFTNotLinkedToVerifiedCollectionError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1797, () => new NFTNotLinkedToVerifiedCollectionError());
+createErrorFromNameLookup.set(
+  'NFTNotLinkedToVerifiedCollection',
+  () => new NFTNotLinkedToVerifiedCollectionError(),
+);
+
+/**
+ * PrimarySaleCanOnlyBeFlippedToTrue: 'Can only update primary sale to true'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class PrimarySaleCanOnlyBeFlippedToTrueError extends Error {
+  readonly code: number = 0x1798;
+  readonly name: string = 'PrimarySaleCanOnlyBeFlippedToTrue';
+  constructor() {
+    super('Can only update primary sale to true');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, PrimarySaleCanOnlyBeFlippedToTrueError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1798, () => new PrimarySaleCanOnlyBeFlippedToTrueError());
+createErrorFromNameLookup.set(
+  'PrimarySaleCanOnlyBeFlippedToTrue',
+  () => new PrimarySaleCanOnlyBeFlippedToTrueError(),
+);
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

@@ -293,6 +293,8 @@ describe('Bubblegum tests', () => {
         },
         {
           root: Array.from(merkleAccount.getCurrentRoot()),
+          nonce: 0,
+          index: 0,
           oldMetadata: originalCompressedNFT,
           newName: 'NewName',
           newSymbol: 'NewSymbol',
@@ -301,8 +303,6 @@ describe('Bubblegum tests', () => {
           newSellerFeeBasisPoints: null,
           newPrimarySaleHappened: null,
           newIsMutable: null,
-          nonce: 0,
-          index: 0
         },
       );
 
@@ -359,7 +359,8 @@ describe('Bubblegum tests', () => {
       const merkleAccountInfo = await connection.getAccountInfo(merkleTree, { commitment: 'confirmed' });
       const merkleAccount = ConcurrentMerkleTreeAccount.fromBuffer(merkleAccountInfo!.data!);
 
-      // Update the NFT in the collection
+      // MintToCollectionV1 will update verified to true in MetadataArgs before minting to the tree
+      // Thus we must alter the MetadataArgs object we expect to exist in the leaf before the update to match
       const oldMetadataArgs = {...metadataArgs, collection: {key: metadataArgs.collection!.key, verified: true} }
       const updateMetadataIx = createUpdateMetadataCollectionNftInstruction(
         {
@@ -380,7 +381,8 @@ describe('Bubblegum tests', () => {
         },
         {
           root: Array.from(merkleAccount.getCurrentRoot()),
-          // MintToCollectionV1 will update verified to true in MetadataArgs before minting to the tree
+          nonce: 1,
+          index: 1,
           oldMetadata: oldMetadataArgs,
           newName: 'NewName',
           newSymbol: 'NewSymbol',
@@ -389,8 +391,6 @@ describe('Bubblegum tests', () => {
           newSellerFeeBasisPoints: null,
           newPrimarySaleHappened: null,
           newIsMutable: null,
-          nonce: 1,
-          index: 1
         },
       );
 

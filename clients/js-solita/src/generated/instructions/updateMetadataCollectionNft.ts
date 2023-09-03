@@ -17,6 +17,8 @@ import { Creator, creatorBeet } from '../types/Creator';
  */
 export type UpdateMetadataCollectionNftInstructionArgs = {
   root: number[] /* size: 32 */;
+  nonce: beet.bignum;
+  index: number;
   oldMetadata: beet.COption<MetadataArgs>;
   newName: beet.COption<string>;
   newSymbol: beet.COption<string>;
@@ -25,8 +27,6 @@ export type UpdateMetadataCollectionNftInstructionArgs = {
   newSellerFeeBasisPoints: beet.COption<number>;
   newPrimarySaleHappened: beet.COption<boolean>;
   newIsMutable: beet.COption<boolean>;
-  nonce: beet.bignum;
-  index: number;
 };
 /**
  * @category Instructions
@@ -41,6 +41,8 @@ export const updateMetadataCollectionNftStruct = new beet.FixableBeetArgsStruct<
   [
     ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
     ['root', beet.uniformFixedSizeArray(beet.u8, 32)],
+    ['nonce', beet.u64],
+    ['index', beet.u32],
     ['oldMetadata', beet.coption(metadataArgsBeet)],
     ['newName', beet.coption(beet.utf8String)],
     ['newSymbol', beet.coption(beet.utf8String)],
@@ -49,8 +51,6 @@ export const updateMetadataCollectionNftStruct = new beet.FixableBeetArgsStruct<
     ['newSellerFeeBasisPoints', beet.coption(beet.u16)],
     ['newPrimarySaleHappened', beet.coption(beet.bool)],
     ['newIsMutable', beet.coption(beet.bool)],
-    ['nonce', beet.u64],
-    ['index', beet.u32],
   ],
   'UpdateMetadataCollectionNftInstructionArgs',
 );
