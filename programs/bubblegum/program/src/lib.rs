@@ -1671,6 +1671,7 @@ pub mod bubblegum {
             .collection
             .as_ref()
             .ok_or(BubblegumError::NFTNotLinkedToVerifiedCollection)?;
+        
         assert_authority_matches_collection(
             collection,
             &ctx.accounts.collection_authority.to_account_info(),
