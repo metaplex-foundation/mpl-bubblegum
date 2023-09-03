@@ -7,13 +7,11 @@
  */
 
 import {
-  AccountMeta,
   Context,
   Pda,
   PublicKey,
   Signer,
   TransactionBuilder,
-  publicKey,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
 import {
@@ -24,7 +22,12 @@ import {
   u8,
 } from '@metaplex-foundation/umi/serializers';
 import { findTreeConfigPda } from '../accounts';
-import { addAccountMeta, addObjectProperty } from '../shared';
+import {
+  ResolvedAccount,
+  ResolvedAccountsWithIndices,
+  expectPublicKey,
+  getAccountMetasAndSigners,
+} from '../shared';
 
 // Accounts.
 export type SetTreeDelegateInstructionAccounts = {
@@ -40,20 +43,7 @@ export type SetTreeDelegateInstructionData = { discriminator: Array<number> };
 
 export type SetTreeDelegateInstructionDataArgs = {};
 
-/** @deprecated Use `getSetTreeDelegateInstructionDataSerializer()` without any argument instead. */
-export function getSetTreeDelegateInstructionDataSerializer(
-  _context: object
-): Serializer<
-  SetTreeDelegateInstructionDataArgs,
-  SetTreeDelegateInstructionData
->;
 export function getSetTreeDelegateInstructionDataSerializer(): Serializer<
-  SetTreeDelegateInstructionDataArgs,
-  SetTreeDelegateInstructionData
->;
-export function getSetTreeDelegateInstructionDataSerializer(
-  _context: object = {}
-): Serializer<
   SetTreeDelegateInstructionDataArgs,
   SetTreeDelegateInstructionData
 > {
@@ -78,61 +68,68 @@ export function getSetTreeDelegateInstructionDataSerializer(
 
 // Instruction.
 export function setTreeDelegate(
-  context: Pick<Context, 'programs' | 'eddsa' | 'identity'>,
+  context: Pick<Context, 'eddsa' | 'identity' | 'programs'>,
   input: SetTreeDelegateInstructionAccounts
 ): TransactionBuilder {
-  const signers: Signer[] = [];
-  const keys: AccountMeta[] = [];
-
   // Program ID.
   const programId = context.programs.getPublicKey(
     'mplBubblegum',
     'BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'
   );
 
-  // Resolved inputs.
-  const resolvedAccounts = {
-    newTreeDelegate: [input.newTreeDelegate, false] as const,
-    merkleTree: [input.merkleTree, false] as const,
+  // Accounts.
+  const resolvedAccounts: ResolvedAccountsWithIndices = {
+    treeConfig: { index: 0, isWritable: true, value: input.treeConfig ?? null },
+    treeCreator: {
+      index: 1,
+      isWritable: false,
+      value: input.treeCreator ?? null,
+    },
+    newTreeDelegate: {
+      index: 2,
+      isWritable: false,
+      value: input.newTreeDelegate ?? null,
+    },
+    merkleTree: {
+      index: 3,
+      isWritable: false,
+      value: input.merkleTree ?? null,
+    },
+    systemProgram: {
+      index: 4,
+      isWritable: false,
+      value: input.systemProgram ?? null,
+    },
   };
-  addObjectProperty(
-    resolvedAccounts,
-    'treeConfig',
-    input.treeConfig
-      ? ([input.treeConfig, true] as const)
-      : ([
-          findTreeConfigPda(context, {
-            merkleTree: publicKey(input.merkleTree, false),
-          }),
-          true,
-        ] as const)
-  );
-  addObjectProperty(
-    resolvedAccounts,
-    'treeCreator',
-    input.treeCreator
-      ? ([input.treeCreator, false] as const)
-      : ([context.identity, false] as const)
-  );
-  addObjectProperty(
-    resolvedAccounts,
-    'systemProgram',
-    input.systemProgram
-      ? ([input.systemProgram, false] as const)
-      : ([
-          context.programs.getPublicKey(
-            'splSystem',
-            '11111111111111111111111111111111'
-          ),
-          false,
-        ] as const)
-  );
 
-  addAccountMeta(keys, signers, resolvedAccounts.treeConfig, false);
-  addAccountMeta(keys, signers, resolvedAccounts.treeCreator, false);
-  addAccountMeta(keys, signers, resolvedAccounts.newTreeDelegate, false);
-  addAccountMeta(keys, signers, resolvedAccounts.merkleTree, false);
-  addAccountMeta(keys, signers, resolvedAccounts.systemProgram, false);
+  // Default values.
+  if (!resolvedAccounts.treeConfig.value) {
+    resolvedAccounts.treeConfig.value = findTreeConfigPda(context, {
+      merkleTree: expectPublicKey(resolvedAccounts.merkleTree.value),
+    });
+  }
+  if (!resolvedAccounts.treeCreator.value) {
+    resolvedAccounts.treeCreator.value = context.identity;
+  }
+  if (!resolvedAccounts.systemProgram.value) {
+    resolvedAccounts.systemProgram.value = context.programs.getPublicKey(
+      'splSystem',
+      '11111111111111111111111111111111'
+    );
+    resolvedAccounts.systemProgram.isWritable = false;
+  }
+
+  // Accounts in order.
+  const orderedAccounts: ResolvedAccount[] = Object.values(
+    resolvedAccounts
+  ).sort((a, b) => a.index - b.index);
+
+  // Keys and Signers.
+  const [keys, signers] = getAccountMetasAndSigners(
+    orderedAccounts,
+    'programId',
+    programId
+  );
 
   // Data.
   const data = getSetTreeDelegateInstructionDataSerializer().serialize({});

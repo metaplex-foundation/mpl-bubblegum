@@ -47,17 +47,10 @@ export type VoucherAccountDataArgs = {
   merkleTree: PublicKey;
 };
 
-/** @deprecated Use `getVoucherAccountDataSerializer()` without any argument instead. */
-export function getVoucherAccountDataSerializer(
-  _context: object
-): Serializer<VoucherAccountDataArgs, VoucherAccountData>;
 export function getVoucherAccountDataSerializer(): Serializer<
   VoucherAccountDataArgs,
   VoucherAccountData
->;
-export function getVoucherAccountDataSerializer(
-  _context: object = {}
-): Serializer<VoucherAccountDataArgs, VoucherAccountData> {
+> {
   return mapSerializer<VoucherAccountDataArgs, any, VoucherAccountData>(
     struct<VoucherAccountData>(
       [
@@ -75,20 +68,8 @@ export function getVoucherAccountDataSerializer(
   ) as Serializer<VoucherAccountDataArgs, VoucherAccountData>;
 }
 
-/** @deprecated Use `deserializeVoucher(rawAccount)` without any context instead. */
-export function deserializeVoucher(
-  context: object,
-  rawAccount: RpcAccount
-): Voucher;
-export function deserializeVoucher(rawAccount: RpcAccount): Voucher;
-export function deserializeVoucher(
-  context: RpcAccount | object,
-  rawAccount?: RpcAccount
-): Voucher {
-  return deserializeAccount(
-    rawAccount ?? (context as RpcAccount),
-    getVoucherAccountDataSerializer()
-  );
+export function deserializeVoucher(rawAccount: RpcAccount): Voucher {
+  return deserializeAccount(rawAccount, getVoucherAccountDataSerializer());
 }
 
 export async function fetchVoucher(

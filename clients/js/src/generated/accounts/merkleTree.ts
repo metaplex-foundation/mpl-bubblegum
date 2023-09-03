@@ -33,20 +33,8 @@ import {
 
 export type MerkleTree = Account<MerkleTreeAccountData>;
 
-/** @deprecated Use `deserializeMerkleTree(rawAccount)` without any context instead. */
-export function deserializeMerkleTree(
-  context: object,
-  rawAccount: RpcAccount
-): MerkleTree;
-export function deserializeMerkleTree(rawAccount: RpcAccount): MerkleTree;
-export function deserializeMerkleTree(
-  context: RpcAccount | object,
-  rawAccount?: RpcAccount
-): MerkleTree {
-  return deserializeAccount(
-    rawAccount ?? (context as RpcAccount),
-    getMerkleTreeAccountDataSerializer()
-  );
+export function deserializeMerkleTree(rawAccount: RpcAccount): MerkleTree {
+  return deserializeAccount(rawAccount, getMerkleTreeAccountDataSerializer());
 }
 
 export async function fetchMerkleTree(
