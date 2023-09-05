@@ -1,5 +1,6 @@
 import { JsonMetadata } from '@metaplex-foundation/mpl-token-metadata';
 import { Nullable, PublicKey } from '@metaplex-foundation/umi';
+import { MetadataArgs } from './generated';
 
 export type ReadApiAssetInterface =
   | 'V1_NFT'
@@ -37,6 +38,7 @@ export type ReadApiAssetCompression = {
   tree: PublicKey;
   seq: number;
   leaf_id: number;
+  metadata: MetadataArgs;
 };
 
 export type ReadApiAssetOwnership = {
