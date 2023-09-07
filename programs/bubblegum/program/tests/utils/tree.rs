@@ -3,8 +3,9 @@ use super::{
     tx_builder::{
         BurnBuilder, CancelRedeemBuilder, CollectionVerificationInner, CreateBuilder,
         CreatorVerificationInner, DelegateBuilder, DelegateInner, MintToCollectionV1Builder,
-        MintV1Builder, RedeemBuilder, SetTreeDelegateBuilder, TransferBuilder, TransferInner,
-        TxBuilder, UnverifyCreatorBuilder, VerifyCollectionBuilder, VerifyCreatorBuilder,
+        MintV1Builder, RedeemBuilder, SetDecompressableStateBuilder, SetTreeDelegateBuilder,
+        TransferBuilder, TransferInner, TxBuilder, UnverifyCreatorBuilder, VerifyCollectionBuilder,
+        VerifyCreatorBuilder,
     },
     Error, LeafArgs, Result,
 };
@@ -12,7 +13,7 @@ use crate::utils::tx_builder::DecompressV1Builder;
 use anchor_lang::{self, AccountDeserialize};
 use bytemuck::try_from_bytes;
 use mpl_bubblegum::{
-    state::{leaf_schema::LeafSchema, TreeConfig, Voucher, VOUCHER_PREFIX},
+    state::{leaf_schema::LeafSchema, DecompressableState, TreeConfig, Voucher, VOUCHER_PREFIX},
     utils::get_asset_id,
 };
 use solana_program::{
@@ -1011,5 +1012,44 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             .into_iter()
             .map(|node| AccountMeta::new_readonly(Pubkey::new_from_array(node), false))
             .collect()
+    }
+
+    // Set Decompression Permission TX
+    pub fn set_decompression_tx(
+        &mut self,
+        decompressable_state: DecompressableState,
+    ) -> SetDecompressableStateBuilder<MAX_DEPTH, MAX_BUFFER_SIZE> {
+        let accounts = mpl_bubblegum::accounts::SetDecompressableState {
+            tree_authority: self.authority(),
+            tree_creator: self.creator_pubkey(),
+        };
+
+        let data = mpl_bubblegum::instruction::SetDecompressableState {
+            decompressable_state,
+        };
+
+        let tree_creator = Keypair::from_bytes(&self.tree_creator.to_bytes()).unwrap();
+        self.tx_builder(
+            accounts,
+            data,
+            None,
+            (),
+            self.creator_pubkey(),
+            &[&tree_creator],
+        )
+    }
+
+    // Enable Decompression
+    pub async fn enable_decompression(&mut self) -> Result<()> {
+        self.set_decompression_tx(DecompressableState::Enabled)
+            .execute()
+            .await
+    }
+
+    // Disable Decompression
+    pub async fn disable_decompression(&mut self) -> Result<()> {
+        self.set_decompression_tx(DecompressableState::Disabled)
+            .execute()
+            .await
     }
 }

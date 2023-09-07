@@ -1,5 +1,5 @@
 {
-  "version": "0.10.1",
+  "version": "0.11.0",
   "name": "bubblegum",
   "instructions": [
     {
@@ -1369,6 +1369,29 @@
         }
       ],
       "args": []
+    },
+    {
+      "name": "setDecompressableState",
+      "accounts": [
+        {
+          "name": "treeAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "treeCreator",
+          "isMut": false,
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "decompressableState",
+          "type": {
+            "defined": "DecompressableState"
+          }
+        }
+      ]
     }
   ],
   "accounts": [
@@ -1396,6 +1419,12 @@
           {
             "name": "isPublic",
             "type": "bool"
+          },
+          {
+            "name": "isDecompressable",
+            "type": {
+              "defined": "DecompressableState"
+            }
           }
         ]
       }
@@ -1706,6 +1735,20 @@
       }
     },
     {
+      "name": "DecompressableState",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Enabled"
+          },
+          {
+            "name": "Disabled"
+          }
+        ]
+      }
+    },
+    {
       "name": "InstructionName",
       "type": {
         "kind": "enum",
@@ -1757,6 +1800,9 @@
           },
           {
             "name": "MintToCollectionV1"
+          },
+          {
+            "name": "SetDecompressableState"
           }
         ]
       }
@@ -1927,6 +1973,11 @@
       "code": 6032,
       "name": "UnknownExternalError",
       "msg": "Could not convert external error to BubblegumError"
+    },
+    {
+      "code": 6033,
+      "name": "DecompressionDisabled",
+      "msg": "Decompression is disabled for this tree."
     }
   ],
   "metadata": {

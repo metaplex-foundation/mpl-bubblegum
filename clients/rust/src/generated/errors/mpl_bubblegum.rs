@@ -109,6 +109,9 @@ pub enum MplBubblegumError {
     /// 0x1790 - Could not convert external error to BubblegumError
     #[error("Could not convert external error to BubblegumError")]
     UnknownExternalError,
+    /// 0x1791 - Decompression is disabled for this tree.
+    #[error("Decompression is disabled for this tree.")]
+    DecompressionDisabled,
 }
 
 impl solana_program::program_error::PrintProgramError for MplBubblegumError {

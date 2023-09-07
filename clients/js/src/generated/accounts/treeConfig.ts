@@ -29,6 +29,11 @@ import {
   u64,
   u8,
 } from '@metaplex-foundation/umi/serializers';
+import {
+  DecompressableState,
+  DecompressableStateArgs,
+  getDecompressableStateSerializer,
+} from '../types';
 
 export type TreeConfig = Account<TreeConfigAccountData>;
 
@@ -39,6 +44,7 @@ export type TreeConfigAccountData = {
   totalMintCapacity: bigint;
   numMinted: bigint;
   isPublic: boolean;
+  isDecompressable: DecompressableState;
 };
 
 export type TreeConfigAccountDataArgs = {
@@ -47,6 +53,7 @@ export type TreeConfigAccountDataArgs = {
   totalMintCapacity: number | bigint;
   numMinted: number | bigint;
   isPublic: boolean;
+  isDecompressable: DecompressableStateArgs;
 };
 
 export function getTreeConfigAccountDataSerializer(): Serializer<
@@ -62,6 +69,7 @@ export function getTreeConfigAccountDataSerializer(): Serializer<
         ['totalMintCapacity', u64()],
         ['numMinted', u64()],
         ['isPublic', bool()],
+        ['isDecompressable', getDecompressableStateSerializer()],
       ],
       { description: 'TreeConfigAccountData' }
     ),
@@ -145,6 +153,7 @@ export function getTreeConfigGpaBuilder(
       totalMintCapacity: number | bigint;
       numMinted: number | bigint;
       isPublic: boolean;
+      isDecompressable: DecompressableStateArgs;
     }>({
       discriminator: [0, array(u8(), { size: 8 })],
       treeCreator: [8, publicKeySerializer()],
@@ -152,6 +161,7 @@ export function getTreeConfigGpaBuilder(
       totalMintCapacity: [72, u64()],
       numMinted: [80, u64()],
       isPublic: [88, bool()],
+      isDecompressable: [89, getDecompressableStateSerializer()],
     })
     .deserializeUsing<TreeConfig>((account) => deserializeTreeConfig(account))
     .whereField('discriminator', [122, 245, 175, 248, 171, 34, 0, 207]);
