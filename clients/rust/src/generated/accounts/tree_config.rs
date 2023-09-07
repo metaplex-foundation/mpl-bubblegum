@@ -10,9 +10,18 @@ use borsh::BorshSerialize;
 use solana_program::pubkey::Pubkey;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct TreeConfig {
     pub discriminator: [u8; 8],
+    #[cfg_attr(
+        feature = "serde",
+        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
+    )]
     pub tree_creator: Pubkey,
+    #[cfg_attr(
+        feature = "serde",
+        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
+    )]
     pub tree_delegate: Pubkey,
     pub total_mint_capacity: u64,
     pub num_minted: u64,
@@ -22,12 +31,6 @@ pub struct TreeConfig {
 impl TreeConfig {
     pub const LEN: usize = 96;
 
-    pub fn find_pda(merkle_tree: &Pubkey) -> (solana_program::pubkey::Pubkey, u8) {
-        solana_program::pubkey::Pubkey::find_program_address(
-            &[merkle_tree.as_ref()],
-            &crate::MPL_BUBBLEGUM_ID,
-        )
-    }
     pub fn create_pda(
         merkle_tree: Pubkey,
         bump: u8,
@@ -36,6 +39,19 @@ impl TreeConfig {
             &[merkle_tree.as_ref(), &[bump]],
             &crate::MPL_BUBBLEGUM_ID,
         )
+    }
+
+    pub fn find_pda(merkle_tree: &Pubkey) -> (solana_program::pubkey::Pubkey, u8) {
+        solana_program::pubkey::Pubkey::find_program_address(
+            &[merkle_tree.as_ref()],
+            &crate::MPL_BUBBLEGUM_ID,
+        )
+    }
+
+    #[inline(always)]
+    pub fn from_bytes(data: &[u8]) -> Result<Self, std::io::Error> {
+        let mut data = data;
+        Self::deserialize(&mut data)
     }
 }
 

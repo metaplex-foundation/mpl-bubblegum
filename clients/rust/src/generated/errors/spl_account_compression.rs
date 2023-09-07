@@ -5,9 +5,10 @@
 //! [https://github.com/metaplex-foundation/kinobi]
 //!
 
-use spl_program_error::*;
+use num_derive::FromPrimitive;
+use thiserror::Error;
 
-#[spl_program_error]
+#[derive(Clone, Debug, Eq, Error, FromPrimitive, PartialEq)]
 pub enum SplAccountCompressionError {
     /// 0x1770 - Incorrect leaf length. Expected vec of 32 bytes
     #[error("Incorrect leaf length. Expected vec of 32 bytes")]
@@ -36,4 +37,10 @@ pub enum SplAccountCompressionError {
     /// 0x1778 - Leaf index of concurrent merkle tree is out of bounds
     #[error("Leaf index of concurrent merkle tree is out of bounds")]
     LeafIndexOutOfBounds,
+}
+
+impl solana_program::program_error::PrintProgramError for SplAccountCompressionError {
+    fn print<E>(&self) {
+        solana_program::msg!(&self.to_string());
+    }
 }

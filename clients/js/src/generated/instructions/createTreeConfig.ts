@@ -8,7 +8,6 @@
 
 import {
   ACCOUNT_HEADER_SIZE,
-  AccountMeta,
   Context,
   Option,
   OptionOrNullable,
@@ -17,7 +16,6 @@ import {
   Signer,
   TransactionBuilder,
   none,
-  publicKey,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
 import {
@@ -31,7 +29,12 @@ import {
   u8,
 } from '@metaplex-foundation/umi/serializers';
 import { findTreeConfigPda, getTreeConfigSize } from '../accounts';
-import { addAccountMeta, addObjectProperty } from '../shared';
+import {
+  ResolvedAccount,
+  ResolvedAccountsWithIndices,
+  expectPublicKey,
+  getAccountMetasAndSigners,
+} from '../shared';
 
 // Accounts.
 export type CreateTreeConfigInstructionAccounts = {
@@ -58,20 +61,7 @@ export type CreateTreeConfigInstructionDataArgs = {
   public?: OptionOrNullable<boolean>;
 };
 
-/** @deprecated Use `getCreateTreeConfigInstructionDataSerializer()` without any argument instead. */
-export function getCreateTreeConfigInstructionDataSerializer(
-  _context: object
-): Serializer<
-  CreateTreeConfigInstructionDataArgs,
-  CreateTreeConfigInstructionData
->;
 export function getCreateTreeConfigInstructionDataSerializer(): Serializer<
-  CreateTreeConfigInstructionDataArgs,
-  CreateTreeConfigInstructionData
->;
-export function getCreateTreeConfigInstructionDataSerializer(
-  _context: object = {}
-): Serializer<
   CreateTreeConfigInstructionDataArgs,
   CreateTreeConfigInstructionData
 > {
@@ -106,101 +96,95 @@ export type CreateTreeConfigInstructionArgs =
 
 // Instruction.
 export function createTreeConfig(
-  context: Pick<Context, 'programs' | 'eddsa' | 'identity' | 'payer'>,
+  context: Pick<Context, 'eddsa' | 'identity' | 'payer' | 'programs'>,
   input: CreateTreeConfigInstructionAccounts & CreateTreeConfigInstructionArgs
 ): TransactionBuilder {
-  const signers: Signer[] = [];
-  const keys: AccountMeta[] = [];
-
   // Program ID.
   const programId = context.programs.getPublicKey(
     'mplBubblegum',
     'BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'
   );
 
-  // Resolved inputs.
-  const resolvedAccounts = {
-    merkleTree: [input.merkleTree, true] as const,
+  // Accounts.
+  const resolvedAccounts: ResolvedAccountsWithIndices = {
+    treeConfig: { index: 0, isWritable: true, value: input.treeConfig ?? null },
+    merkleTree: { index: 1, isWritable: true, value: input.merkleTree ?? null },
+    payer: { index: 2, isWritable: true, value: input.payer ?? null },
+    treeCreator: {
+      index: 3,
+      isWritable: false,
+      value: input.treeCreator ?? null,
+    },
+    logWrapper: {
+      index: 4,
+      isWritable: false,
+      value: input.logWrapper ?? null,
+    },
+    compressionProgram: {
+      index: 5,
+      isWritable: false,
+      value: input.compressionProgram ?? null,
+    },
+    systemProgram: {
+      index: 6,
+      isWritable: false,
+      value: input.systemProgram ?? null,
+    },
   };
-  const resolvingArgs = {};
-  addObjectProperty(
-    resolvedAccounts,
-    'treeConfig',
-    input.treeConfig
-      ? ([input.treeConfig, true] as const)
-      : ([
-          findTreeConfigPda(context, {
-            merkleTree: publicKey(input.merkleTree, false),
-          }),
-          true,
-        ] as const)
-  );
-  addObjectProperty(
-    resolvedAccounts,
-    'payer',
-    input.payer
-      ? ([input.payer, true] as const)
-      : ([context.payer, true] as const)
-  );
-  addObjectProperty(
-    resolvedAccounts,
-    'treeCreator',
-    input.treeCreator
-      ? ([input.treeCreator, false] as const)
-      : ([context.identity, false] as const)
-  );
-  addObjectProperty(
-    resolvedAccounts,
-    'logWrapper',
-    input.logWrapper
-      ? ([input.logWrapper, false] as const)
-      : ([
-          context.programs.getPublicKey(
-            'splNoop',
-            'noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV'
-          ),
-          false,
-        ] as const)
-  );
-  addObjectProperty(
-    resolvedAccounts,
-    'compressionProgram',
-    input.compressionProgram
-      ? ([input.compressionProgram, false] as const)
-      : ([
-          context.programs.getPublicKey(
-            'splAccountCompression',
-            'cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK'
-          ),
-          false,
-        ] as const)
-  );
-  addObjectProperty(
-    resolvedAccounts,
-    'systemProgram',
-    input.systemProgram
-      ? ([input.systemProgram, false] as const)
-      : ([
-          context.programs.getPublicKey(
-            'splSystem',
-            '11111111111111111111111111111111'
-          ),
-          false,
-        ] as const)
-  );
-  const resolvedArgs = { ...input, ...resolvingArgs };
 
-  addAccountMeta(keys, signers, resolvedAccounts.treeConfig, false);
-  addAccountMeta(keys, signers, resolvedAccounts.merkleTree, false);
-  addAccountMeta(keys, signers, resolvedAccounts.payer, false);
-  addAccountMeta(keys, signers, resolvedAccounts.treeCreator, false);
-  addAccountMeta(keys, signers, resolvedAccounts.logWrapper, false);
-  addAccountMeta(keys, signers, resolvedAccounts.compressionProgram, false);
-  addAccountMeta(keys, signers, resolvedAccounts.systemProgram, false);
+  // Arguments.
+  const resolvedArgs: CreateTreeConfigInstructionArgs = { ...input };
+
+  // Default values.
+  if (!resolvedAccounts.treeConfig.value) {
+    resolvedAccounts.treeConfig.value = findTreeConfigPda(context, {
+      merkleTree: expectPublicKey(resolvedAccounts.merkleTree.value),
+    });
+  }
+  if (!resolvedAccounts.payer.value) {
+    resolvedAccounts.payer.value = context.payer;
+  }
+  if (!resolvedAccounts.treeCreator.value) {
+    resolvedAccounts.treeCreator.value = context.identity;
+  }
+  if (!resolvedAccounts.logWrapper.value) {
+    resolvedAccounts.logWrapper.value = context.programs.getPublicKey(
+      'splNoop',
+      'noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV'
+    );
+    resolvedAccounts.logWrapper.isWritable = false;
+  }
+  if (!resolvedAccounts.compressionProgram.value) {
+    resolvedAccounts.compressionProgram.value = context.programs.getPublicKey(
+      'splAccountCompression',
+      'cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK'
+    );
+    resolvedAccounts.compressionProgram.isWritable = false;
+  }
+  if (!resolvedAccounts.systemProgram.value) {
+    resolvedAccounts.systemProgram.value = context.programs.getPublicKey(
+      'splSystem',
+      '11111111111111111111111111111111'
+    );
+    resolvedAccounts.systemProgram.isWritable = false;
+  }
+
+  // Accounts in order.
+  const orderedAccounts: ResolvedAccount[] = Object.values(
+    resolvedAccounts
+  ).sort((a, b) => a.index - b.index);
+
+  // Keys and Signers.
+  const [keys, signers] = getAccountMetasAndSigners(
+    orderedAccounts,
+    'programId',
+    programId
+  );
 
   // Data.
-  const data =
-    getCreateTreeConfigInstructionDataSerializer().serialize(resolvedArgs);
+  const data = getCreateTreeConfigInstructionDataSerializer().serialize(
+    resolvedArgs as CreateTreeConfigInstructionDataArgs
+  );
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = getTreeConfigSize() + ACCOUNT_HEADER_SIZE;

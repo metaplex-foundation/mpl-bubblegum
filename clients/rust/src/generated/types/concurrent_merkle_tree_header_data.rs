@@ -10,6 +10,7 @@ use borsh::BorshSerialize;
 use solana_program::pubkey::Pubkey;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum ConcurrentMerkleTreeHeaderData {
     V1 {
         /// Buffer of changelogs stored on-chain.
@@ -21,6 +22,10 @@ pub enum ConcurrentMerkleTreeHeaderData {
         max_depth: u32,
         /// Authority that validates the content of the trees.
         /// Typically a program, e.g., the Bubblegum contract validates that leaves are valid NFTs.
+        #[cfg_attr(
+            feature = "serde",
+            serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
+        )]
         authority: Pubkey,
         /// Slot corresponding to when the Merkle tree was created.
         /// Provides a lower-bound on what slot to start (re-)building a tree from.

@@ -5,22 +5,22 @@
 //! [https://github.com/metaplex-foundation/kinobi]
 //!
 
-pub mod burn;
-pub mod cancel_redeem;
-pub mod create_tree_config;
-pub mod decompress_v1;
-pub mod delegate;
-pub mod mint_to_collection_v1;
-pub mod mint_v1;
-pub mod redeem;
-pub mod set_and_verify_collection;
-pub mod set_tree_delegate;
-pub mod transfer;
-pub mod unverify_collection;
-pub mod unverify_creator;
-pub mod verify_collection;
-pub mod verify_creator;
-pub mod verify_leaf;
+pub(crate) mod burn;
+pub(crate) mod cancel_redeem;
+pub(crate) mod create_tree_config;
+pub(crate) mod decompress_v1;
+pub(crate) mod delegate;
+pub(crate) mod mint_to_collection_v1;
+pub(crate) mod mint_v1;
+pub(crate) mod redeem;
+pub(crate) mod set_and_verify_collection;
+pub(crate) mod set_tree_delegate;
+pub(crate) mod transfer;
+pub(crate) mod unverify_collection;
+pub(crate) mod unverify_creator;
+pub(crate) mod verify_collection;
+pub(crate) mod verify_creator;
+pub(crate) mod verify_leaf;
 
 pub use self::burn::*;
 pub use self::cancel_redeem::*;
@@ -38,3 +38,61 @@ pub use self::unverify_creator::*;
 pub use self::verify_collection::*;
 pub use self::verify_creator::*;
 pub use self::verify_leaf::*;
+
+#[derive(Clone, Copy)]
+pub enum InstructionAccount {
+    Readonly(solana_program::pubkey::Pubkey),
+    ReadonlySigner(solana_program::pubkey::Pubkey),
+    Writable(solana_program::pubkey::Pubkey),
+    WritableSigner(solana_program::pubkey::Pubkey),
+}
+
+impl InstructionAccount {
+    pub fn to_account_meta(&self) -> solana_program::instruction::AccountMeta {
+        let (pubkey, writable, signer) = match self {
+            InstructionAccount::Readonly(pubkey) => (pubkey, false, false),
+            InstructionAccount::ReadonlySigner(pubkey) => (pubkey, false, true),
+            InstructionAccount::Writable(pubkey) => (pubkey, true, false),
+            InstructionAccount::WritableSigner(pubkey) => (pubkey, true, true),
+        };
+
+        if writable {
+            solana_program::instruction::AccountMeta::new(*pubkey, signer)
+        } else {
+            solana_program::instruction::AccountMeta::new_readonly(*pubkey, signer)
+        }
+    }
+}
+
+#[derive(Clone, Copy)]
+pub enum InstructionAccountInfo<'a> {
+    Readonly(&'a solana_program::account_info::AccountInfo<'a>),
+    ReadonlySigner(&'a solana_program::account_info::AccountInfo<'a>),
+    Writable(&'a solana_program::account_info::AccountInfo<'a>),
+    WritableSigner(&'a solana_program::account_info::AccountInfo<'a>),
+}
+
+impl<'a> InstructionAccountInfo<'a> {
+    pub fn to_account_meta(&self) -> solana_program::instruction::AccountMeta {
+        let (pubkey, writable, signer) = match self {
+            InstructionAccountInfo::Readonly(account_info) => (account_info.key, false, false),
+            InstructionAccountInfo::ReadonlySigner(account_info) => (account_info.key, false, true),
+            InstructionAccountInfo::Writable(account_info) => (account_info.key, true, false),
+            InstructionAccountInfo::WritableSigner(account_info) => (account_info.key, true, true),
+        };
+
+        if writable {
+            solana_program::instruction::AccountMeta::new(*pubkey, signer)
+        } else {
+            solana_program::instruction::AccountMeta::new_readonly(*pubkey, signer)
+        }
+    }
+    pub fn account_info(&self) -> &'a solana_program::account_info::AccountInfo<'a> {
+        match self {
+            InstructionAccountInfo::Readonly(account_info)
+            | InstructionAccountInfo::ReadonlySigner(account_info)
+            | InstructionAccountInfo::Writable(account_info)
+            | InstructionAccountInfo::WritableSigner(account_info) => account_info,
+        }
+    }
+}

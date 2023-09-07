@@ -23,6 +23,7 @@ use borsh::BorshSerialize;
 /// | 30        | (512, 1024, 2048) |
 ///
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ConcurrentMerkleTreeHeader {
     /// Account type
     pub account_type: CompressionAccountType,

@@ -14,16 +14,26 @@ pub struct VerifyLeaf {
 }
 
 impl VerifyLeaf {
-    #[allow(clippy::vec_init_then_push)]
     pub fn instruction(
         &self,
         args: VerifyLeafInstructionArgs,
     ) -> solana_program::instruction::Instruction {
-        let mut accounts = Vec::with_capacity(1);
+        self.instruction_with_remaining_accounts(args, &[])
+    }
+    #[allow(clippy::vec_init_then_push)]
+    pub fn instruction_with_remaining_accounts(
+        &self,
+        args: VerifyLeafInstructionArgs,
+        remaining_accounts: &[super::InstructionAccount],
+    ) -> solana_program::instruction::Instruction {
+        let mut accounts = Vec::with_capacity(1 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.merkle_tree,
             false,
         ));
+        remaining_accounts
+            .iter()
+            .for_each(|remaining_account| accounts.push(remaining_account.to_account_meta()));
         let mut data = VerifyLeafInstructionData::new().try_to_vec().unwrap();
         let mut args = args.try_to_vec().unwrap();
         data.append(&mut args);
@@ -49,7 +59,8 @@ impl VerifyLeafInstructionData {
     }
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Debug)]
+#[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct VerifyLeafInstructionArgs {
     pub root: [u8; 32],
     pub leaf: [u8; 32],
@@ -63,6 +74,7 @@ pub struct VerifyLeafBuilder {
     root: Option<[u8; 32]>,
     leaf: Option<[u8; 32]>,
     index: Option<u32>,
+    __remaining_accounts: Vec<super::InstructionAccount>,
 }
 
 impl VerifyLeafBuilder {
@@ -89,8 +101,18 @@ impl VerifyLeafBuilder {
         self.index = Some(index);
         self
     }
+    #[inline(always)]
+    pub fn add_remaining_account(&mut self, account: super::InstructionAccount) -> &mut Self {
+        self.__remaining_accounts.push(account);
+        self
+    }
+    #[inline(always)]
+    pub fn add_remaining_accounts(&mut self, accounts: &[super::InstructionAccount]) -> &mut Self {
+        self.__remaining_accounts.extend_from_slice(accounts);
+        self
+    }
     #[allow(clippy::clone_on_copy)]
-    pub fn build(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_program::instruction::Instruction {
         let accounts = VerifyLeaf {
             merkle_tree: self.merkle_tree.expect("merkle_tree is not set"),
         };
@@ -100,8 +122,13 @@ impl VerifyLeafBuilder {
             index: self.index.clone().expect("index is not set"),
         };
 
-        accounts.instruction(args)
+        accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
     }
+}
+
+/// `verify_leaf` CPI accounts.
+pub struct VerifyLeafCpiAccounts<'a> {
+    pub merkle_tree: &'a solana_program::account_info::AccountInfo<'a>,
 }
 
 /// `verify_leaf` CPI instruction.
@@ -115,20 +142,50 @@ pub struct VerifyLeafCpi<'a> {
 }
 
 impl<'a> VerifyLeafCpi<'a> {
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
-        self.invoke_signed(&[])
+    pub fn new(
+        program: &'a solana_program::account_info::AccountInfo<'a>,
+        accounts: VerifyLeafCpiAccounts<'a>,
+        args: VerifyLeafInstructionArgs,
+    ) -> Self {
+        Self {
+            __program: program,
+            merkle_tree: accounts.merkle_tree,
+            __args: args,
+        }
     }
-    #[allow(clippy::clone_on_copy)]
-    #[allow(clippy::vec_init_then_push)]
+    #[inline(always)]
+    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+        self.invoke_signed_with_remaining_accounts(&[], &[])
+    }
+    #[inline(always)]
+    pub fn invoke_with_remaining_accounts(
+        &self,
+        remaining_accounts: &[super::InstructionAccountInfo<'a>],
+    ) -> solana_program::entrypoint::ProgramResult {
+        self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
+    }
+    #[inline(always)]
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
     ) -> solana_program::entrypoint::ProgramResult {
-        let mut accounts = Vec::with_capacity(1);
+        self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
+    }
+    #[allow(clippy::clone_on_copy)]
+    #[allow(clippy::vec_init_then_push)]
+    pub fn invoke_signed_with_remaining_accounts(
+        &self,
+        signers_seeds: &[&[&[u8]]],
+        remaining_accounts: &[super::InstructionAccountInfo<'a>],
+    ) -> solana_program::entrypoint::ProgramResult {
+        let mut accounts = Vec::with_capacity(1 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             *self.merkle_tree.key,
             false,
         ));
+        remaining_accounts
+            .iter()
+            .for_each(|remaining_account| accounts.push(remaining_account.to_account_meta()));
         let mut data = VerifyLeafInstructionData::new().try_to_vec().unwrap();
         let mut args = self.__args.try_to_vec().unwrap();
         data.append(&mut args);
@@ -138,9 +195,12 @@ impl<'a> VerifyLeafCpi<'a> {
             accounts,
             data,
         };
-        let mut account_infos = Vec::with_capacity(1 + 1);
+        let mut account_infos = Vec::with_capacity(1 + 1 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
         account_infos.push(self.merkle_tree.clone());
+        remaining_accounts.iter().for_each(|remaining_account| {
+            account_infos.push(remaining_account.account_info().clone())
+        });
 
         if signers_seeds.is_empty() {
             solana_program::program::invoke(&instruction, &account_infos)
@@ -163,6 +223,7 @@ impl<'a> VerifyLeafCpiBuilder<'a> {
             root: None,
             leaf: None,
             index: None,
+            __remaining_accounts: Vec::new(),
         });
         Self { instruction }
     }
@@ -189,15 +250,40 @@ impl<'a> VerifyLeafCpiBuilder<'a> {
         self.instruction.index = Some(index);
         self
     }
+    #[inline(always)]
+    pub fn add_remaining_account(
+        &mut self,
+        account: super::InstructionAccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.__remaining_accounts.push(account);
+        self
+    }
+    #[inline(always)]
+    pub fn add_remaining_accounts(
+        &mut self,
+        accounts: &[super::InstructionAccountInfo<'a>],
+    ) -> &mut Self {
+        self.instruction
+            .__remaining_accounts
+            .extend_from_slice(accounts);
+        self
+    }
+    #[inline(always)]
+    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+        self.invoke_signed(&[])
+    }
     #[allow(clippy::clone_on_copy)]
-    pub fn build(&self) -> VerifyLeafCpi<'a> {
+    #[allow(clippy::vec_init_then_push)]
+    pub fn invoke_signed(
+        &self,
+        signers_seeds: &[&[&[u8]]],
+    ) -> solana_program::entrypoint::ProgramResult {
         let args = VerifyLeafInstructionArgs {
             root: self.instruction.root.clone().expect("root is not set"),
             leaf: self.instruction.leaf.clone().expect("leaf is not set"),
             index: self.instruction.index.clone().expect("index is not set"),
         };
-
-        VerifyLeafCpi {
+        let instruction = VerifyLeafCpi {
             __program: self.instruction.__program,
 
             merkle_tree: self
@@ -205,7 +291,11 @@ impl<'a> VerifyLeafCpiBuilder<'a> {
                 .merkle_tree
                 .expect("merkle_tree is not set"),
             __args: args,
-        }
+        };
+        instruction.invoke_signed_with_remaining_accounts(
+            signers_seeds,
+            &self.instruction.__remaining_accounts,
+        )
     }
 }
 
@@ -215,4 +305,5 @@ struct VerifyLeafCpiBuilderInstruction<'a> {
     root: Option<[u8; 32]>,
     leaf: Option<[u8; 32]>,
     index: Option<u32>,
+    __remaining_accounts: Vec<super::InstructionAccountInfo<'a>>,
 }

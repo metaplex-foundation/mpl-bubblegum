@@ -15,17 +15,10 @@ export enum TokenProgramVersion {
 
 export type TokenProgramVersionArgs = TokenProgramVersion;
 
-/** @deprecated Use `getTokenProgramVersionSerializer()` without any argument instead. */
-export function getTokenProgramVersionSerializer(
-  _context: object
-): Serializer<TokenProgramVersionArgs, TokenProgramVersion>;
 export function getTokenProgramVersionSerializer(): Serializer<
   TokenProgramVersionArgs,
   TokenProgramVersion
->;
-export function getTokenProgramVersionSerializer(
-  _context: object = {}
-): Serializer<TokenProgramVersionArgs, TokenProgramVersion> {
+> {
   return scalarEnum<TokenProgramVersion>(TokenProgramVersion, {
     description: 'TokenProgramVersion',
   }) as Serializer<TokenProgramVersionArgs, TokenProgramVersion>;

@@ -22,9 +22,15 @@ pub struct SetTreeDelegate {
 }
 
 impl SetTreeDelegate {
-    #[allow(clippy::vec_init_then_push)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
-        let mut accounts = Vec::with_capacity(5);
+        self.instruction_with_remaining_accounts(&[])
+    }
+    #[allow(clippy::vec_init_then_push)]
+    pub fn instruction_with_remaining_accounts(
+        &self,
+        remaining_accounts: &[super::InstructionAccount],
+    ) -> solana_program::instruction::Instruction {
+        let mut accounts = Vec::with_capacity(5 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new(
             self.tree_config,
             false,
@@ -45,6 +51,9 @@ impl SetTreeDelegate {
             self.system_program,
             false,
         ));
+        remaining_accounts
+            .iter()
+            .for_each(|remaining_account| accounts.push(remaining_account.to_account_meta()));
         let data = SetTreeDelegateInstructionData::new().try_to_vec().unwrap();
 
         solana_program::instruction::Instruction {
@@ -76,6 +85,7 @@ pub struct SetTreeDelegateBuilder {
     new_tree_delegate: Option<solana_program::pubkey::Pubkey>,
     merkle_tree: Option<solana_program::pubkey::Pubkey>,
     system_program: Option<solana_program::pubkey::Pubkey>,
+    __remaining_accounts: Vec<super::InstructionAccount>,
 }
 
 impl SetTreeDelegateBuilder {
@@ -105,13 +115,24 @@ impl SetTreeDelegateBuilder {
         self.merkle_tree = Some(merkle_tree);
         self
     }
+    /// `[optional account, default to '11111111111111111111111111111111']`
     #[inline(always)]
     pub fn system_program(&mut self, system_program: solana_program::pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
+    #[inline(always)]
+    pub fn add_remaining_account(&mut self, account: super::InstructionAccount) -> &mut Self {
+        self.__remaining_accounts.push(account);
+        self
+    }
+    #[inline(always)]
+    pub fn add_remaining_accounts(&mut self, accounts: &[super::InstructionAccount]) -> &mut Self {
+        self.__remaining_accounts.extend_from_slice(accounts);
+        self
+    }
     #[allow(clippy::clone_on_copy)]
-    pub fn build(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_program::instruction::Instruction {
         let accounts = SetTreeDelegate {
             tree_config: self.tree_config.expect("tree_config is not set"),
             tree_creator: self.tree_creator.expect("tree_creator is not set"),
@@ -124,8 +145,21 @@ impl SetTreeDelegateBuilder {
                 .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
         };
 
-        accounts.instruction()
+        accounts.instruction_with_remaining_accounts(&self.__remaining_accounts)
     }
+}
+
+/// `set_tree_delegate` CPI accounts.
+pub struct SetTreeDelegateCpiAccounts<'a> {
+    pub tree_config: &'a solana_program::account_info::AccountInfo<'a>,
+
+    pub tree_creator: &'a solana_program::account_info::AccountInfo<'a>,
+
+    pub new_tree_delegate: &'a solana_program::account_info::AccountInfo<'a>,
+
+    pub merkle_tree: &'a solana_program::account_info::AccountInfo<'a>,
+
+    pub system_program: &'a solana_program::account_info::AccountInfo<'a>,
 }
 
 /// `set_tree_delegate` CPI instruction.
@@ -145,16 +179,45 @@ pub struct SetTreeDelegateCpi<'a> {
 }
 
 impl<'a> SetTreeDelegateCpi<'a> {
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
-        self.invoke_signed(&[])
+    pub fn new(
+        program: &'a solana_program::account_info::AccountInfo<'a>,
+        accounts: SetTreeDelegateCpiAccounts<'a>,
+    ) -> Self {
+        Self {
+            __program: program,
+            tree_config: accounts.tree_config,
+            tree_creator: accounts.tree_creator,
+            new_tree_delegate: accounts.new_tree_delegate,
+            merkle_tree: accounts.merkle_tree,
+            system_program: accounts.system_program,
+        }
     }
-    #[allow(clippy::clone_on_copy)]
-    #[allow(clippy::vec_init_then_push)]
+    #[inline(always)]
+    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+        self.invoke_signed_with_remaining_accounts(&[], &[])
+    }
+    #[inline(always)]
+    pub fn invoke_with_remaining_accounts(
+        &self,
+        remaining_accounts: &[super::InstructionAccountInfo<'a>],
+    ) -> solana_program::entrypoint::ProgramResult {
+        self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
+    }
+    #[inline(always)]
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
     ) -> solana_program::entrypoint::ProgramResult {
-        let mut accounts = Vec::with_capacity(5);
+        self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
+    }
+    #[allow(clippy::clone_on_copy)]
+    #[allow(clippy::vec_init_then_push)]
+    pub fn invoke_signed_with_remaining_accounts(
+        &self,
+        signers_seeds: &[&[&[u8]]],
+        remaining_accounts: &[super::InstructionAccountInfo<'a>],
+    ) -> solana_program::entrypoint::ProgramResult {
+        let mut accounts = Vec::with_capacity(5 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new(
             *self.tree_config.key,
             false,
@@ -175,6 +238,9 @@ impl<'a> SetTreeDelegateCpi<'a> {
             *self.system_program.key,
             false,
         ));
+        remaining_accounts
+            .iter()
+            .for_each(|remaining_account| accounts.push(remaining_account.to_account_meta()));
         let data = SetTreeDelegateInstructionData::new().try_to_vec().unwrap();
 
         let instruction = solana_program::instruction::Instruction {
@@ -182,13 +248,16 @@ impl<'a> SetTreeDelegateCpi<'a> {
             accounts,
             data,
         };
-        let mut account_infos = Vec::with_capacity(5 + 1);
+        let mut account_infos = Vec::with_capacity(5 + 1 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
         account_infos.push(self.tree_config.clone());
         account_infos.push(self.tree_creator.clone());
         account_infos.push(self.new_tree_delegate.clone());
         account_infos.push(self.merkle_tree.clone());
         account_infos.push(self.system_program.clone());
+        remaining_accounts.iter().for_each(|remaining_account| {
+            account_infos.push(remaining_account.account_info().clone())
+        });
 
         if signers_seeds.is_empty() {
             solana_program::program::invoke(&instruction, &account_infos)
@@ -212,6 +281,7 @@ impl<'a> SetTreeDelegateCpiBuilder<'a> {
             new_tree_delegate: None,
             merkle_tree: None,
             system_program: None,
+            __remaining_accounts: Vec::new(),
         });
         Self { instruction }
     }
@@ -255,9 +325,35 @@ impl<'a> SetTreeDelegateCpiBuilder<'a> {
         self.instruction.system_program = Some(system_program);
         self
     }
+    #[inline(always)]
+    pub fn add_remaining_account(
+        &mut self,
+        account: super::InstructionAccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.__remaining_accounts.push(account);
+        self
+    }
+    #[inline(always)]
+    pub fn add_remaining_accounts(
+        &mut self,
+        accounts: &[super::InstructionAccountInfo<'a>],
+    ) -> &mut Self {
+        self.instruction
+            .__remaining_accounts
+            .extend_from_slice(accounts);
+        self
+    }
+    #[inline(always)]
+    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+        self.invoke_signed(&[])
+    }
     #[allow(clippy::clone_on_copy)]
-    pub fn build(&self) -> SetTreeDelegateCpi<'a> {
-        SetTreeDelegateCpi {
+    #[allow(clippy::vec_init_then_push)]
+    pub fn invoke_signed(
+        &self,
+        signers_seeds: &[&[&[u8]]],
+    ) -> solana_program::entrypoint::ProgramResult {
+        let instruction = SetTreeDelegateCpi {
             __program: self.instruction.__program,
 
             tree_config: self
@@ -284,7 +380,11 @@ impl<'a> SetTreeDelegateCpiBuilder<'a> {
                 .instruction
                 .system_program
                 .expect("system_program is not set"),
-        }
+        };
+        instruction.invoke_signed_with_remaining_accounts(
+            signers_seeds,
+            &self.instruction.__remaining_accounts,
+        )
     }
 }
 
@@ -295,4 +395,5 @@ struct SetTreeDelegateCpiBuilderInstruction<'a> {
     new_tree_delegate: Option<&'a solana_program::account_info::AccountInfo<'a>>,
     merkle_tree: Option<&'a solana_program::account_info::AccountInfo<'a>>,
     system_program: Option<&'a solana_program::account_info::AccountInfo<'a>>,
+    __remaining_accounts: Vec<super::InstructionAccountInfo<'a>>,
 }

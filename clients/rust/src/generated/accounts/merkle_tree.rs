@@ -12,10 +12,19 @@ use borsh::BorshSerialize;
 use kaigan::types::RemainderVec;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct MerkleTree {
     pub discriminator: CompressionAccountType,
     pub tree_header: ConcurrentMerkleTreeHeaderData,
     pub serialized_tree: RemainderVec<u8>,
+}
+
+impl MerkleTree {
+    #[inline(always)]
+    pub fn from_bytes(data: &[u8]) -> Result<Self, std::io::Error> {
+        let mut data = data;
+        Self::deserialize(&mut data)
+    }
 }
 
 impl<'a> TryFrom<&'a solana_program::account_info::AccountInfo<'a>> for MerkleTree {

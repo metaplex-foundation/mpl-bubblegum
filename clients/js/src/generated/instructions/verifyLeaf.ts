@@ -7,11 +7,9 @@
  */
 
 import {
-  AccountMeta,
   Context,
   Pda,
   PublicKey,
-  Signer,
   TransactionBuilder,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
@@ -24,7 +22,12 @@ import {
   u32,
   u8,
 } from '@metaplex-foundation/umi/serializers';
-import { PickPartial, addAccountMeta, addObjectProperty } from '../shared';
+import {
+  PickPartial,
+  ResolvedAccount,
+  ResolvedAccountsWithIndices,
+  getAccountMetasAndSigners,
+} from '../shared';
 
 // Accounts.
 export type VerifyLeafInstructionAccounts = {
@@ -45,17 +48,10 @@ export type VerifyLeafInstructionDataArgs = {
   index: number;
 };
 
-/** @deprecated Use `getVerifyLeafInstructionDataSerializer()` without any argument instead. */
-export function getVerifyLeafInstructionDataSerializer(
-  _context: object
-): Serializer<VerifyLeafInstructionDataArgs, VerifyLeafInstructionData>;
 export function getVerifyLeafInstructionDataSerializer(): Serializer<
   VerifyLeafInstructionDataArgs,
   VerifyLeafInstructionData
->;
-export function getVerifyLeafInstructionDataSerializer(
-  _context: object = {}
-): Serializer<VerifyLeafInstructionDataArgs, VerifyLeafInstructionData> {
+> {
   return mapSerializer<
     VerifyLeafInstructionDataArgs,
     any,
@@ -91,35 +87,53 @@ export function verifyLeaf(
   context: Pick<Context, 'programs'>,
   input: VerifyLeafInstructionAccounts & VerifyLeafInstructionArgs
 ): TransactionBuilder {
-  const signers: Signer[] = [];
-  const keys: AccountMeta[] = [];
-
   // Program ID.
   const programId = context.programs.getPublicKey(
     'splAccountCompression',
     'cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK'
   );
 
-  // Resolved inputs.
-  const resolvedAccounts = {
-    merkleTree: [input.merkleTree, false] as const,
+  // Accounts.
+  const resolvedAccounts: ResolvedAccountsWithIndices = {
+    merkleTree: {
+      index: 0,
+      isWritable: false,
+      value: input.merkleTree ?? null,
+    },
   };
-  const resolvingArgs = {};
-  addObjectProperty(resolvingArgs, 'proof', input.proof ?? []);
-  const resolvedArgs = { ...input, ...resolvingArgs };
 
-  addAccountMeta(keys, signers, resolvedAccounts.merkleTree, false);
+  // Arguments.
+  const resolvedArgs: VerifyLeafInstructionArgs = { ...input };
+
+  // Default values.
+  if (!resolvedArgs.proof) {
+    resolvedArgs.proof = [];
+  }
+
+  // Accounts in order.
+  const orderedAccounts: ResolvedAccount[] = Object.values(
+    resolvedAccounts
+  ).sort((a, b) => a.index - b.index);
 
   // Remaining Accounts.
-  const remainingAccounts = resolvedArgs.proof.map(
-    (address) => [address, false] as const
-  );
-  remainingAccounts.forEach((remainingAccount) =>
-    addAccountMeta(keys, signers, remainingAccount, false)
+  const remainingAccounts = resolvedArgs.proof.map((value, index) => ({
+    index,
+    value,
+    isWritable: false,
+  }));
+  orderedAccounts.push(...remainingAccounts);
+
+  // Keys and Signers.
+  const [keys, signers] = getAccountMetasAndSigners(
+    orderedAccounts,
+    'programId',
+    programId
   );
 
   // Data.
-  const data = getVerifyLeafInstructionDataSerializer().serialize(resolvedArgs);
+  const data = getVerifyLeafInstructionDataSerializer().serialize(
+    resolvedArgs as VerifyLeafInstructionDataArgs
+  );
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 0;

@@ -26,12 +26,19 @@ pub struct CreateTreeConfig {
 }
 
 impl CreateTreeConfig {
-    #[allow(clippy::vec_init_then_push)]
     pub fn instruction(
         &self,
         args: CreateTreeConfigInstructionArgs,
     ) -> solana_program::instruction::Instruction {
-        let mut accounts = Vec::with_capacity(7);
+        self.instruction_with_remaining_accounts(args, &[])
+    }
+    #[allow(clippy::vec_init_then_push)]
+    pub fn instruction_with_remaining_accounts(
+        &self,
+        args: CreateTreeConfigInstructionArgs,
+        remaining_accounts: &[super::InstructionAccount],
+    ) -> solana_program::instruction::Instruction {
+        let mut accounts = Vec::with_capacity(7 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new(
             self.tree_config,
             false,
@@ -59,6 +66,9 @@ impl CreateTreeConfig {
             self.system_program,
             false,
         ));
+        remaining_accounts
+            .iter()
+            .for_each(|remaining_account| accounts.push(remaining_account.to_account_meta()));
         let mut data = CreateTreeConfigInstructionData::new().try_to_vec().unwrap();
         let mut args = args.try_to_vec().unwrap();
         data.append(&mut args);
@@ -84,7 +94,8 @@ impl CreateTreeConfigInstructionData {
     }
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Debug)]
+#[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct CreateTreeConfigInstructionArgs {
     pub max_depth: u32,
     pub max_buffer_size: u32,
@@ -104,6 +115,7 @@ pub struct CreateTreeConfigBuilder {
     max_depth: Option<u32>,
     max_buffer_size: Option<u32>,
     public: Option<bool>,
+    __remaining_accounts: Vec<super::InstructionAccount>,
 }
 
 impl CreateTreeConfigBuilder {
@@ -130,11 +142,13 @@ impl CreateTreeConfigBuilder {
         self.tree_creator = Some(tree_creator);
         self
     }
+    /// `[optional account, default to 'noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV']`
     #[inline(always)]
     pub fn log_wrapper(&mut self, log_wrapper: solana_program::pubkey::Pubkey) -> &mut Self {
         self.log_wrapper = Some(log_wrapper);
         self
     }
+    /// `[optional account, default to 'cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK']`
     #[inline(always)]
     pub fn compression_program(
         &mut self,
@@ -143,6 +157,7 @@ impl CreateTreeConfigBuilder {
         self.compression_program = Some(compression_program);
         self
     }
+    /// `[optional account, default to '11111111111111111111111111111111']`
     #[inline(always)]
     pub fn system_program(&mut self, system_program: solana_program::pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
@@ -164,8 +179,18 @@ impl CreateTreeConfigBuilder {
         self.public = Some(public);
         self
     }
+    #[inline(always)]
+    pub fn add_remaining_account(&mut self, account: super::InstructionAccount) -> &mut Self {
+        self.__remaining_accounts.push(account);
+        self
+    }
+    #[inline(always)]
+    pub fn add_remaining_accounts(&mut self, accounts: &[super::InstructionAccount]) -> &mut Self {
+        self.__remaining_accounts.extend_from_slice(accounts);
+        self
+    }
     #[allow(clippy::clone_on_copy)]
-    pub fn build(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_program::instruction::Instruction {
         let accounts = CreateTreeConfig {
             tree_config: self.tree_config.expect("tree_config is not set"),
             merkle_tree: self.merkle_tree.expect("merkle_tree is not set"),
@@ -190,8 +215,25 @@ impl CreateTreeConfigBuilder {
             public: self.public.clone(),
         };
 
-        accounts.instruction(args)
+        accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
     }
+}
+
+/// `create_tree_config` CPI accounts.
+pub struct CreateTreeConfigCpiAccounts<'a> {
+    pub tree_config: &'a solana_program::account_info::AccountInfo<'a>,
+
+    pub merkle_tree: &'a solana_program::account_info::AccountInfo<'a>,
+
+    pub payer: &'a solana_program::account_info::AccountInfo<'a>,
+
+    pub tree_creator: &'a solana_program::account_info::AccountInfo<'a>,
+
+    pub log_wrapper: &'a solana_program::account_info::AccountInfo<'a>,
+
+    pub compression_program: &'a solana_program::account_info::AccountInfo<'a>,
+
+    pub system_program: &'a solana_program::account_info::AccountInfo<'a>,
 }
 
 /// `create_tree_config` CPI instruction.
@@ -217,16 +259,49 @@ pub struct CreateTreeConfigCpi<'a> {
 }
 
 impl<'a> CreateTreeConfigCpi<'a> {
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
-        self.invoke_signed(&[])
+    pub fn new(
+        program: &'a solana_program::account_info::AccountInfo<'a>,
+        accounts: CreateTreeConfigCpiAccounts<'a>,
+        args: CreateTreeConfigInstructionArgs,
+    ) -> Self {
+        Self {
+            __program: program,
+            tree_config: accounts.tree_config,
+            merkle_tree: accounts.merkle_tree,
+            payer: accounts.payer,
+            tree_creator: accounts.tree_creator,
+            log_wrapper: accounts.log_wrapper,
+            compression_program: accounts.compression_program,
+            system_program: accounts.system_program,
+            __args: args,
+        }
     }
-    #[allow(clippy::clone_on_copy)]
-    #[allow(clippy::vec_init_then_push)]
+    #[inline(always)]
+    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+        self.invoke_signed_with_remaining_accounts(&[], &[])
+    }
+    #[inline(always)]
+    pub fn invoke_with_remaining_accounts(
+        &self,
+        remaining_accounts: &[super::InstructionAccountInfo<'a>],
+    ) -> solana_program::entrypoint::ProgramResult {
+        self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
+    }
+    #[inline(always)]
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
     ) -> solana_program::entrypoint::ProgramResult {
-        let mut accounts = Vec::with_capacity(7);
+        self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
+    }
+    #[allow(clippy::clone_on_copy)]
+    #[allow(clippy::vec_init_then_push)]
+    pub fn invoke_signed_with_remaining_accounts(
+        &self,
+        signers_seeds: &[&[&[u8]]],
+        remaining_accounts: &[super::InstructionAccountInfo<'a>],
+    ) -> solana_program::entrypoint::ProgramResult {
+        let mut accounts = Vec::with_capacity(7 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new(
             *self.tree_config.key,
             false,
@@ -255,6 +330,9 @@ impl<'a> CreateTreeConfigCpi<'a> {
             *self.system_program.key,
             false,
         ));
+        remaining_accounts
+            .iter()
+            .for_each(|remaining_account| accounts.push(remaining_account.to_account_meta()));
         let mut data = CreateTreeConfigInstructionData::new().try_to_vec().unwrap();
         let mut args = self.__args.try_to_vec().unwrap();
         data.append(&mut args);
@@ -264,7 +342,7 @@ impl<'a> CreateTreeConfigCpi<'a> {
             accounts,
             data,
         };
-        let mut account_infos = Vec::with_capacity(7 + 1);
+        let mut account_infos = Vec::with_capacity(7 + 1 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
         account_infos.push(self.tree_config.clone());
         account_infos.push(self.merkle_tree.clone());
@@ -273,6 +351,9 @@ impl<'a> CreateTreeConfigCpi<'a> {
         account_infos.push(self.log_wrapper.clone());
         account_infos.push(self.compression_program.clone());
         account_infos.push(self.system_program.clone());
+        remaining_accounts.iter().for_each(|remaining_account| {
+            account_infos.push(remaining_account.account_info().clone())
+        });
 
         if signers_seeds.is_empty() {
             solana_program::program::invoke(&instruction, &account_infos)
@@ -301,6 +382,7 @@ impl<'a> CreateTreeConfigCpiBuilder<'a> {
             max_depth: None,
             max_buffer_size: None,
             public: None,
+            __remaining_accounts: Vec::new(),
         });
         Self { instruction }
     }
@@ -373,8 +455,34 @@ impl<'a> CreateTreeConfigCpiBuilder<'a> {
         self.instruction.public = Some(public);
         self
     }
+    #[inline(always)]
+    pub fn add_remaining_account(
+        &mut self,
+        account: super::InstructionAccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.__remaining_accounts.push(account);
+        self
+    }
+    #[inline(always)]
+    pub fn add_remaining_accounts(
+        &mut self,
+        accounts: &[super::InstructionAccountInfo<'a>],
+    ) -> &mut Self {
+        self.instruction
+            .__remaining_accounts
+            .extend_from_slice(accounts);
+        self
+    }
+    #[inline(always)]
+    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+        self.invoke_signed(&[])
+    }
     #[allow(clippy::clone_on_copy)]
-    pub fn build(&self) -> CreateTreeConfigCpi<'a> {
+    #[allow(clippy::vec_init_then_push)]
+    pub fn invoke_signed(
+        &self,
+        signers_seeds: &[&[&[u8]]],
+    ) -> solana_program::entrypoint::ProgramResult {
         let args = CreateTreeConfigInstructionArgs {
             max_depth: self
                 .instruction
@@ -388,8 +496,7 @@ impl<'a> CreateTreeConfigCpiBuilder<'a> {
                 .expect("max_buffer_size is not set"),
             public: self.instruction.public.clone(),
         };
-
-        CreateTreeConfigCpi {
+        let instruction = CreateTreeConfigCpi {
             __program: self.instruction.__program,
 
             tree_config: self
@@ -424,7 +531,11 @@ impl<'a> CreateTreeConfigCpiBuilder<'a> {
                 .system_program
                 .expect("system_program is not set"),
             __args: args,
-        }
+        };
+        instruction.invoke_signed_with_remaining_accounts(
+            signers_seeds,
+            &self.instruction.__remaining_accounts,
+        )
     }
 }
 
@@ -440,4 +551,5 @@ struct CreateTreeConfigCpiBuilderInstruction<'a> {
     max_depth: Option<u32>,
     max_buffer_size: Option<u32>,
     public: Option<bool>,
+    __remaining_accounts: Vec<super::InstructionAccountInfo<'a>>,
 }

@@ -28,12 +28,19 @@ pub struct Transfer {
 }
 
 impl Transfer {
-    #[allow(clippy::vec_init_then_push)]
     pub fn instruction(
         &self,
         args: TransferInstructionArgs,
     ) -> solana_program::instruction::Instruction {
-        let mut accounts = Vec::with_capacity(8);
+        self.instruction_with_remaining_accounts(args, &[])
+    }
+    #[allow(clippy::vec_init_then_push)]
+    pub fn instruction_with_remaining_accounts(
+        &self,
+        args: TransferInstructionArgs,
+        remaining_accounts: &[super::InstructionAccount],
+    ) -> solana_program::instruction::Instruction {
+        let mut accounts = Vec::with_capacity(8 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.tree_config,
             false,
@@ -66,6 +73,9 @@ impl Transfer {
             self.system_program,
             false,
         ));
+        remaining_accounts
+            .iter()
+            .for_each(|remaining_account| accounts.push(remaining_account.to_account_meta()));
         let mut data = TransferInstructionData::new().try_to_vec().unwrap();
         let mut args = args.try_to_vec().unwrap();
         data.append(&mut args);
@@ -91,7 +101,8 @@ impl TransferInstructionData {
     }
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Debug)]
+#[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct TransferInstructionArgs {
     pub root: [u8; 32],
     pub data_hash: [u8; 32],
@@ -116,6 +127,7 @@ pub struct TransferBuilder {
     creator_hash: Option<[u8; 32]>,
     nonce: Option<u64>,
     index: Option<u32>,
+    __remaining_accounts: Vec<super::InstructionAccount>,
 }
 
 impl TransferBuilder {
@@ -155,11 +167,13 @@ impl TransferBuilder {
         self.merkle_tree = Some(merkle_tree);
         self
     }
+    /// `[optional account, default to 'noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV']`
     #[inline(always)]
     pub fn log_wrapper(&mut self, log_wrapper: solana_program::pubkey::Pubkey) -> &mut Self {
         self.log_wrapper = Some(log_wrapper);
         self
     }
+    /// `[optional account, default to 'cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK']`
     #[inline(always)]
     pub fn compression_program(
         &mut self,
@@ -168,6 +182,7 @@ impl TransferBuilder {
         self.compression_program = Some(compression_program);
         self
     }
+    /// `[optional account, default to '11111111111111111111111111111111']`
     #[inline(always)]
     pub fn system_program(&mut self, system_program: solana_program::pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
@@ -198,8 +213,18 @@ impl TransferBuilder {
         self.index = Some(index);
         self
     }
+    #[inline(always)]
+    pub fn add_remaining_account(&mut self, account: super::InstructionAccount) -> &mut Self {
+        self.__remaining_accounts.push(account);
+        self
+    }
+    #[inline(always)]
+    pub fn add_remaining_accounts(&mut self, accounts: &[super::InstructionAccount]) -> &mut Self {
+        self.__remaining_accounts.extend_from_slice(accounts);
+        self
+    }
     #[allow(clippy::clone_on_copy)]
-    pub fn build(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_program::instruction::Instruction {
         let accounts = Transfer {
             tree_config: self.tree_config.expect("tree_config is not set"),
             leaf_owner: self.leaf_owner.expect("leaf_owner is not set"),
@@ -224,8 +249,27 @@ impl TransferBuilder {
             index: self.index.clone().expect("index is not set"),
         };
 
-        accounts.instruction(args)
+        accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
     }
+}
+
+/// `transfer` CPI accounts.
+pub struct TransferCpiAccounts<'a> {
+    pub tree_config: &'a solana_program::account_info::AccountInfo<'a>,
+
+    pub leaf_owner: (&'a solana_program::account_info::AccountInfo<'a>, bool),
+
+    pub leaf_delegate: (&'a solana_program::account_info::AccountInfo<'a>, bool),
+
+    pub new_leaf_owner: &'a solana_program::account_info::AccountInfo<'a>,
+
+    pub merkle_tree: &'a solana_program::account_info::AccountInfo<'a>,
+
+    pub log_wrapper: &'a solana_program::account_info::AccountInfo<'a>,
+
+    pub compression_program: &'a solana_program::account_info::AccountInfo<'a>,
+
+    pub system_program: &'a solana_program::account_info::AccountInfo<'a>,
 }
 
 /// `transfer` CPI instruction.
@@ -253,16 +297,50 @@ pub struct TransferCpi<'a> {
 }
 
 impl<'a> TransferCpi<'a> {
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
-        self.invoke_signed(&[])
+    pub fn new(
+        program: &'a solana_program::account_info::AccountInfo<'a>,
+        accounts: TransferCpiAccounts<'a>,
+        args: TransferInstructionArgs,
+    ) -> Self {
+        Self {
+            __program: program,
+            tree_config: accounts.tree_config,
+            leaf_owner: accounts.leaf_owner,
+            leaf_delegate: accounts.leaf_delegate,
+            new_leaf_owner: accounts.new_leaf_owner,
+            merkle_tree: accounts.merkle_tree,
+            log_wrapper: accounts.log_wrapper,
+            compression_program: accounts.compression_program,
+            system_program: accounts.system_program,
+            __args: args,
+        }
     }
-    #[allow(clippy::clone_on_copy)]
-    #[allow(clippy::vec_init_then_push)]
+    #[inline(always)]
+    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+        self.invoke_signed_with_remaining_accounts(&[], &[])
+    }
+    #[inline(always)]
+    pub fn invoke_with_remaining_accounts(
+        &self,
+        remaining_accounts: &[super::InstructionAccountInfo<'a>],
+    ) -> solana_program::entrypoint::ProgramResult {
+        self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
+    }
+    #[inline(always)]
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
     ) -> solana_program::entrypoint::ProgramResult {
-        let mut accounts = Vec::with_capacity(8);
+        self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
+    }
+    #[allow(clippy::clone_on_copy)]
+    #[allow(clippy::vec_init_then_push)]
+    pub fn invoke_signed_with_remaining_accounts(
+        &self,
+        signers_seeds: &[&[&[u8]]],
+        remaining_accounts: &[super::InstructionAccountInfo<'a>],
+    ) -> solana_program::entrypoint::ProgramResult {
+        let mut accounts = Vec::with_capacity(8 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             *self.tree_config.key,
             false,
@@ -295,6 +373,9 @@ impl<'a> TransferCpi<'a> {
             *self.system_program.key,
             false,
         ));
+        remaining_accounts
+            .iter()
+            .for_each(|remaining_account| accounts.push(remaining_account.to_account_meta()));
         let mut data = TransferInstructionData::new().try_to_vec().unwrap();
         let mut args = self.__args.try_to_vec().unwrap();
         data.append(&mut args);
@@ -304,7 +385,7 @@ impl<'a> TransferCpi<'a> {
             accounts,
             data,
         };
-        let mut account_infos = Vec::with_capacity(8 + 1);
+        let mut account_infos = Vec::with_capacity(8 + 1 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
         account_infos.push(self.tree_config.clone());
         account_infos.push(self.leaf_owner.0.clone());
@@ -314,6 +395,9 @@ impl<'a> TransferCpi<'a> {
         account_infos.push(self.log_wrapper.clone());
         account_infos.push(self.compression_program.clone());
         account_infos.push(self.system_program.clone());
+        remaining_accounts.iter().for_each(|remaining_account| {
+            account_infos.push(remaining_account.account_info().clone())
+        });
 
         if signers_seeds.is_empty() {
             solana_program::program::invoke(&instruction, &account_infos)
@@ -345,6 +429,7 @@ impl<'a> TransferCpiBuilder<'a> {
             creator_hash: None,
             nonce: None,
             index: None,
+            __remaining_accounts: Vec::new(),
         });
         Self { instruction }
     }
@@ -439,8 +524,34 @@ impl<'a> TransferCpiBuilder<'a> {
         self.instruction.index = Some(index);
         self
     }
+    #[inline(always)]
+    pub fn add_remaining_account(
+        &mut self,
+        account: super::InstructionAccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.__remaining_accounts.push(account);
+        self
+    }
+    #[inline(always)]
+    pub fn add_remaining_accounts(
+        &mut self,
+        accounts: &[super::InstructionAccountInfo<'a>],
+    ) -> &mut Self {
+        self.instruction
+            .__remaining_accounts
+            .extend_from_slice(accounts);
+        self
+    }
+    #[inline(always)]
+    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+        self.invoke_signed(&[])
+    }
     #[allow(clippy::clone_on_copy)]
-    pub fn build(&self) -> TransferCpi<'a> {
+    #[allow(clippy::vec_init_then_push)]
+    pub fn invoke_signed(
+        &self,
+        signers_seeds: &[&[&[u8]]],
+    ) -> solana_program::entrypoint::ProgramResult {
         let args = TransferInstructionArgs {
             root: self.instruction.root.clone().expect("root is not set"),
             data_hash: self
@@ -456,8 +567,7 @@ impl<'a> TransferCpiBuilder<'a> {
             nonce: self.instruction.nonce.clone().expect("nonce is not set"),
             index: self.instruction.index.clone().expect("index is not set"),
         };
-
-        TransferCpi {
+        let instruction = TransferCpi {
             __program: self.instruction.__program,
 
             tree_config: self
@@ -497,7 +607,11 @@ impl<'a> TransferCpiBuilder<'a> {
                 .system_program
                 .expect("system_program is not set"),
             __args: args,
-        }
+        };
+        instruction.invoke_signed_with_remaining_accounts(
+            signers_seeds,
+            &self.instruction.__remaining_accounts,
+        )
     }
 }
 
@@ -516,4 +630,5 @@ struct TransferCpiBuilderInstruction<'a> {
     creator_hash: Option<[u8; 32]>,
     nonce: Option<u64>,
     index: Option<u32>,
+    __remaining_accounts: Vec<super::InstructionAccountInfo<'a>>,
 }

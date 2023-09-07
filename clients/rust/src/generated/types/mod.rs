@@ -5,20 +5,20 @@
 //! [https://github.com/metaplex-foundation/kinobi]
 //!
 
-pub mod bubblegum_event_type;
-pub mod collection;
-pub mod compression_account_type;
-pub mod concurrent_merkle_tree_header;
-pub mod concurrent_merkle_tree_header_data;
-pub mod creator;
-pub mod instruction_name;
-pub mod leaf_schema;
-pub mod metadata_args;
-pub mod token_program_version;
-pub mod token_standard;
-pub mod use_method;
-pub mod uses;
-pub mod version;
+pub(crate) mod bubblegum_event_type;
+pub(crate) mod collection;
+pub(crate) mod compression_account_type;
+pub(crate) mod concurrent_merkle_tree_header;
+pub(crate) mod concurrent_merkle_tree_header_data;
+pub(crate) mod creator;
+pub(crate) mod instruction_name;
+pub(crate) mod leaf_schema;
+pub(crate) mod metadata_args;
+pub(crate) mod token_program_version;
+pub(crate) mod token_standard;
+pub(crate) mod use_method;
+pub(crate) mod uses;
+pub(crate) mod version;
 
 pub use self::bubblegum_event_type::*;
 pub use self::collection::*;

@@ -11,26 +11,21 @@ use borsh::BorshSerialize;
 use solana_program::pubkey::Pubkey;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Voucher {
     pub discriminator: [u8; 8],
     pub leaf_schema: LeafSchema,
     pub index: u32,
+    #[cfg_attr(
+        feature = "serde",
+        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
+    )]
     pub merkle_tree: Pubkey,
 }
 
 impl Voucher {
     pub const LEN: usize = 213;
 
-    pub fn find_pda(merkle_tree: &Pubkey, nonce: u64) -> (solana_program::pubkey::Pubkey, u8) {
-        solana_program::pubkey::Pubkey::find_program_address(
-            &[
-                "voucher".as_bytes(),
-                merkle_tree.as_ref(),
-                nonce.to_string().as_ref(),
-            ],
-            &crate::MPL_BUBBLEGUM_ID,
-        )
-    }
     pub fn create_pda(
         merkle_tree: Pubkey,
         nonce: u64,
@@ -45,6 +40,23 @@ impl Voucher {
             ],
             &crate::MPL_BUBBLEGUM_ID,
         )
+    }
+
+    pub fn find_pda(merkle_tree: &Pubkey, nonce: u64) -> (solana_program::pubkey::Pubkey, u8) {
+        solana_program::pubkey::Pubkey::find_program_address(
+            &[
+                "voucher".as_bytes(),
+                merkle_tree.as_ref(),
+                nonce.to_string().as_ref(),
+            ],
+            &crate::MPL_BUBBLEGUM_ID,
+        )
+    }
+
+    #[inline(always)]
+    pub fn from_bytes(data: &[u8]) -> Result<Self, std::io::Error> {
+        let mut data = data;
+        Self::deserialize(&mut data)
     }
 }
 

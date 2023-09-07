@@ -38,17 +38,10 @@ export type LeafSchemaArgs = {
   creatorHash: Uint8Array;
 };
 
-/** @deprecated Use `getLeafSchemaSerializer()` without any argument instead. */
-export function getLeafSchemaSerializer(
-  _context: object
-): Serializer<LeafSchemaArgs, LeafSchema>;
 export function getLeafSchemaSerializer(): Serializer<
   LeafSchemaArgs,
   LeafSchema
->;
-export function getLeafSchemaSerializer(
-  _context: object = {}
-): Serializer<LeafSchemaArgs, LeafSchema> {
+> {
   return dataEnum<LeafSchema>(
     [
       [

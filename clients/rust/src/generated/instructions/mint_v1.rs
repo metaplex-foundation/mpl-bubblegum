@@ -31,12 +31,19 @@ pub struct MintV1 {
 }
 
 impl MintV1 {
-    #[allow(clippy::vec_init_then_push)]
     pub fn instruction(
         &self,
         args: MintV1InstructionArgs,
     ) -> solana_program::instruction::Instruction {
-        let mut accounts = Vec::with_capacity(9);
+        self.instruction_with_remaining_accounts(args, &[])
+    }
+    #[allow(clippy::vec_init_then_push)]
+    pub fn instruction_with_remaining_accounts(
+        &self,
+        args: MintV1InstructionArgs,
+        remaining_accounts: &[super::InstructionAccount],
+    ) -> solana_program::instruction::Instruction {
+        let mut accounts = Vec::with_capacity(9 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new(
             self.tree_config,
             false,
@@ -72,6 +79,9 @@ impl MintV1 {
             self.system_program,
             false,
         ));
+        remaining_accounts
+            .iter()
+            .for_each(|remaining_account| accounts.push(remaining_account.to_account_meta()));
         let mut data = MintV1InstructionData::new().try_to_vec().unwrap();
         let mut args = args.try_to_vec().unwrap();
         data.append(&mut args);
@@ -97,7 +107,8 @@ impl MintV1InstructionData {
     }
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Debug)]
+#[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct MintV1InstructionArgs {
     pub metadata: MetadataArgs,
 }
@@ -115,6 +126,7 @@ pub struct MintV1Builder {
     compression_program: Option<solana_program::pubkey::Pubkey>,
     system_program: Option<solana_program::pubkey::Pubkey>,
     metadata: Option<MetadataArgs>,
+    __remaining_accounts: Vec<super::InstructionAccount>,
 }
 
 impl MintV1Builder {
@@ -154,11 +166,13 @@ impl MintV1Builder {
         self.tree_creator_or_delegate = Some(tree_creator_or_delegate);
         self
     }
+    /// `[optional account, default to 'noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV']`
     #[inline(always)]
     pub fn log_wrapper(&mut self, log_wrapper: solana_program::pubkey::Pubkey) -> &mut Self {
         self.log_wrapper = Some(log_wrapper);
         self
     }
+    /// `[optional account, default to 'cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK']`
     #[inline(always)]
     pub fn compression_program(
         &mut self,
@@ -167,6 +181,7 @@ impl MintV1Builder {
         self.compression_program = Some(compression_program);
         self
     }
+    /// `[optional account, default to '11111111111111111111111111111111']`
     #[inline(always)]
     pub fn system_program(&mut self, system_program: solana_program::pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
@@ -177,8 +192,18 @@ impl MintV1Builder {
         self.metadata = Some(metadata);
         self
     }
+    #[inline(always)]
+    pub fn add_remaining_account(&mut self, account: super::InstructionAccount) -> &mut Self {
+        self.__remaining_accounts.push(account);
+        self
+    }
+    #[inline(always)]
+    pub fn add_remaining_accounts(&mut self, accounts: &[super::InstructionAccount]) -> &mut Self {
+        self.__remaining_accounts.extend_from_slice(accounts);
+        self
+    }
     #[allow(clippy::clone_on_copy)]
-    pub fn build(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_program::instruction::Instruction {
         let accounts = MintV1 {
             tree_config: self.tree_config.expect("tree_config is not set"),
             leaf_owner: self.leaf_owner.expect("leaf_owner is not set"),
@@ -202,8 +227,29 @@ impl MintV1Builder {
             metadata: self.metadata.clone().expect("metadata is not set"),
         };
 
-        accounts.instruction(args)
+        accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
     }
+}
+
+/// `mint_v1` CPI accounts.
+pub struct MintV1CpiAccounts<'a> {
+    pub tree_config: &'a solana_program::account_info::AccountInfo<'a>,
+
+    pub leaf_owner: &'a solana_program::account_info::AccountInfo<'a>,
+
+    pub leaf_delegate: &'a solana_program::account_info::AccountInfo<'a>,
+
+    pub merkle_tree: &'a solana_program::account_info::AccountInfo<'a>,
+
+    pub payer: &'a solana_program::account_info::AccountInfo<'a>,
+
+    pub tree_creator_or_delegate: &'a solana_program::account_info::AccountInfo<'a>,
+
+    pub log_wrapper: &'a solana_program::account_info::AccountInfo<'a>,
+
+    pub compression_program: &'a solana_program::account_info::AccountInfo<'a>,
+
+    pub system_program: &'a solana_program::account_info::AccountInfo<'a>,
 }
 
 /// `mint_v1` CPI instruction.
@@ -233,16 +279,51 @@ pub struct MintV1Cpi<'a> {
 }
 
 impl<'a> MintV1Cpi<'a> {
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
-        self.invoke_signed(&[])
+    pub fn new(
+        program: &'a solana_program::account_info::AccountInfo<'a>,
+        accounts: MintV1CpiAccounts<'a>,
+        args: MintV1InstructionArgs,
+    ) -> Self {
+        Self {
+            __program: program,
+            tree_config: accounts.tree_config,
+            leaf_owner: accounts.leaf_owner,
+            leaf_delegate: accounts.leaf_delegate,
+            merkle_tree: accounts.merkle_tree,
+            payer: accounts.payer,
+            tree_creator_or_delegate: accounts.tree_creator_or_delegate,
+            log_wrapper: accounts.log_wrapper,
+            compression_program: accounts.compression_program,
+            system_program: accounts.system_program,
+            __args: args,
+        }
     }
-    #[allow(clippy::clone_on_copy)]
-    #[allow(clippy::vec_init_then_push)]
+    #[inline(always)]
+    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+        self.invoke_signed_with_remaining_accounts(&[], &[])
+    }
+    #[inline(always)]
+    pub fn invoke_with_remaining_accounts(
+        &self,
+        remaining_accounts: &[super::InstructionAccountInfo<'a>],
+    ) -> solana_program::entrypoint::ProgramResult {
+        self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
+    }
+    #[inline(always)]
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
     ) -> solana_program::entrypoint::ProgramResult {
-        let mut accounts = Vec::with_capacity(9);
+        self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
+    }
+    #[allow(clippy::clone_on_copy)]
+    #[allow(clippy::vec_init_then_push)]
+    pub fn invoke_signed_with_remaining_accounts(
+        &self,
+        signers_seeds: &[&[&[u8]]],
+        remaining_accounts: &[super::InstructionAccountInfo<'a>],
+    ) -> solana_program::entrypoint::ProgramResult {
+        let mut accounts = Vec::with_capacity(9 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new(
             *self.tree_config.key,
             false,
@@ -279,6 +360,9 @@ impl<'a> MintV1Cpi<'a> {
             *self.system_program.key,
             false,
         ));
+        remaining_accounts
+            .iter()
+            .for_each(|remaining_account| accounts.push(remaining_account.to_account_meta()));
         let mut data = MintV1InstructionData::new().try_to_vec().unwrap();
         let mut args = self.__args.try_to_vec().unwrap();
         data.append(&mut args);
@@ -288,7 +372,7 @@ impl<'a> MintV1Cpi<'a> {
             accounts,
             data,
         };
-        let mut account_infos = Vec::with_capacity(9 + 1);
+        let mut account_infos = Vec::with_capacity(9 + 1 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
         account_infos.push(self.tree_config.clone());
         account_infos.push(self.leaf_owner.clone());
@@ -299,6 +383,9 @@ impl<'a> MintV1Cpi<'a> {
         account_infos.push(self.log_wrapper.clone());
         account_infos.push(self.compression_program.clone());
         account_infos.push(self.system_program.clone());
+        remaining_accounts.iter().for_each(|remaining_account| {
+            account_infos.push(remaining_account.account_info().clone())
+        });
 
         if signers_seeds.is_empty() {
             solana_program::program::invoke(&instruction, &account_infos)
@@ -327,6 +414,7 @@ impl<'a> MintV1CpiBuilder<'a> {
             compression_program: None,
             system_program: None,
             metadata: None,
+            __remaining_accounts: Vec::new(),
         });
         Self { instruction }
     }
@@ -404,8 +492,34 @@ impl<'a> MintV1CpiBuilder<'a> {
         self.instruction.metadata = Some(metadata);
         self
     }
+    #[inline(always)]
+    pub fn add_remaining_account(
+        &mut self,
+        account: super::InstructionAccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.__remaining_accounts.push(account);
+        self
+    }
+    #[inline(always)]
+    pub fn add_remaining_accounts(
+        &mut self,
+        accounts: &[super::InstructionAccountInfo<'a>],
+    ) -> &mut Self {
+        self.instruction
+            .__remaining_accounts
+            .extend_from_slice(accounts);
+        self
+    }
+    #[inline(always)]
+    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+        self.invoke_signed(&[])
+    }
     #[allow(clippy::clone_on_copy)]
-    pub fn build(&self) -> MintV1Cpi<'a> {
+    #[allow(clippy::vec_init_then_push)]
+    pub fn invoke_signed(
+        &self,
+        signers_seeds: &[&[&[u8]]],
+    ) -> solana_program::entrypoint::ProgramResult {
         let args = MintV1InstructionArgs {
             metadata: self
                 .instruction
@@ -413,8 +527,7 @@ impl<'a> MintV1CpiBuilder<'a> {
                 .clone()
                 .expect("metadata is not set"),
         };
-
-        MintV1Cpi {
+        let instruction = MintV1Cpi {
             __program: self.instruction.__program,
 
             tree_config: self
@@ -456,7 +569,11 @@ impl<'a> MintV1CpiBuilder<'a> {
                 .system_program
                 .expect("system_program is not set"),
             __args: args,
-        }
+        };
+        instruction.invoke_signed_with_remaining_accounts(
+            signers_seeds,
+            &self.instruction.__remaining_accounts,
+        )
     }
 }
 
@@ -472,4 +589,5 @@ struct MintV1CpiBuilderInstruction<'a> {
     compression_program: Option<&'a solana_program::account_info::AccountInfo<'a>>,
     system_program: Option<&'a solana_program::account_info::AccountInfo<'a>>,
     metadata: Option<MetadataArgs>,
+    __remaining_accounts: Vec<super::InstructionAccountInfo<'a>>,
 }

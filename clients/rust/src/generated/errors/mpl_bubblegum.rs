@@ -5,9 +5,10 @@
 //! [https://github.com/metaplex-foundation/kinobi]
 //!
 
-use spl_program_error::*;
+use num_derive::FromPrimitive;
+use thiserror::Error;
 
-#[spl_program_error]
+#[derive(Clone, Debug, Eq, Error, FromPrimitive, PartialEq)]
 pub enum MplBubblegumError {
     /// 0x1770 - Asset Owner Does not match
     #[error("Asset Owner Does not match")]
@@ -108,4 +109,10 @@ pub enum MplBubblegumError {
     /// 0x1790 - Could not convert external error to BubblegumError
     #[error("Could not convert external error to BubblegumError")]
     UnknownExternalError,
+}
+
+impl solana_program::program_error::PrintProgramError for MplBubblegumError {
+    fn print<E>(&self) {
+        solana_program::msg!(&self.to_string());
+    }
 }

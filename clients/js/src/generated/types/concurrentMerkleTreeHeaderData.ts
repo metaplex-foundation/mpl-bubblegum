@@ -80,20 +80,7 @@ export type ConcurrentMerkleTreeHeaderDataArgs = {
   padding: Array<number>;
 };
 
-/** @deprecated Use `getConcurrentMerkleTreeHeaderDataSerializer()` without any argument instead. */
-export function getConcurrentMerkleTreeHeaderDataSerializer(
-  _context: object
-): Serializer<
-  ConcurrentMerkleTreeHeaderDataArgs,
-  ConcurrentMerkleTreeHeaderData
->;
 export function getConcurrentMerkleTreeHeaderDataSerializer(): Serializer<
-  ConcurrentMerkleTreeHeaderDataArgs,
-  ConcurrentMerkleTreeHeaderData
->;
-export function getConcurrentMerkleTreeHeaderDataSerializer(
-  _context: object = {}
-): Serializer<
   ConcurrentMerkleTreeHeaderDataArgs,
   ConcurrentMerkleTreeHeaderData
 > {

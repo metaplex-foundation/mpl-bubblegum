@@ -7,13 +7,11 @@
  */
 
 import {
-  AccountMeta,
   Context,
   Pda,
   PublicKey,
   Signer,
   TransactionBuilder,
-  publicKey,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
 import {
@@ -28,7 +26,14 @@ import {
 } from '@metaplex-foundation/umi/serializers';
 import { resolveCreatorHash, resolveDataHash } from '../../hooked';
 import { findTreeConfigPda } from '../accounts';
-import { PickPartial, addAccountMeta, addObjectProperty } from '../shared';
+import {
+  PickPartial,
+  ResolvedAccount,
+  ResolvedAccountsWithIndices,
+  expectPublicKey,
+  expectSome,
+  getAccountMetasAndSigners,
+} from '../shared';
 import {
   MetadataArgs,
   MetadataArgsArgs,
@@ -68,20 +73,7 @@ export type UnverifyCreatorInstructionDataArgs = {
   metadata: MetadataArgsArgs;
 };
 
-/** @deprecated Use `getUnverifyCreatorInstructionDataSerializer()` without any argument instead. */
-export function getUnverifyCreatorInstructionDataSerializer(
-  _context: object
-): Serializer<
-  UnverifyCreatorInstructionDataArgs,
-  UnverifyCreatorInstructionData
->;
 export function getUnverifyCreatorInstructionDataSerializer(): Serializer<
-  UnverifyCreatorInstructionDataArgs,
-  UnverifyCreatorInstructionData
->;
-export function getUnverifyCreatorInstructionDataSerializer(
-  _context: object = {}
-): Serializer<
   UnverifyCreatorInstructionDataArgs,
   UnverifyCreatorInstructionData
 > {
@@ -123,138 +115,132 @@ export type UnverifyCreatorInstructionArgs = PickPartial<
 
 // Instruction.
 export function unverifyCreator(
-  context: Pick<Context, 'programs' | 'eddsa' | 'identity' | 'payer'>,
+  context: Pick<Context, 'eddsa' | 'identity' | 'payer' | 'programs'>,
   input: UnverifyCreatorInstructionAccounts & UnverifyCreatorInstructionArgs
 ): TransactionBuilder {
-  const signers: Signer[] = [];
-  const keys: AccountMeta[] = [];
-
   // Program ID.
   const programId = context.programs.getPublicKey(
     'mplBubblegum',
     'BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'
   );
 
-  // Resolved inputs.
-  const resolvedAccounts = {
-    leafOwner: [input.leafOwner, false] as const,
-    merkleTree: [input.merkleTree, true] as const,
-    creator: [input.creator, false] as const,
+  // Accounts.
+  const resolvedAccounts: ResolvedAccountsWithIndices = {
+    treeConfig: {
+      index: 0,
+      isWritable: false,
+      value: input.treeConfig ?? null,
+    },
+    leafOwner: { index: 1, isWritable: false, value: input.leafOwner ?? null },
+    leafDelegate: {
+      index: 2,
+      isWritable: false,
+      value: input.leafDelegate ?? null,
+    },
+    merkleTree: { index: 3, isWritable: true, value: input.merkleTree ?? null },
+    payer: { index: 4, isWritable: false, value: input.payer ?? null },
+    creator: { index: 5, isWritable: false, value: input.creator ?? null },
+    logWrapper: {
+      index: 6,
+      isWritable: false,
+      value: input.logWrapper ?? null,
+    },
+    compressionProgram: {
+      index: 7,
+      isWritable: false,
+      value: input.compressionProgram ?? null,
+    },
+    systemProgram: {
+      index: 8,
+      isWritable: false,
+      value: input.systemProgram ?? null,
+    },
   };
-  const resolvingArgs = {};
-  addObjectProperty(
-    resolvedAccounts,
-    'treeConfig',
-    input.treeConfig
-      ? ([input.treeConfig, false] as const)
-      : ([
-          findTreeConfigPda(context, {
-            merkleTree: publicKey(input.merkleTree, false),
-          }),
-          false,
-        ] as const)
-  );
-  addObjectProperty(
-    resolvedAccounts,
-    'leafDelegate',
-    input.leafDelegate
-      ? ([input.leafDelegate, false] as const)
-      : ([input.leafOwner, false] as const)
-  );
-  addObjectProperty(
-    resolvedAccounts,
-    'payer',
-    input.payer
-      ? ([input.payer, false] as const)
-      : ([context.payer, false] as const)
-  );
-  addObjectProperty(
-    resolvedAccounts,
-    'logWrapper',
-    input.logWrapper
-      ? ([input.logWrapper, false] as const)
-      : ([
-          context.programs.getPublicKey(
-            'splNoop',
-            'noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV'
-          ),
-          false,
-        ] as const)
-  );
-  addObjectProperty(
-    resolvedAccounts,
-    'compressionProgram',
-    input.compressionProgram
-      ? ([input.compressionProgram, false] as const)
-      : ([
-          context.programs.getPublicKey(
-            'splAccountCompression',
-            'cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK'
-          ),
-          false,
-        ] as const)
-  );
-  addObjectProperty(
-    resolvedAccounts,
-    'systemProgram',
-    input.systemProgram
-      ? ([input.systemProgram, false] as const)
-      : ([
-          context.programs.getPublicKey(
-            'splSystem',
-            '11111111111111111111111111111111'
-          ),
-          false,
-        ] as const)
-  );
-  addObjectProperty(
-    resolvingArgs,
-    'dataHash',
-    input.dataHash ??
-      resolveDataHash(
-        context,
-        { ...input, ...resolvedAccounts },
-        { ...input, ...resolvingArgs },
-        programId,
-        false
-      )
-  );
-  addObjectProperty(
-    resolvingArgs,
-    'creatorHash',
-    input.creatorHash ??
-      resolveCreatorHash(
-        context,
-        { ...input, ...resolvedAccounts },
-        { ...input, ...resolvingArgs },
-        programId,
-        false
-      )
-  );
-  addObjectProperty(resolvingArgs, 'proof', input.proof ?? []);
-  const resolvedArgs = { ...input, ...resolvingArgs };
 
-  addAccountMeta(keys, signers, resolvedAccounts.treeConfig, false);
-  addAccountMeta(keys, signers, resolvedAccounts.leafOwner, false);
-  addAccountMeta(keys, signers, resolvedAccounts.leafDelegate, false);
-  addAccountMeta(keys, signers, resolvedAccounts.merkleTree, false);
-  addAccountMeta(keys, signers, resolvedAccounts.payer, false);
-  addAccountMeta(keys, signers, resolvedAccounts.creator, false);
-  addAccountMeta(keys, signers, resolvedAccounts.logWrapper, false);
-  addAccountMeta(keys, signers, resolvedAccounts.compressionProgram, false);
-  addAccountMeta(keys, signers, resolvedAccounts.systemProgram, false);
+  // Arguments.
+  const resolvedArgs: UnverifyCreatorInstructionArgs = { ...input };
+
+  // Default values.
+  if (!resolvedAccounts.treeConfig.value) {
+    resolvedAccounts.treeConfig.value = findTreeConfigPda(context, {
+      merkleTree: expectPublicKey(resolvedAccounts.merkleTree.value),
+    });
+  }
+  if (!resolvedAccounts.leafDelegate.value) {
+    resolvedAccounts.leafDelegate.value = expectSome(
+      resolvedAccounts.leafOwner.value
+    );
+  }
+  if (!resolvedAccounts.payer.value) {
+    resolvedAccounts.payer.value = context.payer;
+  }
+  if (!resolvedAccounts.logWrapper.value) {
+    resolvedAccounts.logWrapper.value = context.programs.getPublicKey(
+      'splNoop',
+      'noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV'
+    );
+    resolvedAccounts.logWrapper.isWritable = false;
+  }
+  if (!resolvedAccounts.compressionProgram.value) {
+    resolvedAccounts.compressionProgram.value = context.programs.getPublicKey(
+      'splAccountCompression',
+      'cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK'
+    );
+    resolvedAccounts.compressionProgram.isWritable = false;
+  }
+  if (!resolvedAccounts.systemProgram.value) {
+    resolvedAccounts.systemProgram.value = context.programs.getPublicKey(
+      'splSystem',
+      '11111111111111111111111111111111'
+    );
+    resolvedAccounts.systemProgram.isWritable = false;
+  }
+  if (!resolvedArgs.dataHash) {
+    resolvedArgs.dataHash = resolveDataHash(
+      context,
+      resolvedAccounts,
+      resolvedArgs,
+      programId,
+      false
+    );
+  }
+  if (!resolvedArgs.creatorHash) {
+    resolvedArgs.creatorHash = resolveCreatorHash(
+      context,
+      resolvedAccounts,
+      resolvedArgs,
+      programId,
+      false
+    );
+  }
+  if (!resolvedArgs.proof) {
+    resolvedArgs.proof = [];
+  }
+
+  // Accounts in order.
+  const orderedAccounts: ResolvedAccount[] = Object.values(
+    resolvedAccounts
+  ).sort((a, b) => a.index - b.index);
 
   // Remaining Accounts.
-  const remainingAccounts = resolvedArgs.proof.map(
-    (address) => [address, false] as const
-  );
-  remainingAccounts.forEach((remainingAccount) =>
-    addAccountMeta(keys, signers, remainingAccount, false)
+  const remainingAccounts = resolvedArgs.proof.map((value, index) => ({
+    index,
+    value,
+    isWritable: false,
+  }));
+  orderedAccounts.push(...remainingAccounts);
+
+  // Keys and Signers.
+  const [keys, signers] = getAccountMetasAndSigners(
+    orderedAccounts,
+    'programId',
+    programId
   );
 
   // Data.
-  const data =
-    getUnverifyCreatorInstructionDataSerializer().serialize(resolvedArgs);
+  const data = getUnverifyCreatorInstructionDataSerializer().serialize(
+    resolvedArgs as UnverifyCreatorInstructionDataArgs
+  );
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 0;
