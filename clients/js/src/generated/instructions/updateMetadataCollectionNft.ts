@@ -6,6 +6,7 @@
  * @see https://github.com/metaplex-foundation/kinobi
  */
 
+import { findMetadataPda } from '@metaplex-foundation/mpl-token-metadata';
 import {
   AccountMeta,
   Context,
@@ -44,10 +45,14 @@ import {
 } from '../types';
 
 // Accounts.
-export type UpdateMetadataInstructionAccounts = {
+export type UpdateMetadataCollectionNftInstructionAccounts = {
   oldMetadataAcct?: PublicKey | Pda;
   treeConfig?: PublicKey | Pda;
   treeCreatorOrDelegate?: Signer;
+  collectionAuthority?: Signer;
+  collectionMint: PublicKey | Pda;
+  collectionMetadata?: PublicKey | Pda;
+  collectionAuthorityRecordPda?: PublicKey | Pda;
   leafOwner: PublicKey | Pda;
   leafDelegate?: PublicKey | Pda;
   payer?: Signer;
@@ -59,7 +64,7 @@ export type UpdateMetadataInstructionAccounts = {
 };
 
 // Data.
-export type UpdateMetadataInstructionData = {
+export type UpdateMetadataCollectionNftInstructionData = {
   discriminator: Array<number>;
   root: Uint8Array;
   nonce: bigint;
@@ -74,7 +79,7 @@ export type UpdateMetadataInstructionData = {
   newIsMutable: Option<boolean>;
 };
 
-export type UpdateMetadataInstructionDataArgs = {
+export type UpdateMetadataCollectionNftInstructionDataArgs = {
   root: Uint8Array;
   nonce: number | bigint;
   index: number;
@@ -88,26 +93,29 @@ export type UpdateMetadataInstructionDataArgs = {
   newIsMutable: OptionOrNullable<boolean>;
 };
 
-/** @deprecated Use `getUpdateMetadataInstructionDataSerializer()` without any argument instead. */
-export function getUpdateMetadataInstructionDataSerializer(
+/** @deprecated Use `getUpdateMetadataCollectionNftInstructionDataSerializer()` without any argument instead. */
+export function getUpdateMetadataCollectionNftInstructionDataSerializer(
   _context: object
-): Serializer<UpdateMetadataInstructionDataArgs, UpdateMetadataInstructionData>;
-export function getUpdateMetadataInstructionDataSerializer(): Serializer<
-  UpdateMetadataInstructionDataArgs,
-  UpdateMetadataInstructionData
+): Serializer<
+  UpdateMetadataCollectionNftInstructionDataArgs,
+  UpdateMetadataCollectionNftInstructionData
 >;
-export function getUpdateMetadataInstructionDataSerializer(
+export function getUpdateMetadataCollectionNftInstructionDataSerializer(): Serializer<
+  UpdateMetadataCollectionNftInstructionDataArgs,
+  UpdateMetadataCollectionNftInstructionData
+>;
+export function getUpdateMetadataCollectionNftInstructionDataSerializer(
   _context: object = {}
 ): Serializer<
-  UpdateMetadataInstructionDataArgs,
-  UpdateMetadataInstructionData
+  UpdateMetadataCollectionNftInstructionDataArgs,
+  UpdateMetadataCollectionNftInstructionData
 > {
   return mapSerializer<
-    UpdateMetadataInstructionDataArgs,
+    UpdateMetadataCollectionNftInstructionDataArgs,
     any,
-    UpdateMetadataInstructionData
+    UpdateMetadataCollectionNftInstructionData
   >(
-    struct<UpdateMetadataInstructionData>(
+    struct<UpdateMetadataCollectionNftInstructionData>(
       [
         ['discriminator', array(u8(), { size: 8 })],
         ['root', bytes({ size: 32 })],
@@ -122,25 +130,27 @@ export function getUpdateMetadataInstructionDataSerializer(
         ['newPrimarySaleHappened', option(bool())],
         ['newIsMutable', option(bool())],
       ],
-      { description: 'UpdateMetadataInstructionData' }
+      { description: 'UpdateMetadataCollectionNftInstructionData' }
     ),
     (value) => ({
       ...value,
-      discriminator: [170, 182, 43, 239, 97, 78, 225, 186],
+      discriminator: [244, 12, 175, 194, 227, 28, 102, 215],
     })
   ) as Serializer<
-    UpdateMetadataInstructionDataArgs,
-    UpdateMetadataInstructionData
+    UpdateMetadataCollectionNftInstructionDataArgs,
+    UpdateMetadataCollectionNftInstructionData
   >;
 }
 
 // Args.
-export type UpdateMetadataInstructionArgs = UpdateMetadataInstructionDataArgs;
+export type UpdateMetadataCollectionNftInstructionArgs =
+  UpdateMetadataCollectionNftInstructionDataArgs;
 
 // Instruction.
-export function updateMetadata(
+export function updateMetadataCollectionNft(
   context: Pick<Context, 'programs' | 'eddsa' | 'identity' | 'payer'>,
-  input: UpdateMetadataInstructionAccounts & UpdateMetadataInstructionArgs
+  input: UpdateMetadataCollectionNftInstructionAccounts &
+    UpdateMetadataCollectionNftInstructionArgs
 ): TransactionBuilder {
   const signers: Signer[] = [];
   const keys: AccountMeta[] = [];
@@ -153,6 +163,7 @@ export function updateMetadata(
 
   // Resolved inputs.
   const resolvedAccounts = {
+    collectionMint: [input.collectionMint, false] as const,
     leafOwner: [input.leafOwner, false] as const,
     merkleTree: [input.merkleTree, true] as const,
   };
@@ -182,6 +193,32 @@ export function updateMetadata(
     input.treeCreatorOrDelegate
       ? ([input.treeCreatorOrDelegate, false] as const)
       : ([context.identity, false] as const)
+  );
+  addObjectProperty(
+    resolvedAccounts,
+    'collectionAuthority',
+    input.collectionAuthority
+      ? ([input.collectionAuthority, false] as const)
+      : ([context.identity, false] as const)
+  );
+  addObjectProperty(
+    resolvedAccounts,
+    'collectionMetadata',
+    input.collectionMetadata
+      ? ([input.collectionMetadata, false] as const)
+      : ([
+          findMetadataPda(context, {
+            mint: publicKey(input.collectionMint, false),
+          }),
+          false,
+        ] as const)
+  );
+  addObjectProperty(
+    resolvedAccounts,
+    'collectionAuthorityRecordPda',
+    input.collectionAuthorityRecordPda
+      ? ([input.collectionAuthorityRecordPda, false] as const)
+      : ([programId, false] as const)
   );
   addObjectProperty(
     resolvedAccounts,
@@ -254,6 +291,15 @@ export function updateMetadata(
   addAccountMeta(keys, signers, resolvedAccounts.oldMetadataAcct, false);
   addAccountMeta(keys, signers, resolvedAccounts.treeConfig, false);
   addAccountMeta(keys, signers, resolvedAccounts.treeCreatorOrDelegate, false);
+  addAccountMeta(keys, signers, resolvedAccounts.collectionAuthority, false);
+  addAccountMeta(keys, signers, resolvedAccounts.collectionMint, false);
+  addAccountMeta(keys, signers, resolvedAccounts.collectionMetadata, false);
+  addAccountMeta(
+    keys,
+    signers,
+    resolvedAccounts.collectionAuthorityRecordPda,
+    false
+  );
   addAccountMeta(keys, signers, resolvedAccounts.leafOwner, false);
   addAccountMeta(keys, signers, resolvedAccounts.leafDelegate, false);
   addAccountMeta(keys, signers, resolvedAccounts.payer, false);
@@ -265,7 +311,9 @@ export function updateMetadata(
 
   // Data.
   const data =
-    getUpdateMetadataInstructionDataSerializer().serialize(resolvedArgs);
+    getUpdateMetadataCollectionNftInstructionDataSerializer().serialize(
+      resolvedArgs
+    );
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 0;

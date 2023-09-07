@@ -27,6 +27,7 @@ export enum InstructionName {
   MintToCollectionV1,
   SetDecompressableState,
   UpdateMetadata,
+  UpdateMetadataCollectionNft,
 }
 
 export type InstructionNameArgs = InstructionName;
