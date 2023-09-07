@@ -61,6 +61,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       js_changed: ${{ steps.changes.outputs.js_client }}
+      rust_changed: ${{ steps.changes.outputs.rust_client }}
     permissions:
       contents: write
       pull-requests: write
