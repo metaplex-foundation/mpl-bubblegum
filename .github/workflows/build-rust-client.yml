@@ -1,4 +1,4 @@
-name: Build Programs
+name: Build Rust Client
 
 on:
   workflow_call:
@@ -24,7 +24,7 @@ env:
   CACHE: true
 
 jobs:
-  build_programs:
+  build_sdk:
     name: Build
     runs-on: ubuntu-latest
     steps:
@@ -45,21 +45,21 @@ jobs:
           version: ${{ inputs.solana || env.SOLANA_VERSION }}
           cache: ${{ env.CACHE }}
 
-      - name: Cache program dependencies
-        if: env.CACHE == 'true'
-        uses: metaplex-foundation/actions/cache-programs@v1
+      - name: Run cargo clippy
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: --all-targets --all-features --no-deps --manifest-path ./clients/rust/Cargo.toml
 
-      - name: Build programs
+      - name: Build Rust client
         shell: bash
-        working-directory: configs/program-scripts
-        run: ./build.sh
-        env:
-          PROGRAMS: ${{ env.PROGRAMS }}
+        working-directory: clients/rust
+        run: cargo build --all-features --release
 
-      - name: Upload program builds
+      - name: Upload Rust client builds
         uses: actions/upload-artifact@v3
         with:
-          name: program-builds
-          # First wildcard ensures exported paths are consistently under the programs folder.
-          path: ./program*/.bin/*.so
+          name: rust-client-builds
+          # First wildcard ensures exported paths are consistently under the clients folder.
+          path: ./client*/rust/target/release/*mpl_bubblegum*
           if-no-files-found: error
