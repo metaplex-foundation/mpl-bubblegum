@@ -105,7 +105,7 @@ jobs:
     uses: ./.github/workflows/test-js.yml
     secrets: inherit
 
-build_rust_client:
+  build_rust_client:
     if: needs.generate_clients.outputs.rust_changed == 'true'
     name: Rust Client
     needs: generate_clients
