@@ -98,7 +98,6 @@ kinobi.update(
         return k.instructionAccountNode({
           ...node,
           isOptional: true,
-          isOptionalStrategy: "programId",
         });
       },
     },
