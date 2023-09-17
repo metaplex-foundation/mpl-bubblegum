@@ -2,7 +2,7 @@
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 # go to parent folder
-cd $(dirname $(dirname $SCRIPT_DIR))
+cd $(dirname $(dirname $(dirname $SCRIPT_DIR)))
 WORKING_DIR=$(pwd)
 
 # command-line input

@@ -3,7 +3,7 @@
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 PROGRAMS_OUTPUT="./programs/.bin"
 # go to parent folder
-cd $(dirname $(dirname $SCRIPT_DIR))
+cd $(dirname $(dirname $(dirname $SCRIPT_DIR)))
 
 # command-line input
 ARGS=$*

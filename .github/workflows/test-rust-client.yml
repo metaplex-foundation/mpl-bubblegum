@@ -38,5 +38,5 @@ jobs:
 
       - name: Run tests
         shell: bash
-        working-directory: configs/client-scripts
-        run: RUST_LOG=error ./test-rust-client.sh
+        working-directory: configs/scripts/client
+        run: RUST_LOG=error ./test-rust.sh
