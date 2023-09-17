@@ -37,7 +37,7 @@ macro_rules! assert_custom_instruction_error {
 
 /// Setup a program test with the required programs.
 pub fn create_program_test() -> ProgramTest {
-    let mut program_test = ProgramTest::new("mpl_bubblegum", mpl_bubblegum::ID, None);
+    let mut program_test = ProgramTest::new("bubblegum", mpl_bubblegum::ID, None);
     program_test.add_program("spl_account_compression", spl_account_compression::ID, None);
     program_test.add_program("spl_noop", spl_noop::ID, None);
     program_test

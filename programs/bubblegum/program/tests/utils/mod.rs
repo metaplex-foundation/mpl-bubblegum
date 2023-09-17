@@ -5,8 +5,8 @@ pub mod tx_builder;
 
 use anchor_lang::{self, InstructionData, ToAccountMetas};
 use async_trait::async_trait;
+use bubblegum::{hash_creators, hash_metadata, state::metaplex_adapter::MetadataArgs};
 use bytemuck::PodCastError;
-use mpl_bubblegum::{hash_creators, hash_metadata, state::metaplex_adapter::MetadataArgs};
 use solana_program::{instruction::Instruction, pubkey::Pubkey, system_instruction};
 use solana_program_test::{BanksClientError, ProgramTest, ProgramTestContext};
 use solana_sdk::{
@@ -31,7 +31,7 @@ pub type Result<T> = result::Result<T, Box<Error>>;
 pub type BanksResult<T> = std::result::Result<T, BanksClientError>;
 
 pub fn program_test() -> ProgramTest {
-    let mut test = ProgramTest::new("mpl_bubblegum", mpl_bubblegum::id(), None);
+    let mut test = ProgramTest::new("bubblegum", bubblegum::id(), None);
     test.add_program("spl_noop", spl_noop::id(), None);
     test.add_program(
         "spl_account_compression",
@@ -49,7 +49,7 @@ where
     U: InstructionData,
 {
     Instruction {
-        program_id: mpl_bubblegum::id(),
+        program_id: bubblegum::id(),
         accounts: accounts.to_account_metas(None),
         data: data.data(),
     }

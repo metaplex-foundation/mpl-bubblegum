@@ -131,8 +131,8 @@ where
 // execute transactions.
 pub type CreateBuilder<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> = TxBuilder<
     'a,
-    mpl_bubblegum::accounts::CreateTree,
-    mpl_bubblegum::instruction::CreateTree,
+    bubblegum::accounts::CreateTree,
+    bubblegum::instruction::CreateTree,
     (),
     MAX_DEPTH,
     MAX_BUFFER_SIZE,
@@ -149,8 +149,8 @@ impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExe
 
 pub type MintV1Builder<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> = TxBuilder<
     'a,
-    mpl_bubblegum::accounts::MintV1,
-    mpl_bubblegum::instruction::MintV1,
+    bubblegum::accounts::MintV1,
+    bubblegum::instruction::MintV1,
     &'a mut LeafArgs,
     MAX_DEPTH,
     MAX_BUFFER_SIZE,
@@ -173,8 +173,8 @@ impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExe
 pub type MintToCollectionV1Builder<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> =
     TxBuilder<
         'a,
-        mpl_bubblegum::accounts::MintToCollectionV1,
-        mpl_bubblegum::instruction::MintToCollectionV1,
+        bubblegum::accounts::MintToCollectionV1,
+        bubblegum::instruction::MintToCollectionV1,
         &'a mut LeafArgs,
         MAX_DEPTH,
         MAX_BUFFER_SIZE,
@@ -201,8 +201,8 @@ impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExe
 
 pub type BurnBuilder<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> = TxBuilder<
     'a,
-    mpl_bubblegum::accounts::Burn,
-    mpl_bubblegum::instruction::Burn,
+    bubblegum::accounts::Burn,
+    bubblegum::instruction::Burn,
     &'a LeafArgs,
     MAX_DEPTH,
     MAX_BUFFER_SIZE,
@@ -223,8 +223,8 @@ pub struct TransferInner<'a> {
 
 pub type TransferBuilder<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> = TxBuilder<
     'a,
-    mpl_bubblegum::accounts::Transfer,
-    mpl_bubblegum::instruction::Transfer,
+    bubblegum::accounts::Transfer,
+    bubblegum::instruction::Transfer,
     TransferInner<'a>,
     MAX_DEPTH,
     MAX_BUFFER_SIZE,
@@ -248,8 +248,8 @@ pub struct DelegateInner<'a> {
 
 pub type DelegateBuilder<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> = TxBuilder<
     'a,
-    mpl_bubblegum::accounts::Delegate,
-    mpl_bubblegum::instruction::Delegate,
+    bubblegum::accounts::Delegate,
+    bubblegum::instruction::Delegate,
     DelegateInner<'a>,
     MAX_DEPTH,
     MAX_BUFFER_SIZE,
@@ -266,8 +266,8 @@ impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExe
 
 pub type RedeemBuilder<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> = TxBuilder<
     'a,
-    mpl_bubblegum::accounts::Redeem,
-    mpl_bubblegum::instruction::Redeem,
+    bubblegum::accounts::Redeem,
+    bubblegum::instruction::Redeem,
     &'a LeafArgs,
     MAX_DEPTH,
     MAX_BUFFER_SIZE,
@@ -283,8 +283,8 @@ impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExe
 
 pub type CancelRedeemBuilder<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> = TxBuilder<
     'a,
-    mpl_bubblegum::accounts::CancelRedeem,
-    mpl_bubblegum::instruction::CancelRedeem,
+    bubblegum::accounts::CancelRedeem,
+    bubblegum::instruction::CancelRedeem,
     &'a LeafArgs,
     MAX_DEPTH,
     MAX_BUFFER_SIZE,
@@ -301,8 +301,8 @@ impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExe
 pub type SetTreeDelegateBuilder<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> =
     TxBuilder<
         'a,
-        mpl_bubblegum::accounts::SetTreeDelegate,
-        mpl_bubblegum::instruction::SetTreeDelegate,
+        bubblegum::accounts::SetTreeDelegate,
+        bubblegum::instruction::SetTreeDelegate,
         Keypair,
         MAX_DEPTH,
         MAX_BUFFER_SIZE,
@@ -324,8 +324,8 @@ pub struct CreatorVerificationInner<'a> {
 
 pub type VerifyCreatorBuilder<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> = TxBuilder<
     'a,
-    mpl_bubblegum::accounts::CreatorVerification,
-    mpl_bubblegum::instruction::VerifyCreator,
+    bubblegum::accounts::CreatorVerification,
+    bubblegum::instruction::VerifyCreator,
     CreatorVerificationInner<'a>,
     MAX_DEPTH,
     MAX_BUFFER_SIZE,
@@ -348,8 +348,8 @@ impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExe
 pub type UnverifyCreatorBuilder<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> =
     TxBuilder<
         'a,
-        mpl_bubblegum::accounts::CreatorVerification,
-        mpl_bubblegum::instruction::UnverifyCreator,
+        bubblegum::accounts::CreatorVerification,
+        bubblegum::instruction::UnverifyCreator,
         CreatorVerificationInner<'a>,
         MAX_DEPTH,
         MAX_BUFFER_SIZE,
@@ -371,8 +371,8 @@ impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExe
 
 pub type DecompressV1Builder<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> = TxBuilder<
     'a,
-    mpl_bubblegum::accounts::DecompressV1,
-    mpl_bubblegum::instruction::DecompressV1,
+    bubblegum::accounts::DecompressV1,
+    bubblegum::instruction::DecompressV1,
     (),
     MAX_DEPTH,
     MAX_BUFFER_SIZE,
@@ -389,8 +389,8 @@ impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExe
 pub type SetDecompressableStateBuilder<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> =
     TxBuilder<
         'a,
-        mpl_bubblegum::accounts::SetDecompressableState,
-        mpl_bubblegum::instruction::SetDecompressableState,
+        bubblegum::accounts::SetDecompressableState,
+        bubblegum::instruction::SetDecompressableState,
         (),
         MAX_DEPTH,
         MAX_BUFFER_SIZE,
@@ -416,8 +416,8 @@ pub struct CollectionVerificationInner<'a> {
 pub type VerifyCollectionBuilder<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> =
     TxBuilder<
         'a,
-        mpl_bubblegum::accounts::CollectionVerification,
-        mpl_bubblegum::instruction::VerifyCollection,
+        bubblegum::accounts::CollectionVerification,
+        bubblegum::instruction::VerifyCollection,
         CollectionVerificationInner<'a>,
         MAX_DEPTH,
         MAX_BUFFER_SIZE,
