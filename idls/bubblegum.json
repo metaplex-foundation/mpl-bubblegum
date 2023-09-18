@@ -1087,7 +1087,7 @@
       "name": "updateMetadata",
       "accounts": [
         {
-          "name": "oldMetadataAcct",
+          "name": "metadataBuffer",
           "isMut": false,
           "isSigner": false,
           "isOptional": true
@@ -1162,7 +1162,7 @@
           "type": "u32"
         },
         {
-          "name": "oldMetadata",
+          "name": "currentMetadata",
           "type": {
             "option": {
               "defined": "MetadataArgs"
@@ -1221,7 +1221,7 @@
       "name": "updateMetadataCollectionNft",
       "accounts": [
         {
-          "name": "oldMetadataAcct",
+          "name": "metadataBuffer",
           "isMut": false,
           "isSigner": false,
           "isOptional": true
@@ -1317,7 +1317,7 @@
           "type": "u32"
         },
         {
-          "name": "oldMetadata",
+          "name": "currentMetadata",
           "type": {
             "option": {
               "defined": "MetadataArgs"

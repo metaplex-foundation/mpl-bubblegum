@@ -45,7 +45,7 @@ import {
 
 // Accounts.
 export type UpdateMetadataInstructionAccounts = {
-  oldMetadataAcct?: PublicKey | Pda;
+  metadataBuffer?: PublicKey | Pda;
   treeConfig?: PublicKey | Pda;
   treeCreatorOrDelegate?: Signer;
   leafOwner: PublicKey | Pda;
@@ -64,7 +64,7 @@ export type UpdateMetadataInstructionData = {
   root: Uint8Array;
   nonce: bigint;
   index: number;
-  oldMetadata: Option<MetadataArgs>;
+  currentMetadata: Option<MetadataArgs>;
   newName: Option<string>;
   newSymbol: Option<string>;
   newUri: Option<string>;
@@ -78,7 +78,7 @@ export type UpdateMetadataInstructionDataArgs = {
   root: Uint8Array;
   nonce: number | bigint;
   index: number;
-  oldMetadata: OptionOrNullable<MetadataArgsArgs>;
+  currentMetadata: OptionOrNullable<MetadataArgsArgs>;
   newName: OptionOrNullable<string>;
   newSymbol: OptionOrNullable<string>;
   newUri: OptionOrNullable<string>;
@@ -113,7 +113,7 @@ export function getUpdateMetadataInstructionDataSerializer(
         ['root', bytes({ size: 32 })],
         ['nonce', u64()],
         ['index', u32()],
-        ['oldMetadata', option(getMetadataArgsSerializer())],
+        ['currentMetadata', option(getMetadataArgsSerializer())],
         ['newName', option(string())],
         ['newSymbol', option(string())],
         ['newUri', option(string())],
@@ -159,9 +159,9 @@ export function updateMetadata(
   const resolvingArgs = {};
   addObjectProperty(
     resolvedAccounts,
-    'oldMetadataAcct',
-    input.oldMetadataAcct
-      ? ([input.oldMetadataAcct, false] as const)
+    'metadataBuffer',
+    input.metadataBuffer
+      ? ([input.metadataBuffer, false] as const)
       : ([programId, false] as const)
   );
   addObjectProperty(
@@ -251,7 +251,7 @@ export function updateMetadata(
   );
   const resolvedArgs = { ...input, ...resolvingArgs };
 
-  addAccountMeta(keys, signers, resolvedAccounts.oldMetadataAcct, false);
+  addAccountMeta(keys, signers, resolvedAccounts.metadataBuffer, false);
   addAccountMeta(keys, signers, resolvedAccounts.treeConfig, false);
   addAccountMeta(keys, signers, resolvedAccounts.treeCreatorOrDelegate, false);
   addAccountMeta(keys, signers, resolvedAccounts.leafOwner, false);

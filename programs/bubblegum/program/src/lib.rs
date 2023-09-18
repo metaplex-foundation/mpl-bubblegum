@@ -253,9 +253,9 @@ pub struct Delegate<'info> {
 
 #[derive(Accounts)]
 pub struct UpdateMetadata<'info> {
-    /// CHECK: Can optionally specify the old_metadata of the leaf through an account to save transaction space
+    /// CHECK: Can optionally specify the old metadata of the leaf through an account to save transaction space
     /// CHECK: This account is checked in the instruction
-    pub old_metadata_acct: Option<UncheckedAccount<'info>>,
+    pub metadata_buffer: Option<UncheckedAccount<'info>>,
     #[account(
         seeds = [merkle_tree.key().as_ref()],
         bump,
@@ -279,9 +279,9 @@ pub struct UpdateMetadata<'info> {
 
 #[derive(Accounts)]
 pub struct UpdateMetadataCollectionNFT<'info> {
-    /// CHECK: Can optionally specify the old_metadata of the leaf through an account to save transaction space
+    /// CHECK: Can optionally specify the old metadata of the leaf through an account to save transaction space
     /// CHECK: This account is checked in the instruction
-    pub old_metadata_acct: Option<UncheckedAccount<'info>>,
+    pub metadata_buffer: Option<UncheckedAccount<'info>>,
     #[account(
         seeds = [merkle_tree.key().as_ref()],
         bump,
@@ -961,27 +961,27 @@ fn assert_signed_by_tree_delegate(
     Ok(())
 }
 
-fn fetch_old_metadata_args(
-    old_metadata_arg: Option<MetadataArgs>,
-    old_metadata_acct: &Option<UncheckedAccount>,
+fn fetch_current_metadata(
+    current_metadata_args: Option<MetadataArgs>,
+    metadata_buffer: &Option<UncheckedAccount>,
 ) -> Result<MetadataArgs> {
-    let old_metadata = match old_metadata_arg {
+    let current_metadata = match current_metadata_args {
         Some(metadata) => {
             require!(
-                old_metadata_acct.is_none(),
+                metadata_buffer.is_none(),
                 BubblegumError::MetadataArgsAmbiguous
             );
             metadata
         }
         None => {
-            let old_metadata_account = old_metadata_acct
+            let metadata_account = metadata_buffer
                 .as_ref()
                 .ok_or(BubblegumError::MetadataArgsMissing)?;
-            let old_metadata_data = old_metadata_account.try_borrow_data()?;
-            MetadataArgs::deserialize(&mut old_metadata_data.as_ref())?
+            let metadata_data = metadata_account.try_borrow_data()?;
+            MetadataArgs::deserialize(&mut metadata_data.as_ref())?
         }
     };
-    Ok(old_metadata)
+    Ok(current_metadata)
 }
 
 fn assert_authority_matches_collection<'info>(
@@ -1039,7 +1039,7 @@ fn process_update_metadata<'info>(
     log_wrapper: &Program<'info, Noop>,
     remaining_accounts: &[AccountInfo<'info>],
     root: [u8; 32],
-    old_metadata: MetadataArgs,
+    current_metadata: MetadataArgs,
     new_name: Option<String>,
     new_symbol: Option<String>,
     new_uri: Option<String>,
@@ -1051,24 +1051,27 @@ fn process_update_metadata<'info>(
     index: u32,
 ) -> Result<()> {
     // Old metadata must be mutable to allow metadata update
-    require!(old_metadata.is_mutable, BubblegumError::MetadataImmutable);
+    require!(
+        current_metadata.is_mutable,
+        BubblegumError::MetadataImmutable
+    );
 
-    let old_data_hash = hash_metadata(&old_metadata)?;
-    let old_creator_hash = hash_creators(&old_metadata.creators)?;
+    let current_data_hash = hash_metadata(&current_metadata)?;
+    let current_creator_hash = hash_creators(&current_metadata.creators)?;
 
     // Update metadata
-    let mut new_metadata = old_metadata;
+    let mut updated_metadata = current_metadata;
     if let Some(name) = new_name {
-        new_metadata.name = name;
+        updated_metadata.name = name;
     };
     if let Some(symbol) = new_symbol {
-        new_metadata.symbol = symbol;
+        updated_metadata.symbol = symbol;
     };
     if let Some(uri) = new_uri {
-        new_metadata.uri = uri;
+        updated_metadata.uri = uri;
     };
     if let Some(creators) = new_creators {
-        let old_creators = new_metadata.creators;
+        let old_creators = updated_metadata.creators;
         let no_new_creators_were_verified = creators
             .iter()
             .filter(|c| c.verified) // select only creators that are verified
@@ -1081,26 +1084,26 @@ fn process_update_metadata<'info>(
             no_new_creators_were_verified,
             BubblegumError::CreatorDidNotVerify
         );
-        new_metadata.creators = creators;
+        updated_metadata.creators = creators;
     }
     if let Some(seller_fee_basis_points) = new_seller_fee_basis_points {
-        new_metadata.seller_fee_basis_points = seller_fee_basis_points
+        updated_metadata.seller_fee_basis_points = seller_fee_basis_points
     };
     if let Some(primary_sale_happened) = new_primary_sale_happened {
         // a new value of primary_sale_happened should only be specified if primary_sale_happened was false in the original metadata
         require!(
-            !new_metadata.primary_sale_happened,
+            !updated_metadata.primary_sale_happened,
             BubblegumError::PrimarySaleCanOnlyBeFlippedToTrue
         );
-        new_metadata.primary_sale_happened = primary_sale_happened;
+        updated_metadata.primary_sale_happened = primary_sale_happened;
     };
     if let Some(is_mutable) = new_is_mutable {
-        new_metadata.is_mutable = is_mutable;
+        updated_metadata.is_mutable = is_mutable;
     };
 
-    assert_metadata_is_mpl_compatible(&new_metadata)?;
-    let new_data_hash = hash_metadata(&new_metadata)?;
-    let new_creator_hash = hash_creators(&new_metadata.creators)?;
+    assert_metadata_is_mpl_compatible(&updated_metadata)?;
+    let updated_data_hash = hash_metadata(&updated_metadata)?;
+    let updated_creator_hash = hash_creators(&updated_metadata.creators)?;
 
     let asset_id = get_asset_id(&merkle_tree.key(), nonce);
     let previous_leaf = LeafSchema::new_v0(
@@ -1108,16 +1111,16 @@ fn process_update_metadata<'info>(
         owner.key(),
         delegate.key(),
         nonce,
-        old_data_hash,
-        old_creator_hash,
+        current_data_hash,
+        current_creator_hash,
     );
     let new_leaf = LeafSchema::new_v0(
         asset_id,
         owner.key(),
         delegate.key(),
         nonce,
-        new_data_hash,
-        new_creator_hash,
+        updated_data_hash,
+        updated_creator_hash,
     );
 
     wrap_application_data_v1(new_leaf.to_event().try_to_vec()?, log_wrapper)?;
@@ -1602,7 +1605,7 @@ pub mod bubblegum {
         root: [u8; 32],
         nonce: u64,
         index: u32,
-        old_metadata: Option<MetadataArgs>,
+        current_metadata: Option<MetadataArgs>,
         new_name: Option<String>,
         new_symbol: Option<String>,
         new_uri: Option<String>,
@@ -1614,12 +1617,13 @@ pub mod bubblegum {
         assert_signed_by_tree_delegate(&ctx.accounts.tree_authority, &ctx.accounts.tree_delegate)?;
 
         // Determine how the user opted to pass in the old MetadataArgs
-        let old_metadata = fetch_old_metadata_args(old_metadata, &ctx.accounts.old_metadata_acct)?;
+        let current_metadata =
+            fetch_current_metadata(current_metadata, &ctx.accounts.metadata_buffer)?;
 
         // NFTs which are linked to verified collections cannot be updated through this instruction
         require!(
-            old_metadata.collection.is_none()
-                || !old_metadata.collection.as_ref().unwrap().verified,
+            current_metadata.collection.is_none()
+                || !current_metadata.collection.as_ref().unwrap().verified,
             BubblegumError::NFTLinkedToCollection
         );
 
@@ -1633,7 +1637,7 @@ pub mod bubblegum {
             &ctx.accounts.log_wrapper,
             ctx.remaining_accounts,
             root,
-            old_metadata,
+            current_metadata,
             new_name,
             new_symbol,
             new_uri,
@@ -1651,7 +1655,7 @@ pub mod bubblegum {
         root: [u8; 32],
         nonce: u64,
         index: u32,
-        old_metadata: Option<MetadataArgs>,
+        current_metadata: Option<MetadataArgs>,
         new_name: Option<String>,
         new_symbol: Option<String>,
         new_uri: Option<String>,
@@ -1663,15 +1667,16 @@ pub mod bubblegum {
         assert_signed_by_tree_delegate(&ctx.accounts.tree_authority, &ctx.accounts.tree_delegate)?;
 
         // Determine how the user opted to pass in the old MetadataArgs
-        let old_metadata = fetch_old_metadata_args(old_metadata, &ctx.accounts.old_metadata_acct)?;
+        let current_metadata =
+            fetch_current_metadata(current_metadata, &ctx.accounts.metadata_buffer)?;
 
         // NFTs updated through this instruction must be linked to a collection,
         // so a collection authority for that collection must sign
-        let collection = old_metadata
+        let collection = current_metadata
             .collection
             .as_ref()
             .ok_or(BubblegumError::NFTNotLinkedToVerifiedCollection)?;
-        
+
         assert_authority_matches_collection(
             collection,
             &ctx.accounts.collection_authority.to_account_info(),
@@ -1692,7 +1697,7 @@ pub mod bubblegum {
             &ctx.accounts.log_wrapper,
             ctx.remaining_accounts,
             root,
-            old_metadata,
+            current_metadata,
             new_name,
             new_symbol,
             new_uri,
