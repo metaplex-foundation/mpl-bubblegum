@@ -22,13 +22,10 @@ import {
 import {
   Serializer,
   array,
-  bool,
   bytes,
   mapSerializer,
   option,
-  string,
   struct,
-  u16,
   u32,
   u64,
   u8,
@@ -36,12 +33,12 @@ import {
 import { findTreeConfigPda } from '../accounts';
 import { addAccountMeta, addObjectProperty } from '../shared';
 import {
-  Creator,
-  CreatorArgs,
   MetadataArgs,
   MetadataArgsArgs,
-  getCreatorSerializer,
+  UpdateArgs,
+  UpdateArgsArgs,
   getMetadataArgsSerializer,
+  getUpdateArgsSerializer,
 } from '../types';
 
 // Accounts.
@@ -70,13 +67,7 @@ export type UpdateMetadataCollectionNftInstructionData = {
   nonce: bigint;
   index: number;
   currentMetadata: Option<MetadataArgs>;
-  newName: Option<string>;
-  newSymbol: Option<string>;
-  newUri: Option<string>;
-  newCreators: Option<Array<Creator>>;
-  newSellerFeeBasisPoints: Option<number>;
-  newPrimarySaleHappened: Option<boolean>;
-  newIsMutable: Option<boolean>;
+  updateArgs: UpdateArgs;
 };
 
 export type UpdateMetadataCollectionNftInstructionDataArgs = {
@@ -84,13 +75,7 @@ export type UpdateMetadataCollectionNftInstructionDataArgs = {
   nonce: number | bigint;
   index: number;
   currentMetadata: OptionOrNullable<MetadataArgsArgs>;
-  newName: OptionOrNullable<string>;
-  newSymbol: OptionOrNullable<string>;
-  newUri: OptionOrNullable<string>;
-  newCreators: OptionOrNullable<Array<CreatorArgs>>;
-  newSellerFeeBasisPoints: OptionOrNullable<number>;
-  newPrimarySaleHappened: OptionOrNullable<boolean>;
-  newIsMutable: OptionOrNullable<boolean>;
+  updateArgs: UpdateArgsArgs;
 };
 
 /** @deprecated Use `getUpdateMetadataCollectionNftInstructionDataSerializer()` without any argument instead. */
@@ -122,13 +107,7 @@ export function getUpdateMetadataCollectionNftInstructionDataSerializer(
         ['nonce', u64()],
         ['index', u32()],
         ['currentMetadata', option(getMetadataArgsSerializer())],
-        ['newName', option(string())],
-        ['newSymbol', option(string())],
-        ['newUri', option(string())],
-        ['newCreators', option(array(getCreatorSerializer()))],
-        ['newSellerFeeBasisPoints', option(u16())],
-        ['newPrimarySaleHappened', option(bool())],
-        ['newIsMutable', option(bool())],
+        ['updateArgs', getUpdateArgsSerializer()],
       ],
       { description: 'UpdateMetadataCollectionNftInstructionData' }
     ),

@@ -7,6 +7,7 @@ export * from './LeafSchema';
 export * from './MetadataArgs';
 export * from './TokenProgramVersion';
 export * from './TokenStandard';
+export * from './UpdateArgs';
 export * from './UseMethod';
 export * from './Uses';
 export * from './Version';

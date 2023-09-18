@@ -63,4 +63,4 @@ export const leafSchemaBeet = beet.dataEnum<LeafSchemaRecord>([
       'LeafSchemaRecord["V1"]',
     ),
   ],
-]) as beet.FixableBeet<LeafSchema>;
+]) as beet.FixableBeet<LeafSchema, LeafSchema>;

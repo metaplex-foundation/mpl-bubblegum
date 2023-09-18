@@ -8,7 +8,7 @@
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
 import { MetadataArgs, metadataArgsBeet } from '../types/MetadataArgs';
-import { Creator, creatorBeet } from '../types/Creator';
+import { UpdateArgs, updateArgsBeet } from '../types/UpdateArgs';
 
 /**
  * @category Instructions
@@ -19,14 +19,8 @@ export type UpdateMetadataInstructionArgs = {
   root: number[] /* size: 32 */;
   nonce: beet.bignum;
   index: number;
-  oldMetadata: beet.COption<MetadataArgs>;
-  newName: beet.COption<string>;
-  newSymbol: beet.COption<string>;
-  newUri: beet.COption<string>;
-  newCreators: beet.COption<Creator[]>;
-  newSellerFeeBasisPoints: beet.COption<number>;
-  newPrimarySaleHappened: beet.COption<boolean>;
-  newIsMutable: beet.COption<boolean>;
+  currentMetadata: beet.COption<MetadataArgs>;
+  updateArgs: UpdateArgs;
 };
 /**
  * @category Instructions
@@ -43,21 +37,15 @@ export const updateMetadataStruct = new beet.FixableBeetArgsStruct<
     ['root', beet.uniformFixedSizeArray(beet.u8, 32)],
     ['nonce', beet.u64],
     ['index', beet.u32],
-    ['oldMetadata', beet.coption(metadataArgsBeet)],
-    ['newName', beet.coption(beet.utf8String)],
-    ['newSymbol', beet.coption(beet.utf8String)],
-    ['newUri', beet.coption(beet.utf8String)],
-    ['newCreators', beet.coption(beet.array(creatorBeet))],
-    ['newSellerFeeBasisPoints', beet.coption(beet.u16)],
-    ['newPrimarySaleHappened', beet.coption(beet.bool)],
-    ['newIsMutable', beet.coption(beet.bool)],
+    ['currentMetadata', beet.coption(metadataArgsBeet)],
+    ['updateArgs', updateArgsBeet],
   ],
   'UpdateMetadataInstructionArgs',
 );
 /**
  * Accounts required by the _updateMetadata_ instruction
  *
- * @property [] oldMetadataAcct
+ * @property [] metadataBuffer (optional)
  * @property [] treeAuthority
  * @property [**signer**] treeDelegate
  * @property [] leafOwner
@@ -72,7 +60,7 @@ export const updateMetadataStruct = new beet.FixableBeetArgsStruct<
  * @category generated
  */
 export type UpdateMetadataInstructionAccounts = {
-  oldMetadataAcct: web3.PublicKey;
+  metadataBuffer?: web3.PublicKey;
   treeAuthority: web3.PublicKey;
   treeDelegate: web3.PublicKey;
   leafOwner: web3.PublicKey;
@@ -90,6 +78,9 @@ export const updateMetadataInstructionDiscriminator = [170, 182, 43, 239, 97, 78
 
 /**
  * Creates a _UpdateMetadata_ instruction.
+ *
+ * Optional accounts that are not provided default to the program ID since
+ * this was indicated in the IDL from which this instruction was generated.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @param args to provide as instruction data to the program
@@ -109,7 +100,7 @@ export function createUpdateMetadataInstruction(
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: accounts.oldMetadataAcct,
+      pubkey: accounts.metadataBuffer ?? programId,
       isWritable: false,
       isSigner: false,
     },

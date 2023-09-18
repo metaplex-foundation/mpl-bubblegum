@@ -1170,49 +1170,9 @@
           }
         },
         {
-          "name": "newName",
+          "name": "updateArgs",
           "type": {
-            "option": "string"
-          }
-        },
-        {
-          "name": "newSymbol",
-          "type": {
-            "option": "string"
-          }
-        },
-        {
-          "name": "newUri",
-          "type": {
-            "option": "string"
-          }
-        },
-        {
-          "name": "newCreators",
-          "type": {
-            "option": {
-              "vec": {
-                "defined": "Creator"
-              }
-            }
-          }
-        },
-        {
-          "name": "newSellerFeeBasisPoints",
-          "type": {
-            "option": "u16"
-          }
-        },
-        {
-          "name": "newPrimarySaleHappened",
-          "type": {
-            "option": "bool"
-          }
-        },
-        {
-          "name": "newIsMutable",
-          "type": {
-            "option": "bool"
+            "defined": "UpdateArgs"
           }
         }
       ]
@@ -1325,49 +1285,9 @@
           }
         },
         {
-          "name": "newName",
+          "name": "updateArgs",
           "type": {
-            "option": "string"
-          }
-        },
-        {
-          "name": "newSymbol",
-          "type": {
-            "option": "string"
-          }
-        },
-        {
-          "name": "newUri",
-          "type": {
-            "option": "string"
-          }
-        },
-        {
-          "name": "newCreators",
-          "type": {
-            "option": {
-              "vec": {
-                "defined": "Creator"
-              }
-            }
-          }
-        },
-        {
-          "name": "newSellerFeeBasisPoints",
-          "type": {
-            "option": "u16"
-          }
-        },
-        {
-          "name": "newPrimarySaleHappened",
-          "type": {
-            "option": "bool"
-          }
-        },
-        {
-          "name": "newIsMutable",
-          "type": {
-            "option": "bool"
+            "defined": "UpdateArgs"
           }
         }
       ]
@@ -1895,6 +1815,60 @@
               "vec": {
                 "defined": "Creator"
               }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "UpdateArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "name",
+            "type": {
+              "option": "string"
+            }
+          },
+          {
+            "name": "symbol",
+            "type": {
+              "option": "string"
+            }
+          },
+          {
+            "name": "uri",
+            "type": {
+              "option": "string"
+            }
+          },
+          {
+            "name": "creators",
+            "type": {
+              "option": {
+                "vec": {
+                  "defined": "Creator"
+                }
+              }
+            }
+          },
+          {
+            "name": "sellerFeeBasisPoints",
+            "type": {
+              "option": "u16"
+            }
+          },
+          {
+            "name": "primarySaleHappened",
+            "type": {
+              "option": "bool"
+            }
+          },
+          {
+            "name": "isMutable",
+            "type": {
+              "option": "bool"
             }
           }
         ]

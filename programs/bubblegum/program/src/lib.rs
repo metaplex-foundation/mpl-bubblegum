@@ -5,7 +5,9 @@ use crate::{
     error::{metadata_error_into_bubblegum, BubblegumError},
     state::{
         leaf_schema::LeafSchema,
-        metaplex_adapter::{self, Collection, Creator, MetadataArgs, TokenProgramVersion},
+        metaplex_adapter::{
+            self, Collection, Creator, MetadataArgs, TokenProgramVersion, UpdateArgs,
+        },
         metaplex_anchor::{MasterEdition, MplTokenMetadata, TokenMetadata},
         DecompressableState, TreeConfig, Voucher, ASSET_PREFIX, COLLECTION_CPI_PREFIX,
         TREE_AUTHORITY_SIZE, VOUCHER_PREFIX, VOUCHER_SIZE,
@@ -1040,13 +1042,7 @@ fn process_update_metadata<'info>(
     remaining_accounts: &[AccountInfo<'info>],
     root: [u8; 32],
     current_metadata: MetadataArgs,
-    new_name: Option<String>,
-    new_symbol: Option<String>,
-    new_uri: Option<String>,
-    new_creators: Option<Vec<Creator>>,
-    new_seller_fee_basis_points: Option<u16>,
-    new_primary_sale_happened: Option<bool>,
-    new_is_mutable: Option<bool>,
+    update_args: UpdateArgs,
     nonce: u64,
     index: u32,
 ) -> Result<()> {
@@ -1061,16 +1057,16 @@ fn process_update_metadata<'info>(
 
     // Update metadata
     let mut updated_metadata = current_metadata;
-    if let Some(name) = new_name {
+    if let Some(name) = update_args.name {
         updated_metadata.name = name;
     };
-    if let Some(symbol) = new_symbol {
+    if let Some(symbol) = update_args.symbol {
         updated_metadata.symbol = symbol;
     };
-    if let Some(uri) = new_uri {
+    if let Some(uri) = update_args.uri {
         updated_metadata.uri = uri;
     };
-    if let Some(creators) = new_creators {
+    if let Some(creators) = update_args.creators {
         let old_creators = updated_metadata.creators;
         let no_new_creators_were_verified = creators
             .iter()
@@ -1086,10 +1082,10 @@ fn process_update_metadata<'info>(
         );
         updated_metadata.creators = creators;
     }
-    if let Some(seller_fee_basis_points) = new_seller_fee_basis_points {
+    if let Some(seller_fee_basis_points) = update_args.seller_fee_basis_points {
         updated_metadata.seller_fee_basis_points = seller_fee_basis_points
     };
-    if let Some(primary_sale_happened) = new_primary_sale_happened {
+    if let Some(primary_sale_happened) = update_args.primary_sale_happened {
         // a new value of primary_sale_happened should only be specified if primary_sale_happened was false in the original metadata
         require!(
             !updated_metadata.primary_sale_happened,
@@ -1097,7 +1093,7 @@ fn process_update_metadata<'info>(
         );
         updated_metadata.primary_sale_happened = primary_sale_happened;
     };
-    if let Some(is_mutable) = new_is_mutable {
+    if let Some(is_mutable) = update_args.is_mutable {
         updated_metadata.is_mutable = is_mutable;
     };
 
@@ -1606,13 +1602,7 @@ pub mod bubblegum {
         nonce: u64,
         index: u32,
         current_metadata: Option<MetadataArgs>,
-        new_name: Option<String>,
-        new_symbol: Option<String>,
-        new_uri: Option<String>,
-        new_creators: Option<Vec<Creator>>,
-        new_seller_fee_basis_points: Option<u16>,
-        new_primary_sale_happened: Option<bool>,
-        new_is_mutable: Option<bool>,
+        update_args: UpdateArgs,
     ) -> Result<()> {
         assert_signed_by_tree_delegate(&ctx.accounts.tree_authority, &ctx.accounts.tree_delegate)?;
 
@@ -1638,13 +1628,7 @@ pub mod bubblegum {
             ctx.remaining_accounts,
             root,
             current_metadata,
-            new_name,
-            new_symbol,
-            new_uri,
-            new_creators,
-            new_seller_fee_basis_points,
-            new_primary_sale_happened,
-            new_is_mutable,
+            update_args,
             nonce,
             index,
         )
@@ -1656,13 +1640,7 @@ pub mod bubblegum {
         nonce: u64,
         index: u32,
         current_metadata: Option<MetadataArgs>,
-        new_name: Option<String>,
-        new_symbol: Option<String>,
-        new_uri: Option<String>,
-        new_creators: Option<Vec<Creator>>,
-        new_seller_fee_basis_points: Option<u16>,
-        new_primary_sale_happened: Option<bool>,
-        new_is_mutable: Option<bool>,
+        update_args: UpdateArgs,
     ) -> Result<()> {
         assert_signed_by_tree_delegate(&ctx.accounts.tree_authority, &ctx.accounts.tree_delegate)?;
 
@@ -1698,13 +1676,7 @@ pub mod bubblegum {
             ctx.remaining_accounts,
             root,
             current_metadata,
-            new_name,
-            new_symbol,
-            new_uri,
-            new_creators,
-            new_seller_fee_basis_points,
-            new_primary_sale_happened,
-            new_is_mutable,
+            update_args,
             nonce,
             index,
         )

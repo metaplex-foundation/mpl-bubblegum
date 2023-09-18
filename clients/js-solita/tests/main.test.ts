@@ -286,9 +286,18 @@ describe('Bubblegum tests', () => {
           merkleAccount = ConcurrentMerkleTreeAccount.fromBuffer(merkleAccountInfo!.data!);
         });
         it('Simple update', async () => {
+          const updateArgs = {
+              name: 'NewName',
+              symbol: 'NewSymbol',
+              uri: 'https://foobar.com',
+              creators: null,
+              sellerFeeBasisPoints: null,
+              primarySaleHappened: null,
+              isMutable: null,
+          };
           const updateMetadataIx = createUpdateMetadataInstruction(
             {
-              oldMetadataAcct: BUBBLEGUM_PROGRAM_ID,
+              metadataBuffer: BUBBLEGUM_PROGRAM_ID,
               treeAuthority,
               treeDelegate: payer,
               leafOwner: payer,
@@ -303,14 +312,8 @@ describe('Bubblegum tests', () => {
               root: Array.from(merkleAccount.getCurrentRoot()),
               nonce: 0,
               index: 0,
-              oldMetadata: originalCompressedNFT,
-              newName: 'NewName',
-              newSymbol: 'NewSymbol',
-              newUri: 'https://foobar.com',
-              newCreators: null,
-              newSellerFeeBasisPoints: null,
-              newPrimarySaleHappened: null,
-              newIsMutable: null,
+              currentMetadata: originalCompressedNFT,
+              updateArgs: updateArgs,
             },
           );
     
@@ -328,9 +331,19 @@ describe('Bubblegum tests', () => {
           await verifyLeaf(connection, payerKeypair, payerKeypair.publicKey, payerKeypair.publicKey, 0, merkleTree, newMetadataArgs);
         });
         it('Cannot verify currently un-verified creator', async () => {
+          const updateArgs = {
+            name: 'NewName',
+            symbol: 'NewSymbol',
+            uri: 'https://foobar.com',
+            // Attempt to verify all creators, even though some are not verified
+            creators: creators.map(c => ({ ...c, verified: true })),
+            sellerFeeBasisPoints: null,
+            primarySaleHappened: null,
+            isMutable: null,
+          };
           const updateMetadataIx = createUpdateMetadataInstruction(
             {
-              oldMetadataAcct: BUBBLEGUM_PROGRAM_ID,
+              metadataBuffer: BUBBLEGUM_PROGRAM_ID,
               treeAuthority,
               treeDelegate: payer,
               leafOwner: payer,
@@ -345,15 +358,8 @@ describe('Bubblegum tests', () => {
               root: Array.from(merkleAccount.getCurrentRoot()),
               nonce: 0,
               index: 0,
-              oldMetadata: originalCompressedNFT,
-              newName: 'NewName',
-              newSymbol: 'NewSymbol',
-              newUri: 'https://foobar.com',
-              // Attempt to verify all creators, even though some are not verified
-              newCreators: creators.map(c => ({ ...c, verified: true })),
-              newSellerFeeBasisPoints: null,
-              newPrimarySaleHappened: null,
-              newIsMutable: null,
+              currentMetadata: originalCompressedNFT,
+              updateArgs: updateArgs,
             },
           );
     
@@ -407,10 +413,20 @@ describe('Bubblegum tests', () => {
   
         // MintToCollectionV1 will update verified to true in MetadataArgs before minting to the tree
         // Thus we must alter the MetadataArgs object we expect to exist in the leaf before the update to match
-        const oldMetadataArgs = {...metadataArgs, collection: {key: metadataArgs.collection!.key, verified: true} }
+        const currentMetadataArgs = {...metadataArgs, collection: {key: metadataArgs.collection!.key, verified: true} }
+
+        const updateArgs = {
+          name: 'NewName',
+          symbol: 'NewSymbol',
+          uri: 'https://foobar.com',
+          creators: null,
+          sellerFeeBasisPoints: null,
+          primarySaleHappened: null,
+          isMutable: null,
+        };
         const updateMetadataIx = createUpdateMetadataCollectionNftInstruction(
           {
-            oldMetadataAcct: BUBBLEGUM_PROGRAM_ID,
+            metadataBuffer: BUBBLEGUM_PROGRAM_ID,
             collectionAuthority: payer,
             collectionMint: collection.mintAddress,
             collectionMetadata: collection.metadataAddress,
@@ -429,14 +445,8 @@ describe('Bubblegum tests', () => {
             root: Array.from(merkleAccount.getCurrentRoot()),
             nonce: 1,
             index: 1,
-            oldMetadata: oldMetadataArgs,
-            newName: 'NewName',
-            newSymbol: 'NewSymbol',
-            newUri: 'https://foobar.com',
-            newCreators: null,
-            newSellerFeeBasisPoints: null,
-            newPrimarySaleHappened: null,
-            newIsMutable: null,
+            currentMetadata: currentMetadataArgs,
+            updateArgs: updateArgs,
           },
         );
   
@@ -448,7 +458,7 @@ describe('Bubblegum tests', () => {
   
         console.log("Update metadata tx success:", updateMetadataTxId)
   
-        const newMetadataArgs: MetadataArgs = { ...oldMetadataArgs, name: 'NewName', symbol: 'NewSymbol', uri: 'https://foobar.com'};
+        const newMetadataArgs: MetadataArgs = { ...currentMetadataArgs, name: 'NewName', symbol: 'NewSymbol', uri: 'https://foobar.com'};
   
         // We should now be able to verify the new leaf with the metadata replaced
         await verifyLeaf(connection, payerKeypair, payerKeypair.publicKey, payerKeypair.publicKey, 1, merkleTree, newMetadataArgs);
