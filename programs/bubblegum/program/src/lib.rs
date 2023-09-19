@@ -1031,8 +1031,19 @@ fn assert_authority_matches_collection<'info>(
     Ok(())
 }
 
+fn all_verified_creators_in_a_are_in_b(a: &[Creator], b: &[Creator], exception: Pubkey) -> bool {
+    a.iter()
+        .filter(|creator_a| creator_a.verified)
+        .all(|creator_a| {
+            creator_a.address == exception
+                || b.iter()
+                    .any(|creator_b| creator_a.address == creator_b.address && creator_b.verified)
+        })
+}
+
 fn process_update_metadata<'info>(
     merkle_tree: &AccountInfo<'info>,
+    tree_delegate: &AccountInfo<'info>,
     owner: &AccountInfo<'info>,
     delegate: &AccountInfo<'info>,
     compression_program: &AccountInfo<'info>,
@@ -1066,21 +1077,33 @@ fn process_update_metadata<'info>(
     if let Some(uri) = update_args.uri {
         updated_metadata.uri = uri;
     };
-    if let Some(creators) = update_args.creators {
-        let old_creators = updated_metadata.creators;
-        let no_new_creators_were_verified = creators
-            .iter()
-            .filter(|c| c.verified) // select only creators that are verified
-            .all(|c| {
-                old_creators
-                    .iter()
-                    .any(|old| old.address == c.address && old.verified)
-            });
+    if let Some(updated_creators) = update_args.creators {
+        let current_creators = updated_metadata.creators;
+
+        // Make sure no new creator is verified (unless it is the tree delegate).
+        let no_new_creators_verified = all_verified_creators_in_a_are_in_b(
+            &updated_creators,
+            &current_creators,
+            tree_delegate.key(),
+        );
         require!(
-            no_new_creators_were_verified,
+            no_new_creators_verified,
             BubblegumError::CreatorDidNotVerify
         );
-        updated_metadata.creators = creators;
+
+        // Make sure no current verified creator is unverified or removed (unless it is the tree
+        // delegate).
+        let no_current_creators_unverified = all_verified_creators_in_a_are_in_b(
+            &current_creators,
+            &updated_creators,
+            tree_delegate.key(),
+        );
+        require!(
+            no_current_creators_unverified,
+            BubblegumError::CreatorDidNotUnverify
+        );
+
+        updated_metadata.creators = updated_creators;
     }
     if let Some(seller_fee_basis_points) = update_args.seller_fee_basis_points {
         updated_metadata.seller_fee_basis_points = seller_fee_basis_points
@@ -1619,6 +1642,7 @@ pub mod bubblegum {
 
         process_update_metadata(
             &ctx.accounts.merkle_tree.to_account_info(),
+            &ctx.accounts.tree_delegate,
             &ctx.accounts.leaf_owner,
             &ctx.accounts.leaf_delegate,
             &ctx.accounts.compression_program.to_account_info(),
@@ -1667,6 +1691,7 @@ pub mod bubblegum {
 
         process_update_metadata(
             &ctx.accounts.merkle_tree.to_account_info(),
+            &ctx.accounts.tree_delegate,
             &ctx.accounts.leaf_owner,
             &ctx.accounts.leaf_delegate,
             &ctx.accounts.compression_program.to_account_info(),

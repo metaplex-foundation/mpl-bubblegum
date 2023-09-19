@@ -86,6 +86,8 @@ pub enum BubblegumError {
     NFTNotLinkedToVerifiedCollection,
     #[msg("Can only update primary sale to true")]
     PrimarySaleCanOnlyBeFlippedToTrue,
+    #[msg("Creator did not unverify the metadata")]
+    CreatorDidNotUnverify,
 }
 
 // Converts certain Token Metadata errors into Bubblegum equivalents

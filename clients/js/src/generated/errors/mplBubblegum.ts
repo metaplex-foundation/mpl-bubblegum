@@ -588,6 +588,19 @@ nameToErrorMap.set(
   PrimarySaleCanOnlyBeFlippedToTrueError
 );
 
+/** CreatorDidNotUnverify: Creator did not unverify the metadata */
+export class CreatorDidNotUnverifyError extends ProgramError {
+  readonly name: string = 'CreatorDidNotUnverify';
+
+  readonly code: number = 0x1799; // 6041
+
+  constructor(program: Program, cause?: Error) {
+    super('Creator did not unverify the metadata', program, cause);
+  }
+}
+codeToErrorMap.set(0x1799, CreatorDidNotUnverifyError);
+nameToErrorMap.set('CreatorDidNotUnverify', CreatorDidNotUnverifyError);
+
 /**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors

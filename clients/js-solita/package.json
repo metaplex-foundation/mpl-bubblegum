@@ -17,7 +17,7 @@
     "run-tests": "jest tests --detectOpenHandles",
     "test": "start-server-and-test start-validator http://localhost:8899/health run-tests",
     "api:gen": "DEBUG='(solita|rustbin):(info|error)' solita",
-    "lint": "eslint \"{src,test}/**/*.ts\" --format stylish",
+    "lint": "eslint \"{src,tests}/**/*.ts\" --format stylish",
     "fix:lint": "yarn lint --fix",
     "prettier": "prettier \"{src,test}/**/*.ts\" --check",
     "fix:prettier": "prettier --write src/",
