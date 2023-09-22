@@ -103,7 +103,7 @@ pub struct MetadataArgs {
     pub creators: Vec<Creator>,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, PartialEq, Eq, Debug, Clone)]
+#[derive(AnchorSerialize, AnchorDeserialize, PartialEq, Eq, Debug, Clone, Default)]
 pub struct UpdateArgs {
     pub name: Option<String>,
     pub symbol: Option<String>,
