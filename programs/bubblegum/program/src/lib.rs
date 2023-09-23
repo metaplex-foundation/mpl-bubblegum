@@ -220,7 +220,7 @@ pub struct Transfer<'info> {
     pub tree_authority: Account<'info, TreeConfig>,
     /// CHECK: This account is checked in the instruction
     pub leaf_owner: UncheckedAccount<'info>,
-    /// CHECK: This account is chekced in the instruction
+    /// CHECK: This account is checked in the instruction
     pub leaf_delegate: UncheckedAccount<'info>,
     /// CHECK: This account is neither written to nor read from.
     pub new_leaf_owner: UncheckedAccount<'info>,
@@ -267,7 +267,7 @@ pub struct UpdateMetadata<'info> {
     pub tree_delegate: Signer<'info>,
     /// CHECK: This account is checked in the instruction
     pub leaf_owner: UncheckedAccount<'info>,
-    /// CHECK: This account is chekced in the instruction
+    /// CHECK: This account is checked in the instruction
     pub leaf_delegate: UncheckedAccount<'info>,
     pub payer: Signer<'info>,
     #[account(mut)]
@@ -299,7 +299,7 @@ pub struct UpdateMetadataCollectionNFT<'info> {
     pub collection_authority_record_pda: Option<UncheckedAccount<'info>>,
     /// CHECK: This account is checked in the instruction
     pub leaf_owner: UncheckedAccount<'info>,
-    /// CHECK: This account is chekced in the instruction
+    /// CHECK: This account is checked in the instruction
     pub leaf_delegate: UncheckedAccount<'info>,
     pub payer: Signer<'info>,
     #[account(mut)]
@@ -328,7 +328,7 @@ pub struct Redeem<'info> {
     pub tree_authority: Account<'info, TreeConfig>,
     #[account(mut)]
     pub leaf_owner: Signer<'info>,
-    /// CHECK: This account is chekced in the instruction
+    /// CHECK: This account is checked in the instruction
     pub leaf_delegate: UncheckedAccount<'info>,
     #[account(mut)]
     /// CHECK: checked in cpi
@@ -440,7 +440,7 @@ pub struct Compress<'info> {
     pub tree_authority: UncheckedAccount<'info>,
     /// CHECK: This account is checked in the instruction
     pub leaf_owner: Signer<'info>,
-    /// CHECK: This account is chekced in the instruction
+    /// CHECK: This account is checked in the instruction
     pub leaf_delegate: UncheckedAccount<'info>,
     /// CHECK: This account is not read
     pub merkle_tree: UncheckedAccount<'info>,
