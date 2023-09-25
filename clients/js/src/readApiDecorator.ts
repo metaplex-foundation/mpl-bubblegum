@@ -43,11 +43,11 @@ export const createReadApiDecorator = (
       [
         input.groupKey,
         input.groupValue,
-        input.after ?? null,
-        input.before ?? null,
-        input.limit ?? null,
-        input.page ?? 0,
         input.sortBy ?? null,
+        input.limit ?? null,
+        input.page ?? 1,
+        input.before ?? null,
+        input.after ?? null,
       ]
     );
     if (!assetList) {
