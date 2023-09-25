@@ -1,15 +1,17 @@
 use mpl_bubblegum::{
     accounts::TreeConfig,
     hash::{hash_creators, hash_metadata},
-    instructions::{CreateTreeConfigBuilder, InstructionAccount, MintV1Builder, TransferBuilder},
+    instructions::{CreateTreeConfigBuilder, MintV1Builder, TransferBuilder},
     types::{LeafSchema, MetadataArgs},
-    util::get_asset_id,
+    utils::get_asset_id,
 };
-use solana_program::{pubkey::Pubkey, system_instruction};
+use solana_program::{instruction::AccountMeta, pubkey::Pubkey, system_instruction};
 use solana_program_test::{BanksClientError, ProgramTestContext};
 use solana_sdk::{signature::Keypair, signer::Signer, transaction::Transaction};
 use spl_account_compression::{state::CONCURRENT_MERKLE_TREE_HEADER_SIZE_V1, ConcurrentMerkleTree};
 use spl_merkle_tree_reference::{MerkleTree, Node};
+
+use crate::get_account;
 
 pub struct TreeManager<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> {
     /// A keypair to represent the merkle tree account.
@@ -149,8 +151,17 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> TreeManager<MAX_DEPTH
             ..
         } = asset;
 
-        let mut transfer_builder = TransferBuilder::new();
-        transfer_builder
+        let proof: Vec<AccountMeta> = self
+            .get_proof(*nonce as u32)
+            .iter()
+            .map(|node| AccountMeta {
+                pubkey: Pubkey::new_from_array(*node),
+                is_signer: false,
+                is_writable: false,
+            })
+            .collect();
+
+        let transfer_ix = TransferBuilder::new()
             .leaf_delegate(owner.pubkey(), false)
             .leaf_owner(owner.pubkey(), true)
             .merkle_tree(self.tree.pubkey())
@@ -160,15 +171,12 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> TreeManager<MAX_DEPTH
             .nonce(*nonce)
             .creator_hash(*creator_hash)
             .data_hash(*data_hash)
-            .index(*nonce as u32);
-
-        self.get_proof(*nonce as u32).iter().for_each(|node| {
-            transfer_builder
-                .add_remaining_account(InstructionAccount::Readonly(Pubkey::new_from_array(*node)));
-        });
+            .index(*nonce as u32)
+            .add_remaining_accounts(&proof)
+            .instruction();
 
         let tx = Transaction::new_signed_with_payer(
-            &[transfer_builder.instruction()],
+            &[transfer_ix],
             Some(&context.payer.pubkey()),
             &[owner, &context.payer],
             context.last_blockhash,
@@ -198,5 +206,21 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> TreeManager<MAX_DEPTH
         self.proof_tree.add_leaf(leaf.hash(), nonce as usize);
 
         Ok(leaf)
+    }
+
+    pub async fn assert_root(&self, context: &mut ProgramTestContext) {
+        let mut tree_account = get_account(context, &self.tree.pubkey()).await;
+        let merkle_tree = tree_account.data.as_mut_slice();
+
+        let (_header, data) = merkle_tree.split_at_mut(CONCURRENT_MERKLE_TREE_HEADER_SIZE_V1);
+        let size = std::mem::size_of::<ConcurrentMerkleTree<MAX_DEPTH, MAX_BUFFER_SIZE>>();
+        let tree = &mut data[..size];
+
+        let tree =
+            bytemuck::try_from_bytes::<ConcurrentMerkleTree<MAX_DEPTH, MAX_BUFFER_SIZE>>(tree)
+                .unwrap();
+        let root = tree.change_logs[tree.active_index as usize].root;
+
+        assert_eq!(root, self.proof_tree.root);
     }
 }

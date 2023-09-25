@@ -27,6 +27,7 @@ thiserror = "^1.0"
 
 [dev-dependencies]
 assert_matches = "1.5.0"
+bytemuck = "1.14.0"
 solana-program-test = "^1.14"
 solana-sdk = "^1.14"
 spl-account-compression = { version="0.2.0", features = ["no-entrypoint", "cpi"] }

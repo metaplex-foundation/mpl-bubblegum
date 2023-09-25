@@ -74,5 +74,9 @@ mod transfer {
         let LeafSchema::V1 { owner, .. } = leaf;
 
         assert_eq!(owner, receiver);
+
+        // And the merkle tree root is updated.
+
+        tree_manager.assert_root(&mut context).await;
     }
 }

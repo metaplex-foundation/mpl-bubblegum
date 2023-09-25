@@ -57,6 +57,10 @@ mod mint {
         // Then one cNFT is minted.
 
         assert_eq!(tree_manager.minted(), 1);
+
+        // And the merkle tree root is updated.
+
+        tree_manager.assert_root(&mut context).await;
     }
 
     #[tokio::test]
@@ -108,5 +112,9 @@ mod mint {
 
         assert_eq!(tree_manager.minted(), 10);
         assert!(!tree_manager.get_proof(9).is_empty());
+
+        // And the merkle tree root is updated.
+
+        tree_manager.assert_root(&mut context).await;
     }
 }
