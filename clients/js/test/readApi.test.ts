@@ -113,7 +113,7 @@ test('it can fetch the proof of a compressed asset by ID', async (t) => {
 test('it can fetch an nft assets by group', async (t) => {
   const { umi } = t.context;
 
-  // When we fetch the proof of the asset using its ID.
+  // Fetch the assets on devnet that have the following collection "C7JjL4tXgqDKsek44AoNQBEME2aCvry6xZdKA8CxLoZr"
   const asset = await umi.rpc.getAssetsByGroup({
     groupKey: 'collection',
     groupValue: 'C7JjL4tXgqDKsek44AoNQBEME2aCvry6xZdKA8CxLoZr',
@@ -263,7 +263,7 @@ test('it can fetch an nft assets by group', async (t) => {
 test('it can fetch an nft assets by group with a sort', async (t) => {
   const { umi } = t.context;
 
-  // When we fetch the proof of the asset using its ID.
+  // Fetch the assets on devnet that have the following collection "C7JjL4tXgqDKsek44AoNQBEME2aCvry6xZdKA8CxLoZr"
   const asset = await umi.rpc.getAssetsByGroup({
     groupKey: 'collection',
     groupValue: 'C7JjL4tXgqDKsek44AoNQBEME2aCvry6xZdKA8CxLoZr',
