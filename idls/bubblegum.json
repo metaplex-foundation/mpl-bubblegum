@@ -1468,6 +1468,11 @@
           },
           {
             "name": "share",
+            "docs": [
+              "The percentage share.",
+              "",
+              "The value is a percentage, not basis points."
+            ],
             "type": "u8"
           }
         ]
