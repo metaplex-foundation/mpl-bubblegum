@@ -28,7 +28,7 @@ impl SetTreeDelegate {
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
         &self,
-        remaining_accounts: &[super::InstructionAccount],
+        remaining_accounts: &[solana_program::instruction::AccountMeta],
     ) -> solana_program::instruction::Instruction {
         let mut accounts = Vec::with_capacity(5 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new(
@@ -51,9 +51,7 @@ impl SetTreeDelegate {
             self.system_program,
             false,
         ));
-        remaining_accounts
-            .iter()
-            .for_each(|remaining_account| accounts.push(remaining_account.to_account_meta()));
+        accounts.extend_from_slice(remaining_accounts);
         let data = SetTreeDelegateInstructionData::new().try_to_vec().unwrap();
 
         solana_program::instruction::Instruction {
@@ -85,7 +83,7 @@ pub struct SetTreeDelegateBuilder {
     new_tree_delegate: Option<solana_program::pubkey::Pubkey>,
     merkle_tree: Option<solana_program::pubkey::Pubkey>,
     system_program: Option<solana_program::pubkey::Pubkey>,
-    __remaining_accounts: Vec<super::InstructionAccount>,
+    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
 
 impl SetTreeDelegateBuilder {
@@ -121,13 +119,21 @@ impl SetTreeDelegateBuilder {
         self.system_program = Some(system_program);
         self
     }
+    /// Add an aditional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(&mut self, account: super::InstructionAccount) -> &mut Self {
+    pub fn add_remaining_account(
+        &mut self,
+        account: solana_program::instruction::AccountMeta,
+    ) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
+    /// Add additional accounts to the instruction.
     #[inline(always)]
-    pub fn add_remaining_accounts(&mut self, accounts: &[super::InstructionAccount]) -> &mut Self {
+    pub fn add_remaining_accounts(
+        &mut self,
+        accounts: &[solana_program::instruction::AccountMeta],
+    ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
@@ -150,38 +156,38 @@ impl SetTreeDelegateBuilder {
 }
 
 /// `set_tree_delegate` CPI accounts.
-pub struct SetTreeDelegateCpiAccounts<'a> {
-    pub tree_config: &'a solana_program::account_info::AccountInfo<'a>,
+pub struct SetTreeDelegateCpiAccounts<'a, 'b> {
+    pub tree_config: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub tree_creator: &'a solana_program::account_info::AccountInfo<'a>,
+    pub tree_creator: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub new_tree_delegate: &'a solana_program::account_info::AccountInfo<'a>,
+    pub new_tree_delegate: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub merkle_tree: &'a solana_program::account_info::AccountInfo<'a>,
+    pub merkle_tree: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub system_program: &'a solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
 }
 
 /// `set_tree_delegate` CPI instruction.
-pub struct SetTreeDelegateCpi<'a> {
+pub struct SetTreeDelegateCpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'a solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub tree_config: &'a solana_program::account_info::AccountInfo<'a>,
+    pub tree_config: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub tree_creator: &'a solana_program::account_info::AccountInfo<'a>,
+    pub tree_creator: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub new_tree_delegate: &'a solana_program::account_info::AccountInfo<'a>,
+    pub new_tree_delegate: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub merkle_tree: &'a solana_program::account_info::AccountInfo<'a>,
+    pub merkle_tree: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub system_program: &'a solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
 }
 
-impl<'a> SetTreeDelegateCpi<'a> {
+impl<'a, 'b> SetTreeDelegateCpi<'a, 'b> {
     pub fn new(
-        program: &'a solana_program::account_info::AccountInfo<'a>,
-        accounts: SetTreeDelegateCpiAccounts<'a>,
+        program: &'b solana_program::account_info::AccountInfo<'a>,
+        accounts: SetTreeDelegateCpiAccounts<'a, 'b>,
     ) -> Self {
         Self {
             __program: program,
@@ -199,7 +205,11 @@ impl<'a> SetTreeDelegateCpi<'a> {
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[super::InstructionAccountInfo<'a>],
+        remaining_accounts: &[(
+            &'b solana_program::account_info::AccountInfo<'a>,
+            bool,
+            bool,
+        )],
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
@@ -215,7 +225,11 @@ impl<'a> SetTreeDelegateCpi<'a> {
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[super::InstructionAccountInfo<'a>],
+        remaining_accounts: &[(
+            &'b solana_program::account_info::AccountInfo<'a>,
+            bool,
+            bool,
+        )],
     ) -> solana_program::entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(5 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new(
@@ -238,9 +252,13 @@ impl<'a> SetTreeDelegateCpi<'a> {
             *self.system_program.key,
             false,
         ));
-        remaining_accounts
-            .iter()
-            .for_each(|remaining_account| accounts.push(remaining_account.to_account_meta()));
+        remaining_accounts.iter().for_each(|remaining_account| {
+            accounts.push(solana_program::instruction::AccountMeta {
+                pubkey: *remaining_account.0.key,
+                is_signer: remaining_account.1,
+                is_writable: remaining_account.2,
+            })
+        });
         let data = SetTreeDelegateInstructionData::new().try_to_vec().unwrap();
 
         let instruction = solana_program::instruction::Instruction {
@@ -255,9 +273,9 @@ impl<'a> SetTreeDelegateCpi<'a> {
         account_infos.push(self.new_tree_delegate.clone());
         account_infos.push(self.merkle_tree.clone());
         account_infos.push(self.system_program.clone());
-        remaining_accounts.iter().for_each(|remaining_account| {
-            account_infos.push(remaining_account.account_info().clone())
-        });
+        remaining_accounts
+            .iter()
+            .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
             solana_program::program::invoke(&instruction, &account_infos)
@@ -268,12 +286,12 @@ impl<'a> SetTreeDelegateCpi<'a> {
 }
 
 /// `set_tree_delegate` CPI instruction builder.
-pub struct SetTreeDelegateCpiBuilder<'a> {
-    instruction: Box<SetTreeDelegateCpiBuilderInstruction<'a>>,
+pub struct SetTreeDelegateCpiBuilder<'a, 'b> {
+    instruction: Box<SetTreeDelegateCpiBuilderInstruction<'a, 'b>>,
 }
 
-impl<'a> SetTreeDelegateCpiBuilder<'a> {
-    pub fn new(program: &'a solana_program::account_info::AccountInfo<'a>) -> Self {
+impl<'a, 'b> SetTreeDelegateCpiBuilder<'a, 'b> {
+    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(SetTreeDelegateCpiBuilderInstruction {
             __program: program,
             tree_config: None,
@@ -288,7 +306,7 @@ impl<'a> SetTreeDelegateCpiBuilder<'a> {
     #[inline(always)]
     pub fn tree_config(
         &mut self,
-        tree_config: &'a solana_program::account_info::AccountInfo<'a>,
+        tree_config: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.tree_config = Some(tree_config);
         self
@@ -296,7 +314,7 @@ impl<'a> SetTreeDelegateCpiBuilder<'a> {
     #[inline(always)]
     pub fn tree_creator(
         &mut self,
-        tree_creator: &'a solana_program::account_info::AccountInfo<'a>,
+        tree_creator: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.tree_creator = Some(tree_creator);
         self
@@ -304,7 +322,7 @@ impl<'a> SetTreeDelegateCpiBuilder<'a> {
     #[inline(always)]
     pub fn new_tree_delegate(
         &mut self,
-        new_tree_delegate: &'a solana_program::account_info::AccountInfo<'a>,
+        new_tree_delegate: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.new_tree_delegate = Some(new_tree_delegate);
         self
@@ -312,7 +330,7 @@ impl<'a> SetTreeDelegateCpiBuilder<'a> {
     #[inline(always)]
     pub fn merkle_tree(
         &mut self,
-        merkle_tree: &'a solana_program::account_info::AccountInfo<'a>,
+        merkle_tree: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.merkle_tree = Some(merkle_tree);
         self
@@ -320,23 +338,36 @@ impl<'a> SetTreeDelegateCpiBuilder<'a> {
     #[inline(always)]
     pub fn system_program(
         &mut self,
-        system_program: &'a solana_program::account_info::AccountInfo<'a>,
+        system_program: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.system_program = Some(system_program);
         self
     }
+    /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: super::InstructionAccountInfo<'a>,
+        account: &'b solana_program::account_info::AccountInfo<'a>,
+        is_writable: bool,
+        is_signer: bool,
     ) -> &mut Self {
-        self.instruction.__remaining_accounts.push(account);
+        self.instruction
+            .__remaining_accounts
+            .push((account, is_writable, is_signer));
         self
     }
+    /// Add additional accounts to the instruction.
+    ///
+    /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
+    /// and a `bool` indicating whether the account is a signer or not.
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[super::InstructionAccountInfo<'a>],
+        accounts: &[(
+            &'b solana_program::account_info::AccountInfo<'a>,
+            bool,
+            bool,
+        )],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
@@ -388,12 +419,17 @@ impl<'a> SetTreeDelegateCpiBuilder<'a> {
     }
 }
 
-struct SetTreeDelegateCpiBuilderInstruction<'a> {
-    __program: &'a solana_program::account_info::AccountInfo<'a>,
-    tree_config: Option<&'a solana_program::account_info::AccountInfo<'a>>,
-    tree_creator: Option<&'a solana_program::account_info::AccountInfo<'a>>,
-    new_tree_delegate: Option<&'a solana_program::account_info::AccountInfo<'a>>,
-    merkle_tree: Option<&'a solana_program::account_info::AccountInfo<'a>>,
-    system_program: Option<&'a solana_program::account_info::AccountInfo<'a>>,
-    __remaining_accounts: Vec<super::InstructionAccountInfo<'a>>,
+struct SetTreeDelegateCpiBuilderInstruction<'a, 'b> {
+    __program: &'b solana_program::account_info::AccountInfo<'a>,
+    tree_config: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    tree_creator: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    new_tree_delegate: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    merkle_tree: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
+    __remaining_accounts: Vec<(
+        &'b solana_program::account_info::AccountInfo<'a>,
+        bool,
+        bool,
+    )>,
 }

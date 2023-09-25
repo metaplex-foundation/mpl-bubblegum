@@ -10,31 +10,31 @@ use thiserror::Error;
 
 #[derive(Clone, Debug, Eq, Error, FromPrimitive, PartialEq)]
 pub enum SplAccountCompressionError {
-    /// 0x1770 - Incorrect leaf length. Expected vec of 32 bytes
+    /// 6000 (0x1770) - Incorrect leaf length. Expected vec of 32 bytes
     #[error("Incorrect leaf length. Expected vec of 32 bytes")]
     IncorrectLeafLength,
-    /// 0x1771 - Concurrent merkle tree error
+    /// 6001 (0x1771) - Concurrent merkle tree error
     #[error("Concurrent merkle tree error")]
     ConcurrentMerkleTreeError,
-    /// 0x1772 - Issue zero copying concurrent merkle tree data
+    /// 6002 (0x1772) - Issue zero copying concurrent merkle tree data
     #[error("Issue zero copying concurrent merkle tree data")]
     ZeroCopyError,
-    /// 0x1773 - An unsupported max depth or max buffer size constant was provided
+    /// 6003 (0x1773) - An unsupported max depth or max buffer size constant was provided
     #[error("An unsupported max depth or max buffer size constant was provided")]
     ConcurrentMerkleTreeConstantsError,
-    /// 0x1774 - Expected a different byte length for the merkle tree canopy
+    /// 6004 (0x1774) - Expected a different byte length for the merkle tree canopy
     #[error("Expected a different byte length for the merkle tree canopy")]
     CanopyLengthMismatch,
-    /// 0x1775 - Provided authority does not match expected tree authority
+    /// 6005 (0x1775) - Provided authority does not match expected tree authority
     #[error("Provided authority does not match expected tree authority")]
     IncorrectAuthority,
-    /// 0x1776 - Account is owned by a different program, expected it to be owned by this program
+    /// 6006 (0x1776) - Account is owned by a different program, expected it to be owned by this program
     #[error("Account is owned by a different program, expected it to be owned by this program")]
     IncorrectAccountOwner,
-    /// 0x1777 - Account provided has incorrect account type
+    /// 6007 (0x1777) - Account provided has incorrect account type
     #[error("Account provided has incorrect account type")]
     IncorrectAccountType,
-    /// 0x1778 - Leaf index of concurrent merkle tree is out of bounds
+    /// 6008 (0x1778) - Leaf index of concurrent merkle tree is out of bounds
     #[error("Leaf index of concurrent merkle tree is out of bounds")]
     LeafIndexOutOfBounds,
 }

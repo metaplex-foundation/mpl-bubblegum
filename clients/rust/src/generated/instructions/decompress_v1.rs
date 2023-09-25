@@ -49,7 +49,7 @@ impl DecompressV1 {
     pub fn instruction_with_remaining_accounts(
         &self,
         args: DecompressV1InstructionArgs,
-        remaining_accounts: &[super::InstructionAccount],
+        remaining_accounts: &[solana_program::instruction::AccountMeta],
     ) -> solana_program::instruction::Instruction {
         let mut accounts = Vec::with_capacity(13 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new(
@@ -103,9 +103,7 @@ impl DecompressV1 {
             self.log_wrapper,
             false,
         ));
-        remaining_accounts
-            .iter()
-            .for_each(|remaining_account| accounts.push(remaining_account.to_account_meta()));
+        accounts.extend_from_slice(remaining_accounts);
         let mut data = DecompressV1InstructionData::new().try_to_vec().unwrap();
         let mut args = args.try_to_vec().unwrap();
         data.append(&mut args);
@@ -154,7 +152,7 @@ pub struct DecompressV1Builder {
     associated_token_program: Option<solana_program::pubkey::Pubkey>,
     log_wrapper: Option<solana_program::pubkey::Pubkey>,
     metadata: Option<MetadataArgs>,
-    __remaining_accounts: Vec<super::InstructionAccount>,
+    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
 
 impl DecompressV1Builder {
@@ -246,13 +244,21 @@ impl DecompressV1Builder {
         self.metadata = Some(metadata);
         self
     }
+    /// Add an aditional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(&mut self, account: super::InstructionAccount) -> &mut Self {
+    pub fn add_remaining_account(
+        &mut self,
+        account: solana_program::instruction::AccountMeta,
+    ) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
+    /// Add additional accounts to the instruction.
     #[inline(always)]
-    pub fn add_remaining_accounts(&mut self, accounts: &[super::InstructionAccount]) -> &mut Self {
+    pub fn add_remaining_accounts(
+        &mut self,
+        accounts: &[solana_program::instruction::AccountMeta],
+    ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
@@ -295,72 +301,72 @@ impl DecompressV1Builder {
 }
 
 /// `decompress_v1` CPI accounts.
-pub struct DecompressV1CpiAccounts<'a> {
-    pub voucher: &'a solana_program::account_info::AccountInfo<'a>,
+pub struct DecompressV1CpiAccounts<'a, 'b> {
+    pub voucher: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub leaf_owner: &'a solana_program::account_info::AccountInfo<'a>,
+    pub leaf_owner: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub token_account: &'a solana_program::account_info::AccountInfo<'a>,
+    pub token_account: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub mint: &'a solana_program::account_info::AccountInfo<'a>,
+    pub mint: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub mint_authority: &'a solana_program::account_info::AccountInfo<'a>,
+    pub mint_authority: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub metadata_account: &'a solana_program::account_info::AccountInfo<'a>,
+    pub metadata_account: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub master_edition: &'a solana_program::account_info::AccountInfo<'a>,
+    pub master_edition: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub system_program: &'a solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub sysvar_rent: &'a solana_program::account_info::AccountInfo<'a>,
+    pub sysvar_rent: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub token_metadata_program: &'a solana_program::account_info::AccountInfo<'a>,
+    pub token_metadata_program: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub token_program: &'a solana_program::account_info::AccountInfo<'a>,
+    pub token_program: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub associated_token_program: &'a solana_program::account_info::AccountInfo<'a>,
+    pub associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub log_wrapper: &'a solana_program::account_info::AccountInfo<'a>,
+    pub log_wrapper: &'b solana_program::account_info::AccountInfo<'a>,
 }
 
 /// `decompress_v1` CPI instruction.
-pub struct DecompressV1Cpi<'a> {
+pub struct DecompressV1Cpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'a solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub voucher: &'a solana_program::account_info::AccountInfo<'a>,
+    pub voucher: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub leaf_owner: &'a solana_program::account_info::AccountInfo<'a>,
+    pub leaf_owner: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub token_account: &'a solana_program::account_info::AccountInfo<'a>,
+    pub token_account: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub mint: &'a solana_program::account_info::AccountInfo<'a>,
+    pub mint: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub mint_authority: &'a solana_program::account_info::AccountInfo<'a>,
+    pub mint_authority: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub metadata_account: &'a solana_program::account_info::AccountInfo<'a>,
+    pub metadata_account: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub master_edition: &'a solana_program::account_info::AccountInfo<'a>,
+    pub master_edition: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub system_program: &'a solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub sysvar_rent: &'a solana_program::account_info::AccountInfo<'a>,
+    pub sysvar_rent: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub token_metadata_program: &'a solana_program::account_info::AccountInfo<'a>,
+    pub token_metadata_program: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub token_program: &'a solana_program::account_info::AccountInfo<'a>,
+    pub token_program: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub associated_token_program: &'a solana_program::account_info::AccountInfo<'a>,
+    pub associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub log_wrapper: &'a solana_program::account_info::AccountInfo<'a>,
+    pub log_wrapper: &'b solana_program::account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
     pub __args: DecompressV1InstructionArgs,
 }
 
-impl<'a> DecompressV1Cpi<'a> {
+impl<'a, 'b> DecompressV1Cpi<'a, 'b> {
     pub fn new(
-        program: &'a solana_program::account_info::AccountInfo<'a>,
-        accounts: DecompressV1CpiAccounts<'a>,
+        program: &'b solana_program::account_info::AccountInfo<'a>,
+        accounts: DecompressV1CpiAccounts<'a, 'b>,
         args: DecompressV1InstructionArgs,
     ) -> Self {
         Self {
@@ -388,7 +394,11 @@ impl<'a> DecompressV1Cpi<'a> {
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[super::InstructionAccountInfo<'a>],
+        remaining_accounts: &[(
+            &'b solana_program::account_info::AccountInfo<'a>,
+            bool,
+            bool,
+        )],
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
@@ -404,7 +414,11 @@ impl<'a> DecompressV1Cpi<'a> {
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[super::InstructionAccountInfo<'a>],
+        remaining_accounts: &[(
+            &'b solana_program::account_info::AccountInfo<'a>,
+            bool,
+            bool,
+        )],
     ) -> solana_program::entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(13 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new(
@@ -459,9 +473,13 @@ impl<'a> DecompressV1Cpi<'a> {
             *self.log_wrapper.key,
             false,
         ));
-        remaining_accounts
-            .iter()
-            .for_each(|remaining_account| accounts.push(remaining_account.to_account_meta()));
+        remaining_accounts.iter().for_each(|remaining_account| {
+            accounts.push(solana_program::instruction::AccountMeta {
+                pubkey: *remaining_account.0.key,
+                is_signer: remaining_account.1,
+                is_writable: remaining_account.2,
+            })
+        });
         let mut data = DecompressV1InstructionData::new().try_to_vec().unwrap();
         let mut args = self.__args.try_to_vec().unwrap();
         data.append(&mut args);
@@ -486,9 +504,9 @@ impl<'a> DecompressV1Cpi<'a> {
         account_infos.push(self.token_program.clone());
         account_infos.push(self.associated_token_program.clone());
         account_infos.push(self.log_wrapper.clone());
-        remaining_accounts.iter().for_each(|remaining_account| {
-            account_infos.push(remaining_account.account_info().clone())
-        });
+        remaining_accounts
+            .iter()
+            .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
             solana_program::program::invoke(&instruction, &account_infos)
@@ -499,12 +517,12 @@ impl<'a> DecompressV1Cpi<'a> {
 }
 
 /// `decompress_v1` CPI instruction builder.
-pub struct DecompressV1CpiBuilder<'a> {
-    instruction: Box<DecompressV1CpiBuilderInstruction<'a>>,
+pub struct DecompressV1CpiBuilder<'a, 'b> {
+    instruction: Box<DecompressV1CpiBuilderInstruction<'a, 'b>>,
 }
 
-impl<'a> DecompressV1CpiBuilder<'a> {
-    pub fn new(program: &'a solana_program::account_info::AccountInfo<'a>) -> Self {
+impl<'a, 'b> DecompressV1CpiBuilder<'a, 'b> {
+    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(DecompressV1CpiBuilderInstruction {
             __program: program,
             voucher: None,
@@ -528,7 +546,7 @@ impl<'a> DecompressV1CpiBuilder<'a> {
     #[inline(always)]
     pub fn voucher(
         &mut self,
-        voucher: &'a solana_program::account_info::AccountInfo<'a>,
+        voucher: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.voucher = Some(voucher);
         self
@@ -536,7 +554,7 @@ impl<'a> DecompressV1CpiBuilder<'a> {
     #[inline(always)]
     pub fn leaf_owner(
         &mut self,
-        leaf_owner: &'a solana_program::account_info::AccountInfo<'a>,
+        leaf_owner: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.leaf_owner = Some(leaf_owner);
         self
@@ -544,20 +562,20 @@ impl<'a> DecompressV1CpiBuilder<'a> {
     #[inline(always)]
     pub fn token_account(
         &mut self,
-        token_account: &'a solana_program::account_info::AccountInfo<'a>,
+        token_account: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_account = Some(token_account);
         self
     }
     #[inline(always)]
-    pub fn mint(&mut self, mint: &'a solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn mint(&mut self, mint: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.mint = Some(mint);
         self
     }
     #[inline(always)]
     pub fn mint_authority(
         &mut self,
-        mint_authority: &'a solana_program::account_info::AccountInfo<'a>,
+        mint_authority: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.mint_authority = Some(mint_authority);
         self
@@ -565,7 +583,7 @@ impl<'a> DecompressV1CpiBuilder<'a> {
     #[inline(always)]
     pub fn metadata_account(
         &mut self,
-        metadata_account: &'a solana_program::account_info::AccountInfo<'a>,
+        metadata_account: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.metadata_account = Some(metadata_account);
         self
@@ -573,7 +591,7 @@ impl<'a> DecompressV1CpiBuilder<'a> {
     #[inline(always)]
     pub fn master_edition(
         &mut self,
-        master_edition: &'a solana_program::account_info::AccountInfo<'a>,
+        master_edition: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.master_edition = Some(master_edition);
         self
@@ -581,7 +599,7 @@ impl<'a> DecompressV1CpiBuilder<'a> {
     #[inline(always)]
     pub fn system_program(
         &mut self,
-        system_program: &'a solana_program::account_info::AccountInfo<'a>,
+        system_program: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.system_program = Some(system_program);
         self
@@ -589,7 +607,7 @@ impl<'a> DecompressV1CpiBuilder<'a> {
     #[inline(always)]
     pub fn sysvar_rent(
         &mut self,
-        sysvar_rent: &'a solana_program::account_info::AccountInfo<'a>,
+        sysvar_rent: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.sysvar_rent = Some(sysvar_rent);
         self
@@ -597,7 +615,7 @@ impl<'a> DecompressV1CpiBuilder<'a> {
     #[inline(always)]
     pub fn token_metadata_program(
         &mut self,
-        token_metadata_program: &'a solana_program::account_info::AccountInfo<'a>,
+        token_metadata_program: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_metadata_program = Some(token_metadata_program);
         self
@@ -605,7 +623,7 @@ impl<'a> DecompressV1CpiBuilder<'a> {
     #[inline(always)]
     pub fn token_program(
         &mut self,
-        token_program: &'a solana_program::account_info::AccountInfo<'a>,
+        token_program: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_program = Some(token_program);
         self
@@ -613,7 +631,7 @@ impl<'a> DecompressV1CpiBuilder<'a> {
     #[inline(always)]
     pub fn associated_token_program(
         &mut self,
-        associated_token_program: &'a solana_program::account_info::AccountInfo<'a>,
+        associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.associated_token_program = Some(associated_token_program);
         self
@@ -621,7 +639,7 @@ impl<'a> DecompressV1CpiBuilder<'a> {
     #[inline(always)]
     pub fn log_wrapper(
         &mut self,
-        log_wrapper: &'a solana_program::account_info::AccountInfo<'a>,
+        log_wrapper: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.log_wrapper = Some(log_wrapper);
         self
@@ -631,18 +649,31 @@ impl<'a> DecompressV1CpiBuilder<'a> {
         self.instruction.metadata = Some(metadata);
         self
     }
+    /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: super::InstructionAccountInfo<'a>,
+        account: &'b solana_program::account_info::AccountInfo<'a>,
+        is_writable: bool,
+        is_signer: bool,
     ) -> &mut Self {
-        self.instruction.__remaining_accounts.push(account);
+        self.instruction
+            .__remaining_accounts
+            .push((account, is_writable, is_signer));
         self
     }
+    /// Add additional accounts to the instruction.
+    ///
+    /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
+    /// and a `bool` indicating whether the account is a signer or not.
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[super::InstructionAccountInfo<'a>],
+        accounts: &[(
+            &'b solana_program::account_info::AccountInfo<'a>,
+            bool,
+            bool,
+        )],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
@@ -733,21 +764,26 @@ impl<'a> DecompressV1CpiBuilder<'a> {
     }
 }
 
-struct DecompressV1CpiBuilderInstruction<'a> {
-    __program: &'a solana_program::account_info::AccountInfo<'a>,
-    voucher: Option<&'a solana_program::account_info::AccountInfo<'a>>,
-    leaf_owner: Option<&'a solana_program::account_info::AccountInfo<'a>>,
-    token_account: Option<&'a solana_program::account_info::AccountInfo<'a>>,
-    mint: Option<&'a solana_program::account_info::AccountInfo<'a>>,
-    mint_authority: Option<&'a solana_program::account_info::AccountInfo<'a>>,
-    metadata_account: Option<&'a solana_program::account_info::AccountInfo<'a>>,
-    master_edition: Option<&'a solana_program::account_info::AccountInfo<'a>>,
-    system_program: Option<&'a solana_program::account_info::AccountInfo<'a>>,
-    sysvar_rent: Option<&'a solana_program::account_info::AccountInfo<'a>>,
-    token_metadata_program: Option<&'a solana_program::account_info::AccountInfo<'a>>,
-    token_program: Option<&'a solana_program::account_info::AccountInfo<'a>>,
-    associated_token_program: Option<&'a solana_program::account_info::AccountInfo<'a>>,
-    log_wrapper: Option<&'a solana_program::account_info::AccountInfo<'a>>,
+struct DecompressV1CpiBuilderInstruction<'a, 'b> {
+    __program: &'b solana_program::account_info::AccountInfo<'a>,
+    voucher: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    leaf_owner: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    token_account: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    mint_authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    metadata_account: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    master_edition: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    sysvar_rent: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    token_metadata_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    associated_token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    log_wrapper: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     metadata: Option<MetadataArgs>,
-    __remaining_accounts: Vec<super::InstructionAccountInfo<'a>>,
+    /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
+    __remaining_accounts: Vec<(
+        &'b solana_program::account_info::AccountInfo<'a>,
+        bool,
+        bool,
+    )>,
 }

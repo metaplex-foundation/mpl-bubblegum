@@ -38,7 +38,7 @@ impl Redeem {
     pub fn instruction_with_remaining_accounts(
         &self,
         args: RedeemInstructionArgs,
-        remaining_accounts: &[super::InstructionAccount],
+        remaining_accounts: &[solana_program::instruction::AccountMeta],
     ) -> solana_program::instruction::Instruction {
         let mut accounts = Vec::with_capacity(8 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
@@ -73,9 +73,7 @@ impl Redeem {
             self.system_program,
             false,
         ));
-        remaining_accounts
-            .iter()
-            .for_each(|remaining_account| accounts.push(remaining_account.to_account_meta()));
+        accounts.extend_from_slice(remaining_accounts);
         let mut data = RedeemInstructionData::new().try_to_vec().unwrap();
         let mut args = args.try_to_vec().unwrap();
         data.append(&mut args);
@@ -127,7 +125,7 @@ pub struct RedeemBuilder {
     creator_hash: Option<[u8; 32]>,
     nonce: Option<u64>,
     index: Option<u32>,
-    __remaining_accounts: Vec<super::InstructionAccount>,
+    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
 
 impl RedeemBuilder {
@@ -205,13 +203,21 @@ impl RedeemBuilder {
         self.index = Some(index);
         self
     }
+    /// Add an aditional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(&mut self, account: super::InstructionAccount) -> &mut Self {
+    pub fn add_remaining_account(
+        &mut self,
+        account: solana_program::instruction::AccountMeta,
+    ) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
+    /// Add additional accounts to the instruction.
     #[inline(always)]
-    pub fn add_remaining_accounts(&mut self, accounts: &[super::InstructionAccount]) -> &mut Self {
+    pub fn add_remaining_accounts(
+        &mut self,
+        accounts: &[solana_program::instruction::AccountMeta],
+    ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
@@ -246,52 +252,52 @@ impl RedeemBuilder {
 }
 
 /// `redeem` CPI accounts.
-pub struct RedeemCpiAccounts<'a> {
-    pub tree_config: &'a solana_program::account_info::AccountInfo<'a>,
+pub struct RedeemCpiAccounts<'a, 'b> {
+    pub tree_config: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub leaf_owner: &'a solana_program::account_info::AccountInfo<'a>,
+    pub leaf_owner: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub leaf_delegate: &'a solana_program::account_info::AccountInfo<'a>,
+    pub leaf_delegate: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub merkle_tree: &'a solana_program::account_info::AccountInfo<'a>,
+    pub merkle_tree: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub voucher: &'a solana_program::account_info::AccountInfo<'a>,
+    pub voucher: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub log_wrapper: &'a solana_program::account_info::AccountInfo<'a>,
+    pub log_wrapper: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub compression_program: &'a solana_program::account_info::AccountInfo<'a>,
+    pub compression_program: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub system_program: &'a solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
 }
 
 /// `redeem` CPI instruction.
-pub struct RedeemCpi<'a> {
+pub struct RedeemCpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'a solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub tree_config: &'a solana_program::account_info::AccountInfo<'a>,
+    pub tree_config: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub leaf_owner: &'a solana_program::account_info::AccountInfo<'a>,
+    pub leaf_owner: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub leaf_delegate: &'a solana_program::account_info::AccountInfo<'a>,
+    pub leaf_delegate: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub merkle_tree: &'a solana_program::account_info::AccountInfo<'a>,
+    pub merkle_tree: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub voucher: &'a solana_program::account_info::AccountInfo<'a>,
+    pub voucher: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub log_wrapper: &'a solana_program::account_info::AccountInfo<'a>,
+    pub log_wrapper: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub compression_program: &'a solana_program::account_info::AccountInfo<'a>,
+    pub compression_program: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub system_program: &'a solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
     pub __args: RedeemInstructionArgs,
 }
 
-impl<'a> RedeemCpi<'a> {
+impl<'a, 'b> RedeemCpi<'a, 'b> {
     pub fn new(
-        program: &'a solana_program::account_info::AccountInfo<'a>,
-        accounts: RedeemCpiAccounts<'a>,
+        program: &'b solana_program::account_info::AccountInfo<'a>,
+        accounts: RedeemCpiAccounts<'a, 'b>,
         args: RedeemInstructionArgs,
     ) -> Self {
         Self {
@@ -314,7 +320,11 @@ impl<'a> RedeemCpi<'a> {
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[super::InstructionAccountInfo<'a>],
+        remaining_accounts: &[(
+            &'b solana_program::account_info::AccountInfo<'a>,
+            bool,
+            bool,
+        )],
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
@@ -330,7 +340,11 @@ impl<'a> RedeemCpi<'a> {
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[super::InstructionAccountInfo<'a>],
+        remaining_accounts: &[(
+            &'b solana_program::account_info::AccountInfo<'a>,
+            bool,
+            bool,
+        )],
     ) -> solana_program::entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(8 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
@@ -365,9 +379,13 @@ impl<'a> RedeemCpi<'a> {
             *self.system_program.key,
             false,
         ));
-        remaining_accounts
-            .iter()
-            .for_each(|remaining_account| accounts.push(remaining_account.to_account_meta()));
+        remaining_accounts.iter().for_each(|remaining_account| {
+            accounts.push(solana_program::instruction::AccountMeta {
+                pubkey: *remaining_account.0.key,
+                is_signer: remaining_account.1,
+                is_writable: remaining_account.2,
+            })
+        });
         let mut data = RedeemInstructionData::new().try_to_vec().unwrap();
         let mut args = self.__args.try_to_vec().unwrap();
         data.append(&mut args);
@@ -387,9 +405,9 @@ impl<'a> RedeemCpi<'a> {
         account_infos.push(self.log_wrapper.clone());
         account_infos.push(self.compression_program.clone());
         account_infos.push(self.system_program.clone());
-        remaining_accounts.iter().for_each(|remaining_account| {
-            account_infos.push(remaining_account.account_info().clone())
-        });
+        remaining_accounts
+            .iter()
+            .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
             solana_program::program::invoke(&instruction, &account_infos)
@@ -400,12 +418,12 @@ impl<'a> RedeemCpi<'a> {
 }
 
 /// `redeem` CPI instruction builder.
-pub struct RedeemCpiBuilder<'a> {
-    instruction: Box<RedeemCpiBuilderInstruction<'a>>,
+pub struct RedeemCpiBuilder<'a, 'b> {
+    instruction: Box<RedeemCpiBuilderInstruction<'a, 'b>>,
 }
 
-impl<'a> RedeemCpiBuilder<'a> {
-    pub fn new(program: &'a solana_program::account_info::AccountInfo<'a>) -> Self {
+impl<'a, 'b> RedeemCpiBuilder<'a, 'b> {
+    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(RedeemCpiBuilderInstruction {
             __program: program,
             tree_config: None,
@@ -428,7 +446,7 @@ impl<'a> RedeemCpiBuilder<'a> {
     #[inline(always)]
     pub fn tree_config(
         &mut self,
-        tree_config: &'a solana_program::account_info::AccountInfo<'a>,
+        tree_config: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.tree_config = Some(tree_config);
         self
@@ -436,7 +454,7 @@ impl<'a> RedeemCpiBuilder<'a> {
     #[inline(always)]
     pub fn leaf_owner(
         &mut self,
-        leaf_owner: &'a solana_program::account_info::AccountInfo<'a>,
+        leaf_owner: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.leaf_owner = Some(leaf_owner);
         self
@@ -444,7 +462,7 @@ impl<'a> RedeemCpiBuilder<'a> {
     #[inline(always)]
     pub fn leaf_delegate(
         &mut self,
-        leaf_delegate: &'a solana_program::account_info::AccountInfo<'a>,
+        leaf_delegate: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.leaf_delegate = Some(leaf_delegate);
         self
@@ -452,7 +470,7 @@ impl<'a> RedeemCpiBuilder<'a> {
     #[inline(always)]
     pub fn merkle_tree(
         &mut self,
-        merkle_tree: &'a solana_program::account_info::AccountInfo<'a>,
+        merkle_tree: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.merkle_tree = Some(merkle_tree);
         self
@@ -460,7 +478,7 @@ impl<'a> RedeemCpiBuilder<'a> {
     #[inline(always)]
     pub fn voucher(
         &mut self,
-        voucher: &'a solana_program::account_info::AccountInfo<'a>,
+        voucher: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.voucher = Some(voucher);
         self
@@ -468,7 +486,7 @@ impl<'a> RedeemCpiBuilder<'a> {
     #[inline(always)]
     pub fn log_wrapper(
         &mut self,
-        log_wrapper: &'a solana_program::account_info::AccountInfo<'a>,
+        log_wrapper: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.log_wrapper = Some(log_wrapper);
         self
@@ -476,7 +494,7 @@ impl<'a> RedeemCpiBuilder<'a> {
     #[inline(always)]
     pub fn compression_program(
         &mut self,
-        compression_program: &'a solana_program::account_info::AccountInfo<'a>,
+        compression_program: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.compression_program = Some(compression_program);
         self
@@ -484,7 +502,7 @@ impl<'a> RedeemCpiBuilder<'a> {
     #[inline(always)]
     pub fn system_program(
         &mut self,
-        system_program: &'a solana_program::account_info::AccountInfo<'a>,
+        system_program: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.system_program = Some(system_program);
         self
@@ -514,18 +532,31 @@ impl<'a> RedeemCpiBuilder<'a> {
         self.instruction.index = Some(index);
         self
     }
+    /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: super::InstructionAccountInfo<'a>,
+        account: &'b solana_program::account_info::AccountInfo<'a>,
+        is_writable: bool,
+        is_signer: bool,
     ) -> &mut Self {
-        self.instruction.__remaining_accounts.push(account);
+        self.instruction
+            .__remaining_accounts
+            .push((account, is_writable, is_signer));
         self
     }
+    /// Add additional accounts to the instruction.
+    ///
+    /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
+    /// and a `bool` indicating whether the account is a signer or not.
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[super::InstructionAccountInfo<'a>],
+        accounts: &[(
+            &'b solana_program::account_info::AccountInfo<'a>,
+            bool,
+            bool,
+        )],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
@@ -602,20 +633,25 @@ impl<'a> RedeemCpiBuilder<'a> {
     }
 }
 
-struct RedeemCpiBuilderInstruction<'a> {
-    __program: &'a solana_program::account_info::AccountInfo<'a>,
-    tree_config: Option<&'a solana_program::account_info::AccountInfo<'a>>,
-    leaf_owner: Option<&'a solana_program::account_info::AccountInfo<'a>>,
-    leaf_delegate: Option<&'a solana_program::account_info::AccountInfo<'a>>,
-    merkle_tree: Option<&'a solana_program::account_info::AccountInfo<'a>>,
-    voucher: Option<&'a solana_program::account_info::AccountInfo<'a>>,
-    log_wrapper: Option<&'a solana_program::account_info::AccountInfo<'a>>,
-    compression_program: Option<&'a solana_program::account_info::AccountInfo<'a>>,
-    system_program: Option<&'a solana_program::account_info::AccountInfo<'a>>,
+struct RedeemCpiBuilderInstruction<'a, 'b> {
+    __program: &'b solana_program::account_info::AccountInfo<'a>,
+    tree_config: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    leaf_owner: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    leaf_delegate: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    merkle_tree: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    voucher: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    log_wrapper: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    compression_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     root: Option<[u8; 32]>,
     data_hash: Option<[u8; 32]>,
     creator_hash: Option<[u8; 32]>,
     nonce: Option<u64>,
     index: Option<u32>,
-    __remaining_accounts: Vec<super::InstructionAccountInfo<'a>>,
+    /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
+    __remaining_accounts: Vec<(
+        &'b solana_program::account_info::AccountInfo<'a>,
+        bool,
+        bool,
+    )>,
 }

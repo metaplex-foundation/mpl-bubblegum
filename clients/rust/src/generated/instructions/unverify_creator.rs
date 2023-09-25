@@ -41,7 +41,7 @@ impl UnverifyCreator {
     pub fn instruction_with_remaining_accounts(
         &self,
         args: UnverifyCreatorInstructionArgs,
-        remaining_accounts: &[super::InstructionAccount],
+        remaining_accounts: &[solana_program::instruction::AccountMeta],
     ) -> solana_program::instruction::Instruction {
         let mut accounts = Vec::with_capacity(9 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
@@ -79,9 +79,7 @@ impl UnverifyCreator {
             self.system_program,
             false,
         ));
-        remaining_accounts
-            .iter()
-            .for_each(|remaining_account| accounts.push(remaining_account.to_account_meta()));
+        accounts.extend_from_slice(remaining_accounts);
         let mut data = UnverifyCreatorInstructionData::new().try_to_vec().unwrap();
         let mut args = args.try_to_vec().unwrap();
         data.append(&mut args);
@@ -136,7 +134,7 @@ pub struct UnverifyCreatorBuilder {
     nonce: Option<u64>,
     index: Option<u32>,
     metadata: Option<MetadataArgs>,
-    __remaining_accounts: Vec<super::InstructionAccount>,
+    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
 
 impl UnverifyCreatorBuilder {
@@ -224,13 +222,21 @@ impl UnverifyCreatorBuilder {
         self.metadata = Some(metadata);
         self
     }
+    /// Add an aditional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(&mut self, account: super::InstructionAccount) -> &mut Self {
+    pub fn add_remaining_account(
+        &mut self,
+        account: solana_program::instruction::AccountMeta,
+    ) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
+    /// Add additional accounts to the instruction.
     #[inline(always)]
-    pub fn add_remaining_accounts(&mut self, accounts: &[super::InstructionAccount]) -> &mut Self {
+    pub fn add_remaining_accounts(
+        &mut self,
+        accounts: &[solana_program::instruction::AccountMeta],
+    ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
@@ -267,56 +273,56 @@ impl UnverifyCreatorBuilder {
 }
 
 /// `unverify_creator` CPI accounts.
-pub struct UnverifyCreatorCpiAccounts<'a> {
-    pub tree_config: &'a solana_program::account_info::AccountInfo<'a>,
+pub struct UnverifyCreatorCpiAccounts<'a, 'b> {
+    pub tree_config: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub leaf_owner: &'a solana_program::account_info::AccountInfo<'a>,
+    pub leaf_owner: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub leaf_delegate: &'a solana_program::account_info::AccountInfo<'a>,
+    pub leaf_delegate: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub merkle_tree: &'a solana_program::account_info::AccountInfo<'a>,
+    pub merkle_tree: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub payer: &'a solana_program::account_info::AccountInfo<'a>,
+    pub payer: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub creator: &'a solana_program::account_info::AccountInfo<'a>,
+    pub creator: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub log_wrapper: &'a solana_program::account_info::AccountInfo<'a>,
+    pub log_wrapper: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub compression_program: &'a solana_program::account_info::AccountInfo<'a>,
+    pub compression_program: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub system_program: &'a solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
 }
 
 /// `unverify_creator` CPI instruction.
-pub struct UnverifyCreatorCpi<'a> {
+pub struct UnverifyCreatorCpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'a solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub tree_config: &'a solana_program::account_info::AccountInfo<'a>,
+    pub tree_config: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub leaf_owner: &'a solana_program::account_info::AccountInfo<'a>,
+    pub leaf_owner: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub leaf_delegate: &'a solana_program::account_info::AccountInfo<'a>,
+    pub leaf_delegate: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub merkle_tree: &'a solana_program::account_info::AccountInfo<'a>,
+    pub merkle_tree: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub payer: &'a solana_program::account_info::AccountInfo<'a>,
+    pub payer: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub creator: &'a solana_program::account_info::AccountInfo<'a>,
+    pub creator: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub log_wrapper: &'a solana_program::account_info::AccountInfo<'a>,
+    pub log_wrapper: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub compression_program: &'a solana_program::account_info::AccountInfo<'a>,
+    pub compression_program: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub system_program: &'a solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
     pub __args: UnverifyCreatorInstructionArgs,
 }
 
-impl<'a> UnverifyCreatorCpi<'a> {
+impl<'a, 'b> UnverifyCreatorCpi<'a, 'b> {
     pub fn new(
-        program: &'a solana_program::account_info::AccountInfo<'a>,
-        accounts: UnverifyCreatorCpiAccounts<'a>,
+        program: &'b solana_program::account_info::AccountInfo<'a>,
+        accounts: UnverifyCreatorCpiAccounts<'a, 'b>,
         args: UnverifyCreatorInstructionArgs,
     ) -> Self {
         Self {
@@ -340,7 +346,11 @@ impl<'a> UnverifyCreatorCpi<'a> {
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[super::InstructionAccountInfo<'a>],
+        remaining_accounts: &[(
+            &'b solana_program::account_info::AccountInfo<'a>,
+            bool,
+            bool,
+        )],
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
@@ -356,7 +366,11 @@ impl<'a> UnverifyCreatorCpi<'a> {
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[super::InstructionAccountInfo<'a>],
+        remaining_accounts: &[(
+            &'b solana_program::account_info::AccountInfo<'a>,
+            bool,
+            bool,
+        )],
     ) -> solana_program::entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(9 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
@@ -395,9 +409,13 @@ impl<'a> UnverifyCreatorCpi<'a> {
             *self.system_program.key,
             false,
         ));
-        remaining_accounts
-            .iter()
-            .for_each(|remaining_account| accounts.push(remaining_account.to_account_meta()));
+        remaining_accounts.iter().for_each(|remaining_account| {
+            accounts.push(solana_program::instruction::AccountMeta {
+                pubkey: *remaining_account.0.key,
+                is_signer: remaining_account.1,
+                is_writable: remaining_account.2,
+            })
+        });
         let mut data = UnverifyCreatorInstructionData::new().try_to_vec().unwrap();
         let mut args = self.__args.try_to_vec().unwrap();
         data.append(&mut args);
@@ -418,9 +436,9 @@ impl<'a> UnverifyCreatorCpi<'a> {
         account_infos.push(self.log_wrapper.clone());
         account_infos.push(self.compression_program.clone());
         account_infos.push(self.system_program.clone());
-        remaining_accounts.iter().for_each(|remaining_account| {
-            account_infos.push(remaining_account.account_info().clone())
-        });
+        remaining_accounts
+            .iter()
+            .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
             solana_program::program::invoke(&instruction, &account_infos)
@@ -431,12 +449,12 @@ impl<'a> UnverifyCreatorCpi<'a> {
 }
 
 /// `unverify_creator` CPI instruction builder.
-pub struct UnverifyCreatorCpiBuilder<'a> {
-    instruction: Box<UnverifyCreatorCpiBuilderInstruction<'a>>,
+pub struct UnverifyCreatorCpiBuilder<'a, 'b> {
+    instruction: Box<UnverifyCreatorCpiBuilderInstruction<'a, 'b>>,
 }
 
-impl<'a> UnverifyCreatorCpiBuilder<'a> {
-    pub fn new(program: &'a solana_program::account_info::AccountInfo<'a>) -> Self {
+impl<'a, 'b> UnverifyCreatorCpiBuilder<'a, 'b> {
+    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(UnverifyCreatorCpiBuilderInstruction {
             __program: program,
             tree_config: None,
@@ -461,7 +479,7 @@ impl<'a> UnverifyCreatorCpiBuilder<'a> {
     #[inline(always)]
     pub fn tree_config(
         &mut self,
-        tree_config: &'a solana_program::account_info::AccountInfo<'a>,
+        tree_config: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.tree_config = Some(tree_config);
         self
@@ -469,7 +487,7 @@ impl<'a> UnverifyCreatorCpiBuilder<'a> {
     #[inline(always)]
     pub fn leaf_owner(
         &mut self,
-        leaf_owner: &'a solana_program::account_info::AccountInfo<'a>,
+        leaf_owner: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.leaf_owner = Some(leaf_owner);
         self
@@ -477,7 +495,7 @@ impl<'a> UnverifyCreatorCpiBuilder<'a> {
     #[inline(always)]
     pub fn leaf_delegate(
         &mut self,
-        leaf_delegate: &'a solana_program::account_info::AccountInfo<'a>,
+        leaf_delegate: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.leaf_delegate = Some(leaf_delegate);
         self
@@ -485,20 +503,20 @@ impl<'a> UnverifyCreatorCpiBuilder<'a> {
     #[inline(always)]
     pub fn merkle_tree(
         &mut self,
-        merkle_tree: &'a solana_program::account_info::AccountInfo<'a>,
+        merkle_tree: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.merkle_tree = Some(merkle_tree);
         self
     }
     #[inline(always)]
-    pub fn payer(&mut self, payer: &'a solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn payer(&mut self, payer: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.payer = Some(payer);
         self
     }
     #[inline(always)]
     pub fn creator(
         &mut self,
-        creator: &'a solana_program::account_info::AccountInfo<'a>,
+        creator: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.creator = Some(creator);
         self
@@ -506,7 +524,7 @@ impl<'a> UnverifyCreatorCpiBuilder<'a> {
     #[inline(always)]
     pub fn log_wrapper(
         &mut self,
-        log_wrapper: &'a solana_program::account_info::AccountInfo<'a>,
+        log_wrapper: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.log_wrapper = Some(log_wrapper);
         self
@@ -514,7 +532,7 @@ impl<'a> UnverifyCreatorCpiBuilder<'a> {
     #[inline(always)]
     pub fn compression_program(
         &mut self,
-        compression_program: &'a solana_program::account_info::AccountInfo<'a>,
+        compression_program: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.compression_program = Some(compression_program);
         self
@@ -522,7 +540,7 @@ impl<'a> UnverifyCreatorCpiBuilder<'a> {
     #[inline(always)]
     pub fn system_program(
         &mut self,
-        system_program: &'a solana_program::account_info::AccountInfo<'a>,
+        system_program: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.system_program = Some(system_program);
         self
@@ -557,18 +575,31 @@ impl<'a> UnverifyCreatorCpiBuilder<'a> {
         self.instruction.metadata = Some(metadata);
         self
     }
+    /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: super::InstructionAccountInfo<'a>,
+        account: &'b solana_program::account_info::AccountInfo<'a>,
+        is_writable: bool,
+        is_signer: bool,
     ) -> &mut Self {
-        self.instruction.__remaining_accounts.push(account);
+        self.instruction
+            .__remaining_accounts
+            .push((account, is_writable, is_signer));
         self
     }
+    /// Add additional accounts to the instruction.
+    ///
+    /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
+    /// and a `bool` indicating whether the account is a signer or not.
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[super::InstructionAccountInfo<'a>],
+        accounts: &[(
+            &'b solana_program::account_info::AccountInfo<'a>,
+            bool,
+            bool,
+        )],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
@@ -652,22 +683,27 @@ impl<'a> UnverifyCreatorCpiBuilder<'a> {
     }
 }
 
-struct UnverifyCreatorCpiBuilderInstruction<'a> {
-    __program: &'a solana_program::account_info::AccountInfo<'a>,
-    tree_config: Option<&'a solana_program::account_info::AccountInfo<'a>>,
-    leaf_owner: Option<&'a solana_program::account_info::AccountInfo<'a>>,
-    leaf_delegate: Option<&'a solana_program::account_info::AccountInfo<'a>>,
-    merkle_tree: Option<&'a solana_program::account_info::AccountInfo<'a>>,
-    payer: Option<&'a solana_program::account_info::AccountInfo<'a>>,
-    creator: Option<&'a solana_program::account_info::AccountInfo<'a>>,
-    log_wrapper: Option<&'a solana_program::account_info::AccountInfo<'a>>,
-    compression_program: Option<&'a solana_program::account_info::AccountInfo<'a>>,
-    system_program: Option<&'a solana_program::account_info::AccountInfo<'a>>,
+struct UnverifyCreatorCpiBuilderInstruction<'a, 'b> {
+    __program: &'b solana_program::account_info::AccountInfo<'a>,
+    tree_config: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    leaf_owner: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    leaf_delegate: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    merkle_tree: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    payer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    creator: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    log_wrapper: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    compression_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     root: Option<[u8; 32]>,
     data_hash: Option<[u8; 32]>,
     creator_hash: Option<[u8; 32]>,
     nonce: Option<u64>,
     index: Option<u32>,
     metadata: Option<MetadataArgs>,
-    __remaining_accounts: Vec<super::InstructionAccountInfo<'a>>,
+    /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
+    __remaining_accounts: Vec<(
+        &'b solana_program::account_info::AccountInfo<'a>,
+        bool,
+        bool,
+    )>,
 }

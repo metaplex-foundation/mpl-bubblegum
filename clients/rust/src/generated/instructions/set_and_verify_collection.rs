@@ -58,7 +58,7 @@ impl SetAndVerifyCollection {
     pub fn instruction_with_remaining_accounts(
         &self,
         args: SetAndVerifyCollectionInstructionArgs,
-        remaining_accounts: &[super::InstructionAccount],
+        remaining_accounts: &[solana_program::instruction::AccountMeta],
     ) -> solana_program::instruction::Instruction {
         let mut accounts = Vec::with_capacity(16 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
@@ -131,9 +131,7 @@ impl SetAndVerifyCollection {
             self.system_program,
             false,
         ));
-        remaining_accounts
-            .iter()
-            .for_each(|remaining_account| accounts.push(remaining_account.to_account_meta()));
+        accounts.extend_from_slice(remaining_accounts);
         let mut data = SetAndVerifyCollectionInstructionData::new()
             .try_to_vec()
             .unwrap();
@@ -199,7 +197,7 @@ pub struct SetAndVerifyCollectionBuilder {
     index: Option<u32>,
     metadata: Option<MetadataArgs>,
     collection: Option<Pubkey>,
-    __remaining_accounts: Vec<super::InstructionAccount>,
+    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
 
 impl SetAndVerifyCollectionBuilder {
@@ -359,13 +357,21 @@ impl SetAndVerifyCollectionBuilder {
         self.collection = Some(collection);
         self
     }
+    /// Add an aditional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(&mut self, account: super::InstructionAccount) -> &mut Self {
+    pub fn add_remaining_account(
+        &mut self,
+        account: solana_program::instruction::AccountMeta,
+    ) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
+    /// Add additional accounts to the instruction.
     #[inline(always)]
-    pub fn add_remaining_accounts(&mut self, accounts: &[super::InstructionAccount]) -> &mut Self {
+    pub fn add_remaining_accounts(
+        &mut self,
+        accounts: &[solana_program::instruction::AccountMeta],
+    ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
@@ -423,88 +429,88 @@ impl SetAndVerifyCollectionBuilder {
 }
 
 /// `set_and_verify_collection` CPI accounts.
-pub struct SetAndVerifyCollectionCpiAccounts<'a> {
-    pub tree_config: &'a solana_program::account_info::AccountInfo<'a>,
+pub struct SetAndVerifyCollectionCpiAccounts<'a, 'b> {
+    pub tree_config: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub leaf_owner: &'a solana_program::account_info::AccountInfo<'a>,
+    pub leaf_owner: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub leaf_delegate: &'a solana_program::account_info::AccountInfo<'a>,
+    pub leaf_delegate: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub merkle_tree: &'a solana_program::account_info::AccountInfo<'a>,
+    pub merkle_tree: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub payer: &'a solana_program::account_info::AccountInfo<'a>,
+    pub payer: &'b solana_program::account_info::AccountInfo<'a>,
     /// the case of `set_and_verify_collection` where
     /// we are actually changing the NFT metadata.
-    pub tree_creator_or_delegate: (&'a solana_program::account_info::AccountInfo<'a>, bool),
+    pub tree_creator_or_delegate: (&'b solana_program::account_info::AccountInfo<'a>, bool),
 
-    pub collection_authority: &'a solana_program::account_info::AccountInfo<'a>,
+    pub collection_authority: &'b solana_program::account_info::AccountInfo<'a>,
     /// If there is no collecton authority record PDA then
     /// this must be the Bubblegum program address.
-    pub collection_authority_record_pda: Option<&'a solana_program::account_info::AccountInfo<'a>>,
+    pub collection_authority_record_pda: Option<&'b solana_program::account_info::AccountInfo<'a>>,
 
-    pub collection_mint: &'a solana_program::account_info::AccountInfo<'a>,
+    pub collection_mint: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub collection_metadata: &'a solana_program::account_info::AccountInfo<'a>,
+    pub collection_metadata: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub collection_edition: &'a solana_program::account_info::AccountInfo<'a>,
+    pub collection_edition: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub bubblegum_signer: &'a solana_program::account_info::AccountInfo<'a>,
+    pub bubblegum_signer: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub log_wrapper: &'a solana_program::account_info::AccountInfo<'a>,
+    pub log_wrapper: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub compression_program: &'a solana_program::account_info::AccountInfo<'a>,
+    pub compression_program: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub token_metadata_program: &'a solana_program::account_info::AccountInfo<'a>,
+    pub token_metadata_program: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub system_program: &'a solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
 }
 
 /// `set_and_verify_collection` CPI instruction.
-pub struct SetAndVerifyCollectionCpi<'a> {
+pub struct SetAndVerifyCollectionCpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'a solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub tree_config: &'a solana_program::account_info::AccountInfo<'a>,
+    pub tree_config: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub leaf_owner: &'a solana_program::account_info::AccountInfo<'a>,
+    pub leaf_owner: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub leaf_delegate: &'a solana_program::account_info::AccountInfo<'a>,
+    pub leaf_delegate: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub merkle_tree: &'a solana_program::account_info::AccountInfo<'a>,
+    pub merkle_tree: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub payer: &'a solana_program::account_info::AccountInfo<'a>,
+    pub payer: &'b solana_program::account_info::AccountInfo<'a>,
     /// the case of `set_and_verify_collection` where
     /// we are actually changing the NFT metadata.
-    pub tree_creator_or_delegate: (&'a solana_program::account_info::AccountInfo<'a>, bool),
+    pub tree_creator_or_delegate: (&'b solana_program::account_info::AccountInfo<'a>, bool),
 
-    pub collection_authority: &'a solana_program::account_info::AccountInfo<'a>,
+    pub collection_authority: &'b solana_program::account_info::AccountInfo<'a>,
     /// If there is no collecton authority record PDA then
     /// this must be the Bubblegum program address.
-    pub collection_authority_record_pda: Option<&'a solana_program::account_info::AccountInfo<'a>>,
+    pub collection_authority_record_pda: Option<&'b solana_program::account_info::AccountInfo<'a>>,
 
-    pub collection_mint: &'a solana_program::account_info::AccountInfo<'a>,
+    pub collection_mint: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub collection_metadata: &'a solana_program::account_info::AccountInfo<'a>,
+    pub collection_metadata: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub collection_edition: &'a solana_program::account_info::AccountInfo<'a>,
+    pub collection_edition: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub bubblegum_signer: &'a solana_program::account_info::AccountInfo<'a>,
+    pub bubblegum_signer: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub log_wrapper: &'a solana_program::account_info::AccountInfo<'a>,
+    pub log_wrapper: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub compression_program: &'a solana_program::account_info::AccountInfo<'a>,
+    pub compression_program: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub token_metadata_program: &'a solana_program::account_info::AccountInfo<'a>,
+    pub token_metadata_program: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub system_program: &'a solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
     pub __args: SetAndVerifyCollectionInstructionArgs,
 }
 
-impl<'a> SetAndVerifyCollectionCpi<'a> {
+impl<'a, 'b> SetAndVerifyCollectionCpi<'a, 'b> {
     pub fn new(
-        program: &'a solana_program::account_info::AccountInfo<'a>,
-        accounts: SetAndVerifyCollectionCpiAccounts<'a>,
+        program: &'b solana_program::account_info::AccountInfo<'a>,
+        accounts: SetAndVerifyCollectionCpiAccounts<'a, 'b>,
         args: SetAndVerifyCollectionInstructionArgs,
     ) -> Self {
         Self {
@@ -535,7 +541,11 @@ impl<'a> SetAndVerifyCollectionCpi<'a> {
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[super::InstructionAccountInfo<'a>],
+        remaining_accounts: &[(
+            &'b solana_program::account_info::AccountInfo<'a>,
+            bool,
+            bool,
+        )],
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
@@ -551,7 +561,11 @@ impl<'a> SetAndVerifyCollectionCpi<'a> {
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[super::InstructionAccountInfo<'a>],
+        remaining_accounts: &[(
+            &'b solana_program::account_info::AccountInfo<'a>,
+            bool,
+            bool,
+        )],
     ) -> solana_program::entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(16 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
@@ -625,9 +639,13 @@ impl<'a> SetAndVerifyCollectionCpi<'a> {
             *self.system_program.key,
             false,
         ));
-        remaining_accounts
-            .iter()
-            .for_each(|remaining_account| accounts.push(remaining_account.to_account_meta()));
+        remaining_accounts.iter().for_each(|remaining_account| {
+            accounts.push(solana_program::instruction::AccountMeta {
+                pubkey: *remaining_account.0.key,
+                is_signer: remaining_account.1,
+                is_writable: remaining_account.2,
+            })
+        });
         let mut data = SetAndVerifyCollectionInstructionData::new()
             .try_to_vec()
             .unwrap();
@@ -659,9 +677,9 @@ impl<'a> SetAndVerifyCollectionCpi<'a> {
         account_infos.push(self.compression_program.clone());
         account_infos.push(self.token_metadata_program.clone());
         account_infos.push(self.system_program.clone());
-        remaining_accounts.iter().for_each(|remaining_account| {
-            account_infos.push(remaining_account.account_info().clone())
-        });
+        remaining_accounts
+            .iter()
+            .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
             solana_program::program::invoke(&instruction, &account_infos)
@@ -672,12 +690,12 @@ impl<'a> SetAndVerifyCollectionCpi<'a> {
 }
 
 /// `set_and_verify_collection` CPI instruction builder.
-pub struct SetAndVerifyCollectionCpiBuilder<'a> {
-    instruction: Box<SetAndVerifyCollectionCpiBuilderInstruction<'a>>,
+pub struct SetAndVerifyCollectionCpiBuilder<'a, 'b> {
+    instruction: Box<SetAndVerifyCollectionCpiBuilderInstruction<'a, 'b>>,
 }
 
-impl<'a> SetAndVerifyCollectionCpiBuilder<'a> {
-    pub fn new(program: &'a solana_program::account_info::AccountInfo<'a>) -> Self {
+impl<'a, 'b> SetAndVerifyCollectionCpiBuilder<'a, 'b> {
+    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(SetAndVerifyCollectionCpiBuilderInstruction {
             __program: program,
             tree_config: None,
@@ -710,7 +728,7 @@ impl<'a> SetAndVerifyCollectionCpiBuilder<'a> {
     #[inline(always)]
     pub fn tree_config(
         &mut self,
-        tree_config: &'a solana_program::account_info::AccountInfo<'a>,
+        tree_config: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.tree_config = Some(tree_config);
         self
@@ -718,7 +736,7 @@ impl<'a> SetAndVerifyCollectionCpiBuilder<'a> {
     #[inline(always)]
     pub fn leaf_owner(
         &mut self,
-        leaf_owner: &'a solana_program::account_info::AccountInfo<'a>,
+        leaf_owner: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.leaf_owner = Some(leaf_owner);
         self
@@ -726,7 +744,7 @@ impl<'a> SetAndVerifyCollectionCpiBuilder<'a> {
     #[inline(always)]
     pub fn leaf_delegate(
         &mut self,
-        leaf_delegate: &'a solana_program::account_info::AccountInfo<'a>,
+        leaf_delegate: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.leaf_delegate = Some(leaf_delegate);
         self
@@ -734,13 +752,13 @@ impl<'a> SetAndVerifyCollectionCpiBuilder<'a> {
     #[inline(always)]
     pub fn merkle_tree(
         &mut self,
-        merkle_tree: &'a solana_program::account_info::AccountInfo<'a>,
+        merkle_tree: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.merkle_tree = Some(merkle_tree);
         self
     }
     #[inline(always)]
-    pub fn payer(&mut self, payer: &'a solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn payer(&mut self, payer: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.payer = Some(payer);
         self
     }
@@ -749,7 +767,7 @@ impl<'a> SetAndVerifyCollectionCpiBuilder<'a> {
     #[inline(always)]
     pub fn tree_creator_or_delegate(
         &mut self,
-        tree_creator_or_delegate: &'a solana_program::account_info::AccountInfo<'a>,
+        tree_creator_or_delegate: &'b solana_program::account_info::AccountInfo<'a>,
         as_signer: bool,
     ) -> &mut Self {
         self.instruction.tree_creator_or_delegate = Some((tree_creator_or_delegate, as_signer));
@@ -758,7 +776,7 @@ impl<'a> SetAndVerifyCollectionCpiBuilder<'a> {
     #[inline(always)]
     pub fn collection_authority(
         &mut self,
-        collection_authority: &'a solana_program::account_info::AccountInfo<'a>,
+        collection_authority: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.collection_authority = Some(collection_authority);
         self
@@ -769,7 +787,7 @@ impl<'a> SetAndVerifyCollectionCpiBuilder<'a> {
     #[inline(always)]
     pub fn collection_authority_record_pda(
         &mut self,
-        collection_authority_record_pda: Option<&'a solana_program::account_info::AccountInfo<'a>>,
+        collection_authority_record_pda: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     ) -> &mut Self {
         self.instruction.collection_authority_record_pda = collection_authority_record_pda;
         self
@@ -777,7 +795,7 @@ impl<'a> SetAndVerifyCollectionCpiBuilder<'a> {
     #[inline(always)]
     pub fn collection_mint(
         &mut self,
-        collection_mint: &'a solana_program::account_info::AccountInfo<'a>,
+        collection_mint: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.collection_mint = Some(collection_mint);
         self
@@ -785,7 +803,7 @@ impl<'a> SetAndVerifyCollectionCpiBuilder<'a> {
     #[inline(always)]
     pub fn collection_metadata(
         &mut self,
-        collection_metadata: &'a solana_program::account_info::AccountInfo<'a>,
+        collection_metadata: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.collection_metadata = Some(collection_metadata);
         self
@@ -793,7 +811,7 @@ impl<'a> SetAndVerifyCollectionCpiBuilder<'a> {
     #[inline(always)]
     pub fn collection_edition(
         &mut self,
-        collection_edition: &'a solana_program::account_info::AccountInfo<'a>,
+        collection_edition: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.collection_edition = Some(collection_edition);
         self
@@ -801,7 +819,7 @@ impl<'a> SetAndVerifyCollectionCpiBuilder<'a> {
     #[inline(always)]
     pub fn bubblegum_signer(
         &mut self,
-        bubblegum_signer: &'a solana_program::account_info::AccountInfo<'a>,
+        bubblegum_signer: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.bubblegum_signer = Some(bubblegum_signer);
         self
@@ -809,7 +827,7 @@ impl<'a> SetAndVerifyCollectionCpiBuilder<'a> {
     #[inline(always)]
     pub fn log_wrapper(
         &mut self,
-        log_wrapper: &'a solana_program::account_info::AccountInfo<'a>,
+        log_wrapper: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.log_wrapper = Some(log_wrapper);
         self
@@ -817,7 +835,7 @@ impl<'a> SetAndVerifyCollectionCpiBuilder<'a> {
     #[inline(always)]
     pub fn compression_program(
         &mut self,
-        compression_program: &'a solana_program::account_info::AccountInfo<'a>,
+        compression_program: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.compression_program = Some(compression_program);
         self
@@ -825,7 +843,7 @@ impl<'a> SetAndVerifyCollectionCpiBuilder<'a> {
     #[inline(always)]
     pub fn token_metadata_program(
         &mut self,
-        token_metadata_program: &'a solana_program::account_info::AccountInfo<'a>,
+        token_metadata_program: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_metadata_program = Some(token_metadata_program);
         self
@@ -833,7 +851,7 @@ impl<'a> SetAndVerifyCollectionCpiBuilder<'a> {
     #[inline(always)]
     pub fn system_program(
         &mut self,
-        system_program: &'a solana_program::account_info::AccountInfo<'a>,
+        system_program: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.system_program = Some(system_program);
         self
@@ -873,18 +891,31 @@ impl<'a> SetAndVerifyCollectionCpiBuilder<'a> {
         self.instruction.collection = Some(collection);
         self
     }
+    /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: super::InstructionAccountInfo<'a>,
+        account: &'b solana_program::account_info::AccountInfo<'a>,
+        is_writable: bool,
+        is_signer: bool,
     ) -> &mut Self {
-        self.instruction.__remaining_accounts.push(account);
+        self.instruction
+            .__remaining_accounts
+            .push((account, is_writable, is_signer));
         self
     }
+    /// Add additional accounts to the instruction.
+    ///
+    /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
+    /// and a `bool` indicating whether the account is a signer or not.
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[super::InstructionAccountInfo<'a>],
+        accounts: &[(
+            &'b solana_program::account_info::AccountInfo<'a>,
+            bool,
+            bool,
+        )],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
@@ -1008,24 +1039,24 @@ impl<'a> SetAndVerifyCollectionCpiBuilder<'a> {
     }
 }
 
-struct SetAndVerifyCollectionCpiBuilderInstruction<'a> {
-    __program: &'a solana_program::account_info::AccountInfo<'a>,
-    tree_config: Option<&'a solana_program::account_info::AccountInfo<'a>>,
-    leaf_owner: Option<&'a solana_program::account_info::AccountInfo<'a>>,
-    leaf_delegate: Option<&'a solana_program::account_info::AccountInfo<'a>>,
-    merkle_tree: Option<&'a solana_program::account_info::AccountInfo<'a>>,
-    payer: Option<&'a solana_program::account_info::AccountInfo<'a>>,
-    tree_creator_or_delegate: Option<(&'a solana_program::account_info::AccountInfo<'a>, bool)>,
-    collection_authority: Option<&'a solana_program::account_info::AccountInfo<'a>>,
-    collection_authority_record_pda: Option<&'a solana_program::account_info::AccountInfo<'a>>,
-    collection_mint: Option<&'a solana_program::account_info::AccountInfo<'a>>,
-    collection_metadata: Option<&'a solana_program::account_info::AccountInfo<'a>>,
-    collection_edition: Option<&'a solana_program::account_info::AccountInfo<'a>>,
-    bubblegum_signer: Option<&'a solana_program::account_info::AccountInfo<'a>>,
-    log_wrapper: Option<&'a solana_program::account_info::AccountInfo<'a>>,
-    compression_program: Option<&'a solana_program::account_info::AccountInfo<'a>>,
-    token_metadata_program: Option<&'a solana_program::account_info::AccountInfo<'a>>,
-    system_program: Option<&'a solana_program::account_info::AccountInfo<'a>>,
+struct SetAndVerifyCollectionCpiBuilderInstruction<'a, 'b> {
+    __program: &'b solana_program::account_info::AccountInfo<'a>,
+    tree_config: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    leaf_owner: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    leaf_delegate: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    merkle_tree: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    payer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    tree_creator_or_delegate: Option<(&'b solana_program::account_info::AccountInfo<'a>, bool)>,
+    collection_authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    collection_authority_record_pda: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    collection_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    collection_metadata: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    collection_edition: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    bubblegum_signer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    log_wrapper: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    compression_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    token_metadata_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     root: Option<[u8; 32]>,
     data_hash: Option<[u8; 32]>,
     creator_hash: Option<[u8; 32]>,
@@ -1033,5 +1064,10 @@ struct SetAndVerifyCollectionCpiBuilderInstruction<'a> {
     index: Option<u32>,
     metadata: Option<MetadataArgs>,
     collection: Option<Pubkey>,
-    __remaining_accounts: Vec<super::InstructionAccountInfo<'a>>,
+    /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
+    __remaining_accounts: Vec<(
+        &'b solana_program::account_info::AccountInfo<'a>,
+        bool,
+        bool,
+    )>,
 }

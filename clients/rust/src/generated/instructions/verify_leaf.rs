@@ -24,16 +24,14 @@ impl VerifyLeaf {
     pub fn instruction_with_remaining_accounts(
         &self,
         args: VerifyLeafInstructionArgs,
-        remaining_accounts: &[super::InstructionAccount],
+        remaining_accounts: &[solana_program::instruction::AccountMeta],
     ) -> solana_program::instruction::Instruction {
         let mut accounts = Vec::with_capacity(1 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.merkle_tree,
             false,
         ));
-        remaining_accounts
-            .iter()
-            .for_each(|remaining_account| accounts.push(remaining_account.to_account_meta()));
+        accounts.extend_from_slice(remaining_accounts);
         let mut data = VerifyLeafInstructionData::new().try_to_vec().unwrap();
         let mut args = args.try_to_vec().unwrap();
         data.append(&mut args);
@@ -74,7 +72,7 @@ pub struct VerifyLeafBuilder {
     root: Option<[u8; 32]>,
     leaf: Option<[u8; 32]>,
     index: Option<u32>,
-    __remaining_accounts: Vec<super::InstructionAccount>,
+    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
 
 impl VerifyLeafBuilder {
@@ -101,13 +99,21 @@ impl VerifyLeafBuilder {
         self.index = Some(index);
         self
     }
+    /// Add an aditional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(&mut self, account: super::InstructionAccount) -> &mut Self {
+    pub fn add_remaining_account(
+        &mut self,
+        account: solana_program::instruction::AccountMeta,
+    ) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
+    /// Add additional accounts to the instruction.
     #[inline(always)]
-    pub fn add_remaining_accounts(&mut self, accounts: &[super::InstructionAccount]) -> &mut Self {
+    pub fn add_remaining_accounts(
+        &mut self,
+        accounts: &[solana_program::instruction::AccountMeta],
+    ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
@@ -127,24 +133,24 @@ impl VerifyLeafBuilder {
 }
 
 /// `verify_leaf` CPI accounts.
-pub struct VerifyLeafCpiAccounts<'a> {
-    pub merkle_tree: &'a solana_program::account_info::AccountInfo<'a>,
+pub struct VerifyLeafCpiAccounts<'a, 'b> {
+    pub merkle_tree: &'b solana_program::account_info::AccountInfo<'a>,
 }
 
 /// `verify_leaf` CPI instruction.
-pub struct VerifyLeafCpi<'a> {
+pub struct VerifyLeafCpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'a solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub merkle_tree: &'a solana_program::account_info::AccountInfo<'a>,
+    pub merkle_tree: &'b solana_program::account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
     pub __args: VerifyLeafInstructionArgs,
 }
 
-impl<'a> VerifyLeafCpi<'a> {
+impl<'a, 'b> VerifyLeafCpi<'a, 'b> {
     pub fn new(
-        program: &'a solana_program::account_info::AccountInfo<'a>,
-        accounts: VerifyLeafCpiAccounts<'a>,
+        program: &'b solana_program::account_info::AccountInfo<'a>,
+        accounts: VerifyLeafCpiAccounts<'a, 'b>,
         args: VerifyLeafInstructionArgs,
     ) -> Self {
         Self {
@@ -160,7 +166,11 @@ impl<'a> VerifyLeafCpi<'a> {
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[super::InstructionAccountInfo<'a>],
+        remaining_accounts: &[(
+            &'b solana_program::account_info::AccountInfo<'a>,
+            bool,
+            bool,
+        )],
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
@@ -176,16 +186,24 @@ impl<'a> VerifyLeafCpi<'a> {
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[super::InstructionAccountInfo<'a>],
+        remaining_accounts: &[(
+            &'b solana_program::account_info::AccountInfo<'a>,
+            bool,
+            bool,
+        )],
     ) -> solana_program::entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(1 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             *self.merkle_tree.key,
             false,
         ));
-        remaining_accounts
-            .iter()
-            .for_each(|remaining_account| accounts.push(remaining_account.to_account_meta()));
+        remaining_accounts.iter().for_each(|remaining_account| {
+            accounts.push(solana_program::instruction::AccountMeta {
+                pubkey: *remaining_account.0.key,
+                is_signer: remaining_account.1,
+                is_writable: remaining_account.2,
+            })
+        });
         let mut data = VerifyLeafInstructionData::new().try_to_vec().unwrap();
         let mut args = self.__args.try_to_vec().unwrap();
         data.append(&mut args);
@@ -198,9 +216,9 @@ impl<'a> VerifyLeafCpi<'a> {
         let mut account_infos = Vec::with_capacity(1 + 1 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
         account_infos.push(self.merkle_tree.clone());
-        remaining_accounts.iter().for_each(|remaining_account| {
-            account_infos.push(remaining_account.account_info().clone())
-        });
+        remaining_accounts
+            .iter()
+            .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
             solana_program::program::invoke(&instruction, &account_infos)
@@ -211,12 +229,12 @@ impl<'a> VerifyLeafCpi<'a> {
 }
 
 /// `verify_leaf` CPI instruction builder.
-pub struct VerifyLeafCpiBuilder<'a> {
-    instruction: Box<VerifyLeafCpiBuilderInstruction<'a>>,
+pub struct VerifyLeafCpiBuilder<'a, 'b> {
+    instruction: Box<VerifyLeafCpiBuilderInstruction<'a, 'b>>,
 }
 
-impl<'a> VerifyLeafCpiBuilder<'a> {
-    pub fn new(program: &'a solana_program::account_info::AccountInfo<'a>) -> Self {
+impl<'a, 'b> VerifyLeafCpiBuilder<'a, 'b> {
+    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(VerifyLeafCpiBuilderInstruction {
             __program: program,
             merkle_tree: None,
@@ -230,7 +248,7 @@ impl<'a> VerifyLeafCpiBuilder<'a> {
     #[inline(always)]
     pub fn merkle_tree(
         &mut self,
-        merkle_tree: &'a solana_program::account_info::AccountInfo<'a>,
+        merkle_tree: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.merkle_tree = Some(merkle_tree);
         self
@@ -250,18 +268,31 @@ impl<'a> VerifyLeafCpiBuilder<'a> {
         self.instruction.index = Some(index);
         self
     }
+    /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: super::InstructionAccountInfo<'a>,
+        account: &'b solana_program::account_info::AccountInfo<'a>,
+        is_writable: bool,
+        is_signer: bool,
     ) -> &mut Self {
-        self.instruction.__remaining_accounts.push(account);
+        self.instruction
+            .__remaining_accounts
+            .push((account, is_writable, is_signer));
         self
     }
+    /// Add additional accounts to the instruction.
+    ///
+    /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
+    /// and a `bool` indicating whether the account is a signer or not.
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[super::InstructionAccountInfo<'a>],
+        accounts: &[(
+            &'b solana_program::account_info::AccountInfo<'a>,
+            bool,
+            bool,
+        )],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
@@ -299,11 +330,16 @@ impl<'a> VerifyLeafCpiBuilder<'a> {
     }
 }
 
-struct VerifyLeafCpiBuilderInstruction<'a> {
-    __program: &'a solana_program::account_info::AccountInfo<'a>,
-    merkle_tree: Option<&'a solana_program::account_info::AccountInfo<'a>>,
+struct VerifyLeafCpiBuilderInstruction<'a, 'b> {
+    __program: &'b solana_program::account_info::AccountInfo<'a>,
+    merkle_tree: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     root: Option<[u8; 32]>,
     leaf: Option<[u8; 32]>,
     index: Option<u32>,
-    __remaining_accounts: Vec<super::InstructionAccountInfo<'a>>,
+    /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
+    __remaining_accounts: Vec<(
+        &'b solana_program::account_info::AccountInfo<'a>,
+        bool,
+        bool,
+    )>,
 }

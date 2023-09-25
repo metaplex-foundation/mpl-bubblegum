@@ -27,7 +27,7 @@ impl SetDecompressableState {
     pub fn instruction_with_remaining_accounts(
         &self,
         args: SetDecompressableStateInstructionArgs,
-        remaining_accounts: &[super::InstructionAccount],
+        remaining_accounts: &[solana_program::instruction::AccountMeta],
     ) -> solana_program::instruction::Instruction {
         let mut accounts = Vec::with_capacity(2 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new(
@@ -38,9 +38,7 @@ impl SetDecompressableState {
             self.tree_creator,
             true,
         ));
-        remaining_accounts
-            .iter()
-            .for_each(|remaining_account| accounts.push(remaining_account.to_account_meta()));
+        accounts.extend_from_slice(remaining_accounts);
         let mut data = SetDecompressableStateInstructionData::new()
             .try_to_vec()
             .unwrap();
@@ -80,7 +78,7 @@ pub struct SetDecompressableStateBuilder {
     tree_config: Option<solana_program::pubkey::Pubkey>,
     tree_creator: Option<solana_program::pubkey::Pubkey>,
     decompressable_state: Option<DecompressableState>,
-    __remaining_accounts: Vec<super::InstructionAccount>,
+    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
 
 impl SetDecompressableStateBuilder {
@@ -102,13 +100,21 @@ impl SetDecompressableStateBuilder {
         self.decompressable_state = Some(decompressable_state);
         self
     }
+    /// Add an aditional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(&mut self, account: super::InstructionAccount) -> &mut Self {
+    pub fn add_remaining_account(
+        &mut self,
+        account: solana_program::instruction::AccountMeta,
+    ) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
+    /// Add additional accounts to the instruction.
     #[inline(always)]
-    pub fn add_remaining_accounts(&mut self, accounts: &[super::InstructionAccount]) -> &mut Self {
+    pub fn add_remaining_accounts(
+        &mut self,
+        accounts: &[solana_program::instruction::AccountMeta],
+    ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
@@ -130,28 +136,28 @@ impl SetDecompressableStateBuilder {
 }
 
 /// `set_decompressable_state` CPI accounts.
-pub struct SetDecompressableStateCpiAccounts<'a> {
-    pub tree_config: &'a solana_program::account_info::AccountInfo<'a>,
+pub struct SetDecompressableStateCpiAccounts<'a, 'b> {
+    pub tree_config: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub tree_creator: &'a solana_program::account_info::AccountInfo<'a>,
+    pub tree_creator: &'b solana_program::account_info::AccountInfo<'a>,
 }
 
 /// `set_decompressable_state` CPI instruction.
-pub struct SetDecompressableStateCpi<'a> {
+pub struct SetDecompressableStateCpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'a solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub tree_config: &'a solana_program::account_info::AccountInfo<'a>,
+    pub tree_config: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub tree_creator: &'a solana_program::account_info::AccountInfo<'a>,
+    pub tree_creator: &'b solana_program::account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
     pub __args: SetDecompressableStateInstructionArgs,
 }
 
-impl<'a> SetDecompressableStateCpi<'a> {
+impl<'a, 'b> SetDecompressableStateCpi<'a, 'b> {
     pub fn new(
-        program: &'a solana_program::account_info::AccountInfo<'a>,
-        accounts: SetDecompressableStateCpiAccounts<'a>,
+        program: &'b solana_program::account_info::AccountInfo<'a>,
+        accounts: SetDecompressableStateCpiAccounts<'a, 'b>,
         args: SetDecompressableStateInstructionArgs,
     ) -> Self {
         Self {
@@ -168,7 +174,11 @@ impl<'a> SetDecompressableStateCpi<'a> {
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[super::InstructionAccountInfo<'a>],
+        remaining_accounts: &[(
+            &'b solana_program::account_info::AccountInfo<'a>,
+            bool,
+            bool,
+        )],
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
@@ -184,7 +194,11 @@ impl<'a> SetDecompressableStateCpi<'a> {
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[super::InstructionAccountInfo<'a>],
+        remaining_accounts: &[(
+            &'b solana_program::account_info::AccountInfo<'a>,
+            bool,
+            bool,
+        )],
     ) -> solana_program::entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(2 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new(
@@ -195,9 +209,13 @@ impl<'a> SetDecompressableStateCpi<'a> {
             *self.tree_creator.key,
             true,
         ));
-        remaining_accounts
-            .iter()
-            .for_each(|remaining_account| accounts.push(remaining_account.to_account_meta()));
+        remaining_accounts.iter().for_each(|remaining_account| {
+            accounts.push(solana_program::instruction::AccountMeta {
+                pubkey: *remaining_account.0.key,
+                is_signer: remaining_account.1,
+                is_writable: remaining_account.2,
+            })
+        });
         let mut data = SetDecompressableStateInstructionData::new()
             .try_to_vec()
             .unwrap();
@@ -213,9 +231,9 @@ impl<'a> SetDecompressableStateCpi<'a> {
         account_infos.push(self.__program.clone());
         account_infos.push(self.tree_config.clone());
         account_infos.push(self.tree_creator.clone());
-        remaining_accounts.iter().for_each(|remaining_account| {
-            account_infos.push(remaining_account.account_info().clone())
-        });
+        remaining_accounts
+            .iter()
+            .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
             solana_program::program::invoke(&instruction, &account_infos)
@@ -226,12 +244,12 @@ impl<'a> SetDecompressableStateCpi<'a> {
 }
 
 /// `set_decompressable_state` CPI instruction builder.
-pub struct SetDecompressableStateCpiBuilder<'a> {
-    instruction: Box<SetDecompressableStateCpiBuilderInstruction<'a>>,
+pub struct SetDecompressableStateCpiBuilder<'a, 'b> {
+    instruction: Box<SetDecompressableStateCpiBuilderInstruction<'a, 'b>>,
 }
 
-impl<'a> SetDecompressableStateCpiBuilder<'a> {
-    pub fn new(program: &'a solana_program::account_info::AccountInfo<'a>) -> Self {
+impl<'a, 'b> SetDecompressableStateCpiBuilder<'a, 'b> {
+    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(SetDecompressableStateCpiBuilderInstruction {
             __program: program,
             tree_config: None,
@@ -244,7 +262,7 @@ impl<'a> SetDecompressableStateCpiBuilder<'a> {
     #[inline(always)]
     pub fn tree_config(
         &mut self,
-        tree_config: &'a solana_program::account_info::AccountInfo<'a>,
+        tree_config: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.tree_config = Some(tree_config);
         self
@@ -252,7 +270,7 @@ impl<'a> SetDecompressableStateCpiBuilder<'a> {
     #[inline(always)]
     pub fn tree_creator(
         &mut self,
-        tree_creator: &'a solana_program::account_info::AccountInfo<'a>,
+        tree_creator: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.tree_creator = Some(tree_creator);
         self
@@ -262,18 +280,31 @@ impl<'a> SetDecompressableStateCpiBuilder<'a> {
         self.instruction.decompressable_state = Some(decompressable_state);
         self
     }
+    /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: super::InstructionAccountInfo<'a>,
+        account: &'b solana_program::account_info::AccountInfo<'a>,
+        is_writable: bool,
+        is_signer: bool,
     ) -> &mut Self {
-        self.instruction.__remaining_accounts.push(account);
+        self.instruction
+            .__remaining_accounts
+            .push((account, is_writable, is_signer));
         self
     }
+    /// Add additional accounts to the instruction.
+    ///
+    /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
+    /// and a `bool` indicating whether the account is a signer or not.
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[super::InstructionAccountInfo<'a>],
+        accounts: &[(
+            &'b solana_program::account_info::AccountInfo<'a>,
+            bool,
+            bool,
+        )],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
@@ -318,10 +349,15 @@ impl<'a> SetDecompressableStateCpiBuilder<'a> {
     }
 }
 
-struct SetDecompressableStateCpiBuilderInstruction<'a> {
-    __program: &'a solana_program::account_info::AccountInfo<'a>,
-    tree_config: Option<&'a solana_program::account_info::AccountInfo<'a>>,
-    tree_creator: Option<&'a solana_program::account_info::AccountInfo<'a>>,
+struct SetDecompressableStateCpiBuilderInstruction<'a, 'b> {
+    __program: &'b solana_program::account_info::AccountInfo<'a>,
+    tree_config: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    tree_creator: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     decompressable_state: Option<DecompressableState>,
-    __remaining_accounts: Vec<super::InstructionAccountInfo<'a>>,
+    /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
+    __remaining_accounts: Vec<(
+        &'b solana_program::account_info::AccountInfo<'a>,
+        bool,
+        bool,
+    )>,
 }
