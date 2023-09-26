@@ -21,6 +21,7 @@ pub struct SetAndVerifyCollection {
     pub merkle_tree: solana_program::pubkey::Pubkey,
 
     pub payer: solana_program::pubkey::Pubkey,
+    /// This account is checked to be a signer in
     /// the case of `set_and_verify_collection` where
     /// we are actually changing the NFT metadata.
     pub tree_creator_or_delegate: (solana_program::pubkey::Pubkey, bool),
@@ -229,6 +230,7 @@ impl SetAndVerifyCollectionBuilder {
         self.payer = Some(payer);
         self
     }
+    /// This account is checked to be a signer in
     /// the case of `set_and_verify_collection` where
     /// we are actually changing the NFT metadata.
     #[inline(always)]
@@ -439,6 +441,7 @@ pub struct SetAndVerifyCollectionCpiAccounts<'a, 'b> {
     pub merkle_tree: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub payer: &'b solana_program::account_info::AccountInfo<'a>,
+    /// This account is checked to be a signer in
     /// the case of `set_and_verify_collection` where
     /// we are actually changing the NFT metadata.
     pub tree_creator_or_delegate: (&'b solana_program::account_info::AccountInfo<'a>, bool),
@@ -479,6 +482,7 @@ pub struct SetAndVerifyCollectionCpi<'a, 'b> {
     pub merkle_tree: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub payer: &'b solana_program::account_info::AccountInfo<'a>,
+    /// This account is checked to be a signer in
     /// the case of `set_and_verify_collection` where
     /// we are actually changing the NFT metadata.
     pub tree_creator_or_delegate: (&'b solana_program::account_info::AccountInfo<'a>, bool),
@@ -762,6 +766,7 @@ impl<'a, 'b> SetAndVerifyCollectionCpiBuilder<'a, 'b> {
         self.instruction.payer = Some(payer);
         self
     }
+    /// This account is checked to be a signer in
     /// the case of `set_and_verify_collection` where
     /// we are actually changing the NFT metadata.
     #[inline(always)]
