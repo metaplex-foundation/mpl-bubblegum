@@ -102,3 +102,14 @@ pub struct MetadataArgs {
     pub token_program_version: TokenProgramVersion,
     pub creators: Vec<Creator>,
 }
+
+#[derive(AnchorSerialize, AnchorDeserialize, PartialEq, Eq, Debug, Clone, Default)]
+pub struct UpdateArgs {
+    pub name: Option<String>,
+    pub symbol: Option<String>,
+    pub uri: Option<String>,
+    pub creators: Option<Vec<Creator>>,
+    pub seller_fee_basis_points: Option<u16>,
+    pub primary_sale_happened: Option<bool>,
+    pub is_mutable: Option<bool>,
+}

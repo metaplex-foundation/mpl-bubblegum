@@ -72,6 +72,22 @@ pub enum BubblegumError {
     UnknownExternalError,
     #[msg("Decompression is disabled for this tree.")]
     DecompressionDisabled,
+    #[msg("Metadata not mutable")]
+    MetadataImmutable,
+    #[msg("Collection mismatch")]
+    CollectionMismatch,
+    #[msg("MetadataArgs ambiguous")]
+    MetadataArgsAmbiguous,
+    #[msg("MetadataArgs missing")]
+    MetadataArgsMissing,
+    #[msg("NFT linked to collection")]
+    NFTLinkedToCollection,
+    #[msg("NFT not linked to verified collection")]
+    NFTNotLinkedToVerifiedCollection,
+    #[msg("Can only update primary sale to true")]
+    PrimarySaleCanOnlyBeFlippedToTrue,
+    #[msg("Creator did not unverify the metadata")]
+    CreatorDidNotUnverify,
 }
 
 // Converts certain Token Metadata errors into Bubblegum equivalents

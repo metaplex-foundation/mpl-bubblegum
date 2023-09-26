@@ -28,6 +28,8 @@ export enum InstructionName {
   SetAndVerifyCollection,
   MintToCollectionV1,
   SetDecompressableState,
+  UpdateMetadata,
+  UpdateMetadataCollectionNft,
 }
 
 /**
