@@ -6,7 +6,7 @@ use solana_program::{account_info::AccountInfo, program::invoke_signed, pubkey::
 use spl_account_compression::wrap_application_data_v1;
 
 use crate::{
-    asserts::{assert_has_collection_authority, get_asset_id, replace_leaf},
+    asserts::assert_has_collection_authority,
     error::{metadata_error_into_bubblegum, BubblegumError},
     state::{
         leaf_schema::LeafSchema,
@@ -14,7 +14,7 @@ use crate::{
         metaplex_anchor::TokenMetadata,
         COLLECTION_CPI_PREFIX,
     },
-    utils::{hash_creators, hash_metadata},
+    utils::{get_asset_id, hash_creators, hash_metadata, replace_leaf},
 };
 
 mod burn;
