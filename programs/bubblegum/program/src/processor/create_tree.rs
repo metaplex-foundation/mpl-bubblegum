@@ -1,7 +1,7 @@
 use anchor_lang::{prelude::*, system_program::System};
 use spl_account_compression::{program::SplAccountCompression, Noop};
 
-use crate::state::{DecompressableState, TreeConfig, TREE_AUTHORITY_SIZE};
+use crate::state::{DecompressibleState, TreeConfig, TREE_AUTHORITY_SIZE};
 
 #[derive(Accounts)]
 pub struct CreateTree<'info> {
@@ -40,7 +40,7 @@ pub(crate) fn create_tree(
         total_mint_capacity: 1 << max_depth,
         num_minted: 0,
         is_public: public.unwrap_or(false),
-        is_decompressable: DecompressableState::Disabled,
+        is_decompressible: DecompressibleState::Disabled,
     });
     let authority_pda_signer = &[&seeds[..]];
     let cpi_ctx = CpiContext::new_with_signer(

@@ -389,7 +389,7 @@ impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExe
 pub type SetDecompressableStateBuilder<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> =
     TxBuilder<
         'a,
-        bubblegum::accounts::SetDecompressableState,
+        bubblegum::accounts::SetDecompressibleState,
         bubblegum::instruction::SetDecompressableState,
         (),
         MAX_DEPTH,

@@ -10,7 +10,7 @@ pub mod state;
 pub mod utils;
 
 use processor::*;
-use state::{metaplex_adapter::MetadataArgs, DecompressableState};
+use state::{metaplex_adapter::MetadataArgs, DecompressibleState};
 
 declare_id!("BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY");
 
@@ -31,7 +31,7 @@ pub enum InstructionName {
     UnverifyCollection,
     SetAndVerifyCollection,
     MintToCollectionV1,
-    SetDecompressableState,
+    SetDecompressibleState,
 }
 
 pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
@@ -56,7 +56,9 @@ pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
         [56, 113, 101, 253, 79, 55, 122, 169] => InstructionName::VerifyCollection,
         [250, 251, 42, 106, 41, 137, 186, 168] => InstructionName::UnverifyCollection,
         [235, 242, 121, 216, 158, 234, 180, 234] => InstructionName::SetAndVerifyCollection,
-        [37, 232, 198, 199, 64, 102, 128, 49] => InstructionName::SetDecompressableState,
+        [82, 104, 152, 6, 149, 111, 100, 13] => InstructionName::SetDecompressibleState,
+        // `SetDecompressableState` instruction mapped to `SetDecompressibleState` instruction
+        [18, 135, 238, 168, 246, 195, 61, 115] => InstructionName::SetDecompressibleState,
 
         _ => InstructionName::Unknown,
     }
@@ -169,12 +171,24 @@ pub mod bubblegum {
         )
     }
 
-    /// Sets the `decompressable_state` of a tree.
+    /// Sets the `decompressible_state` of a tree.
+    #[deprecated(
+        since = "0.11.1",
+        note = "Please use `set_decompressible_state` instead"
+    )]
     pub fn set_decompressable_state(
-        ctx: Context<SetDecompressableState>,
-        decompressable_state: DecompressableState,
+        ctx: Context<SetDecompressibleState>,
+        decompressable_state: DecompressibleState,
     ) -> Result<()> {
-        processor::set_decompressable_state(ctx, decompressable_state)
+        processor::set_decompressible_state(ctx, decompressable_state)
+    }
+
+    /// Sets the `decompressible_state` of a tree.
+    pub fn set_decompressible_state(
+        ctx: Context<SetDecompressibleState>,
+        decompressable_state: DecompressibleState,
+    ) -> Result<()> {
+        processor::set_decompressible_state(ctx, decompressable_state)
     }
 
     /// Sets a delegate for a tree.

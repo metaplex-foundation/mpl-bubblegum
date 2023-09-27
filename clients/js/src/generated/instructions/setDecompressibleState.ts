@@ -27,62 +27,62 @@ import {
   getAccountMetasAndSigners,
 } from '../shared';
 import {
-  DecompressableState,
-  DecompressableStateArgs,
-  getDecompressableStateSerializer,
+  DecompressibleState,
+  DecompressibleStateArgs,
+  getDecompressibleStateSerializer,
 } from '../types';
 
 // Accounts.
-export type SetDecompressableStateInstructionAccounts = {
+export type SetDecompressibleStateInstructionAccounts = {
   treeConfig: PublicKey | Pda;
   treeCreator?: Signer;
 };
 
 // Data.
-export type SetDecompressableStateInstructionData = {
+export type SetDecompressibleStateInstructionData = {
   discriminator: Array<number>;
-  decompressableState: DecompressableState;
+  decompressableState: DecompressibleState;
 };
 
-export type SetDecompressableStateInstructionDataArgs = {
-  decompressableState: DecompressableStateArgs;
+export type SetDecompressibleStateInstructionDataArgs = {
+  decompressableState: DecompressibleStateArgs;
 };
 
-export function getSetDecompressableStateInstructionDataSerializer(): Serializer<
-  SetDecompressableStateInstructionDataArgs,
-  SetDecompressableStateInstructionData
+export function getSetDecompressibleStateInstructionDataSerializer(): Serializer<
+  SetDecompressibleStateInstructionDataArgs,
+  SetDecompressibleStateInstructionData
 > {
   return mapSerializer<
-    SetDecompressableStateInstructionDataArgs,
+    SetDecompressibleStateInstructionDataArgs,
     any,
-    SetDecompressableStateInstructionData
+    SetDecompressibleStateInstructionData
   >(
-    struct<SetDecompressableStateInstructionData>(
+    struct<SetDecompressibleStateInstructionData>(
       [
         ['discriminator', array(u8(), { size: 8 })],
-        ['decompressableState', getDecompressableStateSerializer()],
+        ['decompressableState', getDecompressibleStateSerializer()],
       ],
-      { description: 'SetDecompressableStateInstructionData' }
+      { description: 'SetDecompressibleStateInstructionData' }
     ),
     (value) => ({
       ...value,
-      discriminator: [18, 135, 238, 168, 246, 195, 61, 115],
+      discriminator: [82, 104, 152, 6, 149, 111, 100, 13],
     })
   ) as Serializer<
-    SetDecompressableStateInstructionDataArgs,
-    SetDecompressableStateInstructionData
+    SetDecompressibleStateInstructionDataArgs,
+    SetDecompressibleStateInstructionData
   >;
 }
 
 // Args.
-export type SetDecompressableStateInstructionArgs =
-  SetDecompressableStateInstructionDataArgs;
+export type SetDecompressibleStateInstructionArgs =
+  SetDecompressibleStateInstructionDataArgs;
 
 // Instruction.
-export function setDecompressableState(
+export function setDecompressibleState(
   context: Pick<Context, 'identity' | 'programs'>,
-  input: SetDecompressableStateInstructionAccounts &
-    SetDecompressableStateInstructionArgs
+  input: SetDecompressibleStateInstructionAccounts &
+    SetDecompressibleStateInstructionArgs
 ): TransactionBuilder {
   // Program ID.
   const programId = context.programs.getPublicKey(
@@ -101,7 +101,7 @@ export function setDecompressableState(
   };
 
   // Arguments.
-  const resolvedArgs: SetDecompressableStateInstructionArgs = { ...input };
+  const resolvedArgs: SetDecompressibleStateInstructionArgs = { ...input };
 
   // Default values.
   if (!resolvedAccounts.treeCreator.value) {
@@ -121,8 +121,8 @@ export function setDecompressableState(
   );
 
   // Data.
-  const data = getSetDecompressableStateInstructionDataSerializer().serialize(
-    resolvedArgs as SetDecompressableStateInstructionDataArgs
+  const data = getSetDecompressibleStateInstructionDataSerializer().serialize(
+    resolvedArgs as SetDecompressibleStateInstructionDataArgs
   );
 
   // Bytes Created On Chain.
