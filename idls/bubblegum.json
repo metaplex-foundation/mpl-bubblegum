@@ -474,12 +474,7 @@
         {
           "name": "treeDelegate",
           "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "This account is checked to be a signer in",
-            "the case of `set_and_verify_collection` where",
-            "we are actually changing the NFT metadata."
-          ]
+          "isSigner": true
         },
         {
           "name": "collectionAuthority",
@@ -579,12 +574,7 @@
         {
           "name": "treeDelegate",
           "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "This account is checked to be a signer in",
-            "the case of `set_and_verify_collection` where",
-            "we are actually changing the NFT metadata."
-          ]
+          "isSigner": true
         },
         {
           "name": "logWrapper",
