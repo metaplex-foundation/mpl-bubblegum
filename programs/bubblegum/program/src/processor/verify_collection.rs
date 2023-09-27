@@ -24,7 +24,8 @@ pub struct CollectionVerification<'info> {
     /// CHECK: This account is modified in the downstream program
     pub merkle_tree: UncheckedAccount<'info>,
     pub payer: Signer<'info>,
-    /// CHECK: This account is checked to be a signer in
+    /// CHECK: This account is checked in the instruction
+    /// This account is checked to be a signer in
     /// the case of `set_and_verify_collection` where
     /// we are actually changing the NFT metadata.
     pub tree_delegate: UncheckedAccount<'info>,

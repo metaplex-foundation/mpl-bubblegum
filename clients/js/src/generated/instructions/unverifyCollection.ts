@@ -53,6 +53,7 @@ export type UnverifyCollectionInstructionAccounts = {
   merkleTree: PublicKey | Pda;
   payer?: Signer;
   /**
+   * This account is checked to be a signer in
    * the case of `set_and_verify_collection` where
    * we are actually changing the NFT metadata.
    */
