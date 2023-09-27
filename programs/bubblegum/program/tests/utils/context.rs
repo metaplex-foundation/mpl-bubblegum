@@ -25,6 +25,7 @@ pub struct BubblegumTestContext {
 
 pub const DEFAULT_LAMPORTS_FUND_AMOUNT: u64 = 1_000_000_000;
 
+#[allow(deprecated)]
 impl BubblegumTestContext {
     pub fn test_context(&self) -> &ProgramTestContext {
         &self.program_context

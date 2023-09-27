@@ -5,7 +5,10 @@ pub mod tx_builder;
 
 use anchor_lang::{self, InstructionData, ToAccountMetas};
 use async_trait::async_trait;
-use bubblegum::{hash_creators, hash_metadata, state::metaplex_adapter::MetadataArgs};
+use bubblegum::{
+    state::metaplex_adapter::MetadataArgs,
+    utils::{hash_creators, hash_metadata},
+};
 use bytemuck::PodCastError;
 use solana_program::{instruction::Instruction, pubkey::Pubkey, system_instruction};
 use solana_program_test::{BanksClientError, ProgramTest, ProgramTestContext};
