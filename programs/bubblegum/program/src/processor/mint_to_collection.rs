@@ -116,7 +116,6 @@ pub(crate) fn mint_to_collection_v1(
         &token_metadata_program,
         &mut message,
         true,
-        None,
     )?;
 
     process_mint_v1(
