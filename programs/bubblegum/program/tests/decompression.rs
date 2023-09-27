@@ -1,7 +1,7 @@
 #![cfg(feature = "test-sbf")]
 pub mod utils;
 
-use mpl_bubblegum::error::BubblegumError;
+use bubblegum::error::BubblegumError;
 use mpl_token_metadata::{
     pda::{find_master_edition_account, find_metadata_account},
     state::{

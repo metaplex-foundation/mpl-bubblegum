@@ -10,7 +10,9 @@ pub enum TokenProgramVersion {
 pub struct Creator {
     pub address: Pubkey,
     pub verified: bool,
-    // In percentages, NOT basis points ;) Watch out!
+    /// The percentage share.
+    ///
+    /// The value is a percentage, not basis points.
     pub share: u8,
 }
 

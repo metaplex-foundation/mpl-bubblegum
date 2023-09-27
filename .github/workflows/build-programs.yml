@@ -11,12 +11,12 @@ on:
     inputs:
       rust:
         description: Rust version
-        default: 1.65.0
+        default: 1.68.0
         required: true
         type: string
       solana:
         description: Solana version
-        default: 1.14.13
+        default: 1.16.8
         required: true
         type: string
 
@@ -51,7 +51,7 @@ jobs:
 
       - name: Build programs
         shell: bash
-        working-directory: configs/program-scripts
+        working-directory: configs/scripts/program
         run: ./build.sh
         env:
           PROGRAMS: ${{ env.PROGRAMS }}

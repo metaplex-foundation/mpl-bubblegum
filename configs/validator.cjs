@@ -13,7 +13,7 @@ module.exports = {
       {
         label: "Mpl Bubblegum",
         programId: "BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY",
-        deployPath: getProgram("mpl_bubblegum.so"),
+        deployPath: getProgram("bubblegum.so"),
       },
       {
         label: "Token Metadata",

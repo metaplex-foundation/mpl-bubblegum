@@ -15,7 +15,16 @@ import {
   u8,
 } from '@metaplex-foundation/umi/serializers';
 
-export type Creator = { address: PublicKey; verified: boolean; share: number };
+export type Creator = {
+  address: PublicKey;
+  verified: boolean;
+  /**
+   * The percentage share.
+   *
+   * The value is a percentage, not basis points.
+   */
+  share: number;
+};
 
 export type CreatorArgs = Creator;
 

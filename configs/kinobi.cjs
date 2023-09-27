@@ -87,6 +87,20 @@ kinobi.update(
         return k.structFieldTypeNode({ ...node, name: "metadata" });
       },
     },
+    {
+      // Update `collectionAuthorityRecordPda` account as `optional`.
+      selector: {
+        kind: "instructionAccountNode",
+        name: "collectionAuthorityRecordPda",
+      },
+      transformer: (node) => {
+        k.assertInstructionAccountNode(node);
+        return k.instructionAccountNode({
+          ...node,
+          isOptional: true,
+        });
+      },
+    },
   ])
 );
 
@@ -392,5 +406,15 @@ kinobi.accept(
     dependencyMap: {
       mplTokenMetadata: "@metaplex-foundation/mpl-token-metadata",
     },
+  })
+);
+
+// Render Rust.
+const crateDir = path.join(clientDir, "rust");
+const rustDir = path.join(clientDir, "rust", "src", "generated");
+kinobi.accept(
+  new k.RenderRustVisitor(rustDir, {
+    formatCode: true,
+    crateFolder: crateDir,
   })
 );

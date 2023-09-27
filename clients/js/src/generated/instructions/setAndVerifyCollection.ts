@@ -54,6 +54,7 @@ export type SetAndVerifyCollectionInstructionAccounts = {
   merkleTree: PublicKey | Pda;
   payer?: Signer;
   /**
+   * This account is checked to be a signer in
    * the case of `set_and_verify_collection` where
    * we are actually changing the NFT metadata.
    */
@@ -248,10 +249,6 @@ export function setAndVerifyCollection(
   }
   if (!resolvedAccounts.collectionAuthority.value) {
     resolvedAccounts.collectionAuthority.value = context.identity;
-  }
-  if (!resolvedAccounts.collectionAuthorityRecordPda.value) {
-    resolvedAccounts.collectionAuthorityRecordPda.value = programId;
-    resolvedAccounts.collectionAuthorityRecordPda.isWritable = false;
   }
   if (!resolvedAccounts.collectionMetadata.value) {
     resolvedAccounts.collectionMetadata.value = findMetadataPda(context, {
