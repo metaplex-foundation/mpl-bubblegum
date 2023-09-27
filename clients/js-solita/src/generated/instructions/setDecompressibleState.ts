@@ -7,68 +7,66 @@
 
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
-import { DecompressableState, decompressableStateBeet } from '../types/DecompressableState';
+import { DecompressibleState, decompressibleStateBeet } from '../types/DecompressibleState';
 
 /**
  * @category Instructions
- * @category SetDecompressableState
+ * @category SetDecompressibleState
  * @category generated
  */
-export type SetDecompressableStateInstructionArgs = {
-  decompressableState: DecompressableState;
+export type SetDecompressibleStateInstructionArgs = {
+  decompressableState: DecompressibleState;
 };
 /**
  * @category Instructions
- * @category SetDecompressableState
+ * @category SetDecompressibleState
  * @category generated
  */
-export const setDecompressableStateStruct = new beet.BeetArgsStruct<
-  SetDecompressableStateInstructionArgs & {
+export const setDecompressibleStateStruct = new beet.BeetArgsStruct<
+  SetDecompressibleStateInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
     ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
-    ['decompressableState', decompressableStateBeet],
+    ['decompressableState', decompressibleStateBeet],
   ],
-  'SetDecompressableStateInstructionArgs',
+  'SetDecompressibleStateInstructionArgs',
 );
 /**
- * Accounts required by the _setDecompressableState_ instruction
+ * Accounts required by the _setDecompressibleState_ instruction
  *
  * @property [_writable_] treeAuthority
  * @property [**signer**] treeCreator
  * @category Instructions
- * @category SetDecompressableState
+ * @category SetDecompressibleState
  * @category generated
  */
-export type SetDecompressableStateInstructionAccounts = {
+export type SetDecompressibleStateInstructionAccounts = {
   treeAuthority: web3.PublicKey;
   treeCreator: web3.PublicKey;
   anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
-export const setDecompressableStateInstructionDiscriminator = [
-  18, 135, 238, 168, 246, 195, 61, 115,
-];
+export const setDecompressibleStateInstructionDiscriminator = [82, 104, 152, 6, 149, 111, 100, 13];
 
 /**
- * Creates a _SetDecompressableState_ instruction.
+ * Creates a _SetDecompressibleState_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @param args to provide as instruction data to the program
  *
  * @category Instructions
- * @category SetDecompressableState
+ * @category SetDecompressibleState
  * @category generated
  */
-export function createSetDecompressableStateInstruction(
-  accounts: SetDecompressableStateInstructionAccounts,
-  args: SetDecompressableStateInstructionArgs,
+export function createSetDecompressibleStateInstruction(
+  accounts: SetDecompressibleStateInstructionAccounts,
+  args: SetDecompressibleStateInstructionArgs,
   programId = new web3.PublicKey('BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'),
 ) {
-  const [data] = setDecompressableStateStruct.serialize({
-    instructionDiscriminator: setDecompressableStateInstructionDiscriminator,
+  const [data] = setDecompressibleStateStruct.serialize({
+    instructionDiscriminator: setDecompressibleStateInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
