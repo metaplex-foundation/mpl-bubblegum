@@ -5,28 +5,28 @@
 //! [https://github.com/metaplex-foundation/kinobi]
 //!
 
-use crate::generated::types::DecompressableState;
+use crate::generated::types::DecompressibleState;
 use borsh::BorshDeserialize;
 use borsh::BorshSerialize;
 
 /// Accounts.
-pub struct SetDecompressableState {
+pub struct SetDecompressibleState {
     pub tree_config: solana_program::pubkey::Pubkey,
 
     pub tree_creator: solana_program::pubkey::Pubkey,
 }
 
-impl SetDecompressableState {
+impl SetDecompressibleState {
     pub fn instruction(
         &self,
-        args: SetDecompressableStateInstructionArgs,
+        args: SetDecompressibleStateInstructionArgs,
     ) -> solana_program::instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
         &self,
-        args: SetDecompressableStateInstructionArgs,
+        args: SetDecompressibleStateInstructionArgs,
         remaining_accounts: &[solana_program::instruction::AccountMeta],
     ) -> solana_program::instruction::Instruction {
         let mut accounts = Vec::with_capacity(2 + remaining_accounts.len());
@@ -39,7 +39,7 @@ impl SetDecompressableState {
             true,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let mut data = SetDecompressableStateInstructionData::new()
+        let mut data = SetDecompressibleStateInstructionData::new()
             .try_to_vec()
             .unwrap();
         let mut args = args.try_to_vec().unwrap();
@@ -54,34 +54,34 @@ impl SetDecompressableState {
 }
 
 #[derive(BorshDeserialize, BorshSerialize)]
-struct SetDecompressableStateInstructionData {
+struct SetDecompressibleStateInstructionData {
     discriminator: [u8; 8],
 }
 
-impl SetDecompressableStateInstructionData {
+impl SetDecompressibleStateInstructionData {
     fn new() -> Self {
         Self {
-            discriminator: [18, 135, 238, 168, 246, 195, 61, 115],
+            discriminator: [82, 104, 152, 6, 149, 111, 100, 13],
         }
     }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct SetDecompressableStateInstructionArgs {
-    pub decompressable_state: DecompressableState,
+pub struct SetDecompressibleStateInstructionArgs {
+    pub decompressable_state: DecompressibleState,
 }
 
 /// Instruction builder.
 #[derive(Default)]
-pub struct SetDecompressableStateBuilder {
+pub struct SetDecompressibleStateBuilder {
     tree_config: Option<solana_program::pubkey::Pubkey>,
     tree_creator: Option<solana_program::pubkey::Pubkey>,
-    decompressable_state: Option<DecompressableState>,
+    decompressable_state: Option<DecompressibleState>,
     __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
 
-impl SetDecompressableStateBuilder {
+impl SetDecompressibleStateBuilder {
     pub fn new() -> Self {
         Self::default()
     }
@@ -96,7 +96,7 @@ impl SetDecompressableStateBuilder {
         self
     }
     #[inline(always)]
-    pub fn decompressable_state(&mut self, decompressable_state: DecompressableState) -> &mut Self {
+    pub fn decompressable_state(&mut self, decompressable_state: DecompressibleState) -> &mut Self {
         self.decompressable_state = Some(decompressable_state);
         self
     }
@@ -120,11 +120,11 @@ impl SetDecompressableStateBuilder {
     }
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
-        let accounts = SetDecompressableState {
+        let accounts = SetDecompressibleState {
             tree_config: self.tree_config.expect("tree_config is not set"),
             tree_creator: self.tree_creator.expect("tree_creator is not set"),
         };
-        let args = SetDecompressableStateInstructionArgs {
+        let args = SetDecompressibleStateInstructionArgs {
             decompressable_state: self
                 .decompressable_state
                 .clone()
@@ -135,15 +135,15 @@ impl SetDecompressableStateBuilder {
     }
 }
 
-/// `set_decompressable_state` CPI accounts.
-pub struct SetDecompressableStateCpiAccounts<'a, 'b> {
+/// `set_decompressible_state` CPI accounts.
+pub struct SetDecompressibleStateCpiAccounts<'a, 'b> {
     pub tree_config: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub tree_creator: &'b solana_program::account_info::AccountInfo<'a>,
 }
 
-/// `set_decompressable_state` CPI instruction.
-pub struct SetDecompressableStateCpi<'a, 'b> {
+/// `set_decompressible_state` CPI instruction.
+pub struct SetDecompressibleStateCpi<'a, 'b> {
     /// The program to invoke.
     pub __program: &'b solana_program::account_info::AccountInfo<'a>,
 
@@ -151,14 +151,14 @@ pub struct SetDecompressableStateCpi<'a, 'b> {
 
     pub tree_creator: &'b solana_program::account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
-    pub __args: SetDecompressableStateInstructionArgs,
+    pub __args: SetDecompressibleStateInstructionArgs,
 }
 
-impl<'a, 'b> SetDecompressableStateCpi<'a, 'b> {
+impl<'a, 'b> SetDecompressibleStateCpi<'a, 'b> {
     pub fn new(
         program: &'b solana_program::account_info::AccountInfo<'a>,
-        accounts: SetDecompressableStateCpiAccounts<'a, 'b>,
-        args: SetDecompressableStateInstructionArgs,
+        accounts: SetDecompressibleStateCpiAccounts<'a, 'b>,
+        args: SetDecompressibleStateInstructionArgs,
     ) -> Self {
         Self {
             __program: program,
@@ -216,7 +216,7 @@ impl<'a, 'b> SetDecompressableStateCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let mut data = SetDecompressableStateInstructionData::new()
+        let mut data = SetDecompressibleStateInstructionData::new()
             .try_to_vec()
             .unwrap();
         let mut args = self.__args.try_to_vec().unwrap();
@@ -243,14 +243,14 @@ impl<'a, 'b> SetDecompressableStateCpi<'a, 'b> {
     }
 }
 
-/// `set_decompressable_state` CPI instruction builder.
-pub struct SetDecompressableStateCpiBuilder<'a, 'b> {
-    instruction: Box<SetDecompressableStateCpiBuilderInstruction<'a, 'b>>,
+/// `set_decompressible_state` CPI instruction builder.
+pub struct SetDecompressibleStateCpiBuilder<'a, 'b> {
+    instruction: Box<SetDecompressibleStateCpiBuilderInstruction<'a, 'b>>,
 }
 
-impl<'a, 'b> SetDecompressableStateCpiBuilder<'a, 'b> {
+impl<'a, 'b> SetDecompressibleStateCpiBuilder<'a, 'b> {
     pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
-        let instruction = Box::new(SetDecompressableStateCpiBuilderInstruction {
+        let instruction = Box::new(SetDecompressibleStateCpiBuilderInstruction {
             __program: program,
             tree_config: None,
             tree_creator: None,
@@ -276,7 +276,7 @@ impl<'a, 'b> SetDecompressableStateCpiBuilder<'a, 'b> {
         self
     }
     #[inline(always)]
-    pub fn decompressable_state(&mut self, decompressable_state: DecompressableState) -> &mut Self {
+    pub fn decompressable_state(&mut self, decompressable_state: DecompressibleState) -> &mut Self {
         self.instruction.decompressable_state = Some(decompressable_state);
         self
     }
@@ -321,14 +321,14 @@ impl<'a, 'b> SetDecompressableStateCpiBuilder<'a, 'b> {
         &self,
         signers_seeds: &[&[&[u8]]],
     ) -> solana_program::entrypoint::ProgramResult {
-        let args = SetDecompressableStateInstructionArgs {
+        let args = SetDecompressibleStateInstructionArgs {
             decompressable_state: self
                 .instruction
                 .decompressable_state
                 .clone()
                 .expect("decompressable_state is not set"),
         };
-        let instruction = SetDecompressableStateCpi {
+        let instruction = SetDecompressibleStateCpi {
             __program: self.instruction.__program,
 
             tree_config: self
@@ -349,11 +349,11 @@ impl<'a, 'b> SetDecompressableStateCpiBuilder<'a, 'b> {
     }
 }
 
-struct SetDecompressableStateCpiBuilderInstruction<'a, 'b> {
+struct SetDecompressibleStateCpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_program::account_info::AccountInfo<'a>,
     tree_config: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     tree_creator: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    decompressable_state: Option<DecompressableState>,
+    decompressable_state: Option<DecompressibleState>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(
         &'b solana_program::account_info::AccountInfo<'a>,

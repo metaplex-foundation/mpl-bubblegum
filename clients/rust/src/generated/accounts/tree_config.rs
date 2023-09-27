@@ -5,7 +5,7 @@
 //! [https://github.com/metaplex-foundation/kinobi]
 //!
 
-use crate::generated::types::DecompressableState;
+use crate::generated::types::DecompressibleState;
 use borsh::BorshDeserialize;
 use borsh::BorshSerialize;
 use solana_program::pubkey::Pubkey;
@@ -27,7 +27,7 @@ pub struct TreeConfig {
     pub total_mint_capacity: u64,
     pub num_minted: u64,
     pub is_public: bool,
-    pub is_decompressable: DecompressableState,
+    pub is_decompressible: DecompressibleState,
 }
 
 impl TreeConfig {

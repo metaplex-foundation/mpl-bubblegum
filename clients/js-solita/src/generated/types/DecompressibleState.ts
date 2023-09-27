@@ -10,7 +10,7 @@ import * as beet from '@metaplex-foundation/beet';
  * @category enums
  * @category generated
  */
-export enum DecompressableState {
+export enum DecompressibleState {
   Enabled,
   Disabled,
 }
@@ -19,6 +19,6 @@ export enum DecompressableState {
  * @category userTypes
  * @category generated
  */
-export const decompressableStateBeet = beet.fixedScalarEnum(
-  DecompressableState,
-) as beet.FixedSizeBeet<DecompressableState, DecompressableState>;
+export const decompressibleStateBeet = beet.fixedScalarEnum(
+  DecompressibleState,
+) as beet.FixedSizeBeet<DecompressibleState, DecompressibleState>;

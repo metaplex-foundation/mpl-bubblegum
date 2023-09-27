@@ -39,6 +39,8 @@ kinobi.update(
 // Update types.
 kinobi.update(
   new k.UpdateDefinedTypesVisitor({
+    // Remove unnecessary types.
+    InstructionName: { delete: true },
     // Remove unnecessary spl_account_compression type.
     ApplicationDataEventV1: { delete: true },
     ChangeLogEventV1: { delete: true },
@@ -280,6 +282,8 @@ kinobi.update(
     unverifyCollection: { args: { ...hashDefaults } },
     verifyCreator: { args: { ...hashDefaults } },
     unverifyCreator: { args: { ...hashDefaults } },
+    // Remove deprecated instructions.
+    setDecompressableState: { delete: true },
     // Remove unnecessary spl_account_compression instructions.
     append: { delete: true },
     closeEmptyTree: { delete: true },
