@@ -250,10 +250,6 @@ export function setAndVerifyCollection(
   if (!resolvedAccounts.collectionAuthority.value) {
     resolvedAccounts.collectionAuthority.value = context.identity;
   }
-  if (!resolvedAccounts.collectionAuthorityRecordPda.value) {
-    resolvedAccounts.collectionAuthorityRecordPda.value = programId;
-    resolvedAccounts.collectionAuthorityRecordPda.isWritable = false;
-  }
   if (!resolvedAccounts.collectionMetadata.value) {
     resolvedAccounts.collectionMetadata.value = findMetadataPda(context, {
       mint: expectPublicKey(resolvedAccounts.collectionMint.value),

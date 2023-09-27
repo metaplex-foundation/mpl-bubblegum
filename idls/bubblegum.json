@@ -474,7 +474,12 @@
         {
           "name": "treeDelegate",
           "isMut": false,
-          "isSigner": true
+          "isSigner": false,
+          "docs": [
+            "This account is checked to be a signer in",
+            "the case of `set_and_verify_collection` where",
+            "we are actually changing the NFT metadata."
+          ]
         },
         {
           "name": "collectionAuthority",
@@ -574,7 +579,12 @@
         {
           "name": "treeDelegate",
           "isMut": false,
-          "isSigner": true
+          "isSigner": false,
+          "docs": [
+            "This account is checked to be a signer in",
+            "the case of `set_and_verify_collection` where",
+            "we are actually changing the NFT metadata."
+          ]
         },
         {
           "name": "logWrapper",
@@ -1524,6 +1534,11 @@
           },
           {
             "name": "share",
+            "docs": [
+              "The percentage share.",
+              "",
+              "The value is a percentage, not basis points."
+            ],
             "type": "u8"
           }
         ]

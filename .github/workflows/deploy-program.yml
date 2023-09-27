@@ -20,7 +20,6 @@ on:
           - mainnet-beta
       publish_crate:
         description: Release cargo crate
-        required: true
         type: boolean
         default: false
       bump:
@@ -53,7 +52,7 @@ jobs:
   test_js:
     name: JS client
     needs: test_programs
-    uses: ./.github/workflows/test-js.yml
+    uses: ./.github/workflows/test-js-client.yml
     secrets: inherit
 
   deploy_program:
@@ -88,6 +87,14 @@ jobs:
           version: ${{ env.ANCHOR_VERSION }}
           cache: ${{ env.CACHE }}
           
+          
+      - name: Install cargo-release
+        uses: metaplex-foundation/actions/install-cargo-release@v1
+        if: github.event.inputs.publish_crate == 'true'
+        with:
+          cache: ${{ env.CACHE }}
+
+
       - name: Install cargo-release
         uses: metaplex-foundation/actions/install-cargo-release@v1
         if: github.event.inputs.publish_crate == 'true'
@@ -165,7 +172,7 @@ jobs:
           rm ../../program-id.json
           rm ./idl.json
 
-      - name: Publish crate
+      - name: Version program
         working-directory: ./programs/${{ inputs.program }}/program
         if: github.event.inputs.publish_crate == 'true' && github.event.inputs.cluster == 'mainnet-beta'
         run: |
@@ -174,7 +181,7 @@ jobs:
           git config user.email "${{ env.COMMIT_USER_EMAIL }}"
           
           cargo login ${{ secrets.CRATES_TOKEN }}
-          cargo release ${{ inputs.bump }} --no-confirm --no-push --no-tag --execute
+          cargo release ${{ inputs.bump }} --no-confirm --no-push --no-tag --no-publish --execute
 
           git reset --soft HEAD~1
           git stash pop
@@ -183,5 +190,5 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v4
         if: github.event.inputs.publish_crate == 'true' && github.event.inputs.cluster == 'mainnet-beta'
         with:
-          commit_message: Deploy mpl-${{ inputs.program }} program v${{ env.PROGRAM_VERSION }}
-          tagging_message: mpl-${{ inputs.program }}@v${{ env.PROGRAM_VERSION }}
+          commit_message: "chore: ${{ inputs.program }} version ${{ env.PROGRAM_VERSION }}"
+          tagging_message: v${{ env.PROGRAM_VERSION }}@${{ inputs.cluster }}
