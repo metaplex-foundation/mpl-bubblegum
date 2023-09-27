@@ -12,7 +12,7 @@ use super::{
 use crate::utils::tx_builder::DecompressV1Builder;
 use anchor_lang::{self, AccountDeserialize};
 use bubblegum::{
-    state::{leaf_schema::LeafSchema, DecompressableState, TreeConfig, Voucher, VOUCHER_PREFIX},
+    state::{leaf_schema::LeafSchema, DecompressibleState, TreeConfig, Voucher, VOUCHER_PREFIX},
     utils::get_asset_id,
 };
 use bytemuck::try_from_bytes;
@@ -1017,9 +1017,9 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
     // Set Decompression Permission TX
     pub fn set_decompression_tx(
         &mut self,
-        decompressable_state: DecompressableState,
+        decompressable_state: DecompressibleState,
     ) -> SetDecompressableStateBuilder<MAX_DEPTH, MAX_BUFFER_SIZE> {
-        let accounts = bubblegum::accounts::SetDecompressableState {
+        let accounts = bubblegum::accounts::SetDecompressibleState {
             tree_authority: self.authority(),
             tree_creator: self.creator_pubkey(),
         };
@@ -1041,14 +1041,14 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
 
     // Enable Decompression
     pub async fn enable_decompression(&mut self) -> Result<()> {
-        self.set_decompression_tx(DecompressableState::Enabled)
+        self.set_decompression_tx(DecompressibleState::Enabled)
             .execute()
             .await
     }
 
     // Disable Decompression
     pub async fn disable_decompression(&mut self) -> Result<()> {
-        self.set_decompression_tx(DecompressableState::Disabled)
+        self.set_decompression_tx(DecompressibleState::Disabled)
             .execute()
             .await
     }

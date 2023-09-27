@@ -15,6 +15,15 @@ module.exports = {
   programDir,
   rustbin: {
     locked: true,
-    versionRangeFallback: "0.27.0",
+    versionRangeFallback: '0.27.0',
+  },
+  idlHook: (idl) => {
+    const instructions = idl.instructions.filter((ix) => {
+      return ix.name !== 'setDecompressableState';
+    });
+    const types = idl.types.filter((ty) => {
+      return ty.name !== 'InstructionName';
+    });
+    return { ...idl, instructions, types };
   },
 };
