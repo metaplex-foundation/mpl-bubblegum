@@ -17,41 +17,41 @@ use crate::{
     utils::{hash_creators, hash_metadata},
 };
 
-pub mod burn;
-pub mod cancel_redeem;
-pub mod compress;
-pub mod create_tree;
-pub mod decompress;
-pub mod delegate;
-pub mod mint;
-pub mod mint_to_collection;
-pub mod redeem;
-pub mod set_and_verify_collection;
-pub mod set_decompressable_state;
-pub mod set_tree_delegate;
-pub mod transfer;
-pub mod unverify_collection;
-pub mod unverify_creator;
-pub mod verify_collection;
-pub mod verify_creator;
+mod burn;
+mod cancel_redeem;
+mod compress;
+mod create_tree;
+mod decompress;
+mod delegate;
+mod mint;
+mod mint_to_collection;
+mod redeem;
+mod set_and_verify_collection;
+mod set_decompressable_state;
+mod set_tree_delegate;
+mod transfer;
+mod unverify_collection;
+mod unverify_creator;
+mod verify_collection;
+mod verify_creator;
 
-pub use burn::*;
-pub use cancel_redeem::*;
-pub use compress::*;
-pub use create_tree::*;
-pub use decompress::*;
-pub use delegate::*;
-pub use mint::*;
-pub use mint_to_collection::*;
-pub use redeem::*;
-pub use set_and_verify_collection::*;
-pub use set_decompressable_state::*;
-pub use set_tree_delegate::*;
-pub use transfer::*;
-pub use unverify_collection::*;
-pub use unverify_creator::*;
-pub use verify_collection::*;
-pub use verify_creator::*;
+pub(crate) use burn::*;
+pub(crate) use cancel_redeem::*;
+pub(crate) use compress::*;
+pub(crate) use create_tree::*;
+pub(crate) use decompress::*;
+pub(crate) use delegate::*;
+pub(crate) use mint::*;
+pub(crate) use mint_to_collection::*;
+pub(crate) use redeem::*;
+pub(crate) use set_and_verify_collection::*;
+pub(crate) use set_decompressable_state::*;
+pub(crate) use set_tree_delegate::*;
+pub(crate) use transfer::*;
+pub(crate) use unverify_collection::*;
+pub(crate) use unverify_creator::*;
+pub(crate) use verify_collection::*;
+pub(crate) use verify_creator::*;
 
 fn process_creator_verification<'info>(
     ctx: Context<'_, '_, '_, 'info, verify_creator::CreatorVerification<'info>>,
@@ -155,7 +155,7 @@ fn process_creator_verification<'info>(
 }
 
 #[allow(deprecated)]
-pub fn process_collection_verification_mpl_only<'info>(
+fn process_collection_verification_mpl_only<'info>(
     collection_metadata: &Account<'info, TokenMetadata>,
     collection_mint: &AccountInfo<'info>,
     collection_authority: &AccountInfo<'info>,
@@ -277,7 +277,7 @@ pub fn process_collection_verification_mpl_only<'info>(
     Ok(())
 }
 
-pub fn process_collection_verification<'info>(
+fn process_collection_verification<'info>(
     ctx: Context<'_, '_, '_, 'info, verify_collection::CollectionVerification<'info>>,
     root: [u8; 32],
     data_hash: [u8; 32],

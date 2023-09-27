@@ -70,7 +70,7 @@ pub struct DecompressV1<'info> {
     pub log_wrapper: Program<'info, Noop>,
 }
 
-pub fn decompress_v1(ctx: Context<DecompressV1>, metadata: MetadataArgs) -> Result<()> {
+pub(crate) fn decompress_v1(ctx: Context<DecompressV1>, metadata: MetadataArgs) -> Result<()> {
     // Allocate and create mint
     let incoming_data_hash = hash_metadata(&metadata)?;
     match ctx.accounts.voucher.leaf_schema {

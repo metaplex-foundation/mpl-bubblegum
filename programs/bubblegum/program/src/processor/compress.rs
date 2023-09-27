@@ -39,7 +39,7 @@ pub struct Compress<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn compress(_ctx: Context<Compress>) -> Result<()> {
+pub(crate) fn compress(_ctx: Context<Compress>) -> Result<()> {
     // TODO
     Ok(())
 }

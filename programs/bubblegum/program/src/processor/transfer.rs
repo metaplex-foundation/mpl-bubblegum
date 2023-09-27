@@ -29,7 +29,7 @@ pub struct Transfer<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn transfer<'info>(
+pub(crate) fn transfer<'info>(
     ctx: Context<'_, '_, '_, 'info, Transfer<'info>>,
     root: [u8; 32],
     data_hash: [u8; 32],

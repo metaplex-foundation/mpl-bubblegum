@@ -27,7 +27,7 @@ pub struct CreatorVerification<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn verify_creator<'info>(
+pub(crate) fn verify_creator<'info>(
     ctx: Context<'_, '_, '_, 'info, CreatorVerification<'info>>,
     root: [u8; 32],
     data_hash: [u8; 32],

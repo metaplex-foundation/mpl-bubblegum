@@ -54,7 +54,7 @@ pub struct MintToCollectionV1<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn mint_to_collection_v1(
+pub(crate) fn mint_to_collection_v1(
     ctx: Context<MintToCollectionV1>,
     metadata_args: MetadataArgs,
 ) -> Result<()> {

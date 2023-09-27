@@ -5,7 +5,7 @@ use crate::{
     processor::verify_collection::CollectionVerification, state::metaplex_adapter::MetadataArgs,
 };
 
-pub fn set_and_verify_collection<'info>(
+pub(crate) fn set_and_verify_collection<'info>(
     ctx: Context<'_, '_, '_, 'info, CollectionVerification<'info>>,
     root: [u8; 32],
     data_hash: [u8; 32],

@@ -26,7 +26,7 @@ pub struct Burn<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn burn<'info>(
+pub(crate) fn burn<'info>(
     ctx: Context<'_, '_, '_, 'info, Burn<'info>>,
     root: [u8; 32],
     data_hash: [u8; 32],

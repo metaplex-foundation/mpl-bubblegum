@@ -24,7 +24,7 @@ pub struct CreateTree<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn create_tree(
+pub(crate) fn create_tree(
     ctx: Context<CreateTree>,
     max_depth: u32,
     max_buffer_size: u32,

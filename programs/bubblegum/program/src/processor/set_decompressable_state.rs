@@ -9,7 +9,7 @@ pub struct SetDecompressableState<'info> {
     pub tree_creator: Signer<'info>,
 }
 
-pub fn set_decompressable_state(
+pub(crate) fn set_decompressable_state(
     ctx: Context<SetDecompressableState>,
     decompressable_state: DecompressableState,
 ) -> Result<()> {

@@ -52,7 +52,7 @@ pub struct CollectionVerification<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn verify_collection<'info>(
+pub(crate) fn verify_collection<'info>(
     ctx: Context<'_, '_, '_, 'info, CollectionVerification<'info>>,
     root: [u8; 32],
     data_hash: [u8; 32],

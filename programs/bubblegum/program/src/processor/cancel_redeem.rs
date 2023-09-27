@@ -37,7 +37,7 @@ pub struct CancelRedeem<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn cancel_redeem<'info>(
+pub(crate) fn cancel_redeem<'info>(
     ctx: Context<'_, '_, '_, 'info, CancelRedeem<'info>>,
     root: [u8; 32],
 ) -> Result<()> {

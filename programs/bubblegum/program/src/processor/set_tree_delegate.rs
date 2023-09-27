@@ -19,7 +19,7 @@ pub struct SetTreeDelegate<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn set_tree_delegate(ctx: Context<SetTreeDelegate>) -> Result<()> {
+pub(crate) fn set_tree_delegate(ctx: Context<SetTreeDelegate>) -> Result<()> {
     ctx.accounts.tree_authority.tree_delegate = ctx.accounts.new_tree_delegate.key();
     Ok(())
 }
