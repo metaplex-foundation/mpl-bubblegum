@@ -10,22 +10,7 @@ use borsh::BorshSerialize;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq, PartialOrd, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub enum InstructionName {
-    Unknown,
-    MintV1,
-    Redeem,
-    CancelRedeem,
-    Transfer,
-    Delegate,
-    DecompressV1,
-    Compress,
-    Burn,
-    CreateTree,
-    VerifyCreator,
-    UnverifyCreator,
-    VerifyCollection,
-    UnverifyCollection,
-    SetAndVerifyCollection,
-    MintToCollectionV1,
-    SetDecompressableState,
+pub enum DecompressibleState {
+    Enabled,
+    Disabled,
 }

@@ -4,7 +4,7 @@ use spl_account_compression::{program::SplAccountCompression, Node, Noop};
 use crate::{
     error::BubblegumError,
     state::{
-        leaf_schema::LeafSchema, DecompressableState, TreeConfig, Voucher, VOUCHER_PREFIX,
+        leaf_schema::LeafSchema, DecompressibleState, TreeConfig, Voucher, VOUCHER_PREFIX,
         VOUCHER_SIZE,
     },
     utils::{get_asset_id, replace_leaf},
@@ -57,7 +57,7 @@ pub(crate) fn redeem<'info>(
     nonce: u64,
     index: u32,
 ) -> Result<()> {
-    if ctx.accounts.tree_authority.is_decompressable == DecompressableState::Disabled {
+    if ctx.accounts.tree_authority.is_decompressible == DecompressibleState::Disabled {
         return Err(BubblegumError::DecompressionDisabled.into());
     }
 

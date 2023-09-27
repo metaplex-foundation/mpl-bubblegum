@@ -835,7 +835,7 @@
     {
       "name": "setDecompressableState",
       "docs": [
-        "Sets the `decompressable_state` of a tree."
+        "Sets the `decompressible_state` of a tree."
       ],
       "accounts": [
         {
@@ -853,7 +853,33 @@
         {
           "name": "decompressableState",
           "type": {
-            "defined": "DecompressableState"
+            "defined": "DecompressibleState"
+          }
+        }
+      ]
+    },
+    {
+      "name": "setDecompressibleState",
+      "docs": [
+        "Sets the `decompressible_state` of a tree."
+      ],
+      "accounts": [
+        {
+          "name": "treeAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "treeCreator",
+          "isMut": false,
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "decompressableState",
+          "type": {
+            "defined": "DecompressibleState"
           }
         }
       ]
@@ -1477,9 +1503,9 @@
             "type": "bool"
           },
           {
-            "name": "isDecompressable",
+            "name": "isDecompressible",
             "type": {
-              "defined": "DecompressableState"
+              "defined": "DecompressibleState"
             }
           }
         ]
@@ -1796,7 +1822,7 @@
       }
     },
     {
-      "name": "DecompressableState",
+      "name": "DecompressibleState",
       "type": {
         "kind": "enum",
         "variants": [
@@ -1864,6 +1890,9 @@
           },
           {
             "name": "SetDecompressableState"
+          },
+          {
+            "name": "SetDecompressibleState"
           }
         ]
       }
