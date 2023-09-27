@@ -31,7 +31,6 @@ pub enum InstructionName {
     UnverifyCollection,
     SetAndVerifyCollection,
     MintToCollectionV1,
-    SetDecompressableState,
     SetDecompressibleState,
 }
 
@@ -57,8 +56,9 @@ pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
         [56, 113, 101, 253, 79, 55, 122, 169] => InstructionName::VerifyCollection,
         [250, 251, 42, 106, 41, 137, 186, 168] => InstructionName::UnverifyCollection,
         [235, 242, 121, 216, 158, 234, 180, 234] => InstructionName::SetAndVerifyCollection,
-        [18, 135, 238, 168, 246, 195, 61, 115] => InstructionName::SetDecompressableState,
         [82, 104, 152, 6, 149, 111, 100, 13] => InstructionName::SetDecompressibleState,
+        // `SetDecompressableState` instruction mapped to `SetDecompressibleState` instruction
+        [18, 135, 238, 168, 246, 195, 61, 115] => InstructionName::SetDecompressibleState,
 
         _ => InstructionName::Unknown,
     }
