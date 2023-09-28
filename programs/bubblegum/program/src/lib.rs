@@ -180,6 +180,7 @@ pub mod bubblegum {
         ctx: Context<SetDecompressibleState>,
         decompressable_state: DecompressibleState,
     ) -> Result<()> {
+        msg!("Deprecated: please use `set_decompressible_state` instead");
         processor::set_decompressible_state(ctx, decompressable_state)
     }
 

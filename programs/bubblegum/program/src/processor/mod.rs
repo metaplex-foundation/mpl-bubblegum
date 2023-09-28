@@ -166,7 +166,6 @@ fn process_collection_verification_mpl_only<'info>(
     token_metadata_program: &AccountInfo<'info>,
     message: &mut MetadataArgs,
     verify: bool,
-    new_collection: Option<Pubkey>,
 ) -> Result<()> {
     // See if a collection authority record PDA was provided.
     let collection_authority_record = if collection_authority_record_pda.key() == crate::id() {
@@ -189,24 +188,8 @@ fn process_collection_verification_mpl_only<'info>(
         BubblegumError::IncorrectOwner
     );
 
-    // If new collection was provided, set it in the NFT metadata.
-    if new_collection.is_some() {
-        message.collection = new_collection.map(|key| metaplex_adapter::Collection {
-            verified: false, // Set to true below.
-            key,
-        });
-    }
-
     // If the NFT has collection data, we set it to the correct value after doing some validation.
     if let Some(collection) = &mut message.collection {
-        // Don't verify already verified items, or unverify unverified items, otherwise for sized
-        // collections we end up with invalid size data.
-        if verify && collection.verified {
-            return Err(BubblegumError::AlreadyVerified.into());
-        } else if !verify && !collection.verified {
-            return Err(BubblegumError::AlreadyUnverified.into());
-        }
-
         // Collection verify assert from token-metadata program.
         assert_collection_verify_is_valid(
             &Some(collection.adapt()),
@@ -308,6 +291,26 @@ fn process_collection_verification<'info>(
         return Err(BubblegumError::DataHashMismatch.into());
     }
 
+    // Check existing collection.  Don't verify already-verified items, or unverify unverified
+    // items, otherwise for sized collections we end up with invalid size data.  Also, we don't
+    // allow a new collection (via `set_and_verify_collection`) to overwrite an already-verified
+    // item.
+    if let Some(collection) = &message.collection {
+        if verify && collection.verified {
+            return Err(BubblegumError::AlreadyVerified.into());
+        } else if !verify && !collection.verified {
+            return Err(BubblegumError::AlreadyUnverified.into());
+        }
+    }
+
+    // If new collection was provided (via `set_and_verify_collection`), set it in the metadata.
+    if new_collection.is_some() {
+        message.collection = new_collection.map(|key| metaplex_adapter::Collection {
+            verified: false, // Will be set to true later.
+            key,
+        });
+    }
+
     // Note this call mutates message.
     process_collection_verification_mpl_only(
         collection_metadata,
@@ -320,7 +323,6 @@ fn process_collection_verification<'info>(
         &token_metadata_program,
         &mut message,
         verify,
-        new_collection,
     )?;
 
     // Calculate new data hash.
