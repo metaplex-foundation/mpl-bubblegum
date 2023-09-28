@@ -114,7 +114,7 @@ jobs:
           if [ "${{ inputs.program }}" == "bubblegum" ]; then
             echo ${{ secrets.BUBBLEGUM_DEPLOY_KEY }} > ./deploy-key.json 
             echo ${{ secrets.BUBBLEGUM_ID }} > ./program-id.json
-            echo PROGRAM_NAME="mpl_bubblegum" >> $GITHUB_ENV
+            echo PROGRAM_NAME="bubblegum" >> $GITHUB_ENV
           fi
 
       - name: Bump program version
