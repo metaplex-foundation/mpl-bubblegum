@@ -15,7 +15,7 @@ import {
   ConcurrentMerkleTreeAccount,
   SPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
   SPL_NOOP_PROGRAM_ID,
-  ValidDepthSizePair
+  ValidDepthSizePair,
 } from '@solana/spl-account-compression';
 
 import {
@@ -30,19 +30,21 @@ import {
   TokenProgramVersion,
   TokenStandard,
   Creator,
+  createSetDecompressibleStateInstruction,
+  DecompressibleState,
 } from '../src/generated';
-import { getLeafAssetId, computeDataHash, computeCreatorHash, computeCompressedNFTHash } from '../src/mpl-bubblegum';
-import { BN } from 'bn.js';
-import { PROGRAM_ID as TOKEN_METADATA_PROGRAM_ID } from "@metaplex-foundation/mpl-token-metadata";
 import {
-  ASSOCIATED_TOKEN_PROGRAM_ID,
-  TOKEN_PROGRAM_ID
-} from "@solana/spl-token";
+  getLeafAssetId,
+  computeDataHash,
+  computeCreatorHash,
+  computeCompressedNFTHash,
+} from '../src/mpl-bubblegum';
+import { BN } from 'bn.js';
+import { PROGRAM_ID as TOKEN_METADATA_PROGRAM_ID } from '@metaplex-foundation/mpl-token-metadata';
+import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 
 function keypairFromSeed(seed: string) {
-  const expandedSeed = Uint8Array.from(
-    Buffer.from(`${seed}`),
-  );
+  const expandedSeed = Uint8Array.from(Buffer.from(`${seed}`));
   return Keypair.fromSeed(expandedSeed.slice(0, 32));
 }
 
@@ -69,8 +71,8 @@ async function setupTreeWithCompressedNFT(
   compressedNFT: MetadataArgs,
   depthSizePair: ValidDepthSizePair = {
     maxDepth: 14,
-    maxBufferSize: 64
-  }
+    maxBufferSize: 64,
+  },
 ): Promise<{
   merkleTree: PublicKey;
 }> {
@@ -78,7 +80,10 @@ async function setupTreeWithCompressedNFT(
 
   const merkleTreeKeypair = Keypair.generate();
   const merkleTree = merkleTreeKeypair.publicKey;
-  const space = getConcurrentMerkleTreeAccountSize(depthSizePair.maxDepth, depthSizePair.maxBufferSize);
+  const space = getConcurrentMerkleTreeAccountSize(
+    depthSizePair.maxDepth,
+    depthSizePair.maxBufferSize,
+  );
   const allocTreeIx = SystemProgram.createAccount({
     fromPubkey: payer,
     newAccountPubkey: merkleTree,
@@ -107,6 +112,17 @@ async function setupTreeWithCompressedNFT(
     BUBBLEGUM_PROGRAM_ID,
   );
 
+  const setDecompressibleStateIx = createSetDecompressibleStateInstruction(
+    {
+      treeAuthority,
+      treeCreator: payer,
+    },
+    {
+      decompressableState: DecompressibleState.Enabled,
+    },
+    BUBBLEGUM_PROGRAM_ID,
+  );
+
   const mintIx = createMintV1Instruction(
     {
       merkleTree,
@@ -123,7 +139,11 @@ async function setupTreeWithCompressedNFT(
     },
   );
 
-  const tx = new Transaction().add(allocTreeIx).add(createTreeIx).add(mintIx);
+  const tx = new Transaction()
+    .add(allocTreeIx)
+    .add(createTreeIx)
+    .add(setDecompressibleStateIx)
+    .add(mintIx);
   tx.feePayer = payer;
   await sendAndConfirmTransaction(connection, tx, [merkleTreeKeypair, payerKeypair], {
     commitment: 'confirmed',
@@ -158,7 +178,10 @@ describe('Bubblegum tests', () => {
       sellerFeeBasisPoints: 0,
       isMutable: false,
     };
-    await setupTreeWithCompressedNFT(connection, payerKeypair, compressedNFT, { maxDepth: 14, maxBufferSize: 64 });
+    await setupTreeWithCompressedNFT(connection, payerKeypair, compressedNFT, {
+      maxDepth: 14,
+      maxBufferSize: 64,
+    });
   });
 
   describe('Unit test compressed NFT instructions', () => {
@@ -174,7 +197,7 @@ describe('Bubblegum tests', () => {
         share: 45,
         verified: false,
       },
-    ]
+    ];
     const originalCompressedNFT = makeCompressedNFT('test', 'TST', creators);
     beforeEach(async () => {
       await connection.requestAirdrop(payer, LAMPORTS_PER_SOL);
@@ -185,7 +208,7 @@ describe('Bubblegum tests', () => {
         {
           maxDepth: 14,
           maxBufferSize: 64,
-        }
+        },
       );
       merkleTree = result.merkleTree;
     });
@@ -197,15 +220,12 @@ describe('Bubblegum tests', () => {
       // Verify leaf exists.
       const leafIndex = new BN.BN(0);
       const assetId = await getLeafAssetId(merkleTree, leafIndex);
-      const verifyLeafIx = createVerifyLeafIx(
-        merkleTree,
-        {
-          root: account.getCurrentRoot(),
-          leaf: computeCompressedNFTHash(assetId, payer, payer, leafIndex, originalCompressedNFT),
-          leafIndex: 0,
-          proof: [],
-        }
-      );
+      const verifyLeafIx = createVerifyLeafIx(merkleTree, {
+        root: account.getCurrentRoot(),
+        leaf: computeCompressedNFTHash(assetId, payer, payer, leafIndex, originalCompressedNFT),
+        leafIndex: 0,
+        proof: [],
+      });
       const tx = new Transaction().add(verifyLeafIx);
       const txId = await sendAndConfirmTransaction(connection, tx, [payerKeypair], {
         commitment: 'confirmed',
@@ -240,7 +260,7 @@ describe('Bubblegum tests', () => {
           dataHash: Array.from(computeDataHash(originalCompressedNFT)),
           creatorHash: Array.from(computeCreatorHash(originalCompressedNFT.creators)),
           nonce: 0,
-          index: 0
+          index: 0,
         },
       );
 
@@ -268,16 +288,21 @@ describe('Bubblegum tests', () => {
           dataHash: Array.from(computeDataHash(originalCompressedNFT)),
           creatorHash: Array.from(computeCreatorHash(originalCompressedNFT.creators)),
           nonce: 0,
-          index: 0
+          index: 0,
         },
       );
 
       const burnTx = new Transaction().add(burnIx);
       burnTx.feePayer = payer;
-      const burnTxId = await sendAndConfirmTransaction(connection, burnTx, [payerKeypair, newLeafOwnerKeypair], {
-        commitment: 'confirmed',
-        skipPreflight: true,
-      });
+      const burnTxId = await sendAndConfirmTransaction(
+        connection,
+        burnTx,
+        [payerKeypair, newLeafOwnerKeypair],
+        {
+          commitment: 'confirmed',
+          skipPreflight: true,
+        },
+      );
 
       console.log('NFT burn tx:', burnTxId);
     });
@@ -292,7 +317,11 @@ describe('Bubblegum tests', () => {
       );
       const nonce = new BN.BN(0);
       const [voucher] = PublicKey.findProgramAddressSync(
-        [Buffer.from('voucher', 'utf8'), merkleTree.toBuffer(), Uint8Array.from(nonce.toArray('le', 8))],
+        [
+          Buffer.from('voucher', 'utf8'),
+          merkleTree.toBuffer(),
+          Uint8Array.from(nonce.toArray('le', 8)),
+        ],
         BUBBLEGUM_PROGRAM_ID,
       );
 
@@ -311,7 +340,7 @@ describe('Bubblegum tests', () => {
           dataHash: Array.from(computeDataHash(originalCompressedNFT)),
           creatorHash: Array.from(computeCreatorHash(originalCompressedNFT.creators)),
           nonce,
-          index: 0
+          index: 0,
         },
       );
 
@@ -326,7 +355,11 @@ describe('Bubblegum tests', () => {
 
       // Decompress.
       const [mint] = PublicKey.findProgramAddressSync(
-        [Buffer.from('asset', 'utf8'), merkleTree.toBuffer(), Uint8Array.from(nonce.toArray('le', 8))],
+        [
+          Buffer.from('asset', 'utf8'),
+          merkleTree.toBuffer(),
+          Uint8Array.from(nonce.toArray('le', 8)),
+        ],
         BUBBLEGUM_PROGRAM_ID,
       );
       const [tokenAccount] = PublicKey.findProgramAddressSync(
@@ -335,14 +368,19 @@ describe('Bubblegum tests', () => {
       );
       const [mintAuthority] = PublicKey.findProgramAddressSync(
         [mint.toBuffer()],
-        BUBBLEGUM_PROGRAM_ID
+        BUBBLEGUM_PROGRAM_ID,
       );
       const [metadata] = PublicKey.findProgramAddressSync(
         [Buffer.from('metadata', 'utf8'), TOKEN_METADATA_PROGRAM_ID.toBuffer(), mint.toBuffer()],
         TOKEN_METADATA_PROGRAM_ID,
       );
       const [masterEdition] = PublicKey.findProgramAddressSync(
-        [Buffer.from('metadata', 'utf8'), TOKEN_METADATA_PROGRAM_ID.toBuffer(), mint.toBuffer(), Buffer.from('edition', 'utf8')],
+        [
+          Buffer.from('metadata', 'utf8'),
+          TOKEN_METADATA_PROGRAM_ID.toBuffer(),
+          mint.toBuffer(),
+          Buffer.from('edition', 'utf8'),
+        ],
         TOKEN_METADATA_PROGRAM_ID,
       );
 
@@ -361,16 +399,21 @@ describe('Bubblegum tests', () => {
           logWrapper: SPL_NOOP_PROGRAM_ID,
         },
         {
-          metadata: originalCompressedNFT
+          metadata: originalCompressedNFT,
         },
       );
 
       const decompressTx = new Transaction().add(decompressIx);
       decompressTx.feePayer = payer;
-      const decompressTxId = await sendAndConfirmTransaction(connection, decompressTx, [payerKeypair], {
-        commitment: 'confirmed',
-        skipPreflight: true,
-      });
+      const decompressTxId = await sendAndConfirmTransaction(
+        connection,
+        decompressTx,
+        [payerKeypair],
+        {
+          commitment: 'confirmed',
+          skipPreflight: true,
+        },
+      );
 
       console.log('NFT decompress tx:', decompressTxId);
     });
