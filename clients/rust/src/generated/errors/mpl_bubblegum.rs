@@ -112,6 +112,30 @@ pub enum MplBubblegumError {
     /// 6033 (0x1791) - Decompression is disabled for this tree.
     #[error("Decompression is disabled for this tree.")]
     DecompressionDisabled,
+    /// 6034 (0x1792) - Metadata not mutable
+    #[error("Metadata not mutable")]
+    MetadataImmutable,
+    /// 6035 (0x1793) - Collection mismatch
+    #[error("Collection mismatch")]
+    CollectionMismatch,
+    /// 6036 (0x1794) - MetadataArgs ambiguous
+    #[error("MetadataArgs ambiguous")]
+    MetadataArgsAmbiguous,
+    /// 6037 (0x1795) - MetadataArgs missing
+    #[error("MetadataArgs missing")]
+    MetadataArgsMissing,
+    /// 6038 (0x1796) - NFT linked to collection
+    #[error("NFT linked to collection")]
+    NFTLinkedToCollection,
+    /// 6039 (0x1797) - NFT not linked to verified collection
+    #[error("NFT not linked to verified collection")]
+    NFTNotLinkedToVerifiedCollection,
+    /// 6040 (0x1798) - Can only update primary sale to true
+    #[error("Can only update primary sale to true")]
+    PrimarySaleCanOnlyBeFlippedToTrue,
+    /// 6041 (0x1799) - Creator did not unverify the metadata
+    #[error("Creator did not unverify the metadata")]
+    CreatorDidNotUnverify,
 }
 
 impl solana_program::program_error::PrintProgramError for MplBubblegumError {
