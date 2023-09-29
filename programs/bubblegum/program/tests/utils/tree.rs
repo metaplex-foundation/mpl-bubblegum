@@ -11,11 +11,11 @@ use super::{
 };
 use crate::utils::tx_builder::DecompressV1Builder;
 use anchor_lang::{self, AccountDeserialize};
-use bytemuck::try_from_bytes;
-use mpl_bubblegum::{
-    state::{leaf_schema::LeafSchema, DecompressableState, TreeConfig, Voucher, VOUCHER_PREFIX},
+use bubblegum::{
+    state::{leaf_schema::LeafSchema, DecompressibleState, TreeConfig, Voucher, VOUCHER_PREFIX},
     utils::get_asset_id,
 };
+use bytemuck::try_from_bytes;
 use solana_program::{
     instruction::{AccountMeta, Instruction},
     pubkey,
@@ -37,7 +37,7 @@ use spl_merkle_tree_reference::{MerkleTree, Node};
 use std::{convert::TryFrom, mem::size_of};
 
 pub fn decompress_mint_auth_pda(mint_key: Pubkey) -> Pubkey {
-    Pubkey::find_program_address(&[mint_key.as_ref()], &mpl_bubblegum::id()).0
+    Pubkey::find_program_address(&[mint_key.as_ref()], &bubblegum::id()).0
 }
 
 // A convenience object that records some of the parameters for compressed
@@ -105,7 +105,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
     }
 
     pub fn authority(&self) -> Pubkey {
-        Pubkey::find_program_address(&[self.tree_pubkey().as_ref()], &mpl_bubblegum::id()).0
+        Pubkey::find_program_address(&[self.tree_pubkey().as_ref()], &bubblegum::id()).0
     }
 
     pub fn voucher(&self, nonce: u64) -> Pubkey {
@@ -115,7 +115,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
                 self.tree_pubkey().as_ref(),
                 &nonce.to_le_bytes(),
             ],
-            &mpl_bubblegum::id(),
+            &bubblegum::id(),
         )
         .0
     }
@@ -216,7 +216,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         payer: &Keypair,
         public: bool,
     ) -> CreateBuilder<MAX_DEPTH, MAX_BUFFER_SIZE> {
-        let accounts = mpl_bubblegum::accounts::CreateTree {
+        let accounts = bubblegum::accounts::CreateTree {
             tree_authority: self.authority(),
             payer: payer.pubkey(),
             tree_creator: self.creator_pubkey(),
@@ -227,7 +227,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         };
 
         // The conversions below should not fail.
-        let data = mpl_bubblegum::instruction::CreateTree {
+        let data = bubblegum::instruction::CreateTree {
             max_depth: u32::try_from(MAX_DEPTH).unwrap(),
             max_buffer_size: u32::try_from(MAX_BUFFER_SIZE).unwrap(),
             public: Some(public),
@@ -251,7 +251,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         tree_delegate: &Keypair,
         args: &'a mut LeafArgs,
     ) -> MintV1Builder<MAX_DEPTH, MAX_BUFFER_SIZE> {
-        let accounts = mpl_bubblegum::accounts::MintV1 {
+        let accounts = bubblegum::accounts::MintV1 {
             tree_authority: self.authority(),
             tree_delegate: tree_delegate.pubkey(),
             payer: args.owner.pubkey(),
@@ -263,7 +263,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             system_program: system_program::id(),
         };
 
-        let data = mpl_bubblegum::instruction::MintV1 {
+        let data = bubblegum::instruction::MintV1 {
             message: args.metadata.clone(),
         };
 
@@ -282,7 +282,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         tree_delegate: &Keypair,
         args: &'a mut LeafArgs,
     ) -> MintV1Builder<MAX_DEPTH, MAX_BUFFER_SIZE> {
-        let accounts = mpl_bubblegum::accounts::MintV1 {
+        let accounts = bubblegum::accounts::MintV1 {
             tree_authority: self.authority(),
             tree_delegate: tree_delegate.pubkey(),
             payer: args.owner.pubkey(),
@@ -294,7 +294,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             system_program: system_program::id(),
         };
 
-        let data = mpl_bubblegum::instruction::MintV1 {
+        let data = bubblegum::instruction::MintV1 {
             message: args.metadata.clone(),
         };
 
@@ -337,7 +337,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         edition_account: Pubkey,
         collection_record: Option<Pubkey>,
     ) -> MintToCollectionV1Builder<MAX_DEPTH, MAX_BUFFER_SIZE> {
-        let accounts = mpl_bubblegum::accounts::MintToCollectionV1 {
+        let accounts = bubblegum::accounts::MintToCollectionV1 {
             tree_authority: self.authority(),
             leaf_owner: args.owner.pubkey(),
             leaf_delegate: args.delegate.pubkey(),
@@ -345,7 +345,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             payer: args.owner.pubkey(),
             tree_delegate: tree_delegate.pubkey(),
             collection_authority: collection_authority.pubkey(),
-            collection_authority_record_pda: collection_record.unwrap_or(mpl_bubblegum::ID),
+            collection_authority_record_pda: collection_record.unwrap_or(bubblegum::ID),
             collection_mint,
             collection_metadata,
             edition_account,
@@ -356,7 +356,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             system_program: system_program::id(),
         };
 
-        let data = mpl_bubblegum::instruction::MintToCollectionV1 {
+        let data = bubblegum::instruction::MintToCollectionV1 {
             metadata_args: args.metadata.clone(),
         };
 
@@ -420,7 +420,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
 
         let (data_hash, creator_hash) = compute_metadata_hashes(&args.metadata)?;
 
-        let accounts = mpl_bubblegum::accounts::Burn {
+        let accounts = bubblegum::accounts::Burn {
             tree_authority: self.authority(),
             log_wrapper: spl_noop::id(),
             compression_program: spl_account_compression::id(),
@@ -430,7 +430,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             system_program: system_program::id(),
         };
 
-        let data = mpl_bubblegum::instruction::Burn {
+        let data = bubblegum::instruction::Burn {
             root,
             data_hash,
             creator_hash,
@@ -462,7 +462,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         let root = self.decode_root().await?;
         let (data_hash, creator_hash) = compute_metadata_hashes(&args.metadata)?;
 
-        let accounts = mpl_bubblegum::accounts::CreatorVerification {
+        let accounts = bubblegum::accounts::CreatorVerification {
             tree_authority: self.authority(),
             leaf_owner: args.owner.pubkey(),
             leaf_delegate: args.delegate.pubkey(),
@@ -474,7 +474,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             system_program: system_program::id(),
         };
 
-        let data = mpl_bubblegum::instruction::VerifyCreator {
+        let data = bubblegum::instruction::VerifyCreator {
             root,
             data_hash,
             creator_hash,
@@ -512,7 +512,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         let root = self.decode_root().await?;
         let (data_hash, creator_hash) = compute_metadata_hashes(&args.metadata)?;
 
-        let accounts = mpl_bubblegum::accounts::CreatorVerification {
+        let accounts = bubblegum::accounts::CreatorVerification {
             tree_authority: self.authority(),
             leaf_owner: args.owner.pubkey(),
             leaf_delegate: args.delegate.pubkey(),
@@ -524,7 +524,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             system_program: system_program::id(),
         };
 
-        let data = mpl_bubblegum::instruction::UnverifyCreator {
+        let data = bubblegum::instruction::UnverifyCreator {
             root,
             data_hash,
             creator_hash,
@@ -569,7 +569,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         let root = self.decode_root().await?;
         let (data_hash, creator_hash) = compute_metadata_hashes(&args.metadata)?;
 
-        let accounts = mpl_bubblegum::accounts::CollectionVerification {
+        let accounts = bubblegum::accounts::CollectionVerification {
             tree_authority: self.authority(),
             leaf_owner: args.owner.pubkey(),
             leaf_delegate: args.delegate.pubkey(),
@@ -577,7 +577,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             payer: collection_authority.pubkey(),
             tree_delegate: self.tree_creator.pubkey(),
             collection_authority: collection_authority.pubkey(),
-            collection_authority_record_pda: collection_record.unwrap_or(mpl_bubblegum::ID),
+            collection_authority_record_pda: collection_record.unwrap_or(bubblegum::ID),
             collection_mint,
             collection_metadata,
             edition_account,
@@ -588,7 +588,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             system_program: system_program::id(),
         };
 
-        let data = mpl_bubblegum::instruction::VerifyCollection {
+        let data = bubblegum::instruction::VerifyCollection {
             root,
             data_hash,
             creator_hash,
@@ -668,7 +668,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         let root = self.decode_root().await?;
         let (data_hash, creator_hash) = compute_metadata_hashes(&args.metadata)?;
 
-        let accounts = mpl_bubblegum::accounts::Transfer {
+        let accounts = bubblegum::accounts::Transfer {
             tree_authority: self.authority(),
             leaf_owner: args.owner.pubkey(),
             leaf_delegate: args.delegate.pubkey(),
@@ -679,7 +679,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             system_program: system_program::id(),
         };
 
-        let data = mpl_bubblegum::instruction::Transfer {
+        let data = bubblegum::instruction::Transfer {
             root,
             data_hash,
             creator_hash,
@@ -710,7 +710,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         let root = self.decode_root().await?;
         let (data_hash, creator_hash) = compute_metadata_hashes(&args.metadata)?;
 
-        let accounts = mpl_bubblegum::accounts::Delegate {
+        let accounts = bubblegum::accounts::Delegate {
             tree_authority: self.authority(),
             leaf_owner: args.owner.pubkey(),
             previous_leaf_delegate: args.delegate.pubkey(),
@@ -721,7 +721,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             system_program: system_program::id(),
         };
 
-        let data = mpl_bubblegum::instruction::Delegate {
+        let data = bubblegum::instruction::Delegate {
             root,
             data_hash,
             creator_hash,
@@ -751,7 +751,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         let root = self.decode_root().await?;
         let (data_hash, creator_hash) = compute_metadata_hashes(&args.metadata)?;
 
-        let accounts = mpl_bubblegum::accounts::Redeem {
+        let accounts = bubblegum::accounts::Redeem {
             tree_authority: self.authority(),
             leaf_owner: args.owner.pubkey(),
             leaf_delegate: args.delegate.pubkey(),
@@ -762,7 +762,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             system_program: system_program::id(),
         };
 
-        let data = mpl_bubblegum::instruction::Redeem {
+        let data = bubblegum::instruction::Redeem {
             root,
             data_hash,
             creator_hash,
@@ -790,7 +790,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
     ) -> Result<CancelRedeemBuilder<MAX_DEPTH, MAX_BUFFER_SIZE>> {
         let root = self.decode_root().await?;
 
-        let accounts = mpl_bubblegum::accounts::CancelRedeem {
+        let accounts = bubblegum::accounts::CancelRedeem {
             tree_authority: self.authority(),
             leaf_owner: args.owner.pubkey(),
             merkle_tree: self.tree_pubkey(),
@@ -800,7 +800,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             system_program: system_program::id(),
         };
 
-        let data = mpl_bubblegum::instruction::CancelRedeem { root };
+        let data = bubblegum::instruction::CancelRedeem { root };
 
         Ok(self.tx_builder(
             accounts,
@@ -827,7 +827,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         let metadata = mpl_token_metadata::pda::find_metadata_account(&mint).0;
         let master_edition = mpl_token_metadata::pda::find_master_edition_account(&mint).0;
 
-        let accounts = mpl_bubblegum::accounts::DecompressV1 {
+        let accounts = bubblegum::accounts::DecompressV1 {
             voucher: voucher.pda(),
             leaf_owner: args.owner.pubkey(),
             token_account,
@@ -843,7 +843,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             log_wrapper: spl_noop::id(),
         };
 
-        let data = mpl_bubblegum::instruction::DecompressV1 {
+        let data = bubblegum::instruction::DecompressV1 {
             metadata: args.metadata.clone(),
         };
 
@@ -865,7 +865,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         &mut self,
         new_tree_delegate: &Keypair,
     ) -> SetTreeDelegateBuilder<MAX_DEPTH, MAX_BUFFER_SIZE> {
-        let accounts = mpl_bubblegum::accounts::SetTreeDelegate {
+        let accounts = bubblegum::accounts::SetTreeDelegate {
             tree_creator: self.creator_pubkey(),
             new_tree_delegate: new_tree_delegate.pubkey(),
             merkle_tree: self.tree_pubkey(),
@@ -873,7 +873,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             system_program: system_program::id(),
         };
 
-        let data = mpl_bubblegum::instruction::SetTreeDelegate;
+        let data = bubblegum::instruction::SetTreeDelegate;
 
         let tree_creator = Keypair::from_bytes(&self.tree_creator.to_bytes()).unwrap();
         self.tx_builder(
@@ -1017,14 +1017,14 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
     // Set Decompression Permission TX
     pub fn set_decompression_tx(
         &mut self,
-        decompressable_state: DecompressableState,
+        decompressable_state: DecompressibleState,
     ) -> SetDecompressableStateBuilder<MAX_DEPTH, MAX_BUFFER_SIZE> {
-        let accounts = mpl_bubblegum::accounts::SetDecompressableState {
+        let accounts = bubblegum::accounts::SetDecompressibleState {
             tree_authority: self.authority(),
             tree_creator: self.creator_pubkey(),
         };
 
-        let data = mpl_bubblegum::instruction::SetDecompressableState {
+        let data = bubblegum::instruction::SetDecompressableState {
             decompressable_state,
         };
 
@@ -1041,14 +1041,14 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
 
     // Enable Decompression
     pub async fn enable_decompression(&mut self) -> Result<()> {
-        self.set_decompression_tx(DecompressableState::Enabled)
+        self.set_decompression_tx(DecompressibleState::Enabled)
             .execute()
             .await
     }
 
     // Disable Decompression
     pub async fn disable_decompression(&mut self) -> Result<()> {
-        self.set_decompression_tx(DecompressableState::Disabled)
+        self.set_decompression_tx(DecompressibleState::Disabled)
             .execute()
             .await
     }

@@ -8,7 +8,7 @@
 import * as web3 from '@solana/web3.js';
 import * as beet from '@metaplex-foundation/beet';
 import * as beetSolana from '@metaplex-foundation/beet-solana';
-import { DecompressableState, decompressableStateBeet } from '../types/DecompressableState';
+import { DecompressibleState, decompressibleStateBeet } from '../types/DecompressibleState';
 
 /**
  * Arguments used to create {@link TreeConfig}
@@ -21,7 +21,7 @@ export type TreeConfigArgs = {
   totalMintCapacity: beet.bignum;
   numMinted: beet.bignum;
   isPublic: boolean;
-  isDecompressable: DecompressableState;
+  isDecompressible: DecompressibleState;
 };
 
 export const treeConfigDiscriminator = [122, 245, 175, 248, 171, 34, 0, 207];
@@ -39,7 +39,7 @@ export class TreeConfig implements TreeConfigArgs {
     readonly totalMintCapacity: beet.bignum,
     readonly numMinted: beet.bignum,
     readonly isPublic: boolean,
-    readonly isDecompressable: DecompressableState,
+    readonly isDecompressible: DecompressibleState,
   ) {}
 
   /**
@@ -52,7 +52,7 @@ export class TreeConfig implements TreeConfigArgs {
       args.totalMintCapacity,
       args.numMinted,
       args.isPublic,
-      args.isDecompressable,
+      args.isDecompressible,
     );
   }
 
@@ -173,7 +173,7 @@ export class TreeConfig implements TreeConfigArgs {
         return x;
       })(),
       isPublic: this.isPublic,
-      isDecompressable: 'DecompressableState.' + DecompressableState[this.isDecompressable],
+      isDecompressible: 'DecompressibleState.' + DecompressibleState[this.isDecompressible],
     };
   }
 }
@@ -195,7 +195,7 @@ export const treeConfigBeet = new beet.BeetStruct<
     ['totalMintCapacity', beet.u64],
     ['numMinted', beet.u64],
     ['isPublic', beet.bool],
-    ['isDecompressable', decompressableStateBeet],
+    ['isDecompressible', decompressibleStateBeet],
   ],
   TreeConfig.fromArgs,
   'TreeConfig',

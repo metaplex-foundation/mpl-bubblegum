@@ -4,9 +4,7 @@ use super::{
     clone_keypair, digital_asset::DigitalAsset, program_test, tree::Tree, BanksResult, DirtyClone,
     Error, LeafArgs, Result,
 };
-use mpl_bubblegum::state::metaplex_adapter::{
-    Collection, Creator, MetadataArgs, TokenProgramVersion,
-};
+use bubblegum::state::metaplex_adapter::{Collection, Creator, MetadataArgs, TokenProgramVersion};
 use mpl_token_metadata::{
     pda::find_collection_authority_account,
     state::{CollectionDetails, TokenStandard},
@@ -27,6 +25,7 @@ pub struct BubblegumTestContext {
 
 pub const DEFAULT_LAMPORTS_FUND_AMOUNT: u64 = 1_000_000_000;
 
+#[allow(deprecated)]
 impl BubblegumTestContext {
     pub fn test_context(&self) -> &ProgramTestContext {
         &self.program_context

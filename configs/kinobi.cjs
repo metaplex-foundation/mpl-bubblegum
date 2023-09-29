@@ -39,6 +39,8 @@ kinobi.update(
 // Update types.
 kinobi.update(
   new k.UpdateDefinedTypesVisitor({
+    // Remove unnecessary types.
+    InstructionName: { delete: true },
     // Remove unnecessary spl_account_compression type.
     ApplicationDataEventV1: { delete: true },
     ChangeLogEventV1: { delete: true },
@@ -85,6 +87,20 @@ kinobi.update(
       transformer: (node) => {
         k.assertStructFieldTypeNode(node);
         return k.structFieldTypeNode({ ...node, name: "metadata" });
+      },
+    },
+    {
+      // Update `collectionAuthorityRecordPda` account as `optional`.
+      selector: {
+        kind: "instructionAccountNode",
+        name: "collectionAuthorityRecordPda",
+      },
+      transformer: (node) => {
+        k.assertInstructionAccountNode(node);
+        return k.instructionAccountNode({
+          ...node,
+          isOptional: true,
+        });
       },
     },
   ])
@@ -266,6 +282,8 @@ kinobi.update(
     unverifyCollection: { args: { ...hashDefaults } },
     verifyCreator: { args: { ...hashDefaults } },
     unverifyCreator: { args: { ...hashDefaults } },
+    // Remove deprecated instructions.
+    setDecompressableState: { delete: true },
     // Remove unnecessary spl_account_compression instructions.
     append: { delete: true },
     closeEmptyTree: { delete: true },
@@ -392,5 +410,15 @@ kinobi.accept(
     dependencyMap: {
       mplTokenMetadata: "@metaplex-foundation/mpl-token-metadata",
     },
+  })
+);
+
+// Render Rust.
+const crateDir = path.join(clientDir, "rust");
+const rustDir = path.join(clientDir, "rust", "src", "generated");
+kinobi.accept(
+  new k.RenderRustVisitor(rustDir, {
+    formatCode: true,
+    crateFolder: crateDir,
   })
 );

@@ -34,6 +34,8 @@ import {
   Creator,
   createMintToCollectionV1Instruction,
   createUpdateMetadataCollectionNftInstruction,
+  createSetDecompressibleStateInstruction,
+  DecompressibleState,
 } from '../src/generated';
 import {
   getLeafAssetId,
@@ -133,7 +135,6 @@ async function setupTreeWithCompressedNFT(
   const space = getConcurrentMerkleTreeAccountSize(
     depthSizePair.maxDepth,
     depthSizePair.maxBufferSize,
-    depthSizePair.maxDepth,
   );
   const allocTreeIx = SystemProgram.createAccount({
     fromPubkey: payer,
@@ -163,6 +164,17 @@ async function setupTreeWithCompressedNFT(
     BUBBLEGUM_PROGRAM_ID,
   );
 
+  const setDecompressibleStateIx = createSetDecompressibleStateInstruction(
+    {
+      treeAuthority,
+      treeCreator: payer,
+    },
+    {
+      decompressableState: DecompressibleState.Enabled,
+    },
+    BUBBLEGUM_PROGRAM_ID,
+  );
+
   const mintIx = createMintV1Instruction(
     {
       merkleTree,
@@ -179,7 +191,11 @@ async function setupTreeWithCompressedNFT(
     },
   );
 
-  const tx = new Transaction().add(allocTreeIx).add(createTreeIx).add(mintIx);
+  const tx = new Transaction()
+    .add(allocTreeIx)
+    .add(createTreeIx)
+    .add(setDecompressibleStateIx)
+    .add(mintIx);
   tx.feePayer = payer;
   await sendAndConfirmTransaction(connection, tx, [merkleTreeKeypair, payerKeypair], {
     commitment: 'confirmed',

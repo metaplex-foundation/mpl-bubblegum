@@ -1,521 +1,21 @@
 #![allow(clippy::result_large_err)]
 #![allow(clippy::too_many_arguments)]
 
-use crate::{
-    error::{metadata_error_into_bubblegum, BubblegumError},
-    state::{
-        leaf_schema::LeafSchema,
-        metaplex_adapter::{
-            self, Collection, Creator, MetadataArgs, TokenProgramVersion, UpdateArgs,
-        },
-        metaplex_anchor::{MasterEdition, MplTokenMetadata, TokenMetadata},
-        DecompressableState, TreeConfig, Voucher, ASSET_PREFIX, COLLECTION_CPI_PREFIX,
-        TREE_AUTHORITY_SIZE, VOUCHER_PREFIX, VOUCHER_SIZE,
-    },
-    utils::{
-        append_leaf, assert_has_collection_authority, assert_metadata_is_mpl_compatible,
-        assert_pubkey_equal, cmp_bytes, cmp_pubkeys, get_asset_id, replace_leaf,
-    },
-};
-use anchor_lang::{
-    prelude::*,
-    solana_program::{
-        account_info::AccountInfo,
-        keccak,
-        program::{invoke, invoke_signed},
-        program_error::ProgramError,
-        program_pack::Pack,
-        system_instruction,
-    },
-    system_program::System,
-};
-use anchor_spl::{associated_token::AssociatedToken, token::Token};
-use mpl_token_metadata::{
-    assertions::collection::assert_collection_verify_is_valid, state::CollectionDetails,
-};
-use spl_account_compression::{
-    program::SplAccountCompression, wrap_application_data_v1, Node, Noop,
-};
-use spl_token::state::Mint as SplMint;
-use std::collections::HashSet;
+use anchor_lang::prelude::*;
 
+pub mod asserts;
 pub mod error;
+mod processor;
 pub mod state;
 pub mod utils;
 
+use processor::*;
+use state::{
+    metaplex_adapter::{MetadataArgs, UpdateArgs},
+    DecompressibleState,
+};
+
 declare_id!("BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY");
-
-#[derive(Accounts)]
-pub struct CreateTree<'info> {
-    #[account(
-        init,
-        seeds = [merkle_tree.key().as_ref()],
-        payer = payer,
-        space = TREE_AUTHORITY_SIZE,
-        bump,
-    )]
-    pub tree_authority: Account<'info, TreeConfig>,
-    #[account(zero)]
-    /// CHECK: This account must be all zeros
-    pub merkle_tree: UncheckedAccount<'info>,
-    #[account(mut)]
-    pub payer: Signer<'info>,
-    pub tree_creator: Signer<'info>,
-    pub log_wrapper: Program<'info, Noop>,
-    pub compression_program: Program<'info, SplAccountCompression>,
-    pub system_program: Program<'info, System>,
-}
-
-#[derive(Accounts)]
-pub struct MintV1<'info> {
-    #[account(
-        mut,
-        seeds = [merkle_tree.key().as_ref()],
-        bump,
-    )]
-    pub tree_authority: Account<'info, TreeConfig>,
-    /// CHECK: This account is neither written to nor read from.
-    pub leaf_owner: AccountInfo<'info>,
-    /// CHECK: This account is neither written to nor read from.
-    pub leaf_delegate: AccountInfo<'info>,
-    #[account(mut)]
-    /// CHECK: unsafe
-    pub merkle_tree: UncheckedAccount<'info>,
-    pub payer: Signer<'info>,
-    pub tree_delegate: Signer<'info>,
-    pub log_wrapper: Program<'info, Noop>,
-    pub compression_program: Program<'info, SplAccountCompression>,
-    pub system_program: Program<'info, System>,
-}
-
-#[derive(Accounts)]
-pub struct MintToCollectionV1<'info> {
-    #[account(
-        mut,
-        seeds = [merkle_tree.key().as_ref()],
-        bump,
-    )]
-    pub tree_authority: Account<'info, TreeConfig>,
-    /// CHECK: This account is neither written to nor read from.
-    pub leaf_owner: AccountInfo<'info>,
-    /// CHECK: This account is neither written to nor read from.
-    pub leaf_delegate: AccountInfo<'info>,
-    #[account(mut)]
-    /// CHECK: unsafe
-    pub merkle_tree: UncheckedAccount<'info>,
-    pub payer: Signer<'info>,
-    pub tree_delegate: Signer<'info>,
-    pub collection_authority: Signer<'info>,
-    /// CHECK: Optional collection authority record PDA.
-    /// If there is no collecton authority record PDA then
-    /// this must be the Bubblegum program address.
-    pub collection_authority_record_pda: UncheckedAccount<'info>,
-    /// CHECK: This account is checked in the instruction
-    pub collection_mint: UncheckedAccount<'info>,
-    #[account(mut)]
-    pub collection_metadata: Box<Account<'info, TokenMetadata>>,
-    /// CHECK: This account is checked in the instruction
-    pub edition_account: UncheckedAccount<'info>,
-    /// CHECK: This is just used as a signing PDA.
-    #[account(
-        seeds = [COLLECTION_CPI_PREFIX.as_ref()],
-        bump,
-    )]
-    pub bubblegum_signer: UncheckedAccount<'info>,
-    pub log_wrapper: Program<'info, Noop>,
-    pub compression_program: Program<'info, SplAccountCompression>,
-    pub token_metadata_program: Program<'info, MplTokenMetadata>,
-    pub system_program: Program<'info, System>,
-}
-
-#[derive(Accounts)]
-pub struct Burn<'info> {
-    #[account(
-        seeds = [merkle_tree.key().as_ref()],
-        bump,
-    )]
-    pub tree_authority: Account<'info, TreeConfig>,
-    /// CHECK: This account is checked in the instruction
-    pub leaf_owner: UncheckedAccount<'info>,
-    /// CHECK: This account is checked in the instruction
-    pub leaf_delegate: UncheckedAccount<'info>,
-    #[account(mut)]
-    /// CHECK: This account is modified in the downstream program
-    pub merkle_tree: UncheckedAccount<'info>,
-    pub log_wrapper: Program<'info, Noop>,
-    pub compression_program: Program<'info, SplAccountCompression>,
-    pub system_program: Program<'info, System>,
-}
-
-#[derive(Accounts)]
-pub struct CreatorVerification<'info> {
-    #[account(
-        seeds = [merkle_tree.key().as_ref()],
-        bump,
-    )]
-    pub tree_authority: Account<'info, TreeConfig>,
-    /// CHECK: This account is checked in the instruction
-    pub leaf_owner: UncheckedAccount<'info>,
-    /// CHECK: This account is checked in the instruction
-    pub leaf_delegate: UncheckedAccount<'info>,
-    #[account(mut)]
-    /// CHECK: This account is modified in the downstream program
-    pub merkle_tree: UncheckedAccount<'info>,
-    pub payer: Signer<'info>,
-    pub creator: Signer<'info>,
-    pub log_wrapper: Program<'info, Noop>,
-    pub compression_program: Program<'info, SplAccountCompression>,
-    pub system_program: Program<'info, System>,
-}
-
-#[derive(Accounts)]
-pub struct CollectionVerification<'info> {
-    #[account(
-        seeds = [merkle_tree.key().as_ref()],
-        bump,
-    )]
-    pub tree_authority: Account<'info, TreeConfig>,
-    /// CHECK: This account is checked in the instruction
-    pub leaf_owner: UncheckedAccount<'info>,
-    /// CHECK: This account is checked in the instruction
-    pub leaf_delegate: UncheckedAccount<'info>,
-    #[account(mut)]
-    /// CHECK: This account is modified in the downstream program
-    pub merkle_tree: UncheckedAccount<'info>,
-    pub payer: Signer<'info>,
-    /// CHECK: This account is checked to be a signer in
-    /// the case of `set_and_verify_collection` where
-    /// we are actually changing the NFT metadata.
-    pub tree_delegate: UncheckedAccount<'info>,
-    pub collection_authority: Signer<'info>,
-    /// CHECK: Optional collection authority record PDA.
-    /// If there is no collecton authority record PDA then
-    /// this must be the Bubblegum program address.
-    pub collection_authority_record_pda: UncheckedAccount<'info>,
-    /// CHECK: This account is checked in the instruction
-    pub collection_mint: UncheckedAccount<'info>,
-    #[account(mut)]
-    pub collection_metadata: Box<Account<'info, TokenMetadata>>,
-    /// CHECK: This account is checked in the instruction
-    pub edition_account: UncheckedAccount<'info>,
-    /// CHECK: This is just used as a signing PDA.
-    #[account(
-        seeds = [COLLECTION_CPI_PREFIX.as_ref()],
-        bump,
-    )]
-    pub bubblegum_signer: UncheckedAccount<'info>,
-    pub log_wrapper: Program<'info, Noop>,
-    pub compression_program: Program<'info, SplAccountCompression>,
-    pub token_metadata_program: Program<'info, MplTokenMetadata>,
-    pub system_program: Program<'info, System>,
-}
-
-#[derive(Accounts)]
-pub struct Transfer<'info> {
-    #[account(
-        seeds = [merkle_tree.key().as_ref()],
-        bump,
-    )]
-    /// CHECK: This account is neither written to nor read from.
-    pub tree_authority: Account<'info, TreeConfig>,
-    /// CHECK: This account is checked in the instruction
-    pub leaf_owner: UncheckedAccount<'info>,
-    /// CHECK: This account is checked in the instruction
-    pub leaf_delegate: UncheckedAccount<'info>,
-    /// CHECK: This account is neither written to nor read from.
-    pub new_leaf_owner: UncheckedAccount<'info>,
-    #[account(mut)]
-    /// CHECK: This account is modified in the downstream program
-    pub merkle_tree: UncheckedAccount<'info>,
-    pub log_wrapper: Program<'info, Noop>,
-    pub compression_program: Program<'info, SplAccountCompression>,
-    pub system_program: Program<'info, System>,
-}
-
-#[derive(Accounts)]
-pub struct Delegate<'info> {
-    #[account(
-        seeds = [merkle_tree.key().as_ref()],
-        bump,
-    )]
-    /// CHECK: This account is neither written to nor read from.
-    pub tree_authority: Account<'info, TreeConfig>,
-    pub leaf_owner: Signer<'info>,
-    /// CHECK: This account is neither written to nor read from.
-    pub previous_leaf_delegate: UncheckedAccount<'info>,
-    /// CHECK: This account is neither written to nor read from.
-    pub new_leaf_delegate: UncheckedAccount<'info>,
-    #[account(mut)]
-    /// CHECK: This account is modified in the downstream program
-    pub merkle_tree: UncheckedAccount<'info>,
-    pub log_wrapper: Program<'info, Noop>,
-    pub compression_program: Program<'info, SplAccountCompression>,
-    pub system_program: Program<'info, System>,
-}
-
-#[derive(Accounts)]
-pub struct UpdateMetadata<'info> {
-    /// CHECK: Can optionally specify the old metadata of the leaf through an account to save transaction space
-    /// CHECK: This account is checked in the instruction
-    pub metadata_buffer: Option<UncheckedAccount<'info>>,
-    #[account(
-        seeds = [merkle_tree.key().as_ref()],
-        bump,
-    )]
-    /// CHECK: This account is neither written to nor read from.
-    pub tree_authority: Account<'info, TreeConfig>,
-    pub tree_delegate: Signer<'info>,
-    /// CHECK: This account is checked in the instruction
-    pub leaf_owner: UncheckedAccount<'info>,
-    /// CHECK: This account is checked in the instruction
-    pub leaf_delegate: UncheckedAccount<'info>,
-    pub payer: Signer<'info>,
-    #[account(mut)]
-    /// CHECK: This account is modified in the downstream program
-    pub merkle_tree: UncheckedAccount<'info>,
-    pub log_wrapper: Program<'info, Noop>,
-    pub compression_program: Program<'info, SplAccountCompression>,
-    pub token_metadata_program: Program<'info, MplTokenMetadata>,
-    pub system_program: Program<'info, System>,
-}
-
-#[derive(Accounts)]
-pub struct UpdateMetadataCollectionNFT<'info> {
-    /// CHECK: Can optionally specify the old metadata of the leaf through an account to save transaction space
-    /// CHECK: This account is checked in the instruction
-    pub metadata_buffer: Option<UncheckedAccount<'info>>,
-    #[account(
-        seeds = [merkle_tree.key().as_ref()],
-        bump,
-    )]
-    /// CHECK: This account is neither written to nor read from.
-    pub tree_authority: Account<'info, TreeConfig>,
-    pub tree_delegate: Signer<'info>,
-    pub collection_authority: Signer<'info>,
-    /// CHECK: This account is checked in the instruction
-    pub collection_mint: UncheckedAccount<'info>,
-    pub collection_metadata: Box<Account<'info, TokenMetadata>>,
-    /// CHECK: This account is checked in the instruction
-    pub collection_authority_record_pda: Option<UncheckedAccount<'info>>,
-    /// CHECK: This account is checked in the instruction
-    pub leaf_owner: UncheckedAccount<'info>,
-    /// CHECK: This account is checked in the instruction
-    pub leaf_delegate: UncheckedAccount<'info>,
-    pub payer: Signer<'info>,
-    #[account(mut)]
-    /// CHECK: This account is modified in the downstream program
-    pub merkle_tree: UncheckedAccount<'info>,
-    pub log_wrapper: Program<'info, Noop>,
-    pub compression_program: Program<'info, SplAccountCompression>,
-    pub token_metadata_program: Program<'info, MplTokenMetadata>,
-    pub system_program: Program<'info, System>,
-}
-
-#[derive(Accounts)]
-#[instruction(
-    _root: [u8; 32],
-    _data_hash: [u8; 32],
-    _creator_hash: [u8; 32],
-    nonce: u64,
-    _index: u32,
-)]
-pub struct Redeem<'info> {
-    #[account(
-        seeds = [merkle_tree.key().as_ref()],
-        bump,
-    )]
-    /// CHECK: This account is neither written to nor read from.
-    pub tree_authority: Account<'info, TreeConfig>,
-    #[account(mut)]
-    pub leaf_owner: Signer<'info>,
-    /// CHECK: This account is checked in the instruction
-    pub leaf_delegate: UncheckedAccount<'info>,
-    #[account(mut)]
-    /// CHECK: checked in cpi
-    pub merkle_tree: UncheckedAccount<'info>,
-    #[account(
-        init,
-        seeds = [
-        VOUCHER_PREFIX.as_ref(),
-        merkle_tree.key().as_ref(),
-        & nonce.to_le_bytes()
-    ],
-    payer = leaf_owner,
-    space = VOUCHER_SIZE,
-    bump
-    )]
-    pub voucher: Account<'info, Voucher>,
-    pub log_wrapper: Program<'info, Noop>,
-    pub compression_program: Program<'info, SplAccountCompression>,
-    pub system_program: Program<'info, System>,
-}
-
-#[derive(Accounts)]
-pub struct CancelRedeem<'info> {
-    #[account(
-        seeds = [merkle_tree.key().as_ref()],
-        bump,
-    )]
-    /// CHECK: This account is neither written to nor read from.
-    pub tree_authority: Account<'info, TreeConfig>,
-    #[account(mut)]
-    pub leaf_owner: Signer<'info>,
-    #[account(mut)]
-    /// CHECK: unsafe
-    pub merkle_tree: UncheckedAccount<'info>,
-    #[account(
-        mut,
-        close = leaf_owner,
-        seeds = [
-        VOUCHER_PREFIX.as_ref(),
-        merkle_tree.key().as_ref(),
-        & voucher.leaf_schema.nonce().to_le_bytes()
-    ],
-    bump
-    )]
-    pub voucher: Account<'info, Voucher>,
-    pub log_wrapper: Program<'info, Noop>,
-    pub compression_program: Program<'info, SplAccountCompression>,
-    pub system_program: Program<'info, System>,
-}
-
-#[derive(Accounts)]
-pub struct DecompressV1<'info> {
-    #[account(
-        mut,
-        close = leaf_owner,
-        seeds = [
-            VOUCHER_PREFIX.as_ref(),
-            voucher.merkle_tree.as_ref(),
-            voucher.leaf_schema.nonce().to_le_bytes().as_ref()
-        ],
-        bump
-    )]
-    pub voucher: Box<Account<'info, Voucher>>,
-    #[account(mut)]
-    pub leaf_owner: Signer<'info>,
-    /// CHECK: versioning is handled in the instruction
-    #[account(mut)]
-    pub token_account: UncheckedAccount<'info>,
-    /// CHECK: versioning is handled in the instruction
-    #[account(
-        mut,
-        seeds = [
-            ASSET_PREFIX.as_ref(),
-            voucher.merkle_tree.as_ref(),
-            voucher.leaf_schema.nonce().to_le_bytes().as_ref(),
-        ],
-        bump
-    )]
-    pub mint: UncheckedAccount<'info>,
-    /// CHECK:
-    #[account(
-        mut,
-        seeds = [mint.key().as_ref()],
-        bump,
-    )]
-    pub mint_authority: UncheckedAccount<'info>,
-    /// CHECK:
-    #[account(mut)]
-    pub metadata: UncheckedAccount<'info>,
-    /// CHECK: Initialized in Token Metadata Program
-    #[account(mut)]
-    pub master_edition: UncheckedAccount<'info>,
-    pub system_program: Program<'info, System>,
-    pub sysvar_rent: Sysvar<'info, Rent>,
-    /// CHECK:
-    pub token_metadata_program: Program<'info, MplTokenMetadata>,
-    pub token_program: Program<'info, Token>,
-    pub associated_token_program: Program<'info, AssociatedToken>,
-    pub log_wrapper: Program<'info, Noop>,
-}
-
-#[derive(Accounts)]
-pub struct Compress<'info> {
-    #[account(
-        seeds = [merkle_tree.key().as_ref()],
-        bump,
-    )]
-    /// CHECK: This account is neither written to nor read from.
-    pub tree_authority: UncheckedAccount<'info>,
-    /// CHECK: This account is checked in the instruction
-    pub leaf_owner: Signer<'info>,
-    /// CHECK: This account is checked in the instruction
-    pub leaf_delegate: UncheckedAccount<'info>,
-    /// CHECK: This account is not read
-    pub merkle_tree: UncheckedAccount<'info>,
-
-    /// CHECK: versioning is handled in the instruction
-    #[account(mut)]
-    pub token_account: AccountInfo<'info>,
-    /// CHECK: versioning is handled in the instruction
-    #[account(mut)]
-    pub mint: AccountInfo<'info>,
-    #[account(mut)]
-    pub metadata: Box<Account<'info, TokenMetadata>>,
-    #[account(mut)]
-    pub master_edition: Box<Account<'info, MasterEdition>>,
-    #[account(mut)]
-    pub payer: Signer<'info>,
-    pub log_wrapper: Program<'info, Noop>,
-    pub compression_program: Program<'info, SplAccountCompression>,
-    /// CHECK:
-    pub token_program: UncheckedAccount<'info>,
-    /// CHECK:
-    pub token_metadata_program: UncheckedAccount<'info>,
-    pub system_program: Program<'info, System>,
-}
-
-#[derive(Accounts)]
-pub struct SetTreeDelegate<'info> {
-    #[account(
-        mut,
-        seeds = [merkle_tree.key().as_ref()],
-        bump,
-        has_one = tree_creator
-    )]
-    pub tree_authority: Account<'info, TreeConfig>,
-    pub tree_creator: Signer<'info>,
-    /// CHECK: this account is neither read from or written to
-    pub new_tree_delegate: UncheckedAccount<'info>,
-    /// CHECK: this account is neither read from or written to
-    pub merkle_tree: UncheckedAccount<'info>,
-    pub system_program: Program<'info, System>,
-}
-
-#[derive(Accounts)]
-pub struct SetDecompressableState<'info> {
-    #[account(mut, has_one = tree_creator)]
-    pub tree_authority: Account<'info, TreeConfig>,
-    pub tree_creator: Signer<'info>,
-}
-
-pub fn hash_creators(creators: &[Creator]) -> Result<[u8; 32]> {
-    // Convert creator Vec to bytes Vec.
-    let creator_data = creators
-        .iter()
-        .map(|c| [c.address.as_ref(), &[c.verified as u8], &[c.share]].concat())
-        .collect::<Vec<_>>();
-    // Calculate new creator hash.
-    Ok(keccak::hashv(
-        creator_data
-            .iter()
-            .map(|c| c.as_slice())
-            .collect::<Vec<&[u8]>>()
-            .as_ref(),
-    )
-    .to_bytes())
-}
-
-pub fn hash_metadata(metadata: &MetadataArgs) -> Result<[u8; 32]> {
-    let metadata_args_hash = keccak::hashv(&[metadata.try_to_vec()?.as_slice()]);
-    // Calculate new data hash.
-    Ok(keccak::hashv(&[
-        &metadata_args_hash.to_bytes(),
-        &metadata.seller_fee_basis_points.to_le_bytes(),
-    ])
-    .to_bytes())
-}
 
 pub enum InstructionName {
     Unknown,
@@ -535,6 +35,7 @@ pub enum InstructionName {
     SetAndVerifyCollection,
     MintToCollectionV1,
     SetDecompressableState,
+    SetDecompressibleState,
     UpdateMetadata,
     UpdateMetadataCollectionNft,
 }
@@ -561,868 +62,100 @@ pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
         [56, 113, 101, 253, 79, 55, 122, 169] => InstructionName::VerifyCollection,
         [250, 251, 42, 106, 41, 137, 186, 168] => InstructionName::UnverifyCollection,
         [235, 242, 121, 216, 158, 234, 180, 234] => InstructionName::SetAndVerifyCollection,
-        [37, 232, 198, 199, 64, 102, 128, 49] => InstructionName::SetDecompressableState,
+        [82, 104, 152, 6, 149, 111, 100, 13] => InstructionName::SetDecompressibleState,
+        // `SetDecompressableState` instruction mapped to `SetDecompressibleState` instruction
+        [18, 135, 238, 168, 246, 195, 61, 115] => InstructionName::SetDecompressibleState,
         [170, 182, 43, 239, 97, 78, 225, 186] => InstructionName::UpdateMetadata,
         [244, 12, 175, 194, 227, 28, 102, 215] => InstructionName::UpdateMetadataCollectionNft,
         _ => InstructionName::Unknown,
     }
 }
 
-fn process_mint_v1<'info>(
-    message: MetadataArgs,
-    owner: Pubkey,
-    delegate: Pubkey,
-    metadata_auth: HashSet<Pubkey>,
-    authority_bump: u8,
-    authority: &mut Account<'info, TreeConfig>,
-    merkle_tree: &AccountInfo<'info>,
-    wrapper: &Program<'info, Noop>,
-    compression_program: &AccountInfo<'info>,
-    allow_verified_collection: bool,
-) -> Result<()> {
-    assert_metadata_is_mpl_compatible(&message)?;
-    if !allow_verified_collection {
-        if let Some(collection) = &message.collection {
-            if collection.verified {
-                return Err(BubblegumError::CollectionCannotBeVerifiedInThisInstruction.into());
-            }
-        }
-    }
-
-    // @dev: seller_fee_basis points is encoded twice so that it can be passed to marketplace
-    // instructions, without passing the entire, un-hashed MetadataArgs struct
-    let metadata_args_hash = keccak::hashv(&[message.try_to_vec()?.as_slice()]);
-    let data_hash = keccak::hashv(&[
-        &metadata_args_hash.to_bytes(),
-        &message.seller_fee_basis_points.to_le_bytes(),
-    ]);
-
-    // Use the metadata auth to check whether we can allow `verified` to be set to true in the
-    // creator Vec.
-    let creator_data = message
-        .creators
-        .iter()
-        .map(|c| {
-            if c.verified && !metadata_auth.contains(&c.address) {
-                Err(BubblegumError::CreatorDidNotVerify.into())
-            } else {
-                Ok([c.address.as_ref(), &[c.verified as u8], &[c.share]].concat())
-            }
-        })
-        .collect::<Result<Vec<_>>>()?;
-
-    // Calculate creator hash.
-    let creator_hash = keccak::hashv(
-        creator_data
-            .iter()
-            .map(|c| c.as_slice())
-            .collect::<Vec<&[u8]>>()
-            .as_ref(),
-    );
-
-    let asset_id = get_asset_id(&merkle_tree.key(), authority.num_minted);
-    let leaf = LeafSchema::new_v0(
-        asset_id,
-        owner,
-        delegate,
-        authority.num_minted,
-        data_hash.to_bytes(),
-        creator_hash.to_bytes(),
-    );
-
-    wrap_application_data_v1(leaf.to_event().try_to_vec()?, wrapper)?;
-
-    append_leaf(
-        &merkle_tree.key(),
-        authority_bump,
-        &compression_program.to_account_info(),
-        &authority.to_account_info(),
-        &merkle_tree.to_account_info(),
-        &wrapper.to_account_info(),
-        leaf.to_node(),
-    )
-}
-
-fn process_creator_verification<'info>(
-    ctx: Context<'_, '_, '_, 'info, CreatorVerification<'info>>,
-    root: [u8; 32],
-    data_hash: [u8; 32],
-    creator_hash: [u8; 32],
-    nonce: u64,
-    index: u32,
-    mut message: MetadataArgs,
-    verify: bool,
-) -> Result<()> {
-    let owner = ctx.accounts.leaf_owner.to_account_info();
-    let delegate = ctx.accounts.leaf_delegate.to_account_info();
-    let merkle_tree = ctx.accounts.merkle_tree.to_account_info();
-
-    let creator = ctx.accounts.creator.key();
-
-    // Creator Vec must contain creators.
-    if message.creators.is_empty() {
-        return Err(BubblegumError::NoCreatorsPresent.into());
-    }
-
-    // Creator must be in user-provided creator Vec.
-    if !message.creators.iter().any(|c| c.address == creator) {
-        return Err(BubblegumError::CreatorNotFound.into());
-    }
-
-    // User-provided creator Vec must result in same user-provided creator hash.
-    let incoming_creator_hash = hash_creators(&message.creators)?;
-    if creator_hash != incoming_creator_hash {
-        return Err(BubblegumError::CreatorHashMismatch.into());
-    }
-
-    // User-provided metadata must result in same user-provided data hash.
-    let incoming_data_hash = hash_metadata(&message)?;
-    if data_hash != incoming_data_hash {
-        return Err(BubblegumError::DataHashMismatch.into());
-    }
-
-    // Calculate new creator Vec with `verified` set to true for signing creator.
-    let updated_creator_vec = message
-        .creators
-        .iter()
-        .map(|c| {
-            let verified = if c.address == creator.key() {
-                verify
-            } else {
-                c.verified
-            };
-            Creator {
-                address: c.address,
-                verified,
-                share: c.share,
-            }
-        })
-        .collect::<Vec<Creator>>();
-
-    // Calculate new creator hash.
-    let updated_creator_hash = hash_creators(&updated_creator_vec)?;
-
-    // Update creator Vec in metadata args.
-    message.creators = updated_creator_vec;
-
-    // Calculate new data hash.
-    let updated_data_hash = hash_metadata(&message)?;
-
-    // Build previous leaf struct, new leaf struct, and replace the leaf in the tree.
-    let asset_id = get_asset_id(&merkle_tree.key(), nonce);
-    let previous_leaf = LeafSchema::new_v0(
-        asset_id,
-        owner.key(),
-        delegate.key(),
-        nonce,
-        data_hash,
-        creator_hash,
-    );
-    let new_leaf = LeafSchema::new_v0(
-        asset_id,
-        owner.key(),
-        delegate.key(),
-        nonce,
-        updated_data_hash,
-        updated_creator_hash,
-    );
-
-    wrap_application_data_v1(new_leaf.to_event().try_to_vec()?, &ctx.accounts.log_wrapper)?;
-
-    replace_leaf(
-        &merkle_tree.key(),
-        *ctx.bumps.get("tree_authority").unwrap(),
-        &ctx.accounts.compression_program.to_account_info(),
-        &ctx.accounts.tree_authority.to_account_info(),
-        &ctx.accounts.merkle_tree.to_account_info(),
-        &ctx.accounts.log_wrapper.to_account_info(),
-        ctx.remaining_accounts,
-        root,
-        previous_leaf.to_node(),
-        new_leaf.to_node(),
-        index,
-    )
-}
-
-fn process_collection_verification_mpl_only<'info>(
-    collection_metadata: &Account<'info, TokenMetadata>,
-    collection_mint: &AccountInfo<'info>,
-    collection_authority: &AccountInfo<'info>,
-    collection_authority_record_pda: &AccountInfo<'info>,
-    edition_account: &AccountInfo<'info>,
-    bubblegum_signer: &AccountInfo<'info>,
-    bubblegum_bump: u8,
-    token_metadata_program: &AccountInfo<'info>,
-    message: &mut MetadataArgs,
-    verify: bool,
-    new_collection: Option<Pubkey>,
-) -> Result<()> {
-    // See if a collection authority record PDA was provided.
-    let collection_authority_record = if collection_authority_record_pda.key() == crate::id() {
-        None
-    } else {
-        Some(collection_authority_record_pda)
-    };
-
-    // Verify correct account ownerships.
-    require!(
-        *collection_metadata.to_account_info().owner == token_metadata_program.key(),
-        BubblegumError::IncorrectOwner
-    );
-    require!(
-        *collection_mint.owner == spl_token::id(),
-        BubblegumError::IncorrectOwner
-    );
-    require!(
-        *edition_account.owner == token_metadata_program.key(),
-        BubblegumError::IncorrectOwner
-    );
-
-    // If new collection was provided, set it in the NFT metadata.
-    if new_collection.is_some() {
-        message.collection = new_collection.map(|key| metaplex_adapter::Collection {
-            verified: false, // Set to true below.
-            key,
-        });
-    }
-
-    // If the NFT has collection data, we set it to the correct value after doing some validation.
-    if let Some(collection) = &mut message.collection {
-        // Don't verify already verified items, or unverify unverified items, otherwise for sized
-        // collections we end up with invalid size data.
-        if verify && collection.verified {
-            return Err(BubblegumError::AlreadyVerified.into());
-        } else if !verify && !collection.verified {
-            return Err(BubblegumError::AlreadyUnverified.into());
-        }
-
-        // Collection verify assert from token-metadata program.
-        assert_collection_verify_is_valid(
-            &Some(collection.adapt()),
-            collection_metadata,
-            collection_mint,
-            edition_account,
-        )
-        .map_err(metadata_error_into_bubblegum)?;
-
-        assert_has_collection_authority(
-            collection_metadata,
-            collection_mint.key,
-            collection_authority.key,
-            collection_authority_record,
-        )?;
-
-        // Update collection in metadata args.  Note since this is a mutable reference,
-        // it is still updating `message.collection` after being destructured.
-        collection.verified = verify;
-    } else {
-        return Err(BubblegumError::CollectionNotFound.into());
-    }
-
-    // If this is a sized collection, then increment or decrement collection size.
-    if let Some(details) = &collection_metadata.collection_details {
-        // Increment or decrement existing size.
-        let new_size = match details {
-            CollectionDetails::V1 { size } => {
-                if verify {
-                    size.checked_add(1)
-                        .ok_or(BubblegumError::NumericalOverflowError)?
-                } else {
-                    size.checked_sub(1)
-                        .ok_or(BubblegumError::NumericalOverflowError)?
-                }
-            }
-        };
-
-        // CPI into to token-metadata program to change the collection size.
-        let mut bubblegum_set_collection_size_infos = vec![
-            collection_metadata.to_account_info(),
-            collection_authority.clone(),
-            collection_mint.clone(),
-            bubblegum_signer.clone(),
-        ];
-
-        if let Some(record) = collection_authority_record {
-            bubblegum_set_collection_size_infos.push(record.clone());
-        }
-
-        invoke_signed(
-            &mpl_token_metadata::instruction::bubblegum_set_collection_size(
-                token_metadata_program.key(),
-                collection_metadata.to_account_info().key(),
-                collection_authority.key(),
-                collection_mint.key(),
-                bubblegum_signer.key(),
-                collection_authority_record.map(|r| r.key()),
-                new_size,
-            ),
-            bubblegum_set_collection_size_infos.as_slice(),
-            &[&[COLLECTION_CPI_PREFIX.as_bytes(), &[bubblegum_bump]]],
-        )?;
-    } else {
-        return Err(BubblegumError::CollectionMustBeSized.into());
-    }
-
-    Ok(())
-}
-
-fn process_collection_verification<'info>(
-    ctx: Context<'_, '_, '_, 'info, CollectionVerification<'info>>,
-    root: [u8; 32],
-    data_hash: [u8; 32],
-    creator_hash: [u8; 32],
-    nonce: u64,
-    index: u32,
-    mut message: MetadataArgs,
-    verify: bool,
-    new_collection: Option<Pubkey>,
-) -> Result<()> {
-    let owner = ctx.accounts.leaf_owner.to_account_info();
-    let delegate = ctx.accounts.leaf_delegate.to_account_info();
-    let merkle_tree = ctx.accounts.merkle_tree.to_account_info();
-    let collection_metadata = &ctx.accounts.collection_metadata;
-    let collection_mint = ctx.accounts.collection_mint.to_account_info();
-    let edition_account = ctx.accounts.edition_account.to_account_info();
-    let collection_authority = ctx.accounts.collection_authority.to_account_info();
-    let collection_authority_record_pda = ctx
-        .accounts
-        .collection_authority_record_pda
-        .to_account_info();
-    let bubblegum_signer = ctx.accounts.bubblegum_signer.to_account_info();
-    let token_metadata_program = ctx.accounts.token_metadata_program.to_account_info();
-
-    // User-provided metadata must result in same user-provided data hash.
-    let incoming_data_hash = hash_metadata(&message)?;
-    if data_hash != incoming_data_hash {
-        return Err(BubblegumError::DataHashMismatch.into());
-    }
-
-    // Note this call mutates message.
-    process_collection_verification_mpl_only(
-        collection_metadata,
-        &collection_mint,
-        &collection_authority,
-        &collection_authority_record_pda,
-        &edition_account,
-        &bubblegum_signer,
-        ctx.bumps["bubblegum_signer"],
-        &token_metadata_program,
-        &mut message,
-        verify,
-        new_collection,
-    )?;
-
-    // Calculate new data hash.
-    let updated_data_hash = hash_metadata(&message)?;
-
-    // Build previous leaf struct, new leaf struct, and replace the leaf in the tree.
-    let asset_id = get_asset_id(&merkle_tree.key(), nonce);
-    let previous_leaf = LeafSchema::new_v0(
-        asset_id,
-        owner.key(),
-        delegate.key(),
-        nonce,
-        data_hash,
-        creator_hash,
-    );
-    let new_leaf = LeafSchema::new_v0(
-        asset_id,
-        owner.key(),
-        delegate.key(),
-        nonce,
-        updated_data_hash,
-        creator_hash,
-    );
-
-    wrap_application_data_v1(new_leaf.to_event().try_to_vec()?, &ctx.accounts.log_wrapper)?;
-
-    replace_leaf(
-        &merkle_tree.key(),
-        *ctx.bumps.get("tree_authority").unwrap(),
-        &ctx.accounts.compression_program.to_account_info(),
-        &ctx.accounts.tree_authority.to_account_info(),
-        &ctx.accounts.merkle_tree.to_account_info(),
-        &ctx.accounts.log_wrapper.to_account_info(),
-        ctx.remaining_accounts,
-        root,
-        previous_leaf.to_node(),
-        new_leaf.to_node(),
-        index,
-    )
-}
-
-fn assert_signed_by_tree_delegate(
-    tree_config: &TreeConfig,
-    incoming_signer: &Signer,
-) -> Result<()> {
-    require!(
-        incoming_signer.key() == tree_config.tree_creator
-            || incoming_signer.key() == tree_config.tree_delegate,
-        BubblegumError::TreeAuthorityIncorrect,
-    );
-    Ok(())
-}
-
-fn fetch_current_metadata(
-    current_metadata_args: Option<MetadataArgs>,
-    metadata_buffer: &Option<UncheckedAccount>,
-) -> Result<MetadataArgs> {
-    let current_metadata = match current_metadata_args {
-        Some(metadata) => {
-            require!(
-                metadata_buffer.is_none(),
-                BubblegumError::MetadataArgsAmbiguous
-            );
-            metadata
-        }
-        None => {
-            let metadata_account = metadata_buffer
-                .as_ref()
-                .ok_or(BubblegumError::MetadataArgsMissing)?;
-            let metadata_data = metadata_account.try_borrow_data()?;
-            MetadataArgs::deserialize(&mut metadata_data.as_ref())?
-        }
-    };
-    Ok(current_metadata)
-}
-
-fn assert_authority_matches_collection<'info>(
-    collection: &Collection,
-    collection_authority: &AccountInfo<'info>,
-    collection_authority_record_pda: &Option<UncheckedAccount<'info>>,
-    collection_mint: &AccountInfo<'info>,
-    collection_metadata_account_info: &AccountInfo,
-    collection_metadata: &TokenMetadata,
-    token_metadata_program: &Program<'info, MplTokenMetadata>,
-) -> Result<()> {
-    // Mint account must match Collection mint
-    require!(
-        collection_mint.key() == collection.key,
-        BubblegumError::CollectionMismatch
-    );
-    // Metadata mint must match Collection mint
-    require!(
-        collection_metadata.mint == collection.key,
-        BubblegumError::CollectionMismatch
-    );
-    // Verify correct account ownerships.
-    require!(
-        *collection_metadata_account_info.owner == token_metadata_program.key(),
-        BubblegumError::IncorrectOwner
-    );
-    // Collection mint must be owned by SPL token
-    require!(
-        *collection_mint.owner == spl_token::id(),
-        BubblegumError::IncorrectOwner
-    );
-
-    let collection_authority_record = collection_authority_record_pda
-        .as_ref()
-        .map(|authority_record_pda| authority_record_pda.to_account_info());
-
-    // Assert that the correct Collection Authority was provided using token-metadata
-    assert_has_collection_authority(
-        collection_metadata,
-        collection_mint.key,
-        collection_authority.key,
-        collection_authority_record.as_ref(),
-    )?;
-
-    Ok(())
-}
-
-fn all_verified_creators_in_a_are_in_b(a: &[Creator], b: &[Creator], exception: Pubkey) -> bool {
-    a.iter()
-        .filter(|creator_a| creator_a.verified)
-        .all(|creator_a| {
-            creator_a.address == exception
-                || b.iter()
-                    .any(|creator_b| creator_a.address == creator_b.address && creator_b.verified)
-        })
-}
-
-fn process_update_metadata<'info>(
-    merkle_tree: &AccountInfo<'info>,
-    tree_delegate: &AccountInfo<'info>,
-    owner: &AccountInfo<'info>,
-    delegate: &AccountInfo<'info>,
-    compression_program: &AccountInfo<'info>,
-    tree_authority: &AccountInfo<'info>,
-    tree_authority_bump: u8,
-    log_wrapper: &Program<'info, Noop>,
-    remaining_accounts: &[AccountInfo<'info>],
-    root: [u8; 32],
-    current_metadata: MetadataArgs,
-    update_args: UpdateArgs,
-    nonce: u64,
-    index: u32,
-) -> Result<()> {
-    // Old metadata must be mutable to allow metadata update
-    require!(
-        current_metadata.is_mutable,
-        BubblegumError::MetadataImmutable
-    );
-
-    let current_data_hash = hash_metadata(&current_metadata)?;
-    let current_creator_hash = hash_creators(&current_metadata.creators)?;
-
-    // Update metadata
-    let mut updated_metadata = current_metadata;
-    if let Some(name) = update_args.name {
-        updated_metadata.name = name;
-    };
-    if let Some(symbol) = update_args.symbol {
-        updated_metadata.symbol = symbol;
-    };
-    if let Some(uri) = update_args.uri {
-        updated_metadata.uri = uri;
-    };
-    if let Some(updated_creators) = update_args.creators {
-        let current_creators = updated_metadata.creators;
-
-        // Make sure no new creator is verified (unless it is the tree delegate).
-        let no_new_creators_verified = all_verified_creators_in_a_are_in_b(
-            &updated_creators,
-            &current_creators,
-            tree_delegate.key(),
-        );
-        require!(
-            no_new_creators_verified,
-            BubblegumError::CreatorDidNotVerify
-        );
-
-        // Make sure no current verified creator is unverified or removed (unless it is the tree
-        // delegate).
-        let no_current_creators_unverified = all_verified_creators_in_a_are_in_b(
-            &current_creators,
-            &updated_creators,
-            tree_delegate.key(),
-        );
-        require!(
-            no_current_creators_unverified,
-            BubblegumError::CreatorDidNotUnverify
-        );
-
-        updated_metadata.creators = updated_creators;
-    }
-    if let Some(seller_fee_basis_points) = update_args.seller_fee_basis_points {
-        updated_metadata.seller_fee_basis_points = seller_fee_basis_points
-    };
-    if let Some(primary_sale_happened) = update_args.primary_sale_happened {
-        // a new value of primary_sale_happened should only be specified if primary_sale_happened was false in the original metadata
-        require!(
-            !updated_metadata.primary_sale_happened,
-            BubblegumError::PrimarySaleCanOnlyBeFlippedToTrue
-        );
-        updated_metadata.primary_sale_happened = primary_sale_happened;
-    };
-    if let Some(is_mutable) = update_args.is_mutable {
-        updated_metadata.is_mutable = is_mutable;
-    };
-
-    assert_metadata_is_mpl_compatible(&updated_metadata)?;
-    let updated_data_hash = hash_metadata(&updated_metadata)?;
-    let updated_creator_hash = hash_creators(&updated_metadata.creators)?;
-
-    let asset_id = get_asset_id(&merkle_tree.key(), nonce);
-    let previous_leaf = LeafSchema::new_v0(
-        asset_id,
-        owner.key(),
-        delegate.key(),
-        nonce,
-        current_data_hash,
-        current_creator_hash,
-    );
-    let new_leaf = LeafSchema::new_v0(
-        asset_id,
-        owner.key(),
-        delegate.key(),
-        nonce,
-        updated_data_hash,
-        updated_creator_hash,
-    );
-
-    wrap_application_data_v1(new_leaf.to_event().try_to_vec()?, log_wrapper)?;
-
-    replace_leaf(
-        &merkle_tree.key(),
-        tree_authority_bump,
-        compression_program,
-        tree_authority,
-        merkle_tree,
-        &log_wrapper.to_account_info(),
-        remaining_accounts,
-        root,
-        previous_leaf.to_node(),
-        new_leaf.to_node(),
-        index,
-    )
-}
-
 #[program]
 pub mod bubblegum {
-    use state::DecompressableState;
 
     use super::*;
 
+    /// Burns a leaf node from the tree.
+    pub fn burn<'info>(
+        ctx: Context<'_, '_, '_, 'info, Burn<'info>>,
+        root: [u8; 32],
+        data_hash: [u8; 32],
+        creator_hash: [u8; 32],
+        nonce: u64,
+        index: u32,
+    ) -> Result<()> {
+        processor::burn(ctx, root, data_hash, creator_hash, nonce, index)
+    }
+
+    /// Cancels a redeem.
+    pub fn cancel_redeem<'info>(
+        ctx: Context<'_, '_, '_, 'info, CancelRedeem<'info>>,
+        root: [u8; 32],
+    ) -> Result<()> {
+        processor::cancel_redeem(ctx, root)
+    }
+
+    /// Compresses a metadata account.
+    pub fn compress(ctx: Context<Compress>) -> Result<()> {
+        processor::compress(ctx)
+    }
+
+    /// Creates a new tree.
     pub fn create_tree(
         ctx: Context<CreateTree>,
         max_depth: u32,
         max_buffer_size: u32,
         public: Option<bool>,
     ) -> Result<()> {
-        let merkle_tree = ctx.accounts.merkle_tree.to_account_info();
-        let seed = merkle_tree.key();
-        let seeds = &[seed.as_ref(), &[*ctx.bumps.get("tree_authority").unwrap()]];
-        let authority = &mut ctx.accounts.tree_authority;
-        authority.set_inner(TreeConfig {
-            tree_creator: ctx.accounts.tree_creator.key(),
-            tree_delegate: ctx.accounts.tree_creator.key(),
-            total_mint_capacity: 1 << max_depth,
-            num_minted: 0,
-            is_public: public.unwrap_or(false),
-            is_decompressable: DecompressableState::Disabled,
-        });
-        let authority_pda_signer = &[&seeds[..]];
-        let cpi_ctx = CpiContext::new_with_signer(
-            ctx.accounts.compression_program.to_account_info(),
-            spl_account_compression::cpi::accounts::Initialize {
-                authority: ctx.accounts.tree_authority.to_account_info(),
-                merkle_tree,
-                noop: ctx.accounts.log_wrapper.to_account_info(),
-            },
-            authority_pda_signer,
-        );
-        spl_account_compression::cpi::init_empty_merkle_tree(cpi_ctx, max_depth, max_buffer_size)
+        processor::create_tree(ctx, max_depth, max_buffer_size, public)
     }
 
-    pub fn set_tree_delegate(ctx: Context<SetTreeDelegate>) -> Result<()> {
-        ctx.accounts.tree_authority.tree_delegate = ctx.accounts.new_tree_delegate.key();
-        Ok(())
+    /// Decompresses a leaf node from the tree.
+    pub fn decompress_v1(ctx: Context<DecompressV1>, metadata: MetadataArgs) -> Result<()> {
+        processor::decompress_v1(ctx, metadata)
     }
 
-    pub fn mint_v1(ctx: Context<MintV1>, message: MetadataArgs) -> Result<()> {
-        // TODO -> Separate V1 / V1 into seperate instructions
-        let payer = ctx.accounts.payer.key();
-        let incoming_tree_delegate = ctx.accounts.tree_delegate.key();
-        let owner = ctx.accounts.leaf_owner.key();
-        let delegate = ctx.accounts.leaf_delegate.key();
-        let authority = &mut ctx.accounts.tree_authority;
-        let merkle_tree = &ctx.accounts.merkle_tree;
-        if !authority.is_public {
-            require!(
-                incoming_tree_delegate == authority.tree_creator
-                    || incoming_tree_delegate == authority.tree_delegate,
-                BubblegumError::TreeAuthorityIncorrect,
-            );
-        }
-
-        if !authority.contains_mint_capacity(1) {
-            return Err(BubblegumError::InsufficientMintCapacity.into());
-        }
-
-        // Create a HashSet to store signers to use with creator validation.  Any signer can be
-        // counted as a validated creator.
-        let mut metadata_auth = HashSet::<Pubkey>::new();
-        metadata_auth.insert(payer);
-        metadata_auth.insert(incoming_tree_delegate);
-
-        // If there are any remaining accounts that are also signers, they can also be used for
-        // creator validation.
-        metadata_auth.extend(
-            ctx.remaining_accounts
-                .iter()
-                .filter(|a| a.is_signer)
-                .map(|a| a.key()),
-        );
-
-        process_mint_v1(
-            message,
-            owner,
-            delegate,
-            metadata_auth,
-            *ctx.bumps.get("tree_authority").unwrap(),
-            authority,
-            merkle_tree,
-            &ctx.accounts.log_wrapper,
-            &ctx.accounts.compression_program,
-            false,
-        )?;
-
-        authority.increment_mint_count();
-
-        Ok(())
+    /// Sets a delegate for a leaf node.
+    pub fn delegate<'info>(
+        ctx: Context<'_, '_, '_, 'info, Delegate<'info>>,
+        root: [u8; 32],
+        data_hash: [u8; 32],
+        creator_hash: [u8; 32],
+        nonce: u64,
+        index: u32,
+    ) -> Result<()> {
+        processor::delegate(ctx, root, data_hash, creator_hash, nonce, index)
     }
 
+    /// Mints a new asset and adds it to a collection.
     pub fn mint_to_collection_v1(
         ctx: Context<MintToCollectionV1>,
         metadata_args: MetadataArgs,
     ) -> Result<()> {
-        let mut message = metadata_args;
-        // TODO -> Separate V1 / V1 into seperate instructions
-        let payer = ctx.accounts.payer.key();
-        let incoming_tree_delegate = ctx.accounts.tree_delegate.key();
-        let owner = ctx.accounts.leaf_owner.key();
-        let delegate = ctx.accounts.leaf_delegate.key();
-        let authority = &mut ctx.accounts.tree_authority;
-        let merkle_tree = &ctx.accounts.merkle_tree;
-
-        let collection_metadata = &ctx.accounts.collection_metadata;
-        let collection_mint = ctx.accounts.collection_mint.to_account_info();
-        let edition_account = ctx.accounts.edition_account.to_account_info();
-        let collection_authority = ctx.accounts.collection_authority.to_account_info();
-        let collection_authority_record_pda = ctx
-            .accounts
-            .collection_authority_record_pda
-            .to_account_info();
-        let bubblegum_signer = ctx.accounts.bubblegum_signer.to_account_info();
-        let token_metadata_program = ctx.accounts.token_metadata_program.to_account_info();
-
-        if !authority.is_public {
-            require!(
-                incoming_tree_delegate == authority.tree_creator
-                    || incoming_tree_delegate == authority.tree_delegate,
-                BubblegumError::TreeAuthorityIncorrect,
-            );
-        }
-
-        if !authority.contains_mint_capacity(1) {
-            return Err(BubblegumError::InsufficientMintCapacity.into());
-        }
-
-        // Create a HashSet to store signers to use with creator validation.  Any signer can be
-        // counted as a validated creator.
-        let mut metadata_auth = HashSet::<Pubkey>::new();
-        metadata_auth.insert(payer);
-        metadata_auth.insert(incoming_tree_delegate);
-
-        // If there are any remaining accounts that are also signers, they can also be used for
-        // creator validation.
-        metadata_auth.extend(
-            ctx.remaining_accounts
-                .iter()
-                .filter(|a| a.is_signer)
-                .map(|a| a.key()),
-        );
-
-        process_collection_verification_mpl_only(
-            collection_metadata,
-            &collection_mint,
-            &collection_authority,
-            &collection_authority_record_pda,
-            &edition_account,
-            &bubblegum_signer,
-            ctx.bumps["bubblegum_signer"],
-            &token_metadata_program,
-            &mut message,
-            true,
-            None,
-        )?;
-
-        process_mint_v1(
-            message,
-            owner,
-            delegate,
-            metadata_auth,
-            *ctx.bumps.get("tree_authority").unwrap(),
-            authority,
-            merkle_tree,
-            &ctx.accounts.log_wrapper,
-            &ctx.accounts.compression_program,
-            true,
-        )?;
-
-        authority.increment_mint_count();
-
-        Ok(())
+        processor::mint_to_collection_v1(ctx, metadata_args)
     }
 
-    pub fn verify_creator<'info>(
-        ctx: Context<'_, '_, '_, 'info, CreatorVerification<'info>>,
+    /// Mints a new asset.
+    pub fn mint_v1(ctx: Context<MintV1>, message: MetadataArgs) -> Result<()> {
+        processor::mint_v1(ctx, message)
+    }
+
+    /// Redeems a vouches.
+    ///
+    /// Once a vouch is redeemed, the corresponding leaf node is removed from the tree.
+    pub fn redeem<'info>(
+        ctx: Context<'_, '_, '_, 'info, Redeem<'info>>,
         root: [u8; 32],
         data_hash: [u8; 32],
         creator_hash: [u8; 32],
         nonce: u64,
         index: u32,
-        message: MetadataArgs,
     ) -> Result<()> {
-        process_creator_verification(
-            ctx,
-            root,
-            data_hash,
-            creator_hash,
-            nonce,
-            index,
-            message,
-            true,
-        )
+        processor::redeem(ctx, root, data_hash, creator_hash, nonce, index)
     }
 
-    pub fn unverify_creator<'info>(
-        ctx: Context<'_, '_, '_, 'info, CreatorVerification<'info>>,
-        root: [u8; 32],
-        data_hash: [u8; 32],
-        creator_hash: [u8; 32],
-        nonce: u64,
-        index: u32,
-        message: MetadataArgs,
-    ) -> Result<()> {
-        process_creator_verification(
-            ctx,
-            root,
-            data_hash,
-            creator_hash,
-            nonce,
-            index,
-            message,
-            false,
-        )
-    }
-
-    pub fn verify_collection<'info>(
-        ctx: Context<'_, '_, '_, 'info, CollectionVerification<'info>>,
-        root: [u8; 32],
-        data_hash: [u8; 32],
-        creator_hash: [u8; 32],
-        nonce: u64,
-        index: u32,
-        message: MetadataArgs,
-    ) -> Result<()> {
-        process_collection_verification(
-            ctx,
-            root,
-            data_hash,
-            creator_hash,
-            nonce,
-            index,
-            message,
-            true,
-            None,
-        )
-    }
-
-    pub fn unverify_collection<'info>(
-        ctx: Context<'_, '_, '_, 'info, CollectionVerification<'info>>,
-        root: [u8; 32],
-        data_hash: [u8; 32],
-        creator_hash: [u8; 32],
-        nonce: u64,
-        index: u32,
-        message: MetadataArgs,
-    ) -> Result<()> {
-        process_collection_verification(
-            ctx,
-            root,
-            data_hash,
-            creator_hash,
-            nonce,
-            index,
-            message,
-            false,
-            None,
-        )
-    }
-
+    /// Sets and verifies a collection to a leaf node
     pub fn set_and_verify_collection<'info>(
         ctx: Context<'_, '_, '_, 'info, CollectionVerification<'info>>,
         root: [u8; 32],
@@ -1433,33 +166,7 @@ pub mod bubblegum {
         message: MetadataArgs,
         collection: Pubkey,
     ) -> Result<()> {
-        let incoming_tree_delegate = &ctx.accounts.tree_delegate;
-        let tree_creator = ctx.accounts.tree_authority.tree_creator;
-        let tree_delegate = ctx.accounts.tree_authority.tree_delegate;
-        let collection_metadata = &ctx.accounts.collection_metadata;
-
-        // Require that either the tree authority signed this transaction, or the tree authority is
-        // the collection update authority which means the leaf update is approved via proxy, when
-        // we later call `assert_has_collection_authority()`.
-        //
-        // This is similar to logic in token-metadata for `set_and_verify_collection()` except
-        // this logic also allows the tree authority (which we are treating as the leaf metadata
-        // authority) to be different than the collection authority (actual or delegated).  The
-        // token-metadata program required them to be the same.
-        let tree_authority_signed = incoming_tree_delegate.is_signer
-            && (incoming_tree_delegate.key() == tree_creator
-                || incoming_tree_delegate.key() == tree_delegate);
-
-        let tree_authority_is_collection_update_authority = collection_metadata.update_authority
-            == tree_creator
-            || collection_metadata.update_authority == tree_delegate;
-
-        require!(
-            tree_authority_signed || tree_authority_is_collection_update_authority,
-            BubblegumError::UpdateAuthorityIncorrect
-        );
-
-        process_collection_verification(
+        processor::set_and_verify_collection(
             ctx,
             root,
             data_hash,
@@ -1467,11 +174,37 @@ pub mod bubblegum {
             nonce,
             index,
             message,
-            true,
-            Some(collection),
+            collection,
         )
     }
 
+    /// Sets the `decompressible_state` of a tree.
+    #[deprecated(
+        since = "0.11.1",
+        note = "Please use `set_decompressible_state` instead"
+    )]
+    pub fn set_decompressable_state(
+        ctx: Context<SetDecompressibleState>,
+        decompressable_state: DecompressibleState,
+    ) -> Result<()> {
+        msg!("Deprecated: please use `set_decompressible_state` instead");
+        processor::set_decompressible_state(ctx, decompressable_state)
+    }
+
+    /// Sets the `decompressible_state` of a tree.
+    pub fn set_decompressible_state(
+        ctx: Context<SetDecompressibleState>,
+        decompressable_state: DecompressibleState,
+    ) -> Result<()> {
+        processor::set_decompressible_state(ctx, decompressable_state)
+    }
+
+    /// Sets a delegate for a tree.
+    pub fn set_tree_delegate(ctx: Context<SetTreeDelegate>) -> Result<()> {
+        processor::set_tree_delegate(ctx)
+    }
+
+    /// Transfers a leaf node from one account to another.
     pub fn transfer<'info>(
         ctx: Context<'_, '_, '_, 'info, Transfer<'info>>,
         root: [u8; 32],
@@ -1480,145 +213,62 @@ pub mod bubblegum {
         nonce: u64,
         index: u32,
     ) -> Result<()> {
-        // TODO add back version to select hash schema
-        let merkle_tree = ctx.accounts.merkle_tree.to_account_info();
-        let owner = ctx.accounts.leaf_owner.to_account_info();
-        let delegate = ctx.accounts.leaf_delegate.to_account_info();
-
-        // Transfers must be initiated by either the leaf owner or leaf delegate.
-        require!(
-            owner.is_signer || delegate.is_signer,
-            BubblegumError::LeafAuthorityMustSign
-        );
-        let new_owner = ctx.accounts.new_leaf_owner.key();
-        let asset_id = get_asset_id(&merkle_tree.key(), nonce);
-        let previous_leaf = LeafSchema::new_v0(
-            asset_id,
-            owner.key(),
-            delegate.key(),
-            nonce,
-            data_hash,
-            creator_hash,
-        );
-        // New leafs are instantiated with no delegate
-        let new_leaf = LeafSchema::new_v0(
-            asset_id,
-            new_owner,
-            new_owner,
-            nonce,
-            data_hash,
-            creator_hash,
-        );
-
-        wrap_application_data_v1(new_leaf.to_event().try_to_vec()?, &ctx.accounts.log_wrapper)?;
-
-        replace_leaf(
-            &merkle_tree.key(),
-            *ctx.bumps.get("tree_authority").unwrap(),
-            &ctx.accounts.compression_program.to_account_info(),
-            &ctx.accounts.tree_authority.to_account_info(),
-            &ctx.accounts.merkle_tree.to_account_info(),
-            &ctx.accounts.log_wrapper.to_account_info(),
-            ctx.remaining_accounts,
-            root,
-            previous_leaf.to_node(),
-            new_leaf.to_node(),
-            index,
-        )
+        processor::transfer(ctx, root, data_hash, creator_hash, nonce, index)
     }
 
-    pub fn delegate<'info>(
-        ctx: Context<'_, '_, '_, 'info, Delegate<'info>>,
+    /// Unverifies a collection from a leaf node.
+    pub fn unverify_collection<'info>(
+        ctx: Context<'_, '_, '_, 'info, CollectionVerification<'info>>,
         root: [u8; 32],
         data_hash: [u8; 32],
         creator_hash: [u8; 32],
         nonce: u64,
         index: u32,
+        message: MetadataArgs,
     ) -> Result<()> {
-        let merkle_tree = ctx.accounts.merkle_tree.to_account_info();
-        let owner = ctx.accounts.leaf_owner.key();
-        let previous_delegate = ctx.accounts.previous_leaf_delegate.key();
-        let new_delegate = ctx.accounts.new_leaf_delegate.key();
-        let asset_id = get_asset_id(&merkle_tree.key(), nonce);
-        let previous_leaf = LeafSchema::new_v0(
-            asset_id,
-            owner,
-            previous_delegate,
-            nonce,
-            data_hash,
-            creator_hash,
-        );
-        let new_leaf = LeafSchema::new_v0(
-            asset_id,
-            owner,
-            new_delegate,
-            nonce,
-            data_hash,
-            creator_hash,
-        );
-
-        wrap_application_data_v1(new_leaf.to_event().try_to_vec()?, &ctx.accounts.log_wrapper)?;
-
-        replace_leaf(
-            &merkle_tree.key(),
-            *ctx.bumps.get("tree_authority").unwrap(),
-            &ctx.accounts.compression_program.to_account_info(),
-            &ctx.accounts.tree_authority.to_account_info(),
-            &ctx.accounts.merkle_tree.to_account_info(),
-            &ctx.accounts.log_wrapper.to_account_info(),
-            ctx.remaining_accounts,
-            root,
-            previous_leaf.to_node(),
-            new_leaf.to_node(),
-            index,
-        )
+        processor::unverify_collection(ctx, root, data_hash, creator_hash, nonce, index, message)
     }
 
-    pub fn burn<'info>(
-        ctx: Context<'_, '_, '_, 'info, Burn<'info>>,
+    /// Unverifies a creator from a leaf node.
+    pub fn unverify_creator<'info>(
+        ctx: Context<'_, '_, '_, 'info, CreatorVerification<'info>>,
         root: [u8; 32],
         data_hash: [u8; 32],
         creator_hash: [u8; 32],
         nonce: u64,
         index: u32,
+        message: MetadataArgs,
     ) -> Result<()> {
-        let owner = ctx.accounts.leaf_owner.to_account_info();
-        let delegate = ctx.accounts.leaf_delegate.to_account_info();
-
-        // Burn must be initiated by either the leaf owner or leaf delegate.
-        require!(
-            owner.is_signer || delegate.is_signer,
-            BubblegumError::LeafAuthorityMustSign
-        );
-        let merkle_tree = ctx.accounts.merkle_tree.to_account_info();
-        let asset_id = get_asset_id(&merkle_tree.key(), nonce);
-
-        let previous_leaf = LeafSchema::new_v0(
-            asset_id,
-            owner.key(),
-            delegate.key(),
-            nonce,
-            data_hash,
-            creator_hash,
-        );
-
-        let new_leaf = Node::default();
-
-        replace_leaf(
-            &merkle_tree.key(),
-            *ctx.bumps.get("tree_authority").unwrap(),
-            &ctx.accounts.compression_program.to_account_info(),
-            &ctx.accounts.tree_authority.to_account_info(),
-            &ctx.accounts.merkle_tree.to_account_info(),
-            &ctx.accounts.log_wrapper.to_account_info(),
-            ctx.remaining_accounts,
-            root,
-            previous_leaf.to_node(),
-            new_leaf,
-            index,
-        )
+        processor::unverify_creator(ctx, root, data_hash, creator_hash, nonce, index, message)
     }
 
+    /// Verifies a collection for a leaf node.
+    pub fn verify_collection<'info>(
+        ctx: Context<'_, '_, '_, 'info, CollectionVerification<'info>>,
+        root: [u8; 32],
+        data_hash: [u8; 32],
+        creator_hash: [u8; 32],
+        nonce: u64,
+        index: u32,
+        message: MetadataArgs,
+    ) -> Result<()> {
+        processor::verify_collection(ctx, root, data_hash, creator_hash, nonce, index, message)
+    }
+
+    /// Verifies a creator for a leaf node.
+    pub fn verify_creator<'info>(
+        ctx: Context<'_, '_, '_, 'info, CreatorVerification<'info>>,
+        root: [u8; 32],
+        data_hash: [u8; 32],
+        creator_hash: [u8; 32],
+        nonce: u64,
+        index: u32,
+        message: MetadataArgs,
+    ) -> Result<()> {
+        processor::verify_creator(ctx, root, data_hash, creator_hash, nonce, index, message)
+    }
+
+    /// Verifies a creator for a leaf node.
     pub fn update_metadata<'info>(
         ctx: Context<'_, '_, '_, 'info, UpdateMetadata<'info>>,
         root: [u8; 32],
@@ -1627,37 +277,10 @@ pub mod bubblegum {
         current_metadata: Option<MetadataArgs>,
         update_args: UpdateArgs,
     ) -> Result<()> {
-        assert_signed_by_tree_delegate(&ctx.accounts.tree_authority, &ctx.accounts.tree_delegate)?;
-
-        // Determine how the user opted to pass in the old MetadataArgs
-        let current_metadata =
-            fetch_current_metadata(current_metadata, &ctx.accounts.metadata_buffer)?;
-
-        // NFTs which are linked to verified collections cannot be updated through this instruction
-        require!(
-            current_metadata.collection.is_none()
-                || !current_metadata.collection.as_ref().unwrap().verified,
-            BubblegumError::NFTLinkedToCollection
-        );
-
-        process_update_metadata(
-            &ctx.accounts.merkle_tree.to_account_info(),
-            &ctx.accounts.tree_delegate,
-            &ctx.accounts.leaf_owner,
-            &ctx.accounts.leaf_delegate,
-            &ctx.accounts.compression_program.to_account_info(),
-            &ctx.accounts.tree_authority.to_account_info(),
-            *ctx.bumps.get("tree_authority").unwrap(),
-            &ctx.accounts.log_wrapper,
-            ctx.remaining_accounts,
-            root,
-            current_metadata,
-            update_args,
-            nonce,
-            index,
-        )
+        processor::update_metadata(ctx, root, nonce, index, current_metadata, update_args)
     }
 
+    /// Verifies a creator for a leaf node.
     pub fn update_metadata_collection_nft<'info>(
         ctx: Context<'_, '_, '_, 'info, UpdateMetadataCollectionNFT<'info>>,
         root: [u8; 32],
@@ -1666,323 +289,13 @@ pub mod bubblegum {
         current_metadata: Option<MetadataArgs>,
         update_args: UpdateArgs,
     ) -> Result<()> {
-        assert_signed_by_tree_delegate(&ctx.accounts.tree_authority, &ctx.accounts.tree_delegate)?;
-
-        // Determine how the user opted to pass in the old MetadataArgs
-        let current_metadata =
-            fetch_current_metadata(current_metadata, &ctx.accounts.metadata_buffer)?;
-
-        // NFTs updated through this instruction must be linked to a collection,
-        // so a collection authority for that collection must sign
-        let collection = current_metadata
-            .collection
-            .as_ref()
-            .ok_or(BubblegumError::NFTNotLinkedToVerifiedCollection)?;
-
-        assert_authority_matches_collection(
-            collection,
-            &ctx.accounts.collection_authority.to_account_info(),
-            &ctx.accounts.collection_authority_record_pda,
-            &ctx.accounts.collection_mint,
-            &ctx.accounts.collection_metadata.to_account_info(),
-            &ctx.accounts.collection_metadata,
-            &ctx.accounts.token_metadata_program,
-        )?;
-
-        process_update_metadata(
-            &ctx.accounts.merkle_tree.to_account_info(),
-            &ctx.accounts.tree_delegate,
-            &ctx.accounts.leaf_owner,
-            &ctx.accounts.leaf_delegate,
-            &ctx.accounts.compression_program.to_account_info(),
-            &ctx.accounts.tree_authority.to_account_info(),
-            *ctx.bumps.get("tree_authority").unwrap(),
-            &ctx.accounts.log_wrapper,
-            ctx.remaining_accounts,
+        processor::update_metadata_collection_nft(
+            ctx,
             root,
-            current_metadata,
-            update_args,
             nonce,
             index,
+            current_metadata,
+            update_args,
         )
-    }
-
-    pub fn redeem<'info>(
-        ctx: Context<'_, '_, '_, 'info, Redeem<'info>>,
-        root: [u8; 32],
-        data_hash: [u8; 32],
-        creator_hash: [u8; 32],
-        nonce: u64,
-        index: u32,
-    ) -> Result<()> {
-        if ctx.accounts.tree_authority.is_decompressable == DecompressableState::Disabled {
-            return Err(BubblegumError::DecompressionDisabled.into());
-        }
-
-        let owner = ctx.accounts.leaf_owner.key();
-        let delegate = ctx.accounts.leaf_delegate.key();
-        let merkle_tree = ctx.accounts.merkle_tree.to_account_info();
-        let asset_id = get_asset_id(&merkle_tree.key(), nonce);
-        let previous_leaf =
-            LeafSchema::new_v0(asset_id, owner, delegate, nonce, data_hash, creator_hash);
-
-        let new_leaf = Node::default();
-
-        replace_leaf(
-            &merkle_tree.key(),
-            *ctx.bumps.get("tree_authority").unwrap(),
-            &ctx.accounts.compression_program.to_account_info(),
-            &ctx.accounts.tree_authority.to_account_info(),
-            &ctx.accounts.merkle_tree.to_account_info(),
-            &ctx.accounts.log_wrapper.to_account_info(),
-            ctx.remaining_accounts,
-            root,
-            previous_leaf.to_node(),
-            new_leaf,
-            index,
-        )?;
-        ctx.accounts
-            .voucher
-            .set_inner(Voucher::new(previous_leaf, index, merkle_tree.key()));
-
-        Ok(())
-    }
-
-    pub fn cancel_redeem<'info>(
-        ctx: Context<'_, '_, '_, 'info, CancelRedeem<'info>>,
-        root: [u8; 32],
-    ) -> Result<()> {
-        let voucher = &ctx.accounts.voucher;
-        match ctx.accounts.voucher.leaf_schema {
-            LeafSchema::V1 { owner, .. } => assert_pubkey_equal(
-                &ctx.accounts.leaf_owner.key(),
-                &owner,
-                Some(BubblegumError::AssetOwnerMismatch.into()),
-            ),
-        }?;
-        let merkle_tree = ctx.accounts.merkle_tree.to_account_info();
-
-        wrap_application_data_v1(
-            voucher.leaf_schema.to_event().try_to_vec()?,
-            &ctx.accounts.log_wrapper,
-        )?;
-
-        replace_leaf(
-            &merkle_tree.key(),
-            *ctx.bumps.get("tree_authority").unwrap(),
-            &ctx.accounts.compression_program.to_account_info(),
-            &ctx.accounts.tree_authority.to_account_info(),
-            &ctx.accounts.merkle_tree.to_account_info(),
-            &ctx.accounts.log_wrapper.to_account_info(),
-            ctx.remaining_accounts,
-            root,
-            [0; 32],
-            voucher.leaf_schema.to_node(),
-            voucher.index,
-        )
-    }
-
-    pub fn decompress_v1(ctx: Context<DecompressV1>, metadata: MetadataArgs) -> Result<()> {
-        // Allocate and create mint
-        let incoming_data_hash = hash_metadata(&metadata)?;
-        match ctx.accounts.voucher.leaf_schema {
-            LeafSchema::V1 {
-                owner, data_hash, ..
-            } => {
-                if !cmp_bytes(&data_hash, &incoming_data_hash, 32) {
-                    return Err(BubblegumError::HashingMismatch.into());
-                }
-                if !cmp_pubkeys(&owner, ctx.accounts.leaf_owner.key) {
-                    return Err(BubblegumError::AssetOwnerMismatch.into());
-                }
-            }
-        }
-
-        let voucher = &ctx.accounts.voucher;
-        match metadata.token_program_version {
-            TokenProgramVersion::Original => {
-                if ctx.accounts.mint.data_is_empty() {
-                    invoke_signed(
-                        &system_instruction::create_account(
-                            &ctx.accounts.leaf_owner.key(),
-                            &ctx.accounts.mint.key(),
-                            Rent::get()?.minimum_balance(SplMint::LEN),
-                            SplMint::LEN as u64,
-                            &spl_token::id(),
-                        ),
-                        &[
-                            ctx.accounts.leaf_owner.to_account_info(),
-                            ctx.accounts.mint.to_account_info(),
-                            ctx.accounts.system_program.to_account_info(),
-                        ],
-                        &[&[
-                            ASSET_PREFIX.as_bytes(),
-                            voucher.merkle_tree.key().as_ref(),
-                            voucher.leaf_schema.nonce().to_le_bytes().as_ref(),
-                            &[*ctx.bumps.get("mint").unwrap()],
-                        ]],
-                    )?;
-                    invoke(
-                        &spl_token::instruction::initialize_mint2(
-                            &spl_token::id(),
-                            &ctx.accounts.mint.key(),
-                            &ctx.accounts.mint_authority.key(),
-                            Some(&ctx.accounts.mint_authority.key()),
-                            0,
-                        )?,
-                        &[
-                            ctx.accounts.token_program.to_account_info(),
-                            ctx.accounts.mint.to_account_info(),
-                        ],
-                    )?;
-                }
-                if ctx.accounts.token_account.data_is_empty() {
-                    invoke(
-                        &spl_associated_token_account::instruction::create_associated_token_account(
-                            &ctx.accounts.leaf_owner.key(),
-                            &ctx.accounts.leaf_owner.key(),
-                            &ctx.accounts.mint.key(),
-                            &spl_token::ID,
-                        ),
-                        &[
-                            ctx.accounts.leaf_owner.to_account_info(),
-                            ctx.accounts.mint.to_account_info(),
-                            ctx.accounts.token_account.to_account_info(),
-                            ctx.accounts.token_program.to_account_info(),
-                            ctx.accounts.associated_token_program.to_account_info(),
-                            ctx.accounts.system_program.to_account_info(),
-                            ctx.accounts.sysvar_rent.to_account_info(),
-                        ],
-                    )?;
-                }
-                // SPL token will check that the associated token account is initialized, that it
-                // has the correct owner, and that the mint (which is a PDA of this program)
-                // matches.
-
-                invoke_signed(
-                    &spl_token::instruction::mint_to(
-                        &spl_token::id(),
-                        &ctx.accounts.mint.key(),
-                        &ctx.accounts.token_account.key(),
-                        &ctx.accounts.mint_authority.key(),
-                        &[],
-                        1,
-                    )?,
-                    &[
-                        ctx.accounts.mint.to_account_info(),
-                        ctx.accounts.token_account.to_account_info(),
-                        ctx.accounts.mint_authority.to_account_info(),
-                        ctx.accounts.token_program.to_account_info(),
-                    ],
-                    &[&[
-                        ctx.accounts.mint.key().as_ref(),
-                        &[ctx.bumps["mint_authority"]],
-                    ]],
-                )?;
-            }
-            TokenProgramVersion::Token2022 => return Err(ProgramError::InvalidArgument.into()),
-        }
-
-        invoke_signed(
-            &system_instruction::assign(&ctx.accounts.mint_authority.key(), &crate::id()),
-            &[ctx.accounts.mint_authority.to_account_info()],
-            &[&[
-                ctx.accounts.mint.key().as_ref(),
-                &[*ctx.bumps.get("mint_authority").unwrap()],
-            ]],
-        )?;
-
-        let metadata_infos = vec![
-            ctx.accounts.metadata.to_account_info(),
-            ctx.accounts.mint.to_account_info(),
-            ctx.accounts.mint_authority.to_account_info(),
-            ctx.accounts.leaf_owner.to_account_info(),
-            ctx.accounts.token_metadata_program.to_account_info(),
-            ctx.accounts.token_program.to_account_info(),
-            ctx.accounts.system_program.to_account_info(),
-            ctx.accounts.sysvar_rent.to_account_info(),
-        ];
-
-        let master_edition_infos = vec![
-            ctx.accounts.master_edition.to_account_info(),
-            ctx.accounts.mint.to_account_info(),
-            ctx.accounts.mint_authority.to_account_info(),
-            ctx.accounts.leaf_owner.to_account_info(),
-            ctx.accounts.metadata.to_account_info(),
-            ctx.accounts.token_metadata_program.to_account_info(),
-            ctx.accounts.token_program.to_account_info(),
-            ctx.accounts.system_program.to_account_info(),
-            ctx.accounts.sysvar_rent.to_account_info(),
-        ];
-
-        msg!("Creating metadata!");
-        invoke_signed(
-            &mpl_token_metadata::instruction::create_metadata_accounts_v3(
-                ctx.accounts.token_metadata_program.key(),
-                ctx.accounts.metadata.key(),
-                ctx.accounts.mint.key(),
-                ctx.accounts.mint_authority.key(),
-                ctx.accounts.leaf_owner.key(),
-                ctx.accounts.mint_authority.key(),
-                metadata.name.clone(),
-                metadata.symbol.clone(),
-                metadata.uri.clone(),
-                if !metadata.creators.is_empty() {
-                    Some(metadata.creators.iter().map(|c| c.adapt()).collect())
-                } else {
-                    None
-                },
-                metadata.seller_fee_basis_points,
-                true,
-                metadata.is_mutable,
-                metadata.collection.map(|c| c.adapt()),
-                metadata.uses.map(|u| u.adapt()),
-                None,
-            ),
-            metadata_infos.as_slice(),
-            &[&[
-                ctx.accounts.mint.key().as_ref(),
-                &[ctx.bumps["mint_authority"]],
-            ]],
-        )?;
-
-        msg!("Creating master edition!");
-        invoke_signed(
-            &mpl_token_metadata::instruction::create_master_edition_v3(
-                ctx.accounts.token_metadata_program.key(),
-                ctx.accounts.master_edition.key(),
-                ctx.accounts.mint.key(),
-                ctx.accounts.mint_authority.key(),
-                ctx.accounts.mint_authority.key(),
-                ctx.accounts.metadata.key(),
-                ctx.accounts.leaf_owner.key(),
-                Some(0),
-            ),
-            master_edition_infos.as_slice(),
-            &[&[
-                ctx.accounts.mint.key().as_ref(),
-                &[ctx.bumps["mint_authority"]],
-            ]],
-        )?;
-
-        ctx.accounts
-            .mint_authority
-            .to_account_info()
-            .assign(&System::id());
-        Ok(())
-    }
-
-    pub fn compress(_ctx: Context<Compress>) -> Result<()> {
-        // TODO
-        Ok(())
-    }
-
-    pub fn set_decompressable_state(
-        ctx: Context<SetDecompressableState>,
-        decompressable_state: DecompressableState,
-    ) -> Result<()> {
-        ctx.accounts.tree_authority.is_decompressable = decompressable_state;
-
-        Ok(())
     }
 }

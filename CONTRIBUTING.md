@@ -1,6 +1,6 @@
-# Contributing to Mpl Bubblegum
+# Contributing to Metaplex Bubblegum
 
-This is a quick guide to help you contribute to Mpl Bubblegum.
+This is a quick guide to help you contribute to Metaplex Bubblegum.
 
 ## Getting started
 
@@ -12,13 +12,17 @@ pnpm install
 
 You will then have access to the following commands.
 
+- `pnpm programs:build` - Builds all programs.
+- `pnpm programs:test` - Runs BPF tests for all programs (logs disabled).
+- `pnpm programs:debug` - Runs BPF tests for all programs.
+- `pnpm programs:clean` - Deletes all generated program binaries.
+- `clients:rust:test` - Runs BPF tests for the Rust client SDK.
+- `clients:js:test` - Runs the JavaScript tests (you must first start the local validator `pnpm validator`).
+- `pnpm generate` - Shortcut for `pnpm generate:idls && pnpm generate:clients`.
 - `pnpm generate:idls` - Generate IDLs for all programs, as configured in the `configs/shank.cjs` file.
 - `pnpm generate:clients` - Generate clients using Kinobi, as configured in the `configs/kinobi.cjs` file.
-- `pnpm generate` - Shortcut for `pnpm generate:idls && pnpm generate:clients`.
-- `pnpm validator` - Start a local validator using Amman, as configured in the `configs/validator.cjs` file.
-- `pnpm validator:localnet` - Same as `pnpm validator`.
-- `pnpm validator:devnet` - Start a local validator using the `configs/validator.devnet.cjs` file.
-- `pnpm validator:mainnet` - Start a local validator using the `configs/validator.mainnet.cjs` file.
+- `pnpm validator` - Start a local validator using Amman, as configured in the `configs/validator.cjs` file (logs disabled).
+- `pnpm validator:debug` - Start a local validator using Amman, as configured in the `configs/validator.cjs` file.
 - `pnpm validator:stop` - Stop the local validator.
 - `pnpm validator:logs` - Show the logs of the local validator.
 
@@ -27,6 +31,7 @@ You will then have access to the following commands.
 Each client has its own README with instructions on how to get started. You can find them in the `clients` folder.
 
 - [JavaScript client](./clients/js/README.md)
+- [Rust client](./clients/rust/README.md)
 
 ## Setting up CI/CD using GitHub actions
 

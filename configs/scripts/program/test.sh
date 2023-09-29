@@ -5,9 +5,13 @@ OUTPUT="./programs/.bin"
 # saves external programs binaries to the output directory
 source ${SCRIPT_DIR}/dump.sh ${OUTPUT}
 # go to parent folder
-cd $(dirname $(dirname ${SCRIPT_DIR}))
+cd $(dirname $(dirname $(dirname $SCRIPT_DIR)))
 
-if [ -z ${PROGRAMS+x} ]; then
+if [ ! -z "$PROGRAM" ]; then
+    PROGRAMS='["'${PROGRAM}'"]'
+fi
+
+if [ -z "$PROGRAMS" ]; then
     PROGRAMS="$(cat .github/.env | grep "PROGRAMS" | cut -d '=' -f 2)"
 fi
 
@@ -21,17 +25,18 @@ if [ ! -z "$ARGS" ]; then
     ARGS=$*
 fi
 
-PROGRAMS=$(echo ${PROGRAMS} | jq -c '.[]' | sed 's/"//g')
-
-# creates the output directory if it doesn't exist
-if [ ! -d ${OUTPUT} ]; then
-    mkdir ${OUTPUT}
-fi
+PROGRAMS=$(echo $PROGRAMS | jq -c '.[]' | sed 's/"//g')
 
 WORKING_DIR=$(pwd)
+SOLFMT="solfmt"
 export SBF_OUT_DIR="${WORKING_DIR}/${OUTPUT}"
 
 for p in ${PROGRAMS[@]}; do
-    cd ${WORKING_DIR}/programs/${p}/program
-    cargo build-sbf --sbf-out-dir ${WORKING_DIR}/${OUTPUT} $ARGS
+    cd ${WORKING_DIR}/programs/${p}
+
+    if [ ! "$(command -v $SOLFMT)" = "" ]; then
+        CARGO_TERM_COLOR=always cargo test-sbf --sbf-out-dir ${WORKING_DIR}/${OUTPUT} ${ARGS} 2>&1 | ${SOLFMT}
+    else
+        RUST_LOG=error cargo test-sbf --sbf-out-dir ${WORKING_DIR}/${OUTPUT} ${ARGS}
+    fi
 done

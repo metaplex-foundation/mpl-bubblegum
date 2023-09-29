@@ -1,9 +1,225 @@
 {
-  "version": "0.11.0",
+  "version": "0.11.1",
   "name": "bubblegum",
   "instructions": [
     {
+      "name": "burn",
+      "docs": [
+        "Burns a leaf node from the tree."
+      ],
+      "accounts": [
+        {
+          "name": "treeAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "leafOwner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "leafDelegate",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "merkleTree",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "logWrapper",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "compressionProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "root",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "dataHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "creatorHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "nonce",
+          "type": "u64"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "name": "cancelRedeem",
+      "docs": [
+        "Cancels a redeem."
+      ],
+      "accounts": [
+        {
+          "name": "treeAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "leafOwner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "merkleTree",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "voucher",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "logWrapper",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "compressionProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "root",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "compress",
+      "docs": [
+        "Compresses a metadata account."
+      ],
+      "accounts": [
+        {
+          "name": "treeAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "leafOwner",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "leafDelegate",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "merkleTree",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "mint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "metadata",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "masterEdition",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "logWrapper",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "compressionProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMetadataProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "createTree",
+      "docs": [
+        "Creates a new tree."
+      ],
       "accounts": [
         {
           "name": "treeAuthority",
@@ -59,51 +275,109 @@
       ]
     },
     {
-      "name": "setTreeDelegate",
+      "name": "decompressV1",
+      "docs": [
+        "Decompresses a leaf node from the tree."
+      ],
       "accounts": [
         {
-          "name": "treeAuthority",
+          "name": "voucher",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "treeCreator",
-          "isMut": false,
+          "name": "leafOwner",
+          "isMut": true,
           "isSigner": true
         },
         {
-          "name": "newTreeDelegate",
-          "isMut": false,
+          "name": "tokenAccount",
+          "isMut": true,
           "isSigner": false
         },
         {
-          "name": "merkleTree",
-          "isMut": false,
+          "name": "mint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "mintAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "metadata",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "masterEdition",
+          "isMut": true,
           "isSigner": false
         },
         {
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "sysvarRent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMetadataProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "logWrapper",
+          "isMut": false,
+          "isSigner": false
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "metadata",
+          "type": {
+            "defined": "MetadataArgs"
+          }
+        }
+      ]
     },
     {
-      "name": "mintV1",
+      "name": "delegate",
+      "docs": [
+        "Sets a delegate for a leaf node."
+      ],
       "accounts": [
         {
           "name": "treeAuthority",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
           "name": "leafOwner",
           "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "previousLeafDelegate",
+          "isMut": false,
           "isSigner": false
         },
         {
-          "name": "leafDelegate",
+          "name": "newLeafDelegate",
           "isMut": false,
           "isSigner": false
         },
@@ -111,16 +385,6 @@
           "name": "merkleTree",
           "isMut": true,
           "isSigner": false
-        },
-        {
-          "name": "payer",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "treeDelegate",
-          "isMut": false,
-          "isSigner": true
         },
         {
           "name": "logWrapper",
@@ -140,15 +404,47 @@
       ],
       "args": [
         {
-          "name": "message",
+          "name": "root",
           "type": {
-            "defined": "MetadataArgs"
+            "array": [
+              "u8",
+              32
+            ]
           }
+        },
+        {
+          "name": "dataHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "creatorHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "nonce",
+          "type": "u64"
+        },
+        {
+          "name": "index",
+          "type": "u32"
         }
       ]
     },
     {
       "name": "mintToCollectionV1",
+      "docs": [
+        "Mints a new asset and adds it to a collection."
+      ],
       "accounts": [
         {
           "name": "treeAuthority",
@@ -245,197 +541,14 @@
       ]
     },
     {
-      "name": "verifyCreator",
-      "accounts": [
-        {
-          "name": "treeAuthority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "leafOwner",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "leafDelegate",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "merkleTree",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "payer",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "creator",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "logWrapper",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "compressionProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        }
+      "name": "mintV1",
+      "docs": [
+        "Mints a new asset."
       ],
-      "args": [
-        {
-          "name": "root",
-          "type": {
-            "array": [
-              "u8",
-              32
-            ]
-          }
-        },
-        {
-          "name": "dataHash",
-          "type": {
-            "array": [
-              "u8",
-              32
-            ]
-          }
-        },
-        {
-          "name": "creatorHash",
-          "type": {
-            "array": [
-              "u8",
-              32
-            ]
-          }
-        },
-        {
-          "name": "nonce",
-          "type": "u64"
-        },
-        {
-          "name": "index",
-          "type": "u32"
-        },
-        {
-          "name": "message",
-          "type": {
-            "defined": "MetadataArgs"
-          }
-        }
-      ]
-    },
-    {
-      "name": "unverifyCreator",
       "accounts": [
         {
           "name": "treeAuthority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "leafOwner",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "leafDelegate",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "merkleTree",
           "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "payer",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "creator",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "logWrapper",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "compressionProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "root",
-          "type": {
-            "array": [
-              "u8",
-              32
-            ]
-          }
-        },
-        {
-          "name": "dataHash",
-          "type": {
-            "array": [
-              "u8",
-              32
-            ]
-          }
-        },
-        {
-          "name": "creatorHash",
-          "type": {
-            "array": [
-              "u8",
-              32
-            ]
-          }
-        },
-        {
-          "name": "nonce",
-          "type": "u64"
-        },
-        {
-          "name": "index",
-          "type": "u32"
-        },
-        {
-          "name": "message",
-          "type": {
-            "defined": "MetadataArgs"
-          }
-        }
-      ]
-    },
-    {
-      "name": "verifyCollection",
-      "accounts": [
-        {
-          "name": "treeAuthority",
-          "isMut": false,
           "isSigner": false
         },
         {
@@ -461,45 +574,7 @@
         {
           "name": "treeDelegate",
           "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "the case of `set_and_verify_collection` where",
-            "we are actually changing the NFT metadata."
-          ]
-        },
-        {
-          "name": "collectionAuthority",
-          "isMut": false,
           "isSigner": true
-        },
-        {
-          "name": "collectionAuthorityRecordPda",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "If there is no collecton authority record PDA then",
-            "this must be the Bubblegum program address."
-          ]
-        },
-        {
-          "name": "collectionMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "collectionMetadata",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "editionAccount",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "bubblegumSigner",
-          "isMut": false,
-          "isSigner": false
         },
         {
           "name": "logWrapper",
@@ -512,52 +587,12 @@
           "isSigner": false
         },
         {
-          "name": "tokenMetadataProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
         }
       ],
       "args": [
-        {
-          "name": "root",
-          "type": {
-            "array": [
-              "u8",
-              32
-            ]
-          }
-        },
-        {
-          "name": "dataHash",
-          "type": {
-            "array": [
-              "u8",
-              32
-            ]
-          }
-        },
-        {
-          "name": "creatorHash",
-          "type": {
-            "array": [
-              "u8",
-              32
-            ]
-          }
-        },
-        {
-          "name": "nonce",
-          "type": "u64"
-        },
-        {
-          "name": "index",
-          "type": "u32"
-        },
         {
           "name": "message",
           "type": {
@@ -567,7 +602,12 @@
       ]
     },
     {
-      "name": "unverifyCollection",
+      "name": "redeem",
+      "docs": [
+        "Redeems a vouches.",
+        "",
+        "Once a vouch is redeemed, the corresponding leaf node is removed from the tree."
+      ],
       "accounts": [
         {
           "name": "treeAuthority",
@@ -576,8 +616,8 @@
         },
         {
           "name": "leafOwner",
-          "isMut": false,
-          "isSigner": false
+          "isMut": true,
+          "isSigner": true
         },
         {
           "name": "leafDelegate",
@@ -590,51 +630,8 @@
           "isSigner": false
         },
         {
-          "name": "payer",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "treeDelegate",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "the case of `set_and_verify_collection` where",
-            "we are actually changing the NFT metadata."
-          ]
-        },
-        {
-          "name": "collectionAuthority",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "collectionAuthorityRecordPda",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "If there is no collecton authority record PDA then",
-            "this must be the Bubblegum program address."
-          ]
-        },
-        {
-          "name": "collectionMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "collectionMetadata",
+          "name": "voucher",
           "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "editionAccount",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "bubblegumSigner",
-          "isMut": false,
           "isSigner": false
         },
         {
@@ -644,11 +641,6 @@
         },
         {
           "name": "compressionProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenMetadataProgram",
           "isMut": false,
           "isSigner": false
         },
@@ -693,17 +685,14 @@
         {
           "name": "index",
           "type": "u32"
-        },
-        {
-          "name": "message",
-          "type": {
-            "defined": "MetadataArgs"
-          }
         }
       ]
     },
     {
       "name": "setAndVerifyCollection",
+      "docs": [
+        "Sets and verifies a collection to a leaf node"
+      ],
       "accounts": [
         {
           "name": "treeAuthority",
@@ -735,6 +724,7 @@
           "isMut": false,
           "isSigner": false,
           "docs": [
+            "This account is checked to be a signer in",
             "the case of `set_and_verify_collection` where",
             "we are actually changing the NFT metadata."
           ]
@@ -843,7 +833,96 @@
       ]
     },
     {
+      "name": "setDecompressableState",
+      "docs": [
+        "Sets the `decompressible_state` of a tree."
+      ],
+      "accounts": [
+        {
+          "name": "treeAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "treeCreator",
+          "isMut": false,
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "decompressableState",
+          "type": {
+            "defined": "DecompressibleState"
+          }
+        }
+      ]
+    },
+    {
+      "name": "setDecompressibleState",
+      "docs": [
+        "Sets the `decompressible_state` of a tree."
+      ],
+      "accounts": [
+        {
+          "name": "treeAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "treeCreator",
+          "isMut": false,
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "decompressableState",
+          "type": {
+            "defined": "DecompressibleState"
+          }
+        }
+      ]
+    },
+    {
+      "name": "setTreeDelegate",
+      "docs": [
+        "Sets a delegate for a tree."
+      ],
+      "accounts": [
+        {
+          "name": "treeAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "treeCreator",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "newTreeDelegate",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "merkleTree",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "transfer",
+      "docs": [
+        "Transfers a leaf node from one account to another."
+      ],
       "accounts": [
         {
           "name": "treeAuthority",
@@ -925,89 +1004,10 @@
       ]
     },
     {
-      "name": "delegate",
-      "accounts": [
-        {
-          "name": "treeAuthority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "leafOwner",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "previousLeafDelegate",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "newLeafDelegate",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "merkleTree",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "logWrapper",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "compressionProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        }
+      "name": "unverifyCollection",
+      "docs": [
+        "Unverifies a collection from a leaf node."
       ],
-      "args": [
-        {
-          "name": "root",
-          "type": {
-            "array": [
-              "u8",
-              32
-            ]
-          }
-        },
-        {
-          "name": "dataHash",
-          "type": {
-            "array": [
-              "u8",
-              32
-            ]
-          }
-        },
-        {
-          "name": "creatorHash",
-          "type": {
-            "array": [
-              "u8",
-              32
-            ]
-          }
-        },
-        {
-          "name": "nonce",
-          "type": "u64"
-        },
-        {
-          "name": "index",
-          "type": "u32"
-        }
-      ]
-    },
-    {
-      "name": "burn",
       "accounts": [
         {
           "name": "treeAuthority",
@@ -1027,89 +1027,6 @@
         {
           "name": "merkleTree",
           "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "logWrapper",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "compressionProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "root",
-          "type": {
-            "array": [
-              "u8",
-              32
-            ]
-          }
-        },
-        {
-          "name": "dataHash",
-          "type": {
-            "array": [
-              "u8",
-              32
-            ]
-          }
-        },
-        {
-          "name": "creatorHash",
-          "type": {
-            "array": [
-              "u8",
-              32
-            ]
-          }
-        },
-        {
-          "name": "nonce",
-          "type": "u64"
-        },
-        {
-          "name": "index",
-          "type": "u32"
-        }
-      ]
-    },
-    {
-      "name": "updateMetadata",
-      "accounts": [
-        {
-          "name": "metadataBuffer",
-          "isMut": false,
-          "isSigner": false,
-          "isOptional": true
-        },
-        {
-          "name": "treeAuthority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "treeDelegate",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "leafOwner",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "leafDelegate",
-          "isMut": false,
           "isSigner": false
         },
         {
@@ -1118,88 +1035,28 @@
           "isSigner": true
         },
         {
-          "name": "merkleTree",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "logWrapper",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "compressionProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenMetadataProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "root",
-          "type": {
-            "array": [
-              "u8",
-              32
-            ]
-          }
-        },
-        {
-          "name": "nonce",
-          "type": "u64"
-        },
-        {
-          "name": "index",
-          "type": "u32"
-        },
-        {
-          "name": "currentMetadata",
-          "type": {
-            "option": {
-              "defined": "MetadataArgs"
-            }
-          }
-        },
-        {
-          "name": "updateArgs",
-          "type": {
-            "defined": "UpdateArgs"
-          }
-        }
-      ]
-    },
-    {
-      "name": "updateMetadataCollectionNft",
-      "accounts": [
-        {
-          "name": "metadataBuffer",
-          "isMut": false,
-          "isSigner": false,
-          "isOptional": true
-        },
-        {
-          "name": "treeAuthority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "treeDelegate",
           "isMut": false,
-          "isSigner": true
+          "isSigner": false,
+          "docs": [
+            "This account is checked to be a signer in",
+            "the case of `set_and_verify_collection` where",
+            "we are actually changing the NFT metadata."
+          ]
         },
         {
           "name": "collectionAuthority",
           "isMut": false,
           "isSigner": true
+        },
+        {
+          "name": "collectionAuthorityRecordPda",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "If there is no collecton authority record PDA then",
+            "this must be the Bubblegum program address."
+          ]
         },
         {
           "name": "collectionMint",
@@ -1208,33 +1065,17 @@
         },
         {
           "name": "collectionMetadata",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "collectionAuthorityRecordPda",
-          "isMut": false,
-          "isSigner": false,
-          "isOptional": true
-        },
-        {
-          "name": "leafOwner",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "leafDelegate",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "payer",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "merkleTree",
           "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "editionAccount",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "bubblegumSigner",
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -1269,6 +1110,24 @@
           }
         },
         {
+          "name": "dataHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "creatorHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
           "name": "nonce",
           "type": "u64"
         },
@@ -1277,23 +1136,18 @@
           "type": "u32"
         },
         {
-          "name": "currentMetadata",
+          "name": "message",
           "type": {
-            "option": {
-              "defined": "MetadataArgs"
-            }
-          }
-        },
-        {
-          "name": "updateArgs",
-          "type": {
-            "defined": "UpdateArgs"
+            "defined": "MetadataArgs"
           }
         }
       ]
     },
     {
-      "name": "redeem",
+      "name": "unverifyCreator",
+      "docs": [
+        "Unverifies a creator from a leaf node."
+      ],
       "accounts": [
         {
           "name": "treeAuthority",
@@ -1302,8 +1156,8 @@
         },
         {
           "name": "leafOwner",
-          "isMut": true,
-          "isSigner": true
+          "isMut": false,
+          "isSigner": false
         },
         {
           "name": "leafDelegate",
@@ -1316,9 +1170,14 @@
           "isSigner": false
         },
         {
-          "name": "voucher",
-          "isMut": true,
-          "isSigner": false
+          "name": "payer",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "creator",
+          "isMut": false,
+          "isSigner": true
         },
         {
           "name": "logWrapper",
@@ -1371,11 +1230,20 @@
         {
           "name": "index",
           "type": "u32"
+        },
+        {
+          "name": "message",
+          "type": {
+            "defined": "MetadataArgs"
+          }
         }
       ]
     },
     {
-      "name": "cancelRedeem",
+      "name": "verifyCollection",
+      "docs": [
+        "Verifies a collection for a leaf node."
+      ],
       "accounts": [
         {
           "name": "treeAuthority",
@@ -1384,8 +1252,13 @@
         },
         {
           "name": "leafOwner",
-          "isMut": true,
-          "isSigner": true
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "leafDelegate",
+          "isMut": false,
+          "isSigner": false
         },
         {
           "name": "merkleTree",
@@ -1393,9 +1266,154 @@
           "isSigner": false
         },
         {
-          "name": "voucher",
+          "name": "payer",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "treeDelegate",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "This account is checked to be a signer in",
+            "the case of `set_and_verify_collection` where",
+            "we are actually changing the NFT metadata."
+          ]
+        },
+        {
+          "name": "collectionAuthority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "collectionAuthorityRecordPda",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "If there is no collecton authority record PDA then",
+            "this must be the Bubblegum program address."
+          ]
+        },
+        {
+          "name": "collectionMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "collectionMetadata",
           "isMut": true,
           "isSigner": false
+        },
+        {
+          "name": "editionAccount",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "bubblegumSigner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "logWrapper",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "compressionProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMetadataProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "root",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "dataHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "creatorHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "nonce",
+          "type": "u64"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        },
+        {
+          "name": "message",
+          "type": {
+            "defined": "MetadataArgs"
+          }
+        }
+      ]
+    },
+    {
+      "name": "verifyCreator",
+      "docs": [
+        "Verifies a creator for a leaf node."
+      ],
+      "accounts": [
+        {
+          "name": "treeAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "leafOwner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "leafDelegate",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "merkleTree",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "creator",
+          "isMut": false,
+          "isSigner": true
         },
         {
           "name": "logWrapper",
@@ -1422,182 +1440,37 @@
               32
             ]
           }
-        }
-      ]
-    },
-    {
-      "name": "decompressV1",
-      "accounts": [
-        {
-          "name": "voucher",
-          "isMut": true,
-          "isSigner": false
         },
         {
-          "name": "leafOwner",
-          "isMut": true,
-          "isSigner": true
+          "name": "dataHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
         },
         {
-          "name": "tokenAccount",
-          "isMut": true,
-          "isSigner": false
+          "name": "creatorHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
         },
         {
-          "name": "mint",
-          "isMut": true,
-          "isSigner": false
+          "name": "nonce",
+          "type": "u64"
         },
         {
-          "name": "mintAuthority",
-          "isMut": true,
-          "isSigner": false
+          "name": "index",
+          "type": "u32"
         },
         {
-          "name": "metadata",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "masterEdition",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "sysvarRent",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenMetadataProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "associatedTokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "logWrapper",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "metadata",
+          "name": "message",
           "type": {
             "defined": "MetadataArgs"
-          }
-        }
-      ]
-    },
-    {
-      "name": "compress",
-      "accounts": [
-        {
-          "name": "treeAuthority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "leafOwner",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "leafDelegate",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "merkleTree",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "mint",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "metadata",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "masterEdition",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "logWrapper",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "compressionProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenMetadataProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "setDecompressableState",
-      "accounts": [
-        {
-          "name": "treeAuthority",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "treeCreator",
-          "isMut": false,
-          "isSigner": true
-        }
-      ],
-      "args": [
-        {
-          "name": "decompressableState",
-          "type": {
-            "defined": "DecompressableState"
           }
         }
       ]
@@ -1630,9 +1503,9 @@
             "type": "bool"
           },
           {
-            "name": "isDecompressable",
+            "name": "isDecompressible",
             "type": {
-              "defined": "DecompressableState"
+              "defined": "DecompressibleState"
             }
           }
         ]
@@ -1677,6 +1550,11 @@
           },
           {
             "name": "share",
+            "docs": [
+              "The percentage share.",
+              "",
+              "The value is a percentage, not basis points."
+            ],
             "type": "u8"
           }
         ]
@@ -1821,60 +1699,6 @@
       }
     },
     {
-      "name": "UpdateArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "name",
-            "type": {
-              "option": "string"
-            }
-          },
-          {
-            "name": "symbol",
-            "type": {
-              "option": "string"
-            }
-          },
-          {
-            "name": "uri",
-            "type": {
-              "option": "string"
-            }
-          },
-          {
-            "name": "creators",
-            "type": {
-              "option": {
-                "vec": {
-                  "defined": "Creator"
-                }
-              }
-            }
-          },
-          {
-            "name": "sellerFeeBasisPoints",
-            "type": {
-              "option": "u16"
-            }
-          },
-          {
-            "name": "primarySaleHappened",
-            "type": {
-              "option": "bool"
-            }
-          },
-          {
-            "name": "isMutable",
-            "type": {
-              "option": "bool"
-            }
-          }
-        ]
-      }
-    },
-    {
       "name": "Version",
       "type": {
         "kind": "enum",
@@ -1998,7 +1822,7 @@
       }
     },
     {
-      "name": "DecompressableState",
+      "name": "DecompressibleState",
       "type": {
         "kind": "enum",
         "variants": [
@@ -2065,13 +1889,7 @@
             "name": "MintToCollectionV1"
           },
           {
-            "name": "SetDecompressableState"
-          },
-          {
-            "name": "UpdateMetadata"
-          },
-          {
-            "name": "UpdateMetadataCollectionNft"
+            "name": "SetDecompressibleState"
           }
         ]
       }
@@ -2247,46 +2065,6 @@
       "code": 6033,
       "name": "DecompressionDisabled",
       "msg": "Decompression is disabled for this tree."
-    },
-    {
-      "code": 6034,
-      "name": "MetadataImmutable",
-      "msg": "Metadata not mutable"
-    },
-    {
-      "code": 6035,
-      "name": "CollectionMismatch",
-      "msg": "Collection mismatch"
-    },
-    {
-      "code": 6036,
-      "name": "MetadataArgsAmbiguous",
-      "msg": "MetadataArgs ambiguous"
-    },
-    {
-      "code": 6037,
-      "name": "MetadataArgsMissing",
-      "msg": "MetadataArgs missing"
-    },
-    {
-      "code": 6038,
-      "name": "NFTLinkedToCollection",
-      "msg": "NFT linked to collection"
-    },
-    {
-      "code": 6039,
-      "name": "NFTNotLinkedToVerifiedCollection",
-      "msg": "NFT not linked to verified collection"
-    },
-    {
-      "code": 6040,
-      "name": "PrimarySaleCanOnlyBeFlippedToTrue",
-      "msg": "Can only update primary sale to true"
-    },
-    {
-      "code": 6041,
-      "name": "CreatorDidNotUnverify",
-      "msg": "Creator did not unverify the metadata"
     }
   ],
   "metadata": {

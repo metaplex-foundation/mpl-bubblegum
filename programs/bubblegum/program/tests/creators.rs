@@ -2,7 +2,7 @@
 pub mod utils;
 use crate::utils::{Error::BanksClient, LeafArgs};
 use anchor_lang::solana_program::instruction::InstructionError;
-use mpl_bubblegum::{error::BubblegumError, state::metaplex_adapter::Creator};
+use bubblegum::{error::BubblegumError, state::metaplex_adapter::Creator};
 use solana_program_test::{tokio, BanksClientError};
 use solana_sdk::{signature::Keypair, signer::Signer, transaction::TransactionError};
 use utils::context::BubblegumTestContext;
