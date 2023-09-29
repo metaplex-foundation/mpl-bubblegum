@@ -865,6 +865,26 @@ createErrorFromNameLookup.set(
 );
 
 /**
+ * CreatorDidNotUnverify: 'Creator did not unverify the metadata'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class CreatorDidNotUnverifyError extends Error {
+  readonly code: number = 0x1799;
+  readonly name: string = 'CreatorDidNotUnverify';
+  constructor() {
+    super('Creator did not unverify the metadata');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, CreatorDidNotUnverifyError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1799, () => new CreatorDidNotUnverifyError());
+createErrorFromNameLookup.set('CreatorDidNotUnverify', () => new CreatorDidNotUnverifyError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated
