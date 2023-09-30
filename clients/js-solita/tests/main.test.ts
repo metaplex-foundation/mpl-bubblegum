@@ -135,6 +135,7 @@ async function setupTreeWithCompressedNFT(
   const space = getConcurrentMerkleTreeAccountSize(
     depthSizePair.maxDepth,
     depthSizePair.maxBufferSize,
+    depthSizePair.maxDepth,
   );
   const allocTreeIx = SystemProgram.createAccount({
     fromPubkey: payer,
