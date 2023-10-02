@@ -17,7 +17,6 @@ export * from './leafSchema';
 export * from './metadataArgs';
 export * from './tokenProgramVersion';
 export * from './tokenStandard';
-export * from './updateArgs';
 export * from './useMethod';
 export * from './uses';
 export * from './version';

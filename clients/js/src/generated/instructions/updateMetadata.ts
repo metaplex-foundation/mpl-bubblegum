@@ -19,10 +19,13 @@ import {
 import {
   Serializer,
   array,
+  bool,
   bytes,
   mapSerializer,
   option,
+  string,
   struct,
+  u16,
   u32,
   u64,
   u8,
@@ -36,12 +39,12 @@ import {
   getAccountMetasAndSigners,
 } from '../shared';
 import {
+  Creator,
+  CreatorArgs,
   MetadataArgs,
   MetadataArgsArgs,
-  UpdateArgs,
-  UpdateArgsArgs,
+  getCreatorSerializer,
   getMetadataArgsSerializer,
-  getUpdateArgsSerializer,
 } from '../types';
 
 // Accounts.
@@ -66,7 +69,13 @@ export type UpdateMetadataInstructionData = {
   nonce: bigint;
   index: number;
   currentMetadata: Option<MetadataArgs>;
-  updateArgs: UpdateArgs;
+  name: Option<string>;
+  symbol: Option<string>;
+  uri: Option<string>;
+  creators: Option<Array<Creator>>;
+  sellerFeeBasisPoints: Option<number>;
+  primarySaleHappened: Option<boolean>;
+  isMutable: Option<boolean>;
 };
 
 export type UpdateMetadataInstructionDataArgs = {
@@ -74,7 +83,13 @@ export type UpdateMetadataInstructionDataArgs = {
   nonce: number | bigint;
   index: number;
   currentMetadata: OptionOrNullable<MetadataArgsArgs>;
-  updateArgs: UpdateArgsArgs;
+  name: OptionOrNullable<string>;
+  symbol: OptionOrNullable<string>;
+  uri: OptionOrNullable<string>;
+  creators: OptionOrNullable<Array<CreatorArgs>>;
+  sellerFeeBasisPoints: OptionOrNullable<number>;
+  primarySaleHappened: OptionOrNullable<boolean>;
+  isMutable: OptionOrNullable<boolean>;
 };
 
 export function getUpdateMetadataInstructionDataSerializer(): Serializer<
@@ -93,7 +108,13 @@ export function getUpdateMetadataInstructionDataSerializer(): Serializer<
         ['nonce', u64()],
         ['index', u32()],
         ['currentMetadata', option(getMetadataArgsSerializer())],
-        ['updateArgs', getUpdateArgsSerializer()],
+        ['name', option(string())],
+        ['symbol', option(string())],
+        ['uri', option(string())],
+        ['creators', option(array(getCreatorSerializer()))],
+        ['sellerFeeBasisPoints', option(u16())],
+        ['primarySaleHappened', option(bool())],
+        ['isMutable', option(bool())],
       ],
       { description: 'UpdateMetadataInstructionData' }
     ),

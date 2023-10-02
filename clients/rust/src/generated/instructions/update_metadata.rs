@@ -5,8 +5,8 @@
 //! [https://github.com/metaplex-foundation/kinobi]
 //!
 
+use crate::generated::types::Creator;
 use crate::generated::types::MetadataArgs;
-use crate::generated::types::UpdateArgs;
 use borsh::BorshDeserialize;
 use borsh::BorshSerialize;
 
@@ -132,7 +132,13 @@ pub struct UpdateMetadataInstructionArgs {
     pub nonce: u64,
     pub index: u32,
     pub current_metadata: Option<MetadataArgs>,
-    pub update_args: UpdateArgs,
+    pub name: Option<String>,
+    pub symbol: Option<String>,
+    pub uri: Option<String>,
+    pub creators: Option<Vec<Creator>>,
+    pub seller_fee_basis_points: Option<u16>,
+    pub primary_sale_happened: Option<bool>,
+    pub is_mutable: Option<bool>,
 }
 
 /// Instruction builder.
@@ -153,7 +159,13 @@ pub struct UpdateMetadataBuilder {
     nonce: Option<u64>,
     index: Option<u32>,
     current_metadata: Option<MetadataArgs>,
-    update_args: Option<UpdateArgs>,
+    name: Option<String>,
+    symbol: Option<String>,
+    uri: Option<String>,
+    creators: Option<Vec<Creator>>,
+    seller_fee_basis_points: Option<u16>,
+    primary_sale_happened: Option<bool>,
+    is_mutable: Option<bool>,
     __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
 
@@ -254,9 +266,46 @@ impl UpdateMetadataBuilder {
         self.current_metadata = Some(current_metadata);
         self
     }
+    /// `[optional argument]`
     #[inline(always)]
-    pub fn update_args(&mut self, update_args: UpdateArgs) -> &mut Self {
-        self.update_args = Some(update_args);
+    pub fn name(&mut self, name: String) -> &mut Self {
+        self.name = Some(name);
+        self
+    }
+    /// `[optional argument]`
+    #[inline(always)]
+    pub fn symbol(&mut self, symbol: String) -> &mut Self {
+        self.symbol = Some(symbol);
+        self
+    }
+    /// `[optional argument]`
+    #[inline(always)]
+    pub fn uri(&mut self, uri: String) -> &mut Self {
+        self.uri = Some(uri);
+        self
+    }
+    /// `[optional argument]`
+    #[inline(always)]
+    pub fn creators(&mut self, creators: Vec<Creator>) -> &mut Self {
+        self.creators = Some(creators);
+        self
+    }
+    /// `[optional argument]`
+    #[inline(always)]
+    pub fn seller_fee_basis_points(&mut self, seller_fee_basis_points: u16) -> &mut Self {
+        self.seller_fee_basis_points = Some(seller_fee_basis_points);
+        self
+    }
+    /// `[optional argument]`
+    #[inline(always)]
+    pub fn primary_sale_happened(&mut self, primary_sale_happened: bool) -> &mut Self {
+        self.primary_sale_happened = Some(primary_sale_happened);
+        self
+    }
+    /// `[optional argument]`
+    #[inline(always)]
+    pub fn is_mutable(&mut self, is_mutable: bool) -> &mut Self {
+        self.is_mutable = Some(is_mutable);
         self
     }
     /// Add an aditional account to the instruction.
@@ -308,7 +357,13 @@ impl UpdateMetadataBuilder {
             nonce: self.nonce.clone().expect("nonce is not set"),
             index: self.index.clone().expect("index is not set"),
             current_metadata: self.current_metadata.clone(),
-            update_args: self.update_args.clone().expect("update_args is not set"),
+            name: self.name.clone(),
+            symbol: self.symbol.clone(),
+            uri: self.uri.clone(),
+            creators: self.creators.clone(),
+            seller_fee_basis_points: self.seller_fee_basis_points.clone(),
+            primary_sale_happened: self.primary_sale_happened.clone(),
+            is_mutable: self.is_mutable.clone(),
         };
 
         accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
@@ -544,7 +599,13 @@ impl<'a, 'b> UpdateMetadataCpiBuilder<'a, 'b> {
             nonce: None,
             index: None,
             current_metadata: None,
-            update_args: None,
+            name: None,
+            symbol: None,
+            uri: None,
+            creators: None,
+            seller_fee_basis_points: None,
+            primary_sale_happened: None,
+            is_mutable: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
@@ -656,9 +717,46 @@ impl<'a, 'b> UpdateMetadataCpiBuilder<'a, 'b> {
         self.instruction.current_metadata = Some(current_metadata);
         self
     }
+    /// `[optional argument]`
     #[inline(always)]
-    pub fn update_args(&mut self, update_args: UpdateArgs) -> &mut Self {
-        self.instruction.update_args = Some(update_args);
+    pub fn name(&mut self, name: String) -> &mut Self {
+        self.instruction.name = Some(name);
+        self
+    }
+    /// `[optional argument]`
+    #[inline(always)]
+    pub fn symbol(&mut self, symbol: String) -> &mut Self {
+        self.instruction.symbol = Some(symbol);
+        self
+    }
+    /// `[optional argument]`
+    #[inline(always)]
+    pub fn uri(&mut self, uri: String) -> &mut Self {
+        self.instruction.uri = Some(uri);
+        self
+    }
+    /// `[optional argument]`
+    #[inline(always)]
+    pub fn creators(&mut self, creators: Vec<Creator>) -> &mut Self {
+        self.instruction.creators = Some(creators);
+        self
+    }
+    /// `[optional argument]`
+    #[inline(always)]
+    pub fn seller_fee_basis_points(&mut self, seller_fee_basis_points: u16) -> &mut Self {
+        self.instruction.seller_fee_basis_points = Some(seller_fee_basis_points);
+        self
+    }
+    /// `[optional argument]`
+    #[inline(always)]
+    pub fn primary_sale_happened(&mut self, primary_sale_happened: bool) -> &mut Self {
+        self.instruction.primary_sale_happened = Some(primary_sale_happened);
+        self
+    }
+    /// `[optional argument]`
+    #[inline(always)]
+    pub fn is_mutable(&mut self, is_mutable: bool) -> &mut Self {
+        self.instruction.is_mutable = Some(is_mutable);
         self
     }
     /// Add an additional account to the instruction.
@@ -707,11 +805,13 @@ impl<'a, 'b> UpdateMetadataCpiBuilder<'a, 'b> {
             nonce: self.instruction.nonce.clone().expect("nonce is not set"),
             index: self.instruction.index.clone().expect("index is not set"),
             current_metadata: self.instruction.current_metadata.clone(),
-            update_args: self
-                .instruction
-                .update_args
-                .clone()
-                .expect("update_args is not set"),
+            name: self.instruction.name.clone(),
+            symbol: self.instruction.symbol.clone(),
+            uri: self.instruction.uri.clone(),
+            creators: self.instruction.creators.clone(),
+            seller_fee_basis_points: self.instruction.seller_fee_basis_points.clone(),
+            primary_sale_happened: self.instruction.primary_sale_happened.clone(),
+            is_mutable: self.instruction.is_mutable.clone(),
         };
         let instruction = UpdateMetadataCpi {
             __program: self.instruction.__program,
@@ -787,7 +887,13 @@ struct UpdateMetadataCpiBuilderInstruction<'a, 'b> {
     nonce: Option<u64>,
     index: Option<u32>,
     current_metadata: Option<MetadataArgs>,
-    update_args: Option<UpdateArgs>,
+    name: Option<String>,
+    symbol: Option<String>,
+    uri: Option<String>,
+    creators: Option<Vec<Creator>>,
+    seller_fee_basis_points: Option<u16>,
+    primary_sale_happened: Option<bool>,
+    is_mutable: Option<bool>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(
         &'b solana_program::account_info::AccountInfo<'a>,
