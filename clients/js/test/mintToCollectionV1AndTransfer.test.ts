@@ -1,6 +1,4 @@
-import {
-  createNft,
-} from '@metaplex-foundation/mpl-token-metadata';
+import { createNft } from '@metaplex-foundation/mpl-token-metadata';
 import {
   generateSigner,
   percentAmount,
@@ -107,4 +105,3 @@ test('it can mint an NFT from a collection and then transfer it', async (t) => {
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(updatedLeaf));
 });
-
