@@ -2242,21 +2242,11 @@
     },
     {
       "code": 6038,
-      "name": "NFTLinkedToCollection",
-      "msg": "NFT linked to collection"
-    },
-    {
-      "code": 6039,
-      "name": "NFTNotLinkedToVerifiedCollection",
-      "msg": "NFT not linked to verified collection"
-    },
-    {
-      "code": 6040,
       "name": "PrimarySaleCanOnlyBeFlippedToTrue",
       "msg": "Can only update primary sale to true"
     },
     {
-      "code": 6041,
+      "code": 6039,
       "name": "CreatorDidNotUnverify",
       "msg": "Creator did not unverify the metadata"
     }
