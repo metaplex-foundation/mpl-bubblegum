@@ -80,10 +80,6 @@ pub enum BubblegumError {
     MetadataArgsAmbiguous,
     #[msg("MetadataArgs missing")]
     MetadataArgsMissing,
-    #[msg("NFT linked to collection")]
-    NFTLinkedToCollection,
-    #[msg("NFT not linked to verified collection")]
-    NFTNotLinkedToVerifiedCollection,
     #[msg("Can only update primary sale to true")]
     PrimarySaleCanOnlyBeFlippedToTrue,
     #[msg("Creator did not unverify the metadata")]

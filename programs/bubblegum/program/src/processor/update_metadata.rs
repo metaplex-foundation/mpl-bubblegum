@@ -215,13 +215,6 @@ pub fn update_metadata<'info>(
     // Determine how the user opted to pass in the old MetadataArgs
     let current_metadata = fetch_current_metadata(current_metadata, &ctx.accounts.metadata_buffer)?;
 
-    // NFTs which are linked to verified collections cannot be updated through this instruction
-    require!(
-        current_metadata.collection.is_none()
-            || !current_metadata.collection.as_ref().unwrap().verified,
-        BubblegumError::NFTLinkedToCollection
-    );
-
     process_update_metadata(
         &ctx.accounts.merkle_tree.to_account_info(),
         &ctx.accounts.tree_delegate,
