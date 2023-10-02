@@ -34,7 +34,6 @@ pub enum InstructionName {
     UnverifyCollection,
     SetAndVerifyCollection,
     MintToCollectionV1,
-    SetDecompressableState,
     SetDecompressibleState,
     UpdateMetadata,
     UpdateMetadataCollectionNft,

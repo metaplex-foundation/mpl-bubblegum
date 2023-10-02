@@ -2158,9 +2158,6 @@
             "name": "MintToCollectionV1"
           },
           {
-            "name": "SetDecompressableState"
-          },
-          {
             "name": "SetDecompressibleState"
           },
           {
