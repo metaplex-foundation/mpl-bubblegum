@@ -128,80 +128,119 @@ test('it can fetch an nft assets by group', async (t) => {
     items: [
       {
         interface: 'Custom',
-        id: '6QnSsL9mqkzMpvhSWptU5XVs5pM3WLcoiTp8YykEn34D',
-        content: {
-          $schema: 'https://schema.metaplex.com/nft1.0.json',
-          json_uri:
-            'https://nftstorage.link/ipfs/bafybeifuxoy7pzi3mffx7vdjdrq6vdkxpybiscucrwzuc4j3lzfnvldt5i/2.json',
-          files: [],
-          metadata: {
-            name: 'Cloaked #3',
-            symbol: '',
-          },
-        },
-        authorities: [
-          {
-            address: '5oCPMdoLFqXTvQ6n2x4XvJELnatBdG6N6D9EWyhvv8sK',
-            scopes: ['full'],
-          },
-        ],
-        compression: {
-          eligible: false,
-          compressed: false,
-          data_hash: '',
-          creator_hash: '',
-          asset_hash: '',
-          tree: '',
-          seq: 0,
-          leaf_id: 0,
-        },
-        grouping: [
-          {
-            group_key: 'collection',
-            group_value: 'C7JjL4tXgqDKsek44AoNQBEME2aCvry6xZdKA8CxLoZr',
-          },
-        ],
-        royalty: {
-          royalty_model: 'creators',
-          target: null,
-          percent: 0.01,
-          basis_points: 100,
-          primary_sale_happened: true,
-          locked: false,
-        },
-        creators: [
-          {
-            address: '6usSN6vfYch3k4ue88rhmRnJ5DUm1ziYt9J5XzxRdpcG',
-            share: 0,
-            verified: true,
-          },
-          {
-            address: '5oCPMdoLFqXTvQ6n2x4XvJELnatBdG6N6D9EWyhvv8sK',
-            share: 100,
-            verified: false,
-          },
-        ],
-        ownership: {
-          frozen: false,
-          delegated: false,
-          delegate: null,
-          ownership_model: 'single',
-          owner: '5oCPMdoLFqXTvQ6n2x4XvJELnatBdG6N6D9EWyhvv8sK',
-        },
-        supply: null,
-        mutable: true,
-      },
-      {
-        interface: 'Custom',
         id: 'DkiWKRi5j9j2h58XGSWwRBXDu5HgFJYLvAS2Z7kueiAK',
         content: {
           $schema: 'https://schema.metaplex.com/nft1.0.json',
           json_uri:
             'https://nftstorage.link/ipfs/bafybeifuxoy7pzi3mffx7vdjdrq6vdkxpybiscucrwzuc4j3lzfnvldt5i/3.json',
-          files: [],
+          files: [
+            {
+              uri: 'https://nftstorage.link/ipfs/bafybeihummjrhhje4jfmu6mqjdmvmiu7j4k4j22xkpqmxsrmfj5yldq354/3.png',
+              cdn_uri:
+                'https://cdn.helius-rpc.com/cdn-cgi/image//https://nftstorage.link/ipfs/bafybeihummjrhhje4jfmu6mqjdmvmiu7j4k4j22xkpqmxsrmfj5yldq354/3.png',
+              mime: 'image/png',
+            },
+          ],
           metadata: {
+            attributes: [
+              {
+                value: 'True',
+                trait_type: 'Background',
+              },
+            ],
+            description: 'This is your NFT Description',
             name: 'Cloaked #4',
             symbol: '',
+            token_standard: 'ProgrammableNonFungible',
+          },
+          links: {
+            image:
+              'https://nftstorage.link/ipfs/bafybeihummjrhhje4jfmu6mqjdmvmiu7j4k4j22xkpqmxsrmfj5yldq354/3.png',
+          },
+        },
+        authorities: [
+          {
+            address: '5oCPMdoLFqXTvQ6n2x4XvJELnatBdG6N6D9EWyhvv8sK',
+            scopes: ['full'],
+          },
+        ],
+        compression: {
+          eligible: false,
+          compressed: false,
+          data_hash: '',
+          creator_hash: '',
+          asset_hash: '',
+          tree: '',
+          seq: 0,
+          leaf_id: 0,
+        },
+        grouping: [
+          {
+            group_key: 'collection',
+            group_value: 'C7JjL4tXgqDKsek44AoNQBEME2aCvry6xZdKA8CxLoZr',
+          },
+        ],
+        royalty: {
+          royalty_model: 'creators',
+          target: null,
+          percent: 0.01,
+          basis_points: 100,
+          primary_sale_happened: true,
+          locked: false,
+        },
+        creators: [
+          {
+            address: '6usSN6vfYch3k4ue88rhmRnJ5DUm1ziYt9J5XzxRdpcG',
+            share: 0,
+            verified: true,
+          },
+          {
+            address: '5oCPMdoLFqXTvQ6n2x4XvJELnatBdG6N6D9EWyhvv8sK',
+            share: 100,
+            verified: false,
+          },
+        ],
+        ownership: {
+          frozen: true,
+          delegated: false,
+          delegate: null,
+          ownership_model: 'single',
+          owner: '5oCPMdoLFqXTvQ6n2x4XvJELnatBdG6N6D9EWyhvv8sK',
+        },
+        supply: null,
+        mutable: true,
+        burnt: false,
+      },
+      {
+        interface: 'Custom',
+        id: '6QnSsL9mqkzMpvhSWptU5XVs5pM3WLcoiTp8YykEn34D',
+        content: {
+          $schema: 'https://schema.metaplex.com/nft1.0.json',
+          json_uri:
+            'https://nftstorage.link/ipfs/bafybeifuxoy7pzi3mffx7vdjdrq6vdkxpybiscucrwzuc4j3lzfnvldt5i/2.json',
+          files: [
+            {
+              uri: 'https://nftstorage.link/ipfs/bafybeihummjrhhje4jfmu6mqjdmvmiu7j4k4j22xkpqmxsrmfj5yldq354/2.png',
+              cdn_uri:
+                'https://cdn.helius-rpc.com/cdn-cgi/image//https://nftstorage.link/ipfs/bafybeihummjrhhje4jfmu6mqjdmvmiu7j4k4j22xkpqmxsrmfj5yldq354/2.png',
+              mime: 'image/png',
+            },
+          ],
+          metadata: {
+            attributes: [
+              {
+                value: 'True',
+                trait_type: 'Background',
+              },
+            ],
+            description: 'This is your NFT Description',
+            name: 'Cloaked #3',
+            symbol: '',
+            token_standard: 'ProgrammableNonFungible',
+          },
+          links: {
+            image:
+              'https://nftstorage.link/ipfs/bafybeihummjrhhje4jfmu6mqjdmvmiu7j4k4j22xkpqmxsrmfj5yldq354/2.png',
           },
         },
         authorities: [
@@ -255,6 +294,7 @@ test('it can fetch an nft assets by group', async (t) => {
         },
         supply: null,
         mutable: true,
+        burnt: false,
       },
     ],
   });
@@ -270,7 +310,7 @@ test('it can fetch an nft assets by group with a sort', async (t) => {
     page: 1,
     sortBy: {
       sortBy: 'created',
-      sortDirection: 'asc',
+      sortDirection: 'desc',
     },
   });
 
@@ -281,80 +321,34 @@ test('it can fetch an nft assets by group with a sort', async (t) => {
     items: [
       {
         interface: 'Custom',
-        id: 'DkiWKRi5j9j2h58XGSWwRBXDu5HgFJYLvAS2Z7kueiAK',
-        content: {
-          $schema: 'https://schema.metaplex.com/nft1.0.json',
-          json_uri:
-            'https://nftstorage.link/ipfs/bafybeifuxoy7pzi3mffx7vdjdrq6vdkxpybiscucrwzuc4j3lzfnvldt5i/3.json',
-          files: [],
-          metadata: {
-            name: 'Cloaked #4',
-            symbol: '',
-          },
-        },
-        authorities: [
-          {
-            address: '5oCPMdoLFqXTvQ6n2x4XvJELnatBdG6N6D9EWyhvv8sK',
-            scopes: ['full'],
-          },
-        ],
-        compression: {
-          eligible: false,
-          compressed: false,
-          data_hash: '',
-          creator_hash: '',
-          asset_hash: '',
-          tree: '',
-          seq: 0,
-          leaf_id: 0,
-        },
-        grouping: [
-          {
-            group_key: 'collection',
-            group_value: 'C7JjL4tXgqDKsek44AoNQBEME2aCvry6xZdKA8CxLoZr',
-          },
-        ],
-        royalty: {
-          royalty_model: 'creators',
-          target: null,
-          percent: 0.01,
-          basis_points: 100,
-          primary_sale_happened: true,
-          locked: false,
-        },
-        creators: [
-          {
-            address: '6usSN6vfYch3k4ue88rhmRnJ5DUm1ziYt9J5XzxRdpcG',
-            share: 0,
-            verified: true,
-          },
-          {
-            address: '5oCPMdoLFqXTvQ6n2x4XvJELnatBdG6N6D9EWyhvv8sK',
-            share: 100,
-            verified: false,
-          },
-        ],
-        ownership: {
-          frozen: false,
-          delegated: false,
-          delegate: null,
-          ownership_model: 'single',
-          owner: '5oCPMdoLFqXTvQ6n2x4XvJELnatBdG6N6D9EWyhvv8sK',
-        },
-        supply: null,
-        mutable: true,
-      },
-      {
-        interface: 'Custom',
         id: '6QnSsL9mqkzMpvhSWptU5XVs5pM3WLcoiTp8YykEn34D',
         content: {
           $schema: 'https://schema.metaplex.com/nft1.0.json',
           json_uri:
             'https://nftstorage.link/ipfs/bafybeifuxoy7pzi3mffx7vdjdrq6vdkxpybiscucrwzuc4j3lzfnvldt5i/2.json',
-          files: [],
+          files: [
+            {
+              uri: 'https://nftstorage.link/ipfs/bafybeihummjrhhje4jfmu6mqjdmvmiu7j4k4j22xkpqmxsrmfj5yldq354/2.png',
+              cdn_uri:
+                'https://cdn.helius-rpc.com/cdn-cgi/image//https://nftstorage.link/ipfs/bafybeihummjrhhje4jfmu6mqjdmvmiu7j4k4j22xkpqmxsrmfj5yldq354/2.png',
+              mime: 'image/png',
+            },
+          ],
           metadata: {
+            attributes: [
+              {
+                value: 'True',
+                trait_type: 'Background',
+              },
+            ],
+            description: 'This is your NFT Description',
             name: 'Cloaked #3',
             symbol: '',
+            token_standard: 'ProgrammableNonFungible',
+          },
+          links: {
+            image:
+              'https://nftstorage.link/ipfs/bafybeihummjrhhje4jfmu6mqjdmvmiu7j4k4j22xkpqmxsrmfj5yldq354/2.png',
           },
         },
         authorities: [
@@ -408,6 +402,92 @@ test('it can fetch an nft assets by group with a sort', async (t) => {
         },
         supply: null,
         mutable: true,
+        burnt: false,
+      },
+      {
+        interface: 'Custom',
+        id: 'DkiWKRi5j9j2h58XGSWwRBXDu5HgFJYLvAS2Z7kueiAK',
+        content: {
+          $schema: 'https://schema.metaplex.com/nft1.0.json',
+          json_uri:
+            'https://nftstorage.link/ipfs/bafybeifuxoy7pzi3mffx7vdjdrq6vdkxpybiscucrwzuc4j3lzfnvldt5i/3.json',
+          files: [
+            {
+              uri: 'https://nftstorage.link/ipfs/bafybeihummjrhhje4jfmu6mqjdmvmiu7j4k4j22xkpqmxsrmfj5yldq354/3.png',
+              cdn_uri:
+                'https://cdn.helius-rpc.com/cdn-cgi/image//https://nftstorage.link/ipfs/bafybeihummjrhhje4jfmu6mqjdmvmiu7j4k4j22xkpqmxsrmfj5yldq354/3.png',
+              mime: 'image/png',
+            },
+          ],
+          metadata: {
+            attributes: [
+              {
+                value: 'True',
+                trait_type: 'Background',
+              },
+            ],
+            description: 'This is your NFT Description',
+            name: 'Cloaked #4',
+            symbol: '',
+            token_standard: 'ProgrammableNonFungible',
+          },
+          links: {
+            image:
+              'https://nftstorage.link/ipfs/bafybeihummjrhhje4jfmu6mqjdmvmiu7j4k4j22xkpqmxsrmfj5yldq354/3.png',
+          },
+        },
+        authorities: [
+          {
+            address: '5oCPMdoLFqXTvQ6n2x4XvJELnatBdG6N6D9EWyhvv8sK',
+            scopes: ['full'],
+          },
+        ],
+        compression: {
+          eligible: false,
+          compressed: false,
+          data_hash: '',
+          creator_hash: '',
+          asset_hash: '',
+          tree: '',
+          seq: 0,
+          leaf_id: 0,
+        },
+        grouping: [
+          {
+            group_key: 'collection',
+            group_value: 'C7JjL4tXgqDKsek44AoNQBEME2aCvry6xZdKA8CxLoZr',
+          },
+        ],
+        royalty: {
+          royalty_model: 'creators',
+          target: null,
+          percent: 0.01,
+          basis_points: 100,
+          primary_sale_happened: true,
+          locked: false,
+        },
+        creators: [
+          {
+            address: '6usSN6vfYch3k4ue88rhmRnJ5DUm1ziYt9J5XzxRdpcG',
+            share: 0,
+            verified: true,
+          },
+          {
+            address: '5oCPMdoLFqXTvQ6n2x4XvJELnatBdG6N6D9EWyhvv8sK',
+            share: 100,
+            verified: false,
+          },
+        ],
+        ownership: {
+          frozen: true,
+          delegated: false,
+          delegate: null,
+          ownership_model: 'single',
+          owner: '5oCPMdoLFqXTvQ6n2x4XvJELnatBdG6N6D9EWyhvv8sK',
+        },
+        supply: null,
+        mutable: true,
+        burnt: false,
       },
     ],
   });

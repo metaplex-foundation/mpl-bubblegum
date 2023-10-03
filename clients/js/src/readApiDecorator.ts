@@ -67,11 +67,11 @@ export const createReadApiDecorator = (
       'getAssetsByOwner',
       [
         input.owner,
-        input.after ?? null,
-        input.before ?? null,
+        input.sortBy ?? null,
         input.limit ?? null,
         input.page ?? 0,
-        input.sortBy ?? null,
+        input.before ?? null,
+        input.after ?? null,
       ]
     );
     if (!assetList) {
