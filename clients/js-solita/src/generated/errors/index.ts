@@ -719,6 +719,129 @@ createErrorFromCodeLookup.set(0x1791, () => new DecompressionDisabledError());
 createErrorFromNameLookup.set('DecompressionDisabled', () => new DecompressionDisabledError());
 
 /**
+ * MetadataImmutable: 'Metadata not mutable'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MetadataImmutableError extends Error {
+  readonly code: number = 0x1792;
+  readonly name: string = 'MetadataImmutable';
+  constructor() {
+    super('Metadata not mutable');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MetadataImmutableError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1792, () => new MetadataImmutableError());
+createErrorFromNameLookup.set('MetadataImmutable', () => new MetadataImmutableError());
+
+/**
+ * CollectionMismatch: 'Collection mismatch'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class CollectionMismatchError extends Error {
+  readonly code: number = 0x1793;
+  readonly name: string = 'CollectionMismatch';
+  constructor() {
+    super('Collection mismatch');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, CollectionMismatchError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1793, () => new CollectionMismatchError());
+createErrorFromNameLookup.set('CollectionMismatch', () => new CollectionMismatchError());
+
+/**
+ * MetadataArgsAmbiguous: 'MetadataArgs ambiguous'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MetadataArgsAmbiguousError extends Error {
+  readonly code: number = 0x1794;
+  readonly name: string = 'MetadataArgsAmbiguous';
+  constructor() {
+    super('MetadataArgs ambiguous');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MetadataArgsAmbiguousError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1794, () => new MetadataArgsAmbiguousError());
+createErrorFromNameLookup.set('MetadataArgsAmbiguous', () => new MetadataArgsAmbiguousError());
+
+/**
+ * MetadataArgsMissing: 'MetadataArgs missing'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MetadataArgsMissingError extends Error {
+  readonly code: number = 0x1795;
+  readonly name: string = 'MetadataArgsMissing';
+  constructor() {
+    super('MetadataArgs missing');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MetadataArgsMissingError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1795, () => new MetadataArgsMissingError());
+createErrorFromNameLookup.set('MetadataArgsMissing', () => new MetadataArgsMissingError());
+
+/**
+ * PrimarySaleCanOnlyBeFlippedToTrue: 'Can only update primary sale to true'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class PrimarySaleCanOnlyBeFlippedToTrueError extends Error {
+  readonly code: number = 0x1796;
+  readonly name: string = 'PrimarySaleCanOnlyBeFlippedToTrue';
+  constructor() {
+    super('Can only update primary sale to true');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, PrimarySaleCanOnlyBeFlippedToTrueError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1796, () => new PrimarySaleCanOnlyBeFlippedToTrueError());
+createErrorFromNameLookup.set(
+  'PrimarySaleCanOnlyBeFlippedToTrue',
+  () => new PrimarySaleCanOnlyBeFlippedToTrueError(),
+);
+
+/**
+ * CreatorDidNotUnverify: 'Creator did not unverify the metadata'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class CreatorDidNotUnverifyError extends Error {
+  readonly code: number = 0x1797;
+  readonly name: string = 'CreatorDidNotUnverify';
+  constructor() {
+    super('Creator did not unverify the metadata');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, CreatorDidNotUnverifyError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1797, () => new CreatorDidNotUnverifyError());
+createErrorFromNameLookup.set('CreatorDidNotUnverify', () => new CreatorDidNotUnverifyError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated
