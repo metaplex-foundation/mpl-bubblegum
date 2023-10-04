@@ -1,6 +1,7 @@
+#![allow(clippy::derivable_impls)]
 use solana_program::keccak;
 
-use crate::types::{LeafSchema, Version};
+use crate::types::{LeafSchema, UpdateArgs, Version};
 
 // LeafSchema
 
@@ -61,5 +62,21 @@ impl Version {
 impl Default for Version {
     fn default() -> Self {
         Version::V1
+    }
+}
+
+// UpdateArgs
+
+impl Default for UpdateArgs {
+    fn default() -> Self {
+        Self {
+            creators: None,
+            is_mutable: None,
+            name: None,
+            primary_sale_happened: None,
+            seller_fee_basis_points: None,
+            symbol: None,
+            uri: None,
+        }
     }
 }
