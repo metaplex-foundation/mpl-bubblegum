@@ -1,3 +1,6 @@
+use borsh::{BorshDeserialize, BorshSerialize};
+use types::{BubblegumEventType, LeafSchema, Version};
+
 mod generated;
 pub mod hash;
 mod traits;
@@ -53,5 +56,24 @@ pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
         [18, 135, 238, 168, 246, 195, 61, 115] => InstructionName::SetDecompressibleState,
 
         _ => InstructionName::Unknown,
+    }
+}
+
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+pub struct LeafSchemaEvent {
+    pub event_type: BubblegumEventType,
+    pub version: Version,
+    pub schema: LeafSchema,
+    pub leaf_hash: [u8; 32],
+}
+
+impl LeafSchemaEvent {
+    pub fn new(version: Version, schema: LeafSchema, leaf_hash: [u8; 32]) -> Self {
+        Self {
+            event_type: BubblegumEventType::LeafSchemaEvent,
+            version,
+            schema,
+            leaf_hash,
+        }
     }
 }
