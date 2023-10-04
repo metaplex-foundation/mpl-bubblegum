@@ -1571,124 +1571,6 @@
           }
         }
       ]
-    },
-    {
-      "name": "updateMetadataCollectionNft",
-      "docs": [
-        "Verifies a creator for a leaf node."
-      ],
-      "accounts": [
-        {
-          "name": "metadataBuffer",
-          "isMut": false,
-          "isSigner": false,
-          "isOptional": true
-        },
-        {
-          "name": "treeAuthority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "treeDelegate",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "collectionAuthority",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "collectionMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "collectionMetadata",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "collectionAuthorityRecordPda",
-          "isMut": false,
-          "isSigner": false,
-          "isOptional": true
-        },
-        {
-          "name": "leafOwner",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "leafDelegate",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "payer",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "merkleTree",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "logWrapper",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "compressionProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenMetadataProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "root",
-          "type": {
-            "array": [
-              "u8",
-              32
-            ]
-          }
-        },
-        {
-          "name": "nonce",
-          "type": "u64"
-        },
-        {
-          "name": "index",
-          "type": "u32"
-        },
-        {
-          "name": "currentMetadata",
-          "type": {
-            "option": {
-              "defined": "MetadataArgs"
-            }
-          }
-        },
-        {
-          "name": "updateArgs",
-          "type": {
-            "defined": "UpdateArgs"
-          }
-        }
-      ]
     }
   ],
   "accounts": [
@@ -2162,9 +2044,6 @@
           },
           {
             "name": "UpdateMetadata"
-          },
-          {
-            "name": "UpdateMetadataCollectionNft"
           }
         ]
       }
@@ -2363,21 +2242,11 @@
     },
     {
       "code": 6038,
-      "name": "NFTLinkedToCollection",
-      "msg": "NFT linked to collection"
-    },
-    {
-      "code": 6039,
-      "name": "NFTNotLinkedToVerifiedCollection",
-      "msg": "NFT not linked to verified collection"
-    },
-    {
-      "code": 6040,
       "name": "PrimarySaleCanOnlyBeFlippedToTrue",
       "msg": "Can only update primary sale to true"
     },
     {
-      "code": 6041,
+      "code": 6039,
       "name": "CreatorDidNotUnverify",
       "msg": "Creator did not unverify the metadata"
     }

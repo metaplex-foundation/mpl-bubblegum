@@ -799,56 +799,13 @@ createErrorFromCodeLookup.set(0x1795, () => new MetadataArgsMissingError());
 createErrorFromNameLookup.set('MetadataArgsMissing', () => new MetadataArgsMissingError());
 
 /**
- * NFTLinkedToCollection: 'NFT linked to collection'
- *
- * @category Errors
- * @category generated
- */
-export class NFTLinkedToCollectionError extends Error {
-  readonly code: number = 0x1796;
-  readonly name: string = 'NFTLinkedToCollection';
-  constructor() {
-    super('NFT linked to collection');
-    if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, NFTLinkedToCollectionError);
-    }
-  }
-}
-
-createErrorFromCodeLookup.set(0x1796, () => new NFTLinkedToCollectionError());
-createErrorFromNameLookup.set('NFTLinkedToCollection', () => new NFTLinkedToCollectionError());
-
-/**
- * NFTNotLinkedToVerifiedCollection: 'NFT not linked to verified collection'
- *
- * @category Errors
- * @category generated
- */
-export class NFTNotLinkedToVerifiedCollectionError extends Error {
-  readonly code: number = 0x1797;
-  readonly name: string = 'NFTNotLinkedToVerifiedCollection';
-  constructor() {
-    super('NFT not linked to verified collection');
-    if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, NFTNotLinkedToVerifiedCollectionError);
-    }
-  }
-}
-
-createErrorFromCodeLookup.set(0x1797, () => new NFTNotLinkedToVerifiedCollectionError());
-createErrorFromNameLookup.set(
-  'NFTNotLinkedToVerifiedCollection',
-  () => new NFTNotLinkedToVerifiedCollectionError(),
-);
-
-/**
  * PrimarySaleCanOnlyBeFlippedToTrue: 'Can only update primary sale to true'
  *
  * @category Errors
  * @category generated
  */
 export class PrimarySaleCanOnlyBeFlippedToTrueError extends Error {
-  readonly code: number = 0x1798;
+  readonly code: number = 0x1796;
   readonly name: string = 'PrimarySaleCanOnlyBeFlippedToTrue';
   constructor() {
     super('Can only update primary sale to true');
@@ -858,7 +815,7 @@ export class PrimarySaleCanOnlyBeFlippedToTrueError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x1798, () => new PrimarySaleCanOnlyBeFlippedToTrueError());
+createErrorFromCodeLookup.set(0x1796, () => new PrimarySaleCanOnlyBeFlippedToTrueError());
 createErrorFromNameLookup.set(
   'PrimarySaleCanOnlyBeFlippedToTrue',
   () => new PrimarySaleCanOnlyBeFlippedToTrueError(),
@@ -871,7 +828,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class CreatorDidNotUnverifyError extends Error {
-  readonly code: number = 0x1799;
+  readonly code: number = 0x1797;
   readonly name: string = 'CreatorDidNotUnverify';
   constructor() {
     super('Creator did not unverify the metadata');
@@ -881,7 +838,7 @@ export class CreatorDidNotUnverifyError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x1799, () => new CreatorDidNotUnverifyError());
+createErrorFromCodeLookup.set(0x1797, () => new CreatorDidNotUnverifyError());
 createErrorFromNameLookup.set('CreatorDidNotUnverify', () => new CreatorDidNotUnverifyError());
 
 /**

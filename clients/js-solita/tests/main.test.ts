@@ -33,7 +33,6 @@ import {
   TokenStandard,
   Creator,
   createMintToCollectionV1Instruction,
-  createUpdateMetadataCollectionNftInstruction,
   createSetDecompressibleStateInstruction,
   DecompressibleState,
 } from '../src/generated';
@@ -626,7 +625,7 @@ describe('Bubblegum tests', () => {
             );
           } catch (err) {
             assert(
-              err.message.includes('"Custom":6041'),
+              err.message.includes('"Custom":6039'),
               'Did not fail for correct reason! ' + err.message,
             );
           }
@@ -818,13 +817,9 @@ describe('Bubblegum tests', () => {
           primarySaleHappened: null,
           isMutable: null,
         };
-        const updateMetadataIx = createUpdateMetadataCollectionNftInstruction(
+        const updateMetadataIx = createUpdateMetadataInstruction(
           {
             metadataBuffer: BUBBLEGUM_PROGRAM_ID,
-            collectionAuthority: payer,
-            collectionMint: collection.mintAddress,
-            collectionMetadata: collection.metadataAddress,
-            collectionAuthorityRecordPda: BUBBLEGUM_PROGRAM_ID,
             treeAuthority,
             treeDelegate: payer,
             leafOwner: payer,

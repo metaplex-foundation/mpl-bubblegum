@@ -124,16 +124,10 @@ pub enum MplBubblegumError {
     /// 6037 (0x1795) - MetadataArgs missing
     #[error("MetadataArgs missing")]
     MetadataArgsMissing,
-    /// 6038 (0x1796) - NFT linked to collection
-    #[error("NFT linked to collection")]
-    NFTLinkedToCollection,
-    /// 6039 (0x1797) - NFT not linked to verified collection
-    #[error("NFT not linked to verified collection")]
-    NFTNotLinkedToVerifiedCollection,
-    /// 6040 (0x1798) - Can only update primary sale to true
+    /// 6038 (0x1796) - Can only update primary sale to true
     #[error("Can only update primary sale to true")]
     PrimarySaleCanOnlyBeFlippedToTrue,
-    /// 6041 (0x1799) - Creator did not unverify the metadata
+    /// 6039 (0x1797) - Creator did not unverify the metadata
     #[error("Creator did not unverify the metadata")]
     CreatorDidNotUnverify,
 }
