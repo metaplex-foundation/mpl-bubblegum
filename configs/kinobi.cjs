@@ -5,17 +5,59 @@ const k = require("@metaplex-foundation/kinobi");
 const clientDir = path.join(__dirname, "..", "clients");
 const idlDir = path.join(__dirname, "..", "idls");
 
-// Instanciate Kinobi.
-const kinobi = k.createFromIdls([
-  path.join(idlDir, "bubblegum.json"),
-  path.join(idlDir, "spl_account_compression.json"),
-  path.join(idlDir, "spl_noop.json"),
-]);
+// Instanciate Kinobi withtout DefaultVisitor.
+const kinobi = k.createFromIdls(
+  [
+    path.join(idlDir, "bubblegum.json"),
+    path.join(idlDir, "spl_account_compression.json"),
+    path.join(idlDir, "spl_noop.json"),
+  ],
+  false
+);
 
 // Update programs.
 kinobi.update(
   new k.UpdateProgramsVisitor({
     bubblegum: { name: "mplBubblegum" },
+  })
+);
+
+// Add wrapper defined type with a link to UpdateArgs. This is to avoid the
+// type being inlined in the instruction.
+kinobi.update(
+  new k.TransformNodesVisitor([
+    {
+      selector: { kind: "programNode", name: "mplBubblegum" },
+      transformer: (node) => {
+        k.assertProgramNode(node);
+        return k.programNode({
+          ...node,
+          definedTypes: [
+            ...node.definedTypes,
+            // wrapper type
+            k.definedTypeNode({
+              name: "UpdateArgsWrapper",
+              data: k.structTypeNode([
+                k.structFieldTypeNode({
+                  name: "wrapped",
+                  child: k.linkTypeNode("UpdateArgs"),
+                }),
+              ]),
+            }),
+          ],
+        });
+      },
+    },
+  ])
+);
+
+// Apply the DefaultVisitor.
+kinobi.update(new k.DefaultVisitor());
+
+// Delete the unnecessary UpdateArgsWrapper type.
+kinobi.update(
+  new k.UpdateDefinedTypesVisitor({
+    UpdateArgsWrapper: { delete: true },
   })
 );
 
@@ -310,6 +352,15 @@ kinobi.update(
       tokenStandard: k.vSome(k.vEnum("TokenStandard", "NonFungible")),
       uses: k.vNone(),
       tokenProgramVersion: k.vEnum("TokenProgramVersion", "Original"),
+    },
+    updateArgs: {
+      name: k.vNone(),
+      symbol: k.vNone(),
+      uri: k.vNone(),
+      creators: k.vNone(),
+      sellerFeeBasisPoints: k.vNone(),
+      primarySaleHappened: k.vNone(),
+      isMutable: k.vNone(),
     },
   })
 );
