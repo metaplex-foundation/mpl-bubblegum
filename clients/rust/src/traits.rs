@@ -1,5 +1,5 @@
 #![allow(clippy::derivable_impls)]
-use solana_program::keccak;
+use solana_program::{keccak, pubkey::Pubkey};
 
 use crate::types::{LeafSchema, UpdateArgs, Version};
 
@@ -31,6 +31,42 @@ impl LeafSchema {
     pub fn version(&self) -> Version {
         match self {
             LeafSchema::V1 { .. } => Version::V1,
+        }
+    }
+
+    pub fn id(&self) -> Pubkey {
+        match self {
+            LeafSchema::V1 { id, .. } => *id,
+        }
+    }
+
+    pub fn owner(&self) -> Pubkey {
+        match self {
+            LeafSchema::V1 { owner, .. } => *owner,
+        }
+    }
+
+    pub fn delegate(&self) -> Pubkey {
+        match self {
+            LeafSchema::V1 { delegate, .. } => *delegate,
+        }
+    }
+
+    pub fn nonce(&self) -> u64 {
+        match self {
+            LeafSchema::V1 { nonce, .. } => *nonce,
+        }
+    }
+
+    pub fn data_hash(&self) -> [u8; 32] {
+        match self {
+            LeafSchema::V1 { data_hash, .. } => *data_hash,
+        }
+    }
+
+    pub fn creator_hash(&self) -> [u8; 32] {
+        match self {
+            LeafSchema::V1 { creator_hash, .. } => *creator_hash,
         }
     }
 }
