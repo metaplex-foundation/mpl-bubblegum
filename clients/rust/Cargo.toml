@@ -16,7 +16,7 @@ test-sbf = []
 serde = ["dep:serde", "dep:serde_with", "kaigan/serde"]
 
 [dependencies]
-borsh = ">= 0.9"
+borsh = ">= 0.9, < 1.0"
 kaigan = ">= 0.1"
 num-derive = "^0.3"
 num-traits = "^0.2"
