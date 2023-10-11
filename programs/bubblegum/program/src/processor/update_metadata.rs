@@ -15,9 +15,6 @@ use crate::{
 
 #[derive(Accounts)]
 pub struct UpdateMetadata<'info> {
-    /// CHECK: Can optionally specify the old metadata of the leaf through an account to save transaction space
-    /// CHECK: This account is checked in the instruction
-    pub metadata_buffer: Option<UncheckedAccount<'info>>,
     #[account(
         seeds = [merkle_tree.key().as_ref()],
         bump,
@@ -37,41 +34,6 @@ pub struct UpdateMetadata<'info> {
     pub compression_program: Program<'info, SplAccountCompression>,
     pub token_metadata_program: Program<'info, MplTokenMetadata>,
     pub system_program: Program<'info, System>,
-}
-
-fn assert_signed_by_tree_delegate(
-    tree_config: &TreeConfig,
-    incoming_signer: &Signer,
-) -> Result<()> {
-    require!(
-        incoming_signer.key() == tree_config.tree_creator
-            || incoming_signer.key() == tree_config.tree_delegate,
-        BubblegumError::TreeAuthorityIncorrect,
-    );
-    Ok(())
-}
-
-fn fetch_current_metadata(
-    current_metadata_args: Option<MetadataArgs>,
-    metadata_buffer: &Option<UncheckedAccount>,
-) -> Result<MetadataArgs> {
-    let current_metadata = match current_metadata_args {
-        Some(metadata) => {
-            require!(
-                metadata_buffer.is_none(),
-                BubblegumError::MetadataArgsAmbiguous
-            );
-            metadata
-        }
-        None => {
-            let metadata_account = metadata_buffer
-                .as_ref()
-                .ok_or(BubblegumError::MetadataArgsMissing)?;
-            let metadata_data = metadata_account.try_borrow_data()?;
-            MetadataArgs::deserialize(&mut metadata_data.as_ref())?
-        }
-    };
-    Ok(current_metadata)
 }
 
 fn all_verified_creators_in_a_are_in_b(a: &[Creator], b: &[Creator], exception: Pubkey) -> bool {
@@ -207,13 +169,14 @@ pub fn update_metadata<'info>(
     root: [u8; 32],
     nonce: u64,
     index: u32,
-    current_metadata: Option<MetadataArgs>,
+    current_metadata: MetadataArgs,
     update_args: UpdateArgs,
 ) -> Result<()> {
-    assert_signed_by_tree_delegate(&ctx.accounts.tree_authority, &ctx.accounts.tree_delegate)?;
-
-    // Determine how the user opted to pass in the old MetadataArgs
-    let current_metadata = fetch_current_metadata(current_metadata, &ctx.accounts.metadata_buffer)?;
+    require!(
+        ctx.accounts.tree_delegate.key() == ctx.accounts.tree_authority.tree_creator
+            || ctx.accounts.tree_delegate.key() == ctx.accounts.tree_authority.tree_delegate,
+        BubblegumError::TreeAuthorityIncorrect,
+    );
 
     process_update_metadata(
         &ctx.accounts.merkle_tree.to_account_info(),

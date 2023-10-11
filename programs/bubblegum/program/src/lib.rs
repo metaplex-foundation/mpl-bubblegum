@@ -271,7 +271,7 @@ pub mod bubblegum {
         root: [u8; 32],
         nonce: u64,
         index: u32,
-        current_metadata: Option<MetadataArgs>,
+        current_metadata: MetadataArgs,
         update_args: UpdateArgs,
     ) -> Result<()> {
         processor::update_metadata(ctx, root, nonce, index, current_metadata, update_args)
