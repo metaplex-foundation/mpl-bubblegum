@@ -1482,12 +1482,6 @@
       ],
       "accounts": [
         {
-          "name": "metadataBuffer",
-          "isMut": false,
-          "isSigner": false,
-          "isOptional": true
-        },
-        {
           "name": "treeAuthority",
           "isMut": false,
           "isSigner": false
@@ -1559,9 +1553,7 @@
         {
           "name": "currentMetadata",
           "type": {
-            "option": {
-              "defined": "MetadataArgs"
-            }
+            "defined": "MetadataArgs"
           }
         },
         {

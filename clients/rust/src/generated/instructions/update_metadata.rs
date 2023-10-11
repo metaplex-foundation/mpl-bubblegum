@@ -12,8 +12,6 @@ use borsh::BorshSerialize;
 
 /// Accounts.
 pub struct UpdateMetadata {
-    pub metadata_buffer: Option<solana_program::pubkey::Pubkey>,
-
     pub tree_config: solana_program::pubkey::Pubkey,
 
     pub tree_creator_or_delegate: solana_program::pubkey::Pubkey,
@@ -48,18 +46,7 @@ impl UpdateMetadata {
         args: UpdateMetadataInstructionArgs,
         remaining_accounts: &[solana_program::instruction::AccountMeta],
     ) -> solana_program::instruction::Instruction {
-        let mut accounts = Vec::with_capacity(11 + remaining_accounts.len());
-        if let Some(metadata_buffer) = self.metadata_buffer {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-                metadata_buffer,
-                false,
-            ));
-        } else {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-                crate::MPL_BUBBLEGUM_ID,
-                false,
-            ));
-        }
+        let mut accounts = Vec::with_capacity(10 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.tree_config,
             false,
@@ -131,14 +118,13 @@ pub struct UpdateMetadataInstructionArgs {
     pub root: [u8; 32],
     pub nonce: u64,
     pub index: u32,
-    pub current_metadata: Option<MetadataArgs>,
+    pub current_metadata: MetadataArgs,
     pub update_args: UpdateArgs,
 }
 
 /// Instruction builder.
 #[derive(Default)]
 pub struct UpdateMetadataBuilder {
-    metadata_buffer: Option<solana_program::pubkey::Pubkey>,
     tree_config: Option<solana_program::pubkey::Pubkey>,
     tree_creator_or_delegate: Option<solana_program::pubkey::Pubkey>,
     leaf_owner: Option<solana_program::pubkey::Pubkey>,
@@ -160,15 +146,6 @@ pub struct UpdateMetadataBuilder {
 impl UpdateMetadataBuilder {
     pub fn new() -> Self {
         Self::default()
-    }
-    /// `[optional account]`
-    #[inline(always)]
-    pub fn metadata_buffer(
-        &mut self,
-        metadata_buffer: Option<solana_program::pubkey::Pubkey>,
-    ) -> &mut Self {
-        self.metadata_buffer = metadata_buffer;
-        self
     }
     #[inline(always)]
     pub fn tree_config(&mut self, tree_config: solana_program::pubkey::Pubkey) -> &mut Self {
@@ -248,7 +225,6 @@ impl UpdateMetadataBuilder {
         self.index = Some(index);
         self
     }
-    /// `[optional argument]`
     #[inline(always)]
     pub fn current_metadata(&mut self, current_metadata: MetadataArgs) -> &mut Self {
         self.current_metadata = Some(current_metadata);
@@ -281,7 +257,6 @@ impl UpdateMetadataBuilder {
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         let accounts =
             UpdateMetadata {
-                metadata_buffer: self.metadata_buffer,
                 tree_config: self.tree_config.expect("tree_config is not set"),
                 tree_creator_or_delegate: self
                     .tree_creator_or_delegate
@@ -307,7 +282,10 @@ impl UpdateMetadataBuilder {
             root: self.root.clone().expect("root is not set"),
             nonce: self.nonce.clone().expect("nonce is not set"),
             index: self.index.clone().expect("index is not set"),
-            current_metadata: self.current_metadata.clone(),
+            current_metadata: self
+                .current_metadata
+                .clone()
+                .expect("current_metadata is not set"),
             update_args: self.update_args.clone().expect("update_args is not set"),
         };
 
@@ -317,8 +295,6 @@ impl UpdateMetadataBuilder {
 
 /// `update_metadata` CPI accounts.
 pub struct UpdateMetadataCpiAccounts<'a, 'b> {
-    pub metadata_buffer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-
     pub tree_config: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub tree_creator_or_delegate: &'b solana_program::account_info::AccountInfo<'a>,
@@ -344,8 +320,6 @@ pub struct UpdateMetadataCpiAccounts<'a, 'b> {
 pub struct UpdateMetadataCpi<'a, 'b> {
     /// The program to invoke.
     pub __program: &'b solana_program::account_info::AccountInfo<'a>,
-
-    pub metadata_buffer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
 
     pub tree_config: &'b solana_program::account_info::AccountInfo<'a>,
 
@@ -378,7 +352,6 @@ impl<'a, 'b> UpdateMetadataCpi<'a, 'b> {
     ) -> Self {
         Self {
             __program: program,
-            metadata_buffer: accounts.metadata_buffer,
             tree_config: accounts.tree_config,
             tree_creator_or_delegate: accounts.tree_creator_or_delegate,
             leaf_owner: accounts.leaf_owner,
@@ -425,18 +398,7 @@ impl<'a, 'b> UpdateMetadataCpi<'a, 'b> {
             bool,
         )],
     ) -> solana_program::entrypoint::ProgramResult {
-        let mut accounts = Vec::with_capacity(11 + remaining_accounts.len());
-        if let Some(metadata_buffer) = self.metadata_buffer {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-                *metadata_buffer.key,
-                false,
-            ));
-        } else {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-                crate::MPL_BUBBLEGUM_ID,
-                false,
-            ));
-        }
+        let mut accounts = Vec::with_capacity(10 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             *self.tree_config.key,
             false,
@@ -493,11 +455,8 @@ impl<'a, 'b> UpdateMetadataCpi<'a, 'b> {
             accounts,
             data,
         };
-        let mut account_infos = Vec::with_capacity(11 + 1 + remaining_accounts.len());
+        let mut account_infos = Vec::with_capacity(10 + 1 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
-        if let Some(metadata_buffer) = self.metadata_buffer {
-            account_infos.push(metadata_buffer.clone());
-        }
         account_infos.push(self.tree_config.clone());
         account_infos.push(self.tree_creator_or_delegate.clone());
         account_infos.push(self.leaf_owner.clone());
@@ -529,7 +488,6 @@ impl<'a, 'b> UpdateMetadataCpiBuilder<'a, 'b> {
     pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(UpdateMetadataCpiBuilderInstruction {
             __program: program,
-            metadata_buffer: None,
             tree_config: None,
             tree_creator_or_delegate: None,
             leaf_owner: None,
@@ -548,15 +506,6 @@ impl<'a, 'b> UpdateMetadataCpiBuilder<'a, 'b> {
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
-    }
-    /// `[optional account]`
-    #[inline(always)]
-    pub fn metadata_buffer(
-        &mut self,
-        metadata_buffer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    ) -> &mut Self {
-        self.instruction.metadata_buffer = metadata_buffer;
-        self
     }
     #[inline(always)]
     pub fn tree_config(
@@ -650,7 +599,6 @@ impl<'a, 'b> UpdateMetadataCpiBuilder<'a, 'b> {
         self.instruction.index = Some(index);
         self
     }
-    /// `[optional argument]`
     #[inline(always)]
     pub fn current_metadata(&mut self, current_metadata: MetadataArgs) -> &mut Self {
         self.instruction.current_metadata = Some(current_metadata);
@@ -706,7 +654,11 @@ impl<'a, 'b> UpdateMetadataCpiBuilder<'a, 'b> {
             root: self.instruction.root.clone().expect("root is not set"),
             nonce: self.instruction.nonce.clone().expect("nonce is not set"),
             index: self.instruction.index.clone().expect("index is not set"),
-            current_metadata: self.instruction.current_metadata.clone(),
+            current_metadata: self
+                .instruction
+                .current_metadata
+                .clone()
+                .expect("current_metadata is not set"),
             update_args: self
                 .instruction
                 .update_args
@@ -715,8 +667,6 @@ impl<'a, 'b> UpdateMetadataCpiBuilder<'a, 'b> {
         };
         let instruction = UpdateMetadataCpi {
             __program: self.instruction.__program,
-
-            metadata_buffer: self.instruction.metadata_buffer,
 
             tree_config: self
                 .instruction
@@ -772,7 +722,6 @@ impl<'a, 'b> UpdateMetadataCpiBuilder<'a, 'b> {
 
 struct UpdateMetadataCpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_program::account_info::AccountInfo<'a>,
-    metadata_buffer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     tree_config: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     tree_creator_or_delegate: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     leaf_owner: Option<&'b solana_program::account_info::AccountInfo<'a>>,
