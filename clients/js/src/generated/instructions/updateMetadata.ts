@@ -8,8 +8,6 @@
 
 import {
   Context,
-  Option,
-  OptionOrNullable,
   Pda,
   PublicKey,
   Signer,
@@ -21,7 +19,6 @@ import {
   array,
   bytes,
   mapSerializer,
-  option,
   struct,
   u32,
   u64,
@@ -46,7 +43,6 @@ import {
 
 // Accounts.
 export type UpdateMetadataInstructionAccounts = {
-  metadataBuffer?: PublicKey | Pda;
   treeConfig?: PublicKey | Pda;
   treeCreatorOrDelegate?: Signer;
   leafOwner: PublicKey | Pda;
@@ -65,7 +61,7 @@ export type UpdateMetadataInstructionData = {
   root: Uint8Array;
   nonce: bigint;
   index: number;
-  currentMetadata: Option<MetadataArgs>;
+  currentMetadata: MetadataArgs;
   updateArgs: UpdateArgs;
 };
 
@@ -73,7 +69,7 @@ export type UpdateMetadataInstructionDataArgs = {
   root: Uint8Array;
   nonce: number | bigint;
   index: number;
-  currentMetadata: OptionOrNullable<MetadataArgsArgs>;
+  currentMetadata: MetadataArgsArgs;
   updateArgs: UpdateArgsArgs;
 };
 
@@ -92,7 +88,7 @@ export function getUpdateMetadataInstructionDataSerializer(): Serializer<
         ['root', bytes({ size: 32 })],
         ['nonce', u64()],
         ['index', u32()],
-        ['currentMetadata', option(getMetadataArgsSerializer())],
+        ['currentMetadata', getMetadataArgsSerializer()],
         ['updateArgs', getUpdateArgsSerializer()],
       ],
       { description: 'UpdateMetadataInstructionData' }
@@ -123,46 +119,41 @@ export function updateMetadata(
 
   // Accounts.
   const resolvedAccounts: ResolvedAccountsWithIndices = {
-    metadataBuffer: {
-      index: 0,
-      isWritable: false,
-      value: input.metadataBuffer ?? null,
-    },
     treeConfig: {
-      index: 1,
+      index: 0,
       isWritable: false,
       value: input.treeConfig ?? null,
     },
     treeCreatorOrDelegate: {
-      index: 2,
+      index: 1,
       isWritable: false,
       value: input.treeCreatorOrDelegate ?? null,
     },
-    leafOwner: { index: 3, isWritable: false, value: input.leafOwner ?? null },
+    leafOwner: { index: 2, isWritable: false, value: input.leafOwner ?? null },
     leafDelegate: {
-      index: 4,
+      index: 3,
       isWritable: false,
       value: input.leafDelegate ?? null,
     },
-    payer: { index: 5, isWritable: false, value: input.payer ?? null },
-    merkleTree: { index: 6, isWritable: true, value: input.merkleTree ?? null },
+    payer: { index: 4, isWritable: false, value: input.payer ?? null },
+    merkleTree: { index: 5, isWritable: true, value: input.merkleTree ?? null },
     logWrapper: {
-      index: 7,
+      index: 6,
       isWritable: false,
       value: input.logWrapper ?? null,
     },
     compressionProgram: {
-      index: 8,
+      index: 7,
       isWritable: false,
       value: input.compressionProgram ?? null,
     },
     tokenMetadataProgram: {
-      index: 9,
+      index: 8,
       isWritable: false,
       value: input.tokenMetadataProgram ?? null,
     },
     systemProgram: {
-      index: 10,
+      index: 9,
       isWritable: false,
       value: input.systemProgram ?? null,
     },

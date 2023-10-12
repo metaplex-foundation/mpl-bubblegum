@@ -345,7 +345,6 @@ describe('Bubblegum tests', () => {
           };
           const updateMetadataIx = createUpdateMetadataInstruction(
             {
-              metadataBuffer: BUBBLEGUM_PROGRAM_ID,
               treeAuthority,
               treeDelegate: payer,
               leafOwner: payer,
@@ -421,7 +420,6 @@ describe('Bubblegum tests', () => {
           };
           const updateMetadataIx = createUpdateMetadataInstruction(
             {
-              metadataBuffer: BUBBLEGUM_PROGRAM_ID,
               treeAuthority,
               treeDelegate: payer,
               leafOwner: payer,
@@ -483,7 +481,6 @@ describe('Bubblegum tests', () => {
           };
           const updateMetadataIx = createUpdateMetadataInstruction(
             {
-              metadataBuffer: BUBBLEGUM_PROGRAM_ID,
               treeAuthority,
               treeDelegate: payer,
               leafOwner: payer,
@@ -594,7 +591,6 @@ describe('Bubblegum tests', () => {
           };
           const updateMetadataIx = createUpdateMetadataInstruction(
             {
-              metadataBuffer: BUBBLEGUM_PROGRAM_ID,
               treeAuthority,
               treeDelegate: payer,
               leafOwner: payer,
@@ -707,7 +703,6 @@ describe('Bubblegum tests', () => {
           };
           const updateMetadataIx = createUpdateMetadataInstruction(
             {
-              metadataBuffer: BUBBLEGUM_PROGRAM_ID,
               treeAuthority,
               treeDelegate: payer,
               leafOwner: payer,
@@ -819,7 +814,6 @@ describe('Bubblegum tests', () => {
         };
         const updateMetadataIx = createUpdateMetadataInstruction(
           {
-            metadataBuffer: BUBBLEGUM_PROGRAM_ID,
             treeAuthority,
             treeDelegate: payer,
             leafOwner: payer,

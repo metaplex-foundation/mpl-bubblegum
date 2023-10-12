@@ -19,7 +19,7 @@ export type UpdateMetadataInstructionArgs = {
   root: number[] /* size: 32 */;
   nonce: beet.bignum;
   index: number;
-  currentMetadata: beet.COption<MetadataArgs>;
+  currentMetadata: MetadataArgs;
   updateArgs: UpdateArgs;
 };
 /**
@@ -37,7 +37,7 @@ export const updateMetadataStruct = new beet.FixableBeetArgsStruct<
     ['root', beet.uniformFixedSizeArray(beet.u8, 32)],
     ['nonce', beet.u64],
     ['index', beet.u32],
-    ['currentMetadata', beet.coption(metadataArgsBeet)],
+    ['currentMetadata', metadataArgsBeet],
     ['updateArgs', updateArgsBeet],
   ],
   'UpdateMetadataInstructionArgs',
@@ -45,7 +45,6 @@ export const updateMetadataStruct = new beet.FixableBeetArgsStruct<
 /**
  * Accounts required by the _updateMetadata_ instruction
  *
- * @property [] metadataBuffer (optional)
  * @property [] treeAuthority
  * @property [**signer**] treeDelegate
  * @property [] leafOwner
@@ -60,7 +59,6 @@ export const updateMetadataStruct = new beet.FixableBeetArgsStruct<
  * @category generated
  */
 export type UpdateMetadataInstructionAccounts = {
-  metadataBuffer?: web3.PublicKey;
   treeAuthority: web3.PublicKey;
   treeDelegate: web3.PublicKey;
   leafOwner: web3.PublicKey;
@@ -79,9 +77,6 @@ export const updateMetadataInstructionDiscriminator = [170, 182, 43, 239, 97, 78
 /**
  * Creates a _UpdateMetadata_ instruction.
  *
- * Optional accounts that are not provided default to the program ID since
- * this was indicated in the IDL from which this instruction was generated.
- *
  * @param accounts that will be accessed while the instruction is processed
  * @param args to provide as instruction data to the program
  *
@@ -99,11 +94,6 @@ export function createUpdateMetadataInstruction(
     ...args,
   });
   const keys: web3.AccountMeta[] = [
-    {
-      pubkey: accounts.metadataBuffer ?? programId,
-      isWritable: false,
-      isSigner: false,
-    },
     {
       pubkey: accounts.treeAuthority,
       isWritable: false,
