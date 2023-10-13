@@ -7,8 +7,12 @@ import {
   some,
   wrapNullable,
 } from '@metaplex-foundation/umi';
+import {
+  DasApiAsset,
+  DasApiInterface,
+  GetAssetProofRpcResponse,
+} from '@metaplex-foundation/digital-asset-standard-api';
 import { MetadataArgs, TokenProgramVersion, TokenStandard } from './generated';
-import { DasApiAsset, DasApiInterface, GetAssetProofRpcResponse } from '@metaplex-foundation/digital-asset-standard-api';
 
 export type AssetWithProof = {
   leafOwner: PublicKey;
