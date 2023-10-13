@@ -1,14 +1,14 @@
 import { Umi, createUmi, publicKey } from '@metaplex-foundation/umi';
 import { testPlugins } from '@metaplex-foundation/umi-bundle-tests';
 import anyTest, { TestFn } from 'ava';
+import { mplBubblegum } from '../src';
 import {
+  DasApiAsset,
+  DasApiAssetCreator,
+  DasApiAssetGrouping,
   GetAssetProofRpcResponse,
-  ReadApiAsset,
-  ReadApiAssetCreator,
-  ReadApiAssetGrouping,
-  mplBubblegum,
-  readApi,
-} from '../src';
+  dasApi,
+} from '@metaplex-foundation/digital-asset-standard-api';
 
 const test = anyTest as TestFn<{ umi: Umi }>;
 const endpoint = process.env.READ_API_RPC_DEVNET;
@@ -17,7 +17,7 @@ test.before(async (t) => {
   t.context.umi = createUmi()
     .use(testPlugins(endpoint))
     .use(mplBubblegum())
-    .use(readApi());
+    .use(dasApi());
 });
 
 test('it can fetch a compressed asset by ID', async (t) => {
@@ -29,7 +29,7 @@ test('it can fetch a compressed asset by ID', async (t) => {
   const asset = await umi.rpc.getAsset(assetId);
 
   // Then we expect the following data.
-  t.like(asset, <ReadApiAsset>{
+  t.like(asset, <DasApiAsset>{
     interface: 'V1_NFT',
     id: assetId,
     content: {
@@ -52,7 +52,7 @@ test('it can fetch a compressed asset by ID', async (t) => {
       seq: 1,
       leaf_id: 0,
     },
-    grouping: [] as ReadApiAssetGrouping[],
+    grouping: [] as DasApiAssetGrouping[],
     royalty: {
       royalty_model: 'creators',
       target: null,
@@ -61,7 +61,7 @@ test('it can fetch a compressed asset by ID', async (t) => {
       primary_sale_happened: false,
       locked: false,
     },
-    creators: [] as ReadApiAssetCreator[],
+    creators: [] as DasApiAssetCreator[],
     ownership: {
       frozen: false,
       delegated: false,

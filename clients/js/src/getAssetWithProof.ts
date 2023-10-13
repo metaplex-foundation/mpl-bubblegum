@@ -8,8 +8,7 @@ import {
   wrapNullable,
 } from '@metaplex-foundation/umi';
 import { MetadataArgs, TokenProgramVersion, TokenStandard } from './generated';
-import { ReadApiInterface } from './readApiDecorator';
-import { GetAssetProofRpcResponse, ReadApiAsset } from './readApiTypes';
+import { DasApiAsset, DasApiInterface, GetAssetProofRpcResponse } from '@metaplex-foundation/digital-asset-standard-api';
 
 export type AssetWithProof = {
   leafOwner: PublicKey;
@@ -22,12 +21,12 @@ export type AssetWithProof = {
   index: number;
   proof: PublicKey[];
   metadata: MetadataArgs;
-  rpcAsset: ReadApiAsset;
+  rpcAsset: DasApiAsset;
   rpcAssetProof: GetAssetProofRpcResponse;
 };
 
 export const getAssetWithProof = async (
-  context: Pick<Context, 'rpc'> & { rpc: ReadApiInterface },
+  context: Pick<Context, 'rpc'> & { rpc: DasApiInterface },
   assetId: PublicKey
 ): Promise<AssetWithProof> => {
   const [rpcAsset, rpcAssetProof] = await Promise.all([

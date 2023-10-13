@@ -1,8 +1,6 @@
 import { PublicKey, generateSigner, publicKey } from '@metaplex-foundation/umi';
 import test from 'ava';
 import {
-  GetAssetProofRpcResponse,
-  ReadApiAsset,
   delegate,
   fetchMerkleTree,
   findLeafAssetIdPda,
@@ -16,6 +14,10 @@ import {
   verifyLeaf,
 } from '../src';
 import { createTree, createUmi, mint } from './_setup';
+import {
+  DasApiAsset,
+  GetAssetProofRpcResponse,
+} from '@metaplex-foundation/digital-asset-standard-api';
 
 test('it can transfer a compressed NFT', async (t) => {
   // Given a tree with a minted NFT owned by leafOwnerA.
@@ -209,7 +211,7 @@ test('it can transfer a compressed NFT using the getAssetWithProof helper', asyn
       data_hash: publicKey(hashMetadataData(metadata)),
       creator_hash: publicKey(hashMetadataCreators(metadata.creators)),
     },
-  } as ReadApiAsset;
+  } as DasApiAsset;
   const rpcAssetProof = {
     proof: getMerkleProof([...preMints.map((m) => m.leaf), leaf], 5, leaf),
     root: publicKey(getCurrentRoot(merkleTreeAccount.tree)),

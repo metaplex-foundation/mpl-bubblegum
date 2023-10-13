@@ -1,6 +1,9 @@
 lockfileVersion: '6.0'
 
 dependencies:
+  '@metaplex-foundation/digital-asset-standard-api':
+    specifier: ^1.0.0-alpha.0
+    version: 1.0.0-alpha.0(@metaplex-foundation/umi@0.8.2)
   '@metaplex-foundation/mpl-token-metadata':
     specifier: 3.0.0-alpha.27
     version: 3.0.0-alpha.27(@metaplex-foundation/umi@0.8.2)
@@ -2040,6 +2043,14 @@ packages:
       - encoding
       - supports-color
     dev: true
+
+  /@metaplex-foundation/digital-asset-standard-api@1.0.0-alpha.0(@metaplex-foundation/umi@0.8.2):
+    resolution: {integrity: sha512-6L+pIt0Dab7Mv/ElduY9HAUqCSL5zzdCUC5dVmt//j4F7j8ZU7T+bxEXcrS4wGDMpmNsvhHUj4JP/qBAHxBJMw==}
+    peerDependencies:
+      '@metaplex-foundation/umi': ^0.8.2
+    dependencies:
+      '@metaplex-foundation/umi': 0.8.2
+    dev: false
 
   /@metaplex-foundation/mpl-token-metadata@3.0.0-alpha.27(@metaplex-foundation/umi@0.8.2):
     resolution: {integrity: sha512-MSERz5HB2XZ/K+FOMh0tPeqcZZEpGVzdy7e+Cy3MHg7x52JtbGBDtWIoxBJn1OBZayCBfX9gytEoqrXe2YRGqQ==}
