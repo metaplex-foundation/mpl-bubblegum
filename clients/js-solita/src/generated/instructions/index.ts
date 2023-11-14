@@ -14,5 +14,6 @@ export * from './transfer';
 export * from './unverifyCollection';
 export * from './unverifyCreator';
 export * from './updateMetadata';
+export * from './updateMetadataCollectionNft';
 export * from './verifyCollection';
 export * from './verifyCreator';
