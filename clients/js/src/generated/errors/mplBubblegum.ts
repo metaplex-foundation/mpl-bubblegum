@@ -543,17 +543,46 @@ export class MetadataArgsMissingError extends ProgramError {
 codeToErrorMap.set(0x1795, MetadataArgsMissingError);
 nameToErrorMap.set('MetadataArgsMissing', MetadataArgsMissingError);
 
+/** NFTLinkedToCollection: NFT linked to collection */
+export class NFTLinkedToCollectionError extends ProgramError {
+  readonly name: string = 'NFTLinkedToCollection';
+
+  readonly code: number = 0x1796; // 6038
+
+  constructor(program: Program, cause?: Error) {
+    super('NFT linked to collection', program, cause);
+  }
+}
+codeToErrorMap.set(0x1796, NFTLinkedToCollectionError);
+nameToErrorMap.set('NFTLinkedToCollection', NFTLinkedToCollectionError);
+
+/** NFTNotLinkedToVerifiedCollection: NFT not linked to verified collection */
+export class NFTNotLinkedToVerifiedCollectionError extends ProgramError {
+  readonly name: string = 'NFTNotLinkedToVerifiedCollection';
+
+  readonly code: number = 0x1797; // 6039
+
+  constructor(program: Program, cause?: Error) {
+    super('NFT not linked to verified collection', program, cause);
+  }
+}
+codeToErrorMap.set(0x1797, NFTNotLinkedToVerifiedCollectionError);
+nameToErrorMap.set(
+  'NFTNotLinkedToVerifiedCollection',
+  NFTNotLinkedToVerifiedCollectionError
+);
+
 /** PrimarySaleCanOnlyBeFlippedToTrue: Can only update primary sale to true */
 export class PrimarySaleCanOnlyBeFlippedToTrueError extends ProgramError {
   readonly name: string = 'PrimarySaleCanOnlyBeFlippedToTrue';
 
-  readonly code: number = 0x1796; // 6038
+  readonly code: number = 0x1798; // 6040
 
   constructor(program: Program, cause?: Error) {
     super('Can only update primary sale to true', program, cause);
   }
 }
-codeToErrorMap.set(0x1796, PrimarySaleCanOnlyBeFlippedToTrueError);
+codeToErrorMap.set(0x1798, PrimarySaleCanOnlyBeFlippedToTrueError);
 nameToErrorMap.set(
   'PrimarySaleCanOnlyBeFlippedToTrue',
   PrimarySaleCanOnlyBeFlippedToTrueError
@@ -563,13 +592,13 @@ nameToErrorMap.set(
 export class CreatorDidNotUnverifyError extends ProgramError {
   readonly name: string = 'CreatorDidNotUnverify';
 
-  readonly code: number = 0x1797; // 6039
+  readonly code: number = 0x1799; // 6041
 
   constructor(program: Program, cause?: Error) {
     super('Creator did not unverify the metadata', program, cause);
   }
 }
-codeToErrorMap.set(0x1797, CreatorDidNotUnverifyError);
+codeToErrorMap.set(0x1799, CreatorDidNotUnverifyError);
 nameToErrorMap.set('CreatorDidNotUnverify', CreatorDidNotUnverifyError);
 
 /**
