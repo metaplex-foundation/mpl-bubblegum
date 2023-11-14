@@ -2,12 +2,12 @@ use anchor_lang::prelude::*;
 use spl_account_compression::{program::SplAccountCompression, wrap_application_data_v1, Noop};
 
 use crate::{
-    asserts::assert_metadata_is_mpl_compatible,
+    asserts::{assert_has_collection_authority, assert_metadata_is_mpl_compatible},
     error::BubblegumError,
     state::{
         leaf_schema::LeafSchema,
-        metaplex_adapter::{Creator, MetadataArgs, UpdateArgs},
-        metaplex_anchor::MplTokenMetadata,
+        metaplex_adapter::{Collection, Creator, MetadataArgs, UpdateArgs},
+        metaplex_anchor::{MplTokenMetadata, TokenMetadata},
         TreeConfig,
     },
     utils::{get_asset_id, hash_creators, hash_metadata, replace_leaf},
@@ -34,6 +34,80 @@ pub struct UpdateMetadata<'info> {
     pub compression_program: Program<'info, SplAccountCompression>,
     pub token_metadata_program: Program<'info, MplTokenMetadata>,
     pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct UpdateMetadataCollectionNFT<'info> {
+    #[account(
+        seeds = [merkle_tree.key().as_ref()],
+        bump,
+    )]
+    /// CHECK: This account is neither written to nor read from.
+    pub tree_authority: Account<'info, TreeConfig>,
+    pub tree_delegate: Signer<'info>,
+    pub collection_authority: Signer<'info>,
+    /// CHECK: This account is checked in the instruction
+    pub collection_mint: UncheckedAccount<'info>,
+    pub collection_metadata: Box<Account<'info, TokenMetadata>>,
+    /// CHECK: This account is checked in the instruction
+    pub collection_authority_record_pda: Option<UncheckedAccount<'info>>,
+    /// CHECK: This account is checked in the instruction
+    pub leaf_owner: UncheckedAccount<'info>,
+    /// CHECK: This account is checked in the instruction
+    pub leaf_delegate: UncheckedAccount<'info>,
+    pub payer: Signer<'info>,
+    #[account(mut)]
+    /// CHECK: This account is modified in the downstream program
+    pub merkle_tree: UncheckedAccount<'info>,
+    pub log_wrapper: Program<'info, Noop>,
+    pub compression_program: Program<'info, SplAccountCompression>,
+    pub token_metadata_program: Program<'info, MplTokenMetadata>,
+    pub system_program: Program<'info, System>,
+}
+
+fn assert_authority_matches_collection<'info>(
+    collection: &Collection,
+    collection_authority: &AccountInfo<'info>,
+    collection_authority_record_pda: &Option<UncheckedAccount<'info>>,
+    collection_mint: &AccountInfo<'info>,
+    collection_metadata_account_info: &AccountInfo,
+    collection_metadata: &TokenMetadata,
+    token_metadata_program: &Program<'info, MplTokenMetadata>,
+) -> Result<()> {
+    // Mint account must match Collection mint
+    require!(
+        collection_mint.key() == collection.key,
+        BubblegumError::CollectionMismatch
+    );
+    // Metadata mint must match Collection mint
+    require!(
+        collection_metadata.mint == collection.key,
+        BubblegumError::CollectionMismatch
+    );
+    // Verify correct account ownerships.
+    require!(
+        *collection_metadata_account_info.owner == token_metadata_program.key(),
+        BubblegumError::IncorrectOwner
+    );
+    // Collection mint must be owned by SPL token
+    require!(
+        *collection_mint.owner == spl_token::id(),
+        BubblegumError::IncorrectOwner
+    );
+
+    let collection_authority_record = collection_authority_record_pda
+        .as_ref()
+        .map(|authority_record_pda| authority_record_pda.to_account_info());
+
+    // Assert that the correct Collection Authority was provided using token-metadata
+    assert_has_collection_authority(
+        collection_metadata,
+        collection_mint.key,
+        collection_authority.key,
+        collection_authority_record.as_ref(),
+    )?;
+
+    Ok(())
 }
 
 fn all_verified_creators_in_a_are_in_b(a: &[Creator], b: &[Creator], exception: Pubkey) -> bool {
@@ -177,6 +251,62 @@ pub fn update_metadata<'info>(
             || ctx.accounts.tree_delegate.key() == ctx.accounts.tree_authority.tree_delegate,
         BubblegumError::TreeAuthorityIncorrect,
     );
+
+    // NFTs which are linked to verified collections cannot be updated through this instruction
+    require!(
+        current_metadata.collection.is_none()
+            || !current_metadata.collection.as_ref().unwrap().verified,
+        BubblegumError::NFTLinkedToCollection
+    );
+
+    process_update_metadata(
+        &ctx.accounts.merkle_tree.to_account_info(),
+        &ctx.accounts.tree_delegate,
+        &ctx.accounts.leaf_owner,
+        &ctx.accounts.leaf_delegate,
+        &ctx.accounts.compression_program.to_account_info(),
+        &ctx.accounts.tree_authority.to_account_info(),
+        *ctx.bumps.get("tree_authority").unwrap(),
+        &ctx.accounts.log_wrapper,
+        ctx.remaining_accounts,
+        root,
+        current_metadata,
+        update_args,
+        nonce,
+        index,
+    )
+}
+
+pub fn update_metadata_collection_nft<'info>(
+    ctx: Context<'_, '_, '_, 'info, UpdateMetadataCollectionNFT<'info>>,
+    root: [u8; 32],
+    nonce: u64,
+    index: u32,
+    current_metadata: MetadataArgs,
+    update_args: UpdateArgs,
+) -> Result<()> {
+    require!(
+        ctx.accounts.tree_delegate.key() == ctx.accounts.tree_authority.tree_creator
+            || ctx.accounts.tree_delegate.key() == ctx.accounts.tree_authority.tree_delegate,
+        BubblegumError::TreeAuthorityIncorrect,
+    );
+
+    // NFTs updated through this instruction must be linked to a collection,
+    // so a collection authority for that collection must sign
+    let collection = current_metadata
+        .collection
+        .as_ref()
+        .ok_or(BubblegumError::NFTNotLinkedToVerifiedCollection)?;
+
+    assert_authority_matches_collection(
+        collection,
+        &ctx.accounts.collection_authority.to_account_info(),
+        &ctx.accounts.collection_authority_record_pda,
+        &ctx.accounts.collection_mint,
+        &ctx.accounts.collection_metadata.to_account_info(),
+        &ctx.accounts.collection_metadata,
+        &ctx.accounts.token_metadata_program,
+    )?;
 
     process_update_metadata(
         &ctx.accounts.merkle_tree.to_account_info(),
