@@ -45,7 +45,6 @@ import {
 // Accounts.
 export type UpdateMetadataCollectionNftInstructionAccounts = {
   treeConfig?: PublicKey | Pda;
-  treeCreatorOrDelegate?: Signer;
   collectionAuthority?: Signer;
   collectionMint: PublicKey | Pda;
   collectionMetadata?: PublicKey | Pda;
@@ -131,56 +130,51 @@ export function updateMetadataCollectionNft(
       isWritable: false,
       value: input.treeConfig ?? null,
     },
-    treeCreatorOrDelegate: {
-      index: 1,
-      isWritable: false,
-      value: input.treeCreatorOrDelegate ?? null,
-    },
     collectionAuthority: {
-      index: 2,
+      index: 1,
       isWritable: false,
       value: input.collectionAuthority ?? null,
     },
     collectionMint: {
-      index: 3,
+      index: 2,
       isWritable: false,
       value: input.collectionMint ?? null,
     },
     collectionMetadata: {
-      index: 4,
+      index: 3,
       isWritable: false,
       value: input.collectionMetadata ?? null,
     },
     collectionAuthorityRecordPda: {
-      index: 5,
+      index: 4,
       isWritable: false,
       value: input.collectionAuthorityRecordPda ?? null,
     },
-    leafOwner: { index: 6, isWritable: false, value: input.leafOwner ?? null },
+    leafOwner: { index: 5, isWritable: false, value: input.leafOwner ?? null },
     leafDelegate: {
-      index: 7,
+      index: 6,
       isWritable: false,
       value: input.leafDelegate ?? null,
     },
-    payer: { index: 8, isWritable: false, value: input.payer ?? null },
-    merkleTree: { index: 9, isWritable: true, value: input.merkleTree ?? null },
+    payer: { index: 7, isWritable: false, value: input.payer ?? null },
+    merkleTree: { index: 8, isWritable: true, value: input.merkleTree ?? null },
     logWrapper: {
-      index: 10,
+      index: 9,
       isWritable: false,
       value: input.logWrapper ?? null,
     },
     compressionProgram: {
-      index: 11,
+      index: 10,
       isWritable: false,
       value: input.compressionProgram ?? null,
     },
     tokenMetadataProgram: {
-      index: 12,
+      index: 11,
       isWritable: false,
       value: input.tokenMetadataProgram ?? null,
     },
     systemProgram: {
-      index: 13,
+      index: 12,
       isWritable: false,
       value: input.systemProgram ?? null,
     },
@@ -194,9 +188,6 @@ export function updateMetadataCollectionNft(
     resolvedAccounts.treeConfig.value = findTreeConfigPda(context, {
       merkleTree: expectPublicKey(resolvedAccounts.merkleTree.value),
     });
-  }
-  if (!resolvedAccounts.treeCreatorOrDelegate.value) {
-    resolvedAccounts.treeCreatorOrDelegate.value = context.identity;
   }
   if (!resolvedAccounts.collectionAuthority.value) {
     resolvedAccounts.collectionAuthority.value = context.identity;

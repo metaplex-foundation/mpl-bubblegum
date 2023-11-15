@@ -14,8 +14,6 @@ use borsh::BorshSerialize;
 pub struct UpdateMetadataCollectionNft {
     pub tree_config: solana_program::pubkey::Pubkey,
 
-    pub tree_creator_or_delegate: solana_program::pubkey::Pubkey,
-
     pub collection_authority: solana_program::pubkey::Pubkey,
 
     pub collection_mint: solana_program::pubkey::Pubkey,
@@ -54,14 +52,10 @@ impl UpdateMetadataCollectionNft {
         args: UpdateMetadataCollectionNftInstructionArgs,
         remaining_accounts: &[solana_program::instruction::AccountMeta],
     ) -> solana_program::instruction::Instruction {
-        let mut accounts = Vec::with_capacity(14 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(13 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.tree_config,
             false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            self.tree_creator_or_delegate,
-            true,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.collection_authority,
@@ -159,7 +153,6 @@ pub struct UpdateMetadataCollectionNftInstructionArgs {
 #[derive(Default)]
 pub struct UpdateMetadataCollectionNftBuilder {
     tree_config: Option<solana_program::pubkey::Pubkey>,
-    tree_creator_or_delegate: Option<solana_program::pubkey::Pubkey>,
     collection_authority: Option<solana_program::pubkey::Pubkey>,
     collection_mint: Option<solana_program::pubkey::Pubkey>,
     collection_metadata: Option<solana_program::pubkey::Pubkey>,
@@ -187,14 +180,6 @@ impl UpdateMetadataCollectionNftBuilder {
     #[inline(always)]
     pub fn tree_config(&mut self, tree_config: solana_program::pubkey::Pubkey) -> &mut Self {
         self.tree_config = Some(tree_config);
-        self
-    }
-    #[inline(always)]
-    pub fn tree_creator_or_delegate(
-        &mut self,
-        tree_creator_or_delegate: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
-        self.tree_creator_or_delegate = Some(tree_creator_or_delegate);
         self
     }
     #[inline(always)]
@@ -328,9 +313,6 @@ impl UpdateMetadataCollectionNftBuilder {
         let accounts =
             UpdateMetadataCollectionNft {
                 tree_config: self.tree_config.expect("tree_config is not set"),
-                tree_creator_or_delegate: self
-                    .tree_creator_or_delegate
-                    .expect("tree_creator_or_delegate is not set"),
                 collection_authority: self
                     .collection_authority
                     .expect("collection_authority is not set"),
@@ -375,8 +357,6 @@ impl UpdateMetadataCollectionNftBuilder {
 pub struct UpdateMetadataCollectionNftCpiAccounts<'a, 'b> {
     pub tree_config: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub tree_creator_or_delegate: &'b solana_program::account_info::AccountInfo<'a>,
-
     pub collection_authority: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub collection_mint: &'b solana_program::account_info::AccountInfo<'a>,
@@ -408,8 +388,6 @@ pub struct UpdateMetadataCollectionNftCpi<'a, 'b> {
     pub __program: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub tree_config: &'b solana_program::account_info::AccountInfo<'a>,
-
-    pub tree_creator_or_delegate: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub collection_authority: &'b solana_program::account_info::AccountInfo<'a>,
 
@@ -447,7 +425,6 @@ impl<'a, 'b> UpdateMetadataCollectionNftCpi<'a, 'b> {
         Self {
             __program: program,
             tree_config: accounts.tree_config,
-            tree_creator_or_delegate: accounts.tree_creator_or_delegate,
             collection_authority: accounts.collection_authority,
             collection_mint: accounts.collection_mint,
             collection_metadata: accounts.collection_metadata,
@@ -496,14 +473,10 @@ impl<'a, 'b> UpdateMetadataCollectionNftCpi<'a, 'b> {
             bool,
         )],
     ) -> solana_program::entrypoint::ProgramResult {
-        let mut accounts = Vec::with_capacity(14 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(13 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             *self.tree_config.key,
             false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            *self.tree_creator_or_delegate.key,
-            true,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             *self.collection_authority.key,
@@ -578,10 +551,9 @@ impl<'a, 'b> UpdateMetadataCollectionNftCpi<'a, 'b> {
             accounts,
             data,
         };
-        let mut account_infos = Vec::with_capacity(14 + 1 + remaining_accounts.len());
+        let mut account_infos = Vec::with_capacity(13 + 1 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
         account_infos.push(self.tree_config.clone());
-        account_infos.push(self.tree_creator_or_delegate.clone());
         account_infos.push(self.collection_authority.clone());
         account_infos.push(self.collection_mint.clone());
         account_infos.push(self.collection_metadata.clone());
@@ -618,7 +590,6 @@ impl<'a, 'b> UpdateMetadataCollectionNftCpiBuilder<'a, 'b> {
         let instruction = Box::new(UpdateMetadataCollectionNftCpiBuilderInstruction {
             __program: program,
             tree_config: None,
-            tree_creator_or_delegate: None,
             collection_authority: None,
             collection_mint: None,
             collection_metadata: None,
@@ -646,14 +617,6 @@ impl<'a, 'b> UpdateMetadataCollectionNftCpiBuilder<'a, 'b> {
         tree_config: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.tree_config = Some(tree_config);
-        self
-    }
-    #[inline(always)]
-    pub fn tree_creator_or_delegate(
-        &mut self,
-        tree_creator_or_delegate: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
-        self.instruction.tree_creator_or_delegate = Some(tree_creator_or_delegate);
         self
     }
     #[inline(always)]
@@ -839,11 +802,6 @@ impl<'a, 'b> UpdateMetadataCollectionNftCpiBuilder<'a, 'b> {
                 .tree_config
                 .expect("tree_config is not set"),
 
-            tree_creator_or_delegate: self
-                .instruction
-                .tree_creator_or_delegate
-                .expect("tree_creator_or_delegate is not set"),
-
             collection_authority: self
                 .instruction
                 .collection_authority
@@ -906,7 +864,6 @@ impl<'a, 'b> UpdateMetadataCollectionNftCpiBuilder<'a, 'b> {
 struct UpdateMetadataCollectionNftCpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_program::account_info::AccountInfo<'a>,
     tree_config: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    tree_creator_or_delegate: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     collection_authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     collection_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     collection_metadata: Option<&'b solana_program::account_info::AccountInfo<'a>>,

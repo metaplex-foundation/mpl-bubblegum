@@ -44,7 +44,6 @@ pub struct UpdateMetadataCollectionNFT<'info> {
     )]
     /// CHECK: This account is neither written to nor read from.
     pub tree_authority: Account<'info, TreeConfig>,
-    pub tree_delegate: Signer<'info>,
     pub collection_authority: Signer<'info>,
     /// CHECK: This account is checked in the instruction
     pub collection_mint: UncheckedAccount<'info>,
@@ -122,7 +121,7 @@ fn all_verified_creators_in_a_are_in_b(a: &[Creator], b: &[Creator], exception: 
 
 fn process_update_metadata<'info>(
     merkle_tree: &AccountInfo<'info>,
-    tree_delegate: &AccountInfo<'info>,
+    authority: &AccountInfo<'info>,
     owner: &AccountInfo<'info>,
     delegate: &AccountInfo<'info>,
     compression_program: &AccountInfo<'info>,
@@ -163,7 +162,7 @@ fn process_update_metadata<'info>(
         let no_new_creators_verified = all_verified_creators_in_a_are_in_b(
             &updated_creators,
             &current_creators,
-            tree_delegate.key(),
+            authority.key(),
         );
         require!(
             no_new_creators_verified,
@@ -175,7 +174,7 @@ fn process_update_metadata<'info>(
         let no_current_creators_unverified = all_verified_creators_in_a_are_in_b(
             &current_creators,
             &updated_creators,
-            tree_delegate.key(),
+            authority.key(),
         );
         require!(
             no_current_creators_unverified,
@@ -285,12 +284,6 @@ pub fn update_metadata_collection_nft<'info>(
     current_metadata: MetadataArgs,
     update_args: UpdateArgs,
 ) -> Result<()> {
-    require!(
-        ctx.accounts.tree_delegate.key() == ctx.accounts.tree_authority.tree_creator
-            || ctx.accounts.tree_delegate.key() == ctx.accounts.tree_authority.tree_delegate,
-        BubblegumError::TreeAuthorityIncorrect,
-    );
-
     // NFTs updated through this instruction must be linked to a collection,
     // so a collection authority for that collection must sign
     let collection = current_metadata
@@ -310,7 +303,7 @@ pub fn update_metadata_collection_nft<'info>(
 
     process_update_metadata(
         &ctx.accounts.merkle_tree.to_account_info(),
-        &ctx.accounts.tree_delegate,
+        &ctx.accounts.collection_authority,
         &ctx.accounts.leaf_owner,
         &ctx.accounts.leaf_delegate,
         &ctx.accounts.compression_program.to_account_info(),

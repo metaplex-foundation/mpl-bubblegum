@@ -1576,11 +1576,6 @@
           "isSigner": false
         },
         {
-          "name": "treeDelegate",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
           "name": "collectionAuthority",
           "isMut": false,
           "isSigner": true
