@@ -1487,108 +1487,31 @@
           "isSigner": false
         },
         {
-          "name": "treeDelegate",
+          "name": "authority",
           "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "leafOwner",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "leafDelegate",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "payer",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "merkleTree",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "logWrapper",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "compressionProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenMetadataProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "root",
-          "type": {
-            "array": [
-              "u8",
-              32
-            ]
-          }
-        },
-        {
-          "name": "nonce",
-          "type": "u64"
-        },
-        {
-          "name": "index",
-          "type": "u32"
-        },
-        {
-          "name": "currentMetadata",
-          "type": {
-            "defined": "MetadataArgs"
-          }
-        },
-        {
-          "name": "updateArgs",
-          "type": {
-            "defined": "UpdateArgs"
-          }
-        }
-      ]
-    },
-    {
-      "name": "updateMetadataCollectionNft",
-      "docs": [
-        "Updates metadata for a leaf node that is part of a verified collection."
-      ],
-      "accounts": [
-        {
-          "name": "treeAuthority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "collectionAuthority",
-          "isMut": false,
-          "isSigner": true
+          "isSigner": true,
+          "docs": [
+            "Either collection authority or tree owner/delegate, depending",
+            "on whether the item is in a verified collection"
+          ]
         },
         {
           "name": "collectionMint",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "isOptional": true,
+          "docs": [
+            "Used when item is in a verified collection"
+          ]
         },
         {
           "name": "collectionMetadata",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "isOptional": true,
+          "docs": [
+            "Used when item is in a verified collection"
+          ]
         },
         {
           "name": "collectionAuthorityRecordPda",
@@ -2322,41 +2245,31 @@
     },
     {
       "code": 6034,
-      "name": "MetadataImmutable",
-      "msg": "Metadata not mutable"
+      "name": "MissingCollectionMintAccount",
+      "msg": "Missing collection mint account"
     },
     {
       "code": 6035,
+      "name": "MissingCollectionMetadataAccount",
+      "msg": "Missing collection metadata account"
+    },
+    {
+      "code": 6036,
       "name": "CollectionMismatch",
       "msg": "Collection mismatch"
     },
     {
-      "code": 6036,
-      "name": "MetadataArgsAmbiguous",
-      "msg": "MetadataArgs ambiguous"
-    },
-    {
       "code": 6037,
-      "name": "MetadataArgsMissing",
-      "msg": "MetadataArgs missing"
+      "name": "MetadataImmutable",
+      "msg": "Metadata not mutable"
     },
     {
       "code": 6038,
-      "name": "NFTLinkedToCollection",
-      "msg": "NFT linked to collection"
-    },
-    {
-      "code": 6039,
-      "name": "NFTNotLinkedToVerifiedCollection",
-      "msg": "NFT not linked to verified collection"
-    },
-    {
-      "code": 6040,
       "name": "PrimarySaleCanOnlyBeFlippedToTrue",
       "msg": "Can only update primary sale to true"
     },
     {
-      "code": 6041,
+      "code": 6039,
       "name": "CreatorDidNotUnverify",
       "msg": "Creator did not unverify the metadata"
     }

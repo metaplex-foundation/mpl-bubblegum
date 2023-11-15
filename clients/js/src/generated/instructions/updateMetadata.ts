@@ -44,7 +44,17 @@ import {
 // Accounts.
 export type UpdateMetadataInstructionAccounts = {
   treeConfig?: PublicKey | Pda;
-  treeCreatorOrDelegate?: Signer;
+  /**
+   * Either collection authority or tree owner/delegate, depending
+   * on whether the item is in a verified collection
+   */
+
+  authority?: Signer;
+  /** Used when item is in a verified collection */
+  collectionMint?: PublicKey | Pda;
+  /** Used when item is in a verified collection */
+  collectionMetadata?: PublicKey | Pda;
+  collectionAuthorityRecordPda?: PublicKey | Pda;
   leafOwner: PublicKey | Pda;
   leafDelegate?: PublicKey | Pda;
   payer?: Signer;
@@ -124,36 +134,47 @@ export function updateMetadata(
       isWritable: false,
       value: input.treeConfig ?? null,
     },
-    treeCreatorOrDelegate: {
-      index: 1,
+    authority: { index: 1, isWritable: false, value: input.authority ?? null },
+    collectionMint: {
+      index: 2,
       isWritable: false,
-      value: input.treeCreatorOrDelegate ?? null,
+      value: input.collectionMint ?? null,
     },
-    leafOwner: { index: 2, isWritable: false, value: input.leafOwner ?? null },
-    leafDelegate: {
+    collectionMetadata: {
       index: 3,
+      isWritable: false,
+      value: input.collectionMetadata ?? null,
+    },
+    collectionAuthorityRecordPda: {
+      index: 4,
+      isWritable: false,
+      value: input.collectionAuthorityRecordPda ?? null,
+    },
+    leafOwner: { index: 5, isWritable: false, value: input.leafOwner ?? null },
+    leafDelegate: {
+      index: 6,
       isWritable: false,
       value: input.leafDelegate ?? null,
     },
-    payer: { index: 4, isWritable: false, value: input.payer ?? null },
-    merkleTree: { index: 5, isWritable: true, value: input.merkleTree ?? null },
+    payer: { index: 7, isWritable: false, value: input.payer ?? null },
+    merkleTree: { index: 8, isWritable: true, value: input.merkleTree ?? null },
     logWrapper: {
-      index: 6,
+      index: 9,
       isWritable: false,
       value: input.logWrapper ?? null,
     },
     compressionProgram: {
-      index: 7,
+      index: 10,
       isWritable: false,
       value: input.compressionProgram ?? null,
     },
     tokenMetadataProgram: {
-      index: 8,
+      index: 11,
       isWritable: false,
       value: input.tokenMetadataProgram ?? null,
     },
     systemProgram: {
-      index: 9,
+      index: 12,
       isWritable: false,
       value: input.systemProgram ?? null,
     },
@@ -168,8 +189,8 @@ export function updateMetadata(
       merkleTree: expectPublicKey(resolvedAccounts.merkleTree.value),
     });
   }
-  if (!resolvedAccounts.treeCreatorOrDelegate.value) {
-    resolvedAccounts.treeCreatorOrDelegate.value = context.identity;
+  if (!resolvedAccounts.authority.value) {
+    resolvedAccounts.authority.value = context.identity;
   }
   if (!resolvedAccounts.leafDelegate.value) {
     resolvedAccounts.leafDelegate.value = expectSome(
