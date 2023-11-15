@@ -46,7 +46,6 @@ export const updateMetadataCollectionNftStruct = new beet.FixableBeetArgsStruct<
  * Accounts required by the _updateMetadataCollectionNft_ instruction
  *
  * @property [] treeAuthority
- * @property [**signer**] treeDelegate
  * @property [**signer**] collectionAuthority
  * @property [] collectionMint
  * @property [] collectionMetadata
@@ -64,7 +63,6 @@ export const updateMetadataCollectionNftStruct = new beet.FixableBeetArgsStruct<
  */
 export type UpdateMetadataCollectionNftInstructionAccounts = {
   treeAuthority: web3.PublicKey;
-  treeDelegate: web3.PublicKey;
   collectionAuthority: web3.PublicKey;
   collectionMint: web3.PublicKey;
   collectionMetadata: web3.PublicKey;
@@ -111,11 +109,6 @@ export function createUpdateMetadataCollectionNftInstruction(
       pubkey: accounts.treeAuthority,
       isWritable: false,
       isSigner: false,
-    },
-    {
-      pubkey: accounts.treeDelegate,
-      isWritable: false,
-      isSigner: true,
     },
     {
       pubkey: accounts.collectionAuthority,
