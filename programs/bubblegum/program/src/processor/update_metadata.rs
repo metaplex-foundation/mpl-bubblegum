@@ -21,33 +21,14 @@ pub struct UpdateMetadata<'info> {
     )]
     /// CHECK: This account is neither written to nor read from.
     pub tree_authority: Account<'info, TreeConfig>,
-    pub tree_delegate: Signer<'info>,
+    /// Either collection authority or tree owner/delegate, depending
+    /// on whether the item is in a verified collection
+    pub authority: Signer<'info>,
     /// CHECK: This account is checked in the instruction
-    pub leaf_owner: UncheckedAccount<'info>,
-    /// CHECK: This account is checked in the instruction
-    pub leaf_delegate: UncheckedAccount<'info>,
-    pub payer: Signer<'info>,
-    #[account(mut)]
-    /// CHECK: This account is modified in the downstream program
-    pub merkle_tree: UncheckedAccount<'info>,
-    pub log_wrapper: Program<'info, Noop>,
-    pub compression_program: Program<'info, SplAccountCompression>,
-    pub token_metadata_program: Program<'info, MplTokenMetadata>,
-    pub system_program: Program<'info, System>,
-}
-
-#[derive(Accounts)]
-pub struct UpdateMetadataCollectionNFT<'info> {
-    #[account(
-        seeds = [merkle_tree.key().as_ref()],
-        bump,
-    )]
-    /// CHECK: This account is neither written to nor read from.
-    pub tree_authority: Account<'info, TreeConfig>,
-    pub collection_authority: Signer<'info>,
-    /// CHECK: This account is checked in the instruction
-    pub collection_mint: UncheckedAccount<'info>,
-    pub collection_metadata: Box<Account<'info, TokenMetadata>>,
+    /// Used when item is in a verified collection
+    pub collection_mint: Option<UncheckedAccount<'info>>,
+    /// Used when item is in a verified collection
+    pub collection_metadata: Option<Box<Account<'info, TokenMetadata>>>,
     /// CHECK: This account is checked in the instruction
     pub collection_authority_record_pda: Option<UncheckedAccount<'info>>,
     /// CHECK: This account is checked in the instruction
@@ -245,65 +226,44 @@ pub fn update_metadata<'info>(
     current_metadata: MetadataArgs,
     update_args: UpdateArgs,
 ) -> Result<()> {
-    require!(
-        ctx.accounts.tree_delegate.key() == ctx.accounts.tree_authority.tree_creator
-            || ctx.accounts.tree_delegate.key() == ctx.accounts.tree_authority.tree_delegate,
-        BubblegumError::TreeAuthorityIncorrect,
-    );
+    match &current_metadata.collection {
+        // Verified collection case.
+        Some(collection) if collection.verified => {
+            let collection_mint = ctx
+                .accounts
+                .collection_mint
+                .as_ref()
+                .ok_or(BubblegumError::MissingCollectionMintAccount)?;
 
-    // NFTs which are linked to verified collections cannot be updated through this instruction
-    require!(
-        current_metadata.collection.is_none()
-            || !current_metadata.collection.as_ref().unwrap().verified,
-        BubblegumError::NFTLinkedToCollection
-    );
+            let collection_metadata = ctx
+                .accounts
+                .collection_metadata
+                .as_ref()
+                .ok_or(BubblegumError::MissingCollectionMetadataAccount)?;
 
-    process_update_metadata(
-        &ctx.accounts.merkle_tree.to_account_info(),
-        &ctx.accounts.tree_delegate,
-        &ctx.accounts.leaf_owner,
-        &ctx.accounts.leaf_delegate,
-        &ctx.accounts.compression_program.to_account_info(),
-        &ctx.accounts.tree_authority.to_account_info(),
-        *ctx.bumps.get("tree_authority").unwrap(),
-        &ctx.accounts.log_wrapper,
-        ctx.remaining_accounts,
-        root,
-        current_metadata,
-        update_args,
-        nonce,
-        index,
-    )
-}
-
-pub fn update_metadata_collection_nft<'info>(
-    ctx: Context<'_, '_, '_, 'info, UpdateMetadataCollectionNFT<'info>>,
-    root: [u8; 32],
-    nonce: u64,
-    index: u32,
-    current_metadata: MetadataArgs,
-    update_args: UpdateArgs,
-) -> Result<()> {
-    // NFTs updated through this instruction must be linked to a collection,
-    // so a collection authority for that collection must sign
-    let collection = current_metadata
-        .collection
-        .as_ref()
-        .ok_or(BubblegumError::NFTNotLinkedToVerifiedCollection)?;
-
-    assert_authority_matches_collection(
-        collection,
-        &ctx.accounts.collection_authority.to_account_info(),
-        &ctx.accounts.collection_authority_record_pda,
-        &ctx.accounts.collection_mint,
-        &ctx.accounts.collection_metadata.to_account_info(),
-        &ctx.accounts.collection_metadata,
-        &ctx.accounts.token_metadata_program,
-    )?;
+            assert_authority_matches_collection(
+                collection,
+                &ctx.accounts.authority.to_account_info(),
+                &ctx.accounts.collection_authority_record_pda,
+                collection_mint,
+                &collection_metadata.to_account_info(),
+                collection_metadata,
+                &ctx.accounts.token_metadata_program,
+            )?;
+        }
+        // No collection or unverified collection case.
+        _ => {
+            require!(
+                ctx.accounts.authority.key() == ctx.accounts.tree_authority.tree_creator
+                    || ctx.accounts.authority.key() == ctx.accounts.tree_authority.tree_delegate,
+                BubblegumError::TreeAuthorityIncorrect,
+            );
+        }
+    }
 
     process_update_metadata(
         &ctx.accounts.merkle_tree.to_account_info(),
-        &ctx.accounts.collection_authority,
+        &ctx.accounts.authority,
         &ctx.accounts.leaf_owner,
         &ctx.accounts.leaf_delegate,
         &ctx.accounts.compression_program.to_account_info(),

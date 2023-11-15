@@ -278,23 +278,4 @@ pub mod bubblegum {
     ) -> Result<()> {
         processor::update_metadata(ctx, root, nonce, index, current_metadata, update_args)
     }
-
-    /// Updates metadata for a leaf node that is part of a verified collection.
-    pub fn update_metadata_collection_nft<'info>(
-        ctx: Context<'_, '_, '_, 'info, UpdateMetadataCollectionNFT<'info>>,
-        root: [u8; 32],
-        nonce: u64,
-        index: u32,
-        current_metadata: MetadataArgs,
-        update_args: UpdateArgs,
-    ) -> Result<()> {
-        processor::update_metadata_collection_nft(
-            ctx,
-            root,
-            nonce,
-            index,
-            current_metadata,
-            update_args,
-        )
-    }
 }
