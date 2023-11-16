@@ -33,7 +33,6 @@ import {
   TokenStandard,
   Creator,
   createMintToCollectionV1Instruction,
-  createUpdateMetadataCollectionNftInstruction,
   createSetDecompressibleStateInstruction,
   DecompressibleState,
 } from '../src/generated';
@@ -346,7 +345,7 @@ describe('Bubblegum tests', () => {
           const updateMetadataIx = createUpdateMetadataInstruction(
             {
               treeAuthority,
-              treeDelegate: payer,
+              authority: payer,
               leafOwner: payer,
               leafDelegate: payer,
               payer,
@@ -396,13 +395,21 @@ describe('Bubblegum tests', () => {
           );
         });
 
-        it('Cannot use createUpdateMetadataCollectionNft', async () => {
+        it('Cannot use collection_authority', async () => {
+          const collectionAuthority = new Keypair();
+          const airdropSig = await connection.requestAirdrop(collectionAuthority.publicKey, LAMPORTS_PER_SOL);
+          const latestBlockhash = await connection.getLatestBlockhash();
+          await connection.confirmTransaction({
+            blockhash: latestBlockhash.blockhash,
+            lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+            signature: airdropSig,
+          });
           const collection = await setupCertifiedCollection(
             connection,
             'ColName',
             'ColSymbol',
             'https://mycollection.com',
-            payerKeypair,
+            collectionAuthority,
           );
 
           const updateArgs = {
@@ -414,16 +421,16 @@ describe('Bubblegum tests', () => {
             primarySaleHappened: null,
             isMutable: null,
           };
-          const updateMetadataIx = createUpdateMetadataCollectionNftInstruction(
+          const updateMetadataIx = createUpdateMetadataInstruction(
             {
-              collectionAuthority: payer,
+              authority: collectionAuthority.publicKey,
               collectionMint: collection.mintAddress,
               collectionMetadata: collection.metadataAddress,
               collectionAuthorityRecordPda: BUBBLEGUM_PROGRAM_ID,
               treeAuthority,
               leafOwner: payer,
               leafDelegate: payer,
-              payer,
+              payer: collectionAuthority.publicKey,
               merkleTree,
               logWrapper: SPL_NOOP_PROGRAM_ID,
               compressionProgram: SPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
@@ -440,16 +447,16 @@ describe('Bubblegum tests', () => {
 
           const updateMetadataTx = new Transaction().add(updateMetadataIx);
           try {
-            await sendAndConfirmTransaction(connection, updateMetadataTx, [payerKeypair], {
+            await sendAndConfirmTransaction(connection, updateMetadataTx, [collectionAuthority], {
               commitment: 'confirmed',
               skipPreflight: true,
             });
             assert.fail(
-              'Metadata update using createUpdateMetadataCollectionNft should fail for item not in collection',
+              'Metadata update using collection_authority should fail for item not in collection',
             );
           } catch (err) {
             assert(
-              err.message.includes('"Custom":6039'),
+              err.message.includes('"Custom":6016'),
               'Did not fail for correct reason! ' + err.message,
             );
           }
@@ -481,7 +488,7 @@ describe('Bubblegum tests', () => {
           const updateMetadataIx = createUpdateMetadataInstruction(
             {
               treeAuthority,
-              treeDelegate: payer,
+              authority: payer,
               leafOwner: payer,
               leafDelegate: payer,
               payer,
@@ -542,7 +549,7 @@ describe('Bubblegum tests', () => {
           const updateMetadataIx = createUpdateMetadataInstruction(
             {
               treeAuthority,
-              treeDelegate: payer,
+              authority: payer,
               leafOwner: payer,
               leafDelegate: payer,
               payer,
@@ -576,7 +583,13 @@ describe('Bubblegum tests', () => {
 
         it('Cannot unverify currently verified creator if not signer', async () => {
           // Verify second creator.
-          await connection.requestAirdrop(secondCreator.publicKey, LAMPORTS_PER_SOL);
+          const airdropSig = await connection.requestAirdrop(secondCreator.publicKey, LAMPORTS_PER_SOL);
+          const latestBlockhash = await connection.getLatestBlockhash();
+          await connection.confirmTransaction({
+            blockhash: latestBlockhash.blockhash,
+            lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+            signature: airdropSig,
+          });
           const verifyCreatorIx = createVerifyCreatorInstruction(
             {
               treeAuthority,
@@ -652,7 +665,7 @@ describe('Bubblegum tests', () => {
           const updateMetadataIx = createUpdateMetadataInstruction(
             {
               treeAuthority,
-              treeDelegate: payer,
+              authority: payer,
               leafOwner: payer,
               leafDelegate: payer,
               payer,
@@ -681,7 +694,7 @@ describe('Bubblegum tests', () => {
             );
           } catch (err) {
             assert(
-              err.message.includes('"Custom":6041'),
+              err.message.includes('"Custom":6039'),
               'Did not fail for correct reason! ' + err.message,
             );
           }
@@ -764,7 +777,7 @@ describe('Bubblegum tests', () => {
           const updateMetadataIx = createUpdateMetadataInstruction(
             {
               treeAuthority,
-              treeDelegate: payer,
+              authority: payer,
               leafOwner: payer,
               leafDelegate: payer,
               payer,
@@ -805,12 +818,20 @@ describe('Bubblegum tests', () => {
           merkleAccount = ConcurrentMerkleTreeAccount.fromBuffer(merkleAccountInfo!.data!);
         });
         it('Linked to verified collection update', async () => {
+          const collectionAuthority = new Keypair();
+          const airdropSig = await connection.requestAirdrop(collectionAuthority.publicKey, LAMPORTS_PER_SOL);
+          const latestBlockhash = await connection.getLatestBlockhash();
+          await connection.confirmTransaction({
+            blockhash: latestBlockhash.blockhash,
+            lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+            signature: airdropSig,
+          });
           const collection = await setupCertifiedCollection(
             connection,
             'ColName',
             'ColSymbol',
             'https://mycollection.com',
-            payerKeypair,
+            collectionAuthority,
           );
           const [bubblegumSigner] = PublicKey.findProgramAddressSync(
             [Buffer.from('collection_cpi')],
@@ -832,7 +853,7 @@ describe('Bubblegum tests', () => {
               merkleTree,
               payer,
               treeDelegate: payer,
-              collectionAuthority: payer,
+              collectionAuthority: collectionAuthority.publicKey,
               collectionAuthorityRecordPda: BUBBLEGUM_PROGRAM_ID,
               collectionMint: collection.mintAddress,
               collectionMetadata: collection.metadataAddress,
@@ -850,7 +871,7 @@ describe('Bubblegum tests', () => {
           const mintToCollectionTxId = await sendAndConfirmTransaction(
             connection,
             new Transaction().add(mintToCollectionIx),
-            [payerKeypair],
+            [payerKeypair, collectionAuthority],
             {
               commitment: 'confirmed',
               skipPreflight: true,
@@ -875,16 +896,16 @@ describe('Bubblegum tests', () => {
             primarySaleHappened: null,
             isMutable: null,
           };
-          const updateMetadataIx = createUpdateMetadataCollectionNftInstruction(
+          const updateMetadataIx = createUpdateMetadataInstruction(
             {
-              collectionAuthority: payer,
+              authority: collectionAuthority.publicKey,
               collectionMint: collection.mintAddress,
               collectionMetadata: collection.metadataAddress,
               collectionAuthorityRecordPda: BUBBLEGUM_PROGRAM_ID,
               treeAuthority,
               leafOwner: payer,
               leafDelegate: payer,
-              payer,
+              payer: collectionAuthority.publicKey,
               merkleTree,
               logWrapper: SPL_NOOP_PROGRAM_ID,
               compressionProgram: SPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
@@ -903,7 +924,7 @@ describe('Bubblegum tests', () => {
           const updateMetadataTxId = await sendAndConfirmTransaction(
             connection,
             updateMetadataTx,
-            [payerKeypair],
+            [collectionAuthority],
             {
               commitment: 'confirmed',
               skipPreflight: true,
@@ -931,13 +952,21 @@ describe('Bubblegum tests', () => {
           );
         });
 
-        it('Cannot use createUpdateMetadata when item in collection', async () => {
+        it('Cannot use tree_owner when item in collection', async () => {
+          const collectionAuthority = new Keypair();
+          const airdropSig = await connection.requestAirdrop(collectionAuthority.publicKey, LAMPORTS_PER_SOL);
+          const latestBlockhash = await connection.getLatestBlockhash();
+          await connection.confirmTransaction({
+            blockhash: latestBlockhash.blockhash,
+            lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+            signature: airdropSig,
+          });
           const collection = await setupCertifiedCollection(
             connection,
             'ColName',
             'ColSymbol',
             'https://mycollection.com',
-            payerKeypair,
+            collectionAuthority,
           );
           const [bubblegumSigner] = PublicKey.findProgramAddressSync(
             [Buffer.from('collection_cpi')],
@@ -959,7 +988,7 @@ describe('Bubblegum tests', () => {
               merkleTree,
               payer,
               treeDelegate: payer,
-              collectionAuthority: payer,
+              collectionAuthority: collectionAuthority.publicKey,
               collectionAuthorityRecordPda: BUBBLEGUM_PROGRAM_ID,
               collectionMint: collection.mintAddress,
               collectionMetadata: collection.metadataAddress,
@@ -977,7 +1006,7 @@ describe('Bubblegum tests', () => {
           const mintToCollectionTxId = await sendAndConfirmTransaction(
             connection,
             new Transaction().add(mintToCollectionIx),
-            [payerKeypair],
+            [payerKeypair, collectionAuthority],
             {
               commitment: 'confirmed',
               skipPreflight: true,
@@ -1005,8 +1034,11 @@ describe('Bubblegum tests', () => {
 
           const updateMetadataIx = createUpdateMetadataInstruction(
             {
+              authority: payer,
+              collectionMint: collection.mintAddress,
+              collectionMetadata: collection.metadataAddress,
+              collectionAuthorityRecordPda: BUBBLEGUM_PROGRAM_ID,
               treeAuthority,
-              treeDelegate: payer,
               leafOwner: payer,
               leafDelegate: payer,
               payer,
@@ -1031,11 +1063,11 @@ describe('Bubblegum tests', () => {
               skipPreflight: true,
             });
             assert.fail(
-              'Metadata update using createUpdateMetadata should fail for item in collection',
+              'Metadata update using tree owner should fail for item in collection',
             );
           } catch (err) {
             assert(
-              err.message.includes('"Custom":6038'),
+              err.message.includes('"Custom":6028'),
               'Did not fail for correct reason! ' + err.message,
             );
           }
