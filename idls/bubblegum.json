@@ -2064,9 +2064,6 @@
           },
           {
             "name": "UpdateMetadata"
-          },
-          {
-            "name": "UpdateMetadataCollectionNft"
           }
         ]
       }
