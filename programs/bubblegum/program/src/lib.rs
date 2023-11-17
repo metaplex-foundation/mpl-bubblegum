@@ -36,7 +36,6 @@ pub enum InstructionName {
     MintToCollectionV1,
     SetDecompressibleState,
     UpdateMetadata,
-    UpdateMetadataCollectionNft,
 }
 
 pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
@@ -65,7 +64,6 @@ pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
         // `SetDecompressableState` instruction mapped to `SetDecompressibleState` instruction
         [18, 135, 238, 168, 246, 195, 61, 115] => InstructionName::SetDecompressibleState,
         [170, 182, 43, 239, 97, 78, 225, 186] => InstructionName::UpdateMetadata,
-        [244, 12, 175, 194, 227, 28, 102, 215] => InstructionName::UpdateMetadataCollectionNft,
         _ => InstructionName::Unknown,
     }
 }
