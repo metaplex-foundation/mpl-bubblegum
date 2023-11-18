@@ -6,7 +6,7 @@
     "programs:debug": "./configs/scripts/program/test.sh",
     "programs:clean": "./configs/scripts/program/clean.sh",
     "clients:rust:test": "./configs/scripts/client/test-rust.sh",
-    "clients:js:test": "./configs/sripts/client/test-js.sh",
+    "clients:js:test": "./configs/scripts/client/test-js.sh",
     "generate": "pnpm generate:idls && pnpm generate:clients",
     "generate:idls": "node ./configs/shank.cjs",
     "generate:clients": "node ./configs/kinobi.cjs",

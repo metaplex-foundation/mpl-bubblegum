@@ -719,24 +719,50 @@ createErrorFromCodeLookup.set(0x1791, () => new DecompressionDisabledError());
 createErrorFromNameLookup.set('DecompressionDisabled', () => new DecompressionDisabledError());
 
 /**
- * MetadataImmutable: 'Metadata not mutable'
+ * MissingCollectionMintAccount: 'Missing collection mint account'
  *
  * @category Errors
  * @category generated
  */
-export class MetadataImmutableError extends Error {
+export class MissingCollectionMintAccountError extends Error {
   readonly code: number = 0x1792;
-  readonly name: string = 'MetadataImmutable';
+  readonly name: string = 'MissingCollectionMintAccount';
   constructor() {
-    super('Metadata not mutable');
+    super('Missing collection mint account');
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, MetadataImmutableError);
+      Error.captureStackTrace(this, MissingCollectionMintAccountError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(0x1792, () => new MetadataImmutableError());
-createErrorFromNameLookup.set('MetadataImmutable', () => new MetadataImmutableError());
+createErrorFromCodeLookup.set(0x1792, () => new MissingCollectionMintAccountError());
+createErrorFromNameLookup.set(
+  'MissingCollectionMintAccount',
+  () => new MissingCollectionMintAccountError(),
+);
+
+/**
+ * MissingCollectionMetadataAccount: 'Missing collection metadata account'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingCollectionMetadataAccountError extends Error {
+  readonly code: number = 0x1793;
+  readonly name: string = 'MissingCollectionMetadataAccount';
+  constructor() {
+    super('Missing collection metadata account');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingCollectionMetadataAccountError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1793, () => new MissingCollectionMetadataAccountError());
+createErrorFromNameLookup.set(
+  'MissingCollectionMetadataAccount',
+  () => new MissingCollectionMetadataAccountError(),
+);
 
 /**
  * CollectionMismatch: 'Collection mismatch'
@@ -745,7 +771,7 @@ createErrorFromNameLookup.set('MetadataImmutable', () => new MetadataImmutableEr
  * @category generated
  */
 export class CollectionMismatchError extends Error {
-  readonly code: number = 0x1793;
+  readonly code: number = 0x1794;
   readonly name: string = 'CollectionMismatch';
   constructor() {
     super('Collection mismatch');
@@ -755,48 +781,28 @@ export class CollectionMismatchError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x1793, () => new CollectionMismatchError());
+createErrorFromCodeLookup.set(0x1794, () => new CollectionMismatchError());
 createErrorFromNameLookup.set('CollectionMismatch', () => new CollectionMismatchError());
 
 /**
- * MetadataArgsAmbiguous: 'MetadataArgs ambiguous'
+ * MetadataImmutable: 'Metadata not mutable'
  *
  * @category Errors
  * @category generated
  */
-export class MetadataArgsAmbiguousError extends Error {
-  readonly code: number = 0x1794;
-  readonly name: string = 'MetadataArgsAmbiguous';
-  constructor() {
-    super('MetadataArgs ambiguous');
-    if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, MetadataArgsAmbiguousError);
-    }
-  }
-}
-
-createErrorFromCodeLookup.set(0x1794, () => new MetadataArgsAmbiguousError());
-createErrorFromNameLookup.set('MetadataArgsAmbiguous', () => new MetadataArgsAmbiguousError());
-
-/**
- * MetadataArgsMissing: 'MetadataArgs missing'
- *
- * @category Errors
- * @category generated
- */
-export class MetadataArgsMissingError extends Error {
+export class MetadataImmutableError extends Error {
   readonly code: number = 0x1795;
-  readonly name: string = 'MetadataArgsMissing';
+  readonly name: string = 'MetadataImmutable';
   constructor() {
-    super('MetadataArgs missing');
+    super('Metadata not mutable');
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, MetadataArgsMissingError);
+      Error.captureStackTrace(this, MetadataImmutableError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(0x1795, () => new MetadataArgsMissingError());
-createErrorFromNameLookup.set('MetadataArgsMissing', () => new MetadataArgsMissingError());
+createErrorFromCodeLookup.set(0x1795, () => new MetadataImmutableError());
+createErrorFromNameLookup.set('MetadataImmutable', () => new MetadataImmutableError());
 
 /**
  * PrimarySaleCanOnlyBeFlippedToTrue: 'Can only update primary sale to true'

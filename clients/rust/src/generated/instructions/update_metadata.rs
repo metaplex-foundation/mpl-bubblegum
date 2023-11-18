@@ -13,8 +13,15 @@ use borsh::BorshSerialize;
 /// Accounts.
 pub struct UpdateMetadata {
     pub tree_config: solana_program::pubkey::Pubkey,
+    /// Either collection authority or tree owner/delegate, depending
+    /// on whether the item is in a verified collection
+    pub authority: solana_program::pubkey::Pubkey,
+    /// Used when item is in a verified collection
+    pub collection_mint: Option<solana_program::pubkey::Pubkey>,
+    /// Used when item is in a verified collection
+    pub collection_metadata: Option<solana_program::pubkey::Pubkey>,
 
-    pub tree_creator_or_delegate: solana_program::pubkey::Pubkey,
+    pub collection_authority_record_pda: Option<solana_program::pubkey::Pubkey>,
 
     pub leaf_owner: solana_program::pubkey::Pubkey,
 
@@ -46,15 +53,48 @@ impl UpdateMetadata {
         args: UpdateMetadataInstructionArgs,
         remaining_accounts: &[solana_program::instruction::AccountMeta],
     ) -> solana_program::instruction::Instruction {
-        let mut accounts = Vec::with_capacity(10 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(13 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.tree_config,
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            self.tree_creator_or_delegate,
+            self.authority,
             true,
         ));
+        if let Some(collection_mint) = self.collection_mint {
+            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+                collection_mint,
+                false,
+            ));
+        } else {
+            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+                crate::MPL_BUBBLEGUM_ID,
+                false,
+            ));
+        }
+        if let Some(collection_metadata) = self.collection_metadata {
+            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+                collection_metadata,
+                false,
+            ));
+        } else {
+            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+                crate::MPL_BUBBLEGUM_ID,
+                false,
+            ));
+        }
+        if let Some(collection_authority_record_pda) = self.collection_authority_record_pda {
+            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+                collection_authority_record_pda,
+                false,
+            ));
+        } else {
+            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+                crate::MPL_BUBBLEGUM_ID,
+                false,
+            ));
+        }
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.leaf_owner,
             false,
@@ -126,7 +166,10 @@ pub struct UpdateMetadataInstructionArgs {
 #[derive(Default)]
 pub struct UpdateMetadataBuilder {
     tree_config: Option<solana_program::pubkey::Pubkey>,
-    tree_creator_or_delegate: Option<solana_program::pubkey::Pubkey>,
+    authority: Option<solana_program::pubkey::Pubkey>,
+    collection_mint: Option<solana_program::pubkey::Pubkey>,
+    collection_metadata: Option<solana_program::pubkey::Pubkey>,
+    collection_authority_record_pda: Option<solana_program::pubkey::Pubkey>,
     leaf_owner: Option<solana_program::pubkey::Pubkey>,
     leaf_delegate: Option<solana_program::pubkey::Pubkey>,
     payer: Option<solana_program::pubkey::Pubkey>,
@@ -152,12 +195,40 @@ impl UpdateMetadataBuilder {
         self.tree_config = Some(tree_config);
         self
     }
+    /// Either collection authority or tree owner/delegate, depending
+    /// on whether the item is in a verified collection
     #[inline(always)]
-    pub fn tree_creator_or_delegate(
+    pub fn authority(&mut self, authority: solana_program::pubkey::Pubkey) -> &mut Self {
+        self.authority = Some(authority);
+        self
+    }
+    /// `[optional account]`
+    /// Used when item is in a verified collection
+    #[inline(always)]
+    pub fn collection_mint(
         &mut self,
-        tree_creator_or_delegate: solana_program::pubkey::Pubkey,
+        collection_mint: Option<solana_program::pubkey::Pubkey>,
     ) -> &mut Self {
-        self.tree_creator_or_delegate = Some(tree_creator_or_delegate);
+        self.collection_mint = collection_mint;
+        self
+    }
+    /// `[optional account]`
+    /// Used when item is in a verified collection
+    #[inline(always)]
+    pub fn collection_metadata(
+        &mut self,
+        collection_metadata: Option<solana_program::pubkey::Pubkey>,
+    ) -> &mut Self {
+        self.collection_metadata = collection_metadata;
+        self
+    }
+    /// `[optional account]`
+    #[inline(always)]
+    pub fn collection_authority_record_pda(
+        &mut self,
+        collection_authority_record_pda: Option<solana_program::pubkey::Pubkey>,
+    ) -> &mut Self {
+        self.collection_authority_record_pda = collection_authority_record_pda;
         self
     }
     #[inline(always)]
@@ -258,9 +329,10 @@ impl UpdateMetadataBuilder {
         let accounts =
             UpdateMetadata {
                 tree_config: self.tree_config.expect("tree_config is not set"),
-                tree_creator_or_delegate: self
-                    .tree_creator_or_delegate
-                    .expect("tree_creator_or_delegate is not set"),
+                authority: self.authority.expect("authority is not set"),
+                collection_mint: self.collection_mint,
+                collection_metadata: self.collection_metadata,
+                collection_authority_record_pda: self.collection_authority_record_pda,
                 leaf_owner: self.leaf_owner.expect("leaf_owner is not set"),
                 leaf_delegate: self.leaf_delegate.expect("leaf_delegate is not set"),
                 payer: self.payer.expect("payer is not set"),
@@ -296,8 +368,15 @@ impl UpdateMetadataBuilder {
 /// `update_metadata` CPI accounts.
 pub struct UpdateMetadataCpiAccounts<'a, 'b> {
     pub tree_config: &'b solana_program::account_info::AccountInfo<'a>,
+    /// Either collection authority or tree owner/delegate, depending
+    /// on whether the item is in a verified collection
+    pub authority: &'b solana_program::account_info::AccountInfo<'a>,
+    /// Used when item is in a verified collection
+    pub collection_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    /// Used when item is in a verified collection
+    pub collection_metadata: Option<&'b solana_program::account_info::AccountInfo<'a>>,
 
-    pub tree_creator_or_delegate: &'b solana_program::account_info::AccountInfo<'a>,
+    pub collection_authority_record_pda: Option<&'b solana_program::account_info::AccountInfo<'a>>,
 
     pub leaf_owner: &'b solana_program::account_info::AccountInfo<'a>,
 
@@ -322,8 +401,15 @@ pub struct UpdateMetadataCpi<'a, 'b> {
     pub __program: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub tree_config: &'b solana_program::account_info::AccountInfo<'a>,
+    /// Either collection authority or tree owner/delegate, depending
+    /// on whether the item is in a verified collection
+    pub authority: &'b solana_program::account_info::AccountInfo<'a>,
+    /// Used when item is in a verified collection
+    pub collection_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    /// Used when item is in a verified collection
+    pub collection_metadata: Option<&'b solana_program::account_info::AccountInfo<'a>>,
 
-    pub tree_creator_or_delegate: &'b solana_program::account_info::AccountInfo<'a>,
+    pub collection_authority_record_pda: Option<&'b solana_program::account_info::AccountInfo<'a>>,
 
     pub leaf_owner: &'b solana_program::account_info::AccountInfo<'a>,
 
@@ -353,7 +439,10 @@ impl<'a, 'b> UpdateMetadataCpi<'a, 'b> {
         Self {
             __program: program,
             tree_config: accounts.tree_config,
-            tree_creator_or_delegate: accounts.tree_creator_or_delegate,
+            authority: accounts.authority,
+            collection_mint: accounts.collection_mint,
+            collection_metadata: accounts.collection_metadata,
+            collection_authority_record_pda: accounts.collection_authority_record_pda,
             leaf_owner: accounts.leaf_owner,
             leaf_delegate: accounts.leaf_delegate,
             payer: accounts.payer,
@@ -398,15 +487,48 @@ impl<'a, 'b> UpdateMetadataCpi<'a, 'b> {
             bool,
         )],
     ) -> solana_program::entrypoint::ProgramResult {
-        let mut accounts = Vec::with_capacity(10 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(13 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             *self.tree_config.key,
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            *self.tree_creator_or_delegate.key,
+            *self.authority.key,
             true,
         ));
+        if let Some(collection_mint) = self.collection_mint {
+            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+                *collection_mint.key,
+                false,
+            ));
+        } else {
+            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+                crate::MPL_BUBBLEGUM_ID,
+                false,
+            ));
+        }
+        if let Some(collection_metadata) = self.collection_metadata {
+            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+                *collection_metadata.key,
+                false,
+            ));
+        } else {
+            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+                crate::MPL_BUBBLEGUM_ID,
+                false,
+            ));
+        }
+        if let Some(collection_authority_record_pda) = self.collection_authority_record_pda {
+            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+                *collection_authority_record_pda.key,
+                false,
+            ));
+        } else {
+            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+                crate::MPL_BUBBLEGUM_ID,
+                false,
+            ));
+        }
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             *self.leaf_owner.key,
             false,
@@ -455,10 +577,19 @@ impl<'a, 'b> UpdateMetadataCpi<'a, 'b> {
             accounts,
             data,
         };
-        let mut account_infos = Vec::with_capacity(10 + 1 + remaining_accounts.len());
+        let mut account_infos = Vec::with_capacity(13 + 1 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
         account_infos.push(self.tree_config.clone());
-        account_infos.push(self.tree_creator_or_delegate.clone());
+        account_infos.push(self.authority.clone());
+        if let Some(collection_mint) = self.collection_mint {
+            account_infos.push(collection_mint.clone());
+        }
+        if let Some(collection_metadata) = self.collection_metadata {
+            account_infos.push(collection_metadata.clone());
+        }
+        if let Some(collection_authority_record_pda) = self.collection_authority_record_pda {
+            account_infos.push(collection_authority_record_pda.clone());
+        }
         account_infos.push(self.leaf_owner.clone());
         account_infos.push(self.leaf_delegate.clone());
         account_infos.push(self.payer.clone());
@@ -489,7 +620,10 @@ impl<'a, 'b> UpdateMetadataCpiBuilder<'a, 'b> {
         let instruction = Box::new(UpdateMetadataCpiBuilderInstruction {
             __program: program,
             tree_config: None,
-            tree_creator_or_delegate: None,
+            authority: None,
+            collection_mint: None,
+            collection_metadata: None,
+            collection_authority_record_pda: None,
             leaf_owner: None,
             leaf_delegate: None,
             payer: None,
@@ -515,12 +649,43 @@ impl<'a, 'b> UpdateMetadataCpiBuilder<'a, 'b> {
         self.instruction.tree_config = Some(tree_config);
         self
     }
+    /// Either collection authority or tree owner/delegate, depending
+    /// on whether the item is in a verified collection
     #[inline(always)]
-    pub fn tree_creator_or_delegate(
+    pub fn authority(
         &mut self,
-        tree_creator_or_delegate: &'b solana_program::account_info::AccountInfo<'a>,
+        authority: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
-        self.instruction.tree_creator_or_delegate = Some(tree_creator_or_delegate);
+        self.instruction.authority = Some(authority);
+        self
+    }
+    /// `[optional account]`
+    /// Used when item is in a verified collection
+    #[inline(always)]
+    pub fn collection_mint(
+        &mut self,
+        collection_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    ) -> &mut Self {
+        self.instruction.collection_mint = collection_mint;
+        self
+    }
+    /// `[optional account]`
+    /// Used when item is in a verified collection
+    #[inline(always)]
+    pub fn collection_metadata(
+        &mut self,
+        collection_metadata: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    ) -> &mut Self {
+        self.instruction.collection_metadata = collection_metadata;
+        self
+    }
+    /// `[optional account]`
+    #[inline(always)]
+    pub fn collection_authority_record_pda(
+        &mut self,
+        collection_authority_record_pda: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    ) -> &mut Self {
+        self.instruction.collection_authority_record_pda = collection_authority_record_pda;
         self
     }
     #[inline(always)]
@@ -673,10 +838,13 @@ impl<'a, 'b> UpdateMetadataCpiBuilder<'a, 'b> {
                 .tree_config
                 .expect("tree_config is not set"),
 
-            tree_creator_or_delegate: self
-                .instruction
-                .tree_creator_or_delegate
-                .expect("tree_creator_or_delegate is not set"),
+            authority: self.instruction.authority.expect("authority is not set"),
+
+            collection_mint: self.instruction.collection_mint,
+
+            collection_metadata: self.instruction.collection_metadata,
+
+            collection_authority_record_pda: self.instruction.collection_authority_record_pda,
 
             leaf_owner: self.instruction.leaf_owner.expect("leaf_owner is not set"),
 
@@ -723,7 +891,10 @@ impl<'a, 'b> UpdateMetadataCpiBuilder<'a, 'b> {
 struct UpdateMetadataCpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_program::account_info::AccountInfo<'a>,
     tree_config: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    tree_creator_or_delegate: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    collection_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    collection_metadata: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    collection_authority_record_pda: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     leaf_owner: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     leaf_delegate: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     payer: Option<&'b solana_program::account_info::AccountInfo<'a>>,

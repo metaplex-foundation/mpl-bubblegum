@@ -46,7 +46,10 @@ export const updateMetadataStruct = new beet.FixableBeetArgsStruct<
  * Accounts required by the _updateMetadata_ instruction
  *
  * @property [] treeAuthority
- * @property [**signer**] treeDelegate
+ * @property [**signer**] authority
+ * @property [] collectionMint (optional)
+ * @property [] collectionMetadata (optional)
+ * @property [] collectionAuthorityRecordPda (optional)
  * @property [] leafOwner
  * @property [] leafDelegate
  * @property [**signer**] payer
@@ -60,7 +63,10 @@ export const updateMetadataStruct = new beet.FixableBeetArgsStruct<
  */
 export type UpdateMetadataInstructionAccounts = {
   treeAuthority: web3.PublicKey;
-  treeDelegate: web3.PublicKey;
+  authority: web3.PublicKey;
+  collectionMint?: web3.PublicKey;
+  collectionMetadata?: web3.PublicKey;
+  collectionAuthorityRecordPda?: web3.PublicKey;
   leafOwner: web3.PublicKey;
   leafDelegate: web3.PublicKey;
   payer: web3.PublicKey;
@@ -76,6 +82,9 @@ export const updateMetadataInstructionDiscriminator = [170, 182, 43, 239, 97, 78
 
 /**
  * Creates a _UpdateMetadata_ instruction.
+ *
+ * Optional accounts that are not provided default to the program ID since
+ * this was indicated in the IDL from which this instruction was generated.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @param args to provide as instruction data to the program
@@ -100,9 +109,24 @@ export function createUpdateMetadataInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.treeDelegate,
+      pubkey: accounts.authority,
       isWritable: false,
       isSigner: true,
+    },
+    {
+      pubkey: accounts.collectionMint ?? programId,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.collectionMetadata ?? programId,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.collectionAuthorityRecordPda ?? programId,
+      isWritable: false,
+      isSigner: false,
     },
     {
       pubkey: accounts.leafOwner,

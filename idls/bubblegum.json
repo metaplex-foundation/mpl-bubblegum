@@ -1478,7 +1478,7 @@
     {
       "name": "updateMetadata",
       "docs": [
-        "Verifies a creator for a leaf node."
+        "Updates metadata for a leaf node that is not part of a verified collection."
       ],
       "accounts": [
         {
@@ -1487,9 +1487,37 @@
           "isSigner": false
         },
         {
-          "name": "treeDelegate",
+          "name": "authority",
           "isMut": false,
-          "isSigner": true
+          "isSigner": true,
+          "docs": [
+            "Either collection authority or tree owner/delegate, depending",
+            "on whether the item is in a verified collection"
+          ]
+        },
+        {
+          "name": "collectionMint",
+          "isMut": false,
+          "isSigner": false,
+          "isOptional": true,
+          "docs": [
+            "Used when item is in a verified collection"
+          ]
+        },
+        {
+          "name": "collectionMetadata",
+          "isMut": false,
+          "isSigner": false,
+          "isOptional": true,
+          "docs": [
+            "Used when item is in a verified collection"
+          ]
+        },
+        {
+          "name": "collectionAuthorityRecordPda",
+          "isMut": false,
+          "isSigner": false,
+          "isOptional": true
         },
         {
           "name": "leafOwner",
@@ -2214,23 +2242,23 @@
     },
     {
       "code": 6034,
-      "name": "MetadataImmutable",
-      "msg": "Metadata not mutable"
+      "name": "MissingCollectionMintAccount",
+      "msg": "Missing collection mint account"
     },
     {
       "code": 6035,
+      "name": "MissingCollectionMetadataAccount",
+      "msg": "Missing collection metadata account"
+    },
+    {
+      "code": 6036,
       "name": "CollectionMismatch",
       "msg": "Collection mismatch"
     },
     {
-      "code": 6036,
-      "name": "MetadataArgsAmbiguous",
-      "msg": "MetadataArgs ambiguous"
-    },
-    {
       "code": 6037,
-      "name": "MetadataArgsMissing",
-      "msg": "MetadataArgs missing"
+      "name": "MetadataImmutable",
+      "msg": "Metadata not mutable"
     },
     {
       "code": 6038,

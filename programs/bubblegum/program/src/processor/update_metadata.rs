@@ -2,12 +2,12 @@ use anchor_lang::prelude::*;
 use spl_account_compression::{program::SplAccountCompression, wrap_application_data_v1, Noop};
 
 use crate::{
-    asserts::assert_metadata_is_mpl_compatible,
+    asserts::{assert_has_collection_authority, assert_metadata_is_mpl_compatible},
     error::BubblegumError,
     state::{
         leaf_schema::LeafSchema,
-        metaplex_adapter::{Creator, MetadataArgs, UpdateArgs},
-        metaplex_anchor::MplTokenMetadata,
+        metaplex_adapter::{Collection, Creator, MetadataArgs, UpdateArgs},
+        metaplex_anchor::{MplTokenMetadata, TokenMetadata},
         TreeConfig,
     },
     utils::{get_asset_id, hash_creators, hash_metadata, replace_leaf},
@@ -21,7 +21,16 @@ pub struct UpdateMetadata<'info> {
     )]
     /// CHECK: This account is neither written to nor read from.
     pub tree_authority: Account<'info, TreeConfig>,
-    pub tree_delegate: Signer<'info>,
+    /// Either collection authority or tree owner/delegate, depending
+    /// on whether the item is in a verified collection
+    pub authority: Signer<'info>,
+    /// CHECK: This account is checked in the instruction
+    /// Used when item is in a verified collection
+    pub collection_mint: Option<UncheckedAccount<'info>>,
+    /// Used when item is in a verified collection
+    pub collection_metadata: Option<Box<Account<'info, TokenMetadata>>>,
+    /// CHECK: This account is checked in the instruction
+    pub collection_authority_record_pda: Option<UncheckedAccount<'info>>,
     /// CHECK: This account is checked in the instruction
     pub leaf_owner: UncheckedAccount<'info>,
     /// CHECK: This account is checked in the instruction
@@ -36,6 +45,51 @@ pub struct UpdateMetadata<'info> {
     pub system_program: Program<'info, System>,
 }
 
+fn assert_authority_matches_collection<'info>(
+    collection: &Collection,
+    collection_authority: &AccountInfo<'info>,
+    collection_authority_record_pda: &Option<UncheckedAccount<'info>>,
+    collection_mint: &AccountInfo<'info>,
+    collection_metadata_account_info: &AccountInfo,
+    collection_metadata: &TokenMetadata,
+    token_metadata_program: &Program<'info, MplTokenMetadata>,
+) -> Result<()> {
+    // Mint account must match Collection mint
+    require!(
+        collection_mint.key() == collection.key,
+        BubblegumError::CollectionMismatch
+    );
+    // Metadata mint must match Collection mint
+    require!(
+        collection_metadata.mint == collection.key,
+        BubblegumError::CollectionMismatch
+    );
+    // Verify correct account ownerships.
+    require!(
+        *collection_metadata_account_info.owner == token_metadata_program.key(),
+        BubblegumError::IncorrectOwner
+    );
+    // Collection mint must be owned by SPL token
+    require!(
+        *collection_mint.owner == spl_token::id(),
+        BubblegumError::IncorrectOwner
+    );
+
+    let collection_authority_record = collection_authority_record_pda
+        .as_ref()
+        .map(|authority_record_pda| authority_record_pda.to_account_info());
+
+    // Assert that the correct Collection Authority was provided using token-metadata
+    assert_has_collection_authority(
+        collection_metadata,
+        collection_mint.key,
+        collection_authority.key,
+        collection_authority_record.as_ref(),
+    )?;
+
+    Ok(())
+}
+
 fn all_verified_creators_in_a_are_in_b(a: &[Creator], b: &[Creator], exception: Pubkey) -> bool {
     a.iter()
         .filter(|creator_a| creator_a.verified)
@@ -48,7 +102,7 @@ fn all_verified_creators_in_a_are_in_b(a: &[Creator], b: &[Creator], exception: 
 
 fn process_update_metadata<'info>(
     merkle_tree: &AccountInfo<'info>,
-    tree_delegate: &AccountInfo<'info>,
+    authority: &AccountInfo<'info>,
     owner: &AccountInfo<'info>,
     delegate: &AccountInfo<'info>,
     compression_program: &AccountInfo<'info>,
@@ -89,7 +143,7 @@ fn process_update_metadata<'info>(
         let no_new_creators_verified = all_verified_creators_in_a_are_in_b(
             &updated_creators,
             &current_creators,
-            tree_delegate.key(),
+            authority.key(),
         );
         require!(
             no_new_creators_verified,
@@ -101,7 +155,7 @@ fn process_update_metadata<'info>(
         let no_current_creators_unverified = all_verified_creators_in_a_are_in_b(
             &current_creators,
             &updated_creators,
-            tree_delegate.key(),
+            authority.key(),
         );
         require!(
             no_current_creators_unverified,
@@ -172,15 +226,44 @@ pub fn update_metadata<'info>(
     current_metadata: MetadataArgs,
     update_args: UpdateArgs,
 ) -> Result<()> {
-    require!(
-        ctx.accounts.tree_delegate.key() == ctx.accounts.tree_authority.tree_creator
-            || ctx.accounts.tree_delegate.key() == ctx.accounts.tree_authority.tree_delegate,
-        BubblegumError::TreeAuthorityIncorrect,
-    );
+    match &current_metadata.collection {
+        // Verified collection case.
+        Some(collection) if collection.verified => {
+            let collection_mint = ctx
+                .accounts
+                .collection_mint
+                .as_ref()
+                .ok_or(BubblegumError::MissingCollectionMintAccount)?;
+
+            let collection_metadata = ctx
+                .accounts
+                .collection_metadata
+                .as_ref()
+                .ok_or(BubblegumError::MissingCollectionMetadataAccount)?;
+
+            assert_authority_matches_collection(
+                collection,
+                &ctx.accounts.authority.to_account_info(),
+                &ctx.accounts.collection_authority_record_pda,
+                collection_mint,
+                &collection_metadata.to_account_info(),
+                collection_metadata,
+                &ctx.accounts.token_metadata_program,
+            )?;
+        }
+        // No collection or unverified collection case.
+        _ => {
+            require!(
+                ctx.accounts.authority.key() == ctx.accounts.tree_authority.tree_creator
+                    || ctx.accounts.authority.key() == ctx.accounts.tree_authority.tree_delegate,
+                BubblegumError::TreeAuthorityIncorrect,
+            );
+        }
+    }
 
     process_update_metadata(
         &ctx.accounts.merkle_tree.to_account_info(),
-        &ctx.accounts.tree_delegate,
+        &ctx.accounts.authority,
         &ctx.accounts.leaf_owner,
         &ctx.accounts.leaf_delegate,
         &ctx.accounts.compression_program.to_account_info(),

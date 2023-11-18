@@ -303,7 +303,6 @@ describe('Bubblegum tests', () => {
       );
       merkleTree = result.merkleTree;
     });
-
     it('Can verify existence of a compressed NFT', async () => {
       const result = await verifyLeaf(
         connection,
@@ -346,7 +345,7 @@ describe('Bubblegum tests', () => {
           const updateMetadataIx = createUpdateMetadataInstruction(
             {
               treeAuthority,
-              treeDelegate: payer,
+              authority: payer,
               leafOwner: payer,
               leafDelegate: payer,
               payer,
@@ -395,6 +394,74 @@ describe('Bubblegum tests', () => {
             newMetadataArgs,
           );
         });
+
+        it('Cannot use collection_authority', async () => {
+          const collectionAuthority = new Keypair();
+          const airdropSig = await connection.requestAirdrop(collectionAuthority.publicKey, LAMPORTS_PER_SOL);
+          const latestBlockhash = await connection.getLatestBlockhash();
+          await connection.confirmTransaction({
+            blockhash: latestBlockhash.blockhash,
+            lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+            signature: airdropSig,
+          });
+          const collection = await setupCertifiedCollection(
+            connection,
+            'ColName',
+            'ColSymbol',
+            'https://mycollection.com',
+            collectionAuthority,
+          );
+
+          const updateArgs = {
+            name: 'NewName',
+            symbol: 'NewSymbol',
+            uri: 'https://foobar.com',
+            creators: null,
+            sellerFeeBasisPoints: null,
+            primarySaleHappened: null,
+            isMutable: null,
+          };
+          const updateMetadataIx = createUpdateMetadataInstruction(
+            {
+              authority: collectionAuthority.publicKey,
+              collectionMint: collection.mintAddress,
+              collectionMetadata: collection.metadataAddress,
+              collectionAuthorityRecordPda: BUBBLEGUM_PROGRAM_ID,
+              treeAuthority,
+              leafOwner: payer,
+              leafDelegate: payer,
+              payer: collectionAuthority.publicKey,
+              merkleTree,
+              logWrapper: SPL_NOOP_PROGRAM_ID,
+              compressionProgram: SPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
+              tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
+            },
+            {
+              root: Array.from(merkleAccount.getCurrentRoot()),
+              nonce: 0,
+              index: 0,
+              currentMetadata: originalCompressedNFT,
+              updateArgs: updateArgs,
+            },
+          );
+
+          const updateMetadataTx = new Transaction().add(updateMetadataIx);
+          try {
+            await sendAndConfirmTransaction(connection, updateMetadataTx, [collectionAuthority], {
+              commitment: 'confirmed',
+              skipPreflight: true,
+            });
+            assert.fail(
+              'Metadata update using collection_authority should fail for item not in collection',
+            );
+          } catch (err) {
+            assert(
+              err.message.includes('"Custom":6016'),
+              'Did not fail for correct reason! ' + err.message,
+            );
+          }
+        });
+
         it('Cannot verify currently unverified creator if not signer', async () => {
           // Attempt to verify second creator, should not work.
           const updatedCreators: Creator[] = [
@@ -421,7 +488,7 @@ describe('Bubblegum tests', () => {
           const updateMetadataIx = createUpdateMetadataInstruction(
             {
               treeAuthority,
-              treeDelegate: payer,
+              authority: payer,
               leafOwner: payer,
               leafDelegate: payer,
               payer,
@@ -482,7 +549,7 @@ describe('Bubblegum tests', () => {
           const updateMetadataIx = createUpdateMetadataInstruction(
             {
               treeAuthority,
-              treeDelegate: payer,
+              authority: payer,
               leafOwner: payer,
               leafDelegate: payer,
               payer,
@@ -516,7 +583,13 @@ describe('Bubblegum tests', () => {
 
         it('Cannot unverify currently verified creator if not signer', async () => {
           // Verify second creator.
-          await connection.requestAirdrop(secondCreator.publicKey, LAMPORTS_PER_SOL);
+          const airdropSig = await connection.requestAirdrop(secondCreator.publicKey, LAMPORTS_PER_SOL);
+          const latestBlockhash = await connection.getLatestBlockhash();
+          await connection.confirmTransaction({
+            blockhash: latestBlockhash.blockhash,
+            lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+            signature: airdropSig,
+          });
           const verifyCreatorIx = createVerifyCreatorInstruction(
             {
               treeAuthority,
@@ -592,7 +665,7 @@ describe('Bubblegum tests', () => {
           const updateMetadataIx = createUpdateMetadataInstruction(
             {
               treeAuthority,
-              treeDelegate: payer,
+              authority: payer,
               leafOwner: payer,
               leafDelegate: payer,
               payer,
@@ -704,7 +777,7 @@ describe('Bubblegum tests', () => {
           const updateMetadataIx = createUpdateMetadataInstruction(
             {
               treeAuthority,
-              treeDelegate: payer,
+              authority: payer,
               leafOwner: payer,
               leafDelegate: payer,
               payer,
@@ -736,133 +809,269 @@ describe('Bubblegum tests', () => {
           console.log('Update metadata success, payer unverified:', updateMetadataTxId);
         });
       });
-      it('Linked to verified collection update', async () => {
-        const collection = await setupCertifiedCollection(
-          connection,
-          'ColName',
-          'ColSymbol',
-          'https://mycollection.com',
-          payerKeypair,
-        );
-        const [bubblegumSigner] = PublicKey.findProgramAddressSync(
-          [Buffer.from('collection_cpi')],
-          BUBBLEGUM_PROGRAM_ID,
-        );
-        const metadataArgs = makeCompressedCollectionNFT(
-          'cname',
-          'csymbol',
-          'https://myuri.com',
-          collection.mintAddress,
-        );
-
-        // Mint a New NFT to a Collection
-        const mintToCollectionIx = createMintToCollectionV1Instruction(
-          {
-            treeAuthority,
-            leafOwner: payer,
-            leafDelegate: payer,
-            merkleTree,
-            payer,
-            treeDelegate: payer,
-            collectionAuthority: payer,
-            collectionAuthorityRecordPda: BUBBLEGUM_PROGRAM_ID,
-            collectionMint: collection.mintAddress,
-            collectionMetadata: collection.metadataAddress,
-            editionAccount: collection.masterEditionAddress,
-            bubblegumSigner,
-            logWrapper: SPL_NOOP_PROGRAM_ID,
-            compressionProgram: SPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
-            tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
-          },
-          {
-            metadataArgs: metadataArgs,
-          },
-        );
-
-        const mintToCollectionTxId = await sendAndConfirmTransaction(
-          connection,
-          new Transaction().add(mintToCollectionIx),
-          [payerKeypair],
-          {
+      describe('Linked to collection', () => {
+        let merkleAccount: ConcurrentMerkleTreeAccount;
+        beforeEach(async () => {
+          const merkleAccountInfo = await connection.getAccountInfo(merkleTree, {
             commitment: 'confirmed',
-            skipPreflight: true,
-          },
-        );
-
-        console.log('Mint to Collection Success:', mintToCollectionTxId);
-
-        const merkleAccountInfo = await connection.getAccountInfo(merkleTree, {
-          commitment: 'confirmed',
+          });
+          merkleAccount = ConcurrentMerkleTreeAccount.fromBuffer(merkleAccountInfo!.data!);
         });
-        const merkleAccount = ConcurrentMerkleTreeAccount.fromBuffer(merkleAccountInfo!.data!);
+        it('Linked to verified collection update', async () => {
+          const collectionAuthority = new Keypair();
+          const airdropSig = await connection.requestAirdrop(collectionAuthority.publicKey, LAMPORTS_PER_SOL);
+          const latestBlockhash = await connection.getLatestBlockhash();
+          await connection.confirmTransaction({
+            blockhash: latestBlockhash.blockhash,
+            lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+            signature: airdropSig,
+          });
+          const collection = await setupCertifiedCollection(
+            connection,
+            'ColName',
+            'ColSymbol',
+            'https://mycollection.com',
+            collectionAuthority,
+          );
+          const [bubblegumSigner] = PublicKey.findProgramAddressSync(
+            [Buffer.from('collection_cpi')],
+            BUBBLEGUM_PROGRAM_ID,
+          );
+          const metadataArgs = makeCompressedCollectionNFT(
+            'cname',
+            'csymbol',
+            'https://myuri.com',
+            collection.mintAddress,
+          );
 
-        // MintToCollectionV1 will update verified to true in MetadataArgs before minting to the tree
-        // Thus we must alter the MetadataArgs object we expect to exist in the leaf before the update to match
-        const currentMetadataArgs = {
-          ...metadataArgs,
-          collection: { key: metadataArgs.collection!.key, verified: true },
-        };
+          // Mint a New NFT to a Collection
+          const mintToCollectionIx = createMintToCollectionV1Instruction(
+            {
+              treeAuthority,
+              leafOwner: payer,
+              leafDelegate: payer,
+              merkleTree,
+              payer,
+              treeDelegate: payer,
+              collectionAuthority: collectionAuthority.publicKey,
+              collectionAuthorityRecordPda: BUBBLEGUM_PROGRAM_ID,
+              collectionMint: collection.mintAddress,
+              collectionMetadata: collection.metadataAddress,
+              editionAccount: collection.masterEditionAddress,
+              bubblegumSigner,
+              logWrapper: SPL_NOOP_PROGRAM_ID,
+              compressionProgram: SPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
+              tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
+            },
+            {
+              metadataArgs: metadataArgs,
+            },
+          );
 
-        const updateArgs = {
-          name: 'NewName',
-          symbol: 'NewSymbol',
-          uri: 'https://foobar.com',
-          creators: null,
-          sellerFeeBasisPoints: null,
-          primarySaleHappened: null,
-          isMutable: null,
-        };
-        const updateMetadataIx = createUpdateMetadataInstruction(
-          {
-            treeAuthority,
-            treeDelegate: payer,
-            leafOwner: payer,
-            leafDelegate: payer,
-            payer,
+          const mintToCollectionTxId = await sendAndConfirmTransaction(
+            connection,
+            new Transaction().add(mintToCollectionIx),
+            [payerKeypair, collectionAuthority],
+            {
+              commitment: 'confirmed',
+              skipPreflight: true,
+            },
+          );
+
+          console.log('Mint to Collection Success:', mintToCollectionTxId);
+
+          // MintToCollectionV1 will update verified to true in MetadataArgs before minting to the tree
+          // Thus we must alter the MetadataArgs object we expect to exist in the leaf before the update to match
+          const currentMetadataArgs = {
+            ...metadataArgs,
+            collection: { key: metadataArgs.collection!.key, verified: true },
+          };
+
+          const updateArgs = {
+            name: 'NewName',
+            symbol: 'NewSymbol',
+            uri: 'https://foobar.com',
+            creators: null,
+            sellerFeeBasisPoints: null,
+            primarySaleHappened: null,
+            isMutable: null,
+          };
+          const updateMetadataIx = createUpdateMetadataInstruction(
+            {
+              authority: collectionAuthority.publicKey,
+              collectionMint: collection.mintAddress,
+              collectionMetadata: collection.metadataAddress,
+              collectionAuthorityRecordPda: BUBBLEGUM_PROGRAM_ID,
+              treeAuthority,
+              leafOwner: payer,
+              leafDelegate: payer,
+              payer: collectionAuthority.publicKey,
+              merkleTree,
+              logWrapper: SPL_NOOP_PROGRAM_ID,
+              compressionProgram: SPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
+              tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
+            },
+            {
+              root: Array.from(merkleAccount.getCurrentRoot()),
+              nonce: 1,
+              index: 1,
+              currentMetadata: currentMetadataArgs,
+              updateArgs: updateArgs,
+            },
+          );
+
+          const updateMetadataTx = new Transaction().add(updateMetadataIx);
+          const updateMetadataTxId = await sendAndConfirmTransaction(
+            connection,
+            updateMetadataTx,
+            [collectionAuthority],
+            {
+              commitment: 'confirmed',
+              skipPreflight: true,
+            },
+          );
+
+          console.log('Update metadata tx success:', updateMetadataTxId);
+
+          const newMetadataArgs: MetadataArgs = {
+            ...currentMetadataArgs,
+            name: 'NewName',
+            symbol: 'NewSymbol',
+            uri: 'https://foobar.com',
+          };
+
+          // We should now be able to verify the new leaf with the metadata replaced
+          await verifyLeaf(
+            connection,
+            payerKeypair,
+            payerKeypair.publicKey,
+            payerKeypair.publicKey,
+            1,
             merkleTree,
-            logWrapper: SPL_NOOP_PROGRAM_ID,
-            compressionProgram: SPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
-            tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
-          },
-          {
-            root: Array.from(merkleAccount.getCurrentRoot()),
-            nonce: 1,
-            index: 1,
-            currentMetadata: currentMetadataArgs,
-            updateArgs: updateArgs,
-          },
-        );
+            newMetadataArgs,
+          );
+        });
 
-        const updateMetadataTx = new Transaction().add(updateMetadataIx);
-        const updateMetadataTxId = await sendAndConfirmTransaction(
-          connection,
-          updateMetadataTx,
-          [payerKeypair],
-          {
-            commitment: 'confirmed',
-            skipPreflight: true,
-          },
-        );
+        it('Cannot use tree_owner when item in collection', async () => {
+          const collectionAuthority = new Keypair();
+          const airdropSig = await connection.requestAirdrop(collectionAuthority.publicKey, LAMPORTS_PER_SOL);
+          const latestBlockhash = await connection.getLatestBlockhash();
+          await connection.confirmTransaction({
+            blockhash: latestBlockhash.blockhash,
+            lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+            signature: airdropSig,
+          });
+          const collection = await setupCertifiedCollection(
+            connection,
+            'ColName',
+            'ColSymbol',
+            'https://mycollection.com',
+            collectionAuthority,
+          );
+          const [bubblegumSigner] = PublicKey.findProgramAddressSync(
+            [Buffer.from('collection_cpi')],
+            BUBBLEGUM_PROGRAM_ID,
+          );
+          const metadataArgs = makeCompressedCollectionNFT(
+            'cname',
+            'csymbol',
+            'https://myuri.com',
+            collection.mintAddress,
+          );
 
-        console.log('Update metadata tx success:', updateMetadataTxId);
+          // Mint a New NFT to a Collection
+          const mintToCollectionIx = createMintToCollectionV1Instruction(
+            {
+              treeAuthority,
+              leafOwner: payer,
+              leafDelegate: payer,
+              merkleTree,
+              payer,
+              treeDelegate: payer,
+              collectionAuthority: collectionAuthority.publicKey,
+              collectionAuthorityRecordPda: BUBBLEGUM_PROGRAM_ID,
+              collectionMint: collection.mintAddress,
+              collectionMetadata: collection.metadataAddress,
+              editionAccount: collection.masterEditionAddress,
+              bubblegumSigner,
+              logWrapper: SPL_NOOP_PROGRAM_ID,
+              compressionProgram: SPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
+              tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
+            },
+            {
+              metadataArgs: metadataArgs,
+            },
+          );
 
-        const newMetadataArgs: MetadataArgs = {
-          ...currentMetadataArgs,
-          name: 'NewName',
-          symbol: 'NewSymbol',
-          uri: 'https://foobar.com',
-        };
+          const mintToCollectionTxId = await sendAndConfirmTransaction(
+            connection,
+            new Transaction().add(mintToCollectionIx),
+            [payerKeypair, collectionAuthority],
+            {
+              commitment: 'confirmed',
+              skipPreflight: true,
+            },
+          );
 
-        // We should now be able to verify the new leaf with the metadata replaced
-        await verifyLeaf(
-          connection,
-          payerKeypair,
-          payerKeypair.publicKey,
-          payerKeypair.publicKey,
-          1,
-          merkleTree,
-          newMetadataArgs,
-        );
+          console.log('Mint to Collection Success:', mintToCollectionTxId);
+
+          // MintToCollectionV1 will update verified to true in MetadataArgs before minting to the tree
+          // Thus we must alter the MetadataArgs object we expect to exist in the leaf before the update to match
+          const currentMetadataArgs = {
+            ...metadataArgs,
+            collection: { key: metadataArgs.collection!.key, verified: true },
+          };
+
+          const updateArgs = {
+            name: 'NewName',
+            symbol: 'NewSymbol',
+            uri: 'https://foobar.com',
+            creators: null,
+            sellerFeeBasisPoints: null,
+            primarySaleHappened: null,
+            isMutable: null,
+          };
+
+          const updateMetadataIx = createUpdateMetadataInstruction(
+            {
+              authority: payer,
+              collectionMint: collection.mintAddress,
+              collectionMetadata: collection.metadataAddress,
+              collectionAuthorityRecordPda: BUBBLEGUM_PROGRAM_ID,
+              treeAuthority,
+              leafOwner: payer,
+              leafDelegate: payer,
+              payer,
+              merkleTree,
+              logWrapper: SPL_NOOP_PROGRAM_ID,
+              compressionProgram: SPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
+              tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
+            },
+            {
+              root: Array.from(merkleAccount.getCurrentRoot()),
+              nonce: 1,
+              index: 1,
+              currentMetadata: currentMetadataArgs,
+              updateArgs: updateArgs,
+            },
+          );
+
+          const updateMetadataTx = new Transaction().add(updateMetadataIx);
+          try {
+            await sendAndConfirmTransaction(connection, updateMetadataTx, [payerKeypair], {
+              commitment: 'confirmed',
+              skipPreflight: true,
+            });
+            assert.fail(
+              'Metadata update using tree owner should fail for item in collection',
+            );
+          } catch (err) {
+            assert(
+              err.message.includes('"Custom":6028'),
+              'Did not fail for correct reason! ' + err.message,
+            );
+          }
+        });
       });
     });
 

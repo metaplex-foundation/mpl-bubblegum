@@ -265,7 +265,7 @@ pub mod bubblegum {
         processor::verify_creator(ctx, root, data_hash, creator_hash, nonce, index, message)
     }
 
-    /// Verifies a creator for a leaf node.
+    /// Updates metadata for a leaf node that is not part of a verified collection.
     pub fn update_metadata<'info>(
         ctx: Context<'_, '_, '_, 'info, UpdateMetadata<'info>>,
         root: [u8; 32],
