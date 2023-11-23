@@ -776,11 +776,11 @@ dependencies = [
  "solana-program-test",
  "solana-sdk",
  "spl-account-compression",
- "spl-associated-token-account 1.1.3",
+ "spl-associated-token-account 2.0.0",
  "spl-concurrent-merkle-tree",
  "spl-merkle-tree-reference",
  "spl-noop 0.1.3",
- "spl-token 3.5.0",
+ "spl-token 4.0.0",
 ]
 
 [[package]]
@@ -2264,7 +2264,7 @@ checksum = "66b1ec5ee0570f688cc84ff4624c5c50732f1a2bfc789f6b34af5b563428d971"
 dependencies = [
  "borsh 0.10.3",
  "bytemuck",
- "mpl-token-metadata-context-derive 0.2.1",
+ "mpl-token-metadata-context-derive",
  "num-derive",
  "num-traits",
  "rmp-serde",
@@ -2277,21 +2277,14 @@ dependencies = [
 
 [[package]]
 name = "mpl-token-metadata"
-version = "2.0.0-beta.1"
+version = "3.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d3545bd5fe73416f6514cd93899612e0e138619e72df8bc7d19906a12688c69e"
+checksum = "2f026911d295dae5bee7186ca0d94e96ea56a3a7d802d0c038560c2c7b18418f"
 dependencies = [
- "arrayref",
  "borsh 0.10.3",
- "mpl-token-auth-rules",
- "mpl-token-metadata-context-derive 0.3.0",
- "mpl-utils",
  "num-derive",
  "num-traits",
- "shank",
  "solana-program",
- "spl-associated-token-account 2.0.0",
- "spl-token 4.0.0",
  "thiserror",
 ]
 
@@ -2303,27 +2296,6 @@ checksum = "12989bc45715b0ee91944855130131479f9c772e198a910c3eb0ea327d5bffc3"
 dependencies = [
  "quote 1.0.32",
  "syn 1.0.109",
-]
-
-[[package]]
-name = "mpl-token-metadata-context-derive"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b5a739019e11d93661a64ef5fe108ab17c79b35961e944442ff6efdd460ad01a"
-dependencies = [
- "quote 1.0.32",
- "syn 1.0.109",
-]
-
-[[package]]
-name = "mpl-utils"
-version = "0.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3f2e4f92aec317d5853c0cc4c03c55f5178511c45bb3dbb441aea63117bf3dc9"
-dependencies = [
- "arrayref",
- "solana-program",
- "spl-token-2022 0.6.1",
 ]
 
 [[package]]
