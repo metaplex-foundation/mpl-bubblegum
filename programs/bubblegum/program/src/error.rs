@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use mpl_token_metadata::error::MetadataError;
+use mpl_token_metadata::errors::MplTokenMetadataError;
 use num_traits::FromPrimitive;
 
 #[error_code]
@@ -82,12 +82,12 @@ pub fn metadata_error_into_bubblegum(error: ProgramError) -> BubblegumError {
                 FromPrimitive::from_u32(e).expect("Unknown error code from token-metadata");
 
             match metadata_error {
-                MetadataError::CollectionNotFound => BubblegumError::CollectionNotFound,
-                MetadataError::CollectionMustBeAUniqueMasterEdition => {
+                MplTokenMetadataError::CollectionNotFound => BubblegumError::CollectionNotFound,
+                MplTokenMetadataError::CollectionMustBeAUniqueMasterEdition => {
                     BubblegumError::CollectionMustBeAUniqueMasterEdition
                 }
 
-                MetadataError::CollectionMasterEditionAccountInvalid => {
+                MplTokenMetadataError::CollectionMasterEditionAccountInvalid => {
                     BubblegumError::CollectionMasterEditionAccountInvalid
                 }
 

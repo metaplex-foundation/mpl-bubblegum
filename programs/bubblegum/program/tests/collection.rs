@@ -102,7 +102,7 @@ async fn verify_collection_with_new_delegate() {
     let mut collection_asset = context.default_collection.dirty_clone();
     let mut program_context = context.owned_test_context();
 
-    let args = mpl_token_metadata::instruction::DelegateArgs::CollectionV1 {
+    let args = mpl_token_metadata::types::DelegateArgs::CollectionV1 {
         authorization_data: None,
     };
 
