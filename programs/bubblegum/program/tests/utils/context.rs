@@ -6,8 +6,9 @@ use super::{
 };
 use bubblegum::state::metaplex_adapter::{Collection, Creator, MetadataArgs, TokenProgramVersion};
 use mpl_token_metadata::{
-    pda::find_collection_authority_account,
-    state::{CollectionDetails, TokenStandard},
+    accounts::CollectionAuthorityRecord,
+    instructions::ApproveCollectionAuthorityBuilder,
+    types::{CollectionDetails, TokenStandard},
 };
 use solana_program::pubkey::Pubkey;
 use solana_program_test::{BanksClient, ProgramTestContext, ProgramTestError};
@@ -219,17 +220,16 @@ impl BubblegumTestContext {
         let collection_asset = &self.default_collection;
 
         let (record, _) =
-            find_collection_authority_account(&collection_asset.mint.pubkey(), &delegate);
+            CollectionAuthorityRecord::find_pda(&collection_asset.mint.pubkey(), &delegate);
 
-        let ix = mpl_token_metadata::instruction::approve_collection_authority(
-            mpl_token_metadata::ID,
-            record,
-            delegate,
-            authority.pubkey(),
-            payer.pubkey(),
-            collection_asset.metadata,
-            collection_asset.mint.pubkey(),
-        );
+        let ix = ApproveCollectionAuthorityBuilder::default()
+            .collection_authority_record(record)
+            .new_collection_authority(delegate)
+            .update_authority(authority.pubkey())
+            .payer(payer.pubkey())
+            .metadata(collection_asset.metadata)
+            .mint(collection_asset.mint.pubkey())
+            .instruction();
 
         let tx = Transaction::new_signed_with_payer(
             &[ix],

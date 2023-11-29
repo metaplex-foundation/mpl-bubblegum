@@ -3,12 +3,9 @@ pub mod utils;
 
 use bubblegum::error::BubblegumError;
 use mpl_token_metadata::{
-    pda::{find_master_edition_account, find_metadata_account},
-    state::{
-        MasterEditionV2, TokenMetadataAccount, TokenStandard, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH,
-        MAX_URI_LENGTH,
-    },
-    utils::puffed_out_string,
+    accounts::{MasterEdition, Metadata},
+    types::TokenStandard,
+    MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH,
 };
 use solana_program::{account_info::AccountInfo, program_option::COption, program_pack::Pack};
 use solana_program_test::{tokio, BanksClientError};
@@ -19,7 +16,7 @@ use spl_associated_token_account::get_associated_token_address;
 use spl_token::state::Mint;
 use utils::context::BubblegumTestContext;
 
-use crate::utils::{tree::decompress_mint_auth_pda, Error::BanksClient};
+use crate::utils::{puffed_out_string, tree::decompress_mint_auth_pda, Error::BanksClient};
 
 // Test for multiple combinations?
 const MAX_DEPTH: usize = 14;
@@ -66,11 +63,11 @@ async fn test_decompress_passes() {
         let mint = Mint::unpack(mint_account.data.as_slice()).unwrap();
 
         let expected_mint = Mint {
-            mint_authority: COption::Some(find_master_edition_account(&mint_key).0),
+            mint_authority: COption::Some(MasterEdition::find_pda(&mint_key).0),
             supply: 1,
             decimals: 0,
             is_initialized: true,
-            freeze_authority: COption::Some(find_master_edition_account(&mint_key).0),
+            freeze_authority: COption::Some(MasterEdition::find_pda(&mint_key).0),
         };
 
         assert_eq!(mint, expected_mint);
@@ -92,11 +89,11 @@ async fn test_decompress_passes() {
 
         assert_eq!(t, expected_t);
 
-        let metadata_key = find_metadata_account(&mint_key).0;
+        let metadata_key = Metadata::find_pda(&mint_key).0;
         let mut meta_account = tree.read_account(metadata_key).await.unwrap();
 
-        let meta: mpl_token_metadata::state::Metadata =
-            mpl_token_metadata::state::Metadata::from_account_info(&AccountInfo::from((
+        let meta: mpl_token_metadata::accounts::Metadata =
+            mpl_token_metadata::accounts::Metadata::try_from(&AccountInfo::from((
                 &metadata_key,
                 &mut meta_account,
             )))
@@ -106,7 +103,7 @@ async fn test_decompress_passes() {
 
         // Can't compare directly as they are different types for some reason.
         for c1 in leaf.metadata.creators.iter() {
-            expected_creators.push(mpl_token_metadata::state::Creator {
+            expected_creators.push(mpl_token_metadata::types::Creator {
                 address: c1.address,
                 verified: c1.verified,
                 share: c1.share,
@@ -115,17 +112,15 @@ async fn test_decompress_passes() {
 
         assert!(expected_creators[0].verified);
 
-        let expected_meta = mpl_token_metadata::state::Metadata {
-            key: mpl_token_metadata::state::Key::MetadataV1,
+        let expected_meta = mpl_token_metadata::accounts::Metadata {
+            key: mpl_token_metadata::types::Key::MetadataV1,
             update_authority: decompress_mint_auth_pda(mint_key),
             mint: mint_key,
-            data: mpl_token_metadata::state::Data {
-                name: puffed_out_string(&leaf.metadata.name, MAX_NAME_LENGTH),
-                symbol: puffed_out_string(&leaf.metadata.symbol, MAX_SYMBOL_LENGTH),
-                uri: puffed_out_string(&leaf.metadata.uri, MAX_URI_LENGTH),
-                seller_fee_basis_points: leaf.metadata.seller_fee_basis_points,
-                creators: Some(expected_creators),
-            },
+            name: puffed_out_string(&leaf.metadata.name, MAX_NAME_LENGTH),
+            symbol: puffed_out_string(&leaf.metadata.symbol, MAX_SYMBOL_LENGTH),
+            uri: puffed_out_string(&leaf.metadata.uri, MAX_URI_LENGTH),
+            seller_fee_basis_points: leaf.metadata.seller_fee_basis_points,
+            creators: Some(expected_creators),
             primary_sale_happened: false,
             is_mutable: false,
             collection: leaf.metadata.collection.as_mut().map(|c| c.adapt()),
@@ -140,14 +135,13 @@ async fn test_decompress_passes() {
         assert_eq!(meta, expected_meta);
 
         // Test master edition account.
-        let me_key = find_master_edition_account(&mint_key).0;
+        let me_key = MasterEdition::find_pda(&mint_key).0;
         let mut me_account = tree.read_account(me_key).await.unwrap();
-        let me: MasterEditionV2 =
-            MasterEditionV2::from_account_info(&AccountInfo::from((&me_key, &mut me_account)))
-                .unwrap();
+        let me: MasterEdition =
+            MasterEdition::try_from(&AccountInfo::from((&me_key, &mut me_account))).unwrap();
 
-        let expected_me = MasterEditionV2 {
-            key: mpl_token_metadata::state::Key::MasterEditionV2,
+        let expected_me = MasterEdition {
+            key: mpl_token_metadata::types::Key::MasterEditionV2,
             supply: 0,
             max_supply: Some(0),
         };
