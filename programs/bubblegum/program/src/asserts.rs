@@ -1,22 +1,21 @@
 use crate::{error::BubblegumError, state::metaplex_adapter::MetadataArgs, utils::cmp_pubkeys};
 use anchor_lang::prelude::*;
 use mpl_token_metadata::{
-    instruction::MetadataDelegateRole,
-    pda::{find_collection_authority_account, find_metadata_delegate_record_account},
-    state::{CollectionAuthorityRecord, Metadata, MetadataDelegateRecord, TokenMetadataAccount},
+    accounts::{CollectionAuthorityRecord, Metadata, MetadataDelegateRecord},
+    types::{Collection, MetadataDelegateRole, TokenStandard},
 };
 
 /// Assert that the provided MetadataArgs are compatible with MPL `Data`
 pub fn assert_metadata_is_mpl_compatible(metadata: &MetadataArgs) -> Result<()> {
-    if metadata.name.len() > mpl_token_metadata::state::MAX_NAME_LENGTH {
+    if metadata.name.len() > mpl_token_metadata::MAX_NAME_LENGTH {
         return Err(BubblegumError::MetadataNameTooLong.into());
     }
 
-    if metadata.symbol.len() > mpl_token_metadata::state::MAX_SYMBOL_LENGTH {
+    if metadata.symbol.len() > mpl_token_metadata::MAX_SYMBOL_LENGTH {
         return Err(BubblegumError::MetadataSymbolTooLong.into());
     }
 
-    if metadata.uri.len() > mpl_token_metadata::state::MAX_URI_LENGTH {
+    if metadata.uri.len() > mpl_token_metadata::MAX_URI_LENGTH {
         return Err(BubblegumError::MetadataUriTooLong.into());
     }
 
@@ -24,7 +23,7 @@ pub fn assert_metadata_is_mpl_compatible(metadata: &MetadataArgs) -> Result<()> 
         return Err(BubblegumError::MetadataBasisPointsTooHigh.into());
     }
     if !metadata.creators.is_empty() {
-        if metadata.creators.len() > mpl_token_metadata::state::MAX_CREATOR_LIMIT {
+        if metadata.creators.len() > mpl_token_metadata::MAX_CREATOR_LIMIT {
             return Err(BubblegumError::CreatorsTooLong.into());
         }
 
@@ -106,8 +105,8 @@ pub fn assert_has_collection_authority(
     }
 
     if let Some(record_info) = delegate_record {
-        let (ca_pda, ca_bump) = find_collection_authority_account(mint, collection_authority);
-        let (md_pda, md_bump) = find_metadata_delegate_record_account(
+        let (ca_pda, ca_bump) = CollectionAuthorityRecord::find_pda(mint, collection_authority);
+        let (md_pda, md_bump) = MetadataDelegateRecord::find_pda(
             mint,
             MetadataDelegateRole::Collection,
             &collection_data.update_authority,
@@ -148,5 +147,43 @@ pub fn assert_has_collection_authority(
     } else if collection_data.update_authority != *collection_authority {
         return Err(BubblegumError::InvalidCollectionAuthority.into());
     }
+    Ok(())
+}
+
+pub fn assert_collection_membership(
+    membership: &Option<Collection>,
+    collection_metadata: &Metadata,
+    collection_mint: &Pubkey,
+    collection_edition: &AccountInfo,
+) -> Result<()> {
+    match membership {
+        Some(collection) => {
+            if collection.key != *collection_mint || collection_metadata.mint != *collection_mint {
+                return Err(BubblegumError::CollectionNotFound.into());
+            }
+        }
+        None => {
+            return Err(BubblegumError::CollectionNotFound.into());
+        }
+    }
+
+    let (expected, _) = mpl_token_metadata::accounts::MasterEdition::find_pda(collection_mint);
+
+    if collection_edition.key != &expected {
+        return Err(BubblegumError::CollectionMasterEditionAccountInvalid.into());
+    }
+
+    let edition = mpl_token_metadata::accounts::MasterEdition::try_from(collection_edition)
+        .map_err(|_err| BubblegumError::CollectionMustBeAUniqueMasterEdition)?;
+
+    match collection_metadata.token_standard {
+        Some(TokenStandard::NonFungible) | Some(TokenStandard::ProgrammableNonFungible) => (),
+        _ => return Err(BubblegumError::CollectionMustBeAUniqueMasterEdition.into()),
+    }
+
+    if edition.max_supply != Some(0) {
+        return Err(BubblegumError::CollectionMustBeAUniqueMasterEdition.into());
+    }
+
     Ok(())
 }
