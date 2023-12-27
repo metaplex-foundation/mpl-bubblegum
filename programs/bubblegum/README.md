@@ -20,18 +20,18 @@ See [README.md](https://github.com/metaplex-foundation/mpl-bubblegum/blob/main/c
 
 ## Overview
 
-`Bubblegum` is the Metaplex Protocol program for creating and interacting with compressed Metaplex NFTs.  Compressed NFTs are secured on-chain using Merkle trees.
+`Bubblegum` is the Metaplex Protocol program for creating and interacting with Metaplex compressed NFTs (cNFTs).  Compressed NFTs are secured on-chain using Merkle trees.
 
 With Bubblegum you can:
 * Create a tree
 * Delegate authority for a tree.
-* Mint a compressed cNFT to a tree.
+* Mint a cNFT to a tree.
 * Verify/unverify creators
 * Verify/unverify membership of a cNFT to a Metaplex Verified Collection.
 * Transfer ownership of a cNFT.
 * Delegate authority for a cNFT.
 * Burn a cNFT.
-* Redeem a cNFT and decompress it into an uncompressed Metaplex cNFT.
+* Redeem a cNFT and decompress it into an uncompressed Token Metadata NFT.
 
 ## Background
 
@@ -64,13 +64,13 @@ Beyond verifying creators at the time of mint, there are `verify_creator` and `u
 Note that there is no such thing as compressed Verified Collections.  Collections are still NFTs created in the realm of Metadata and Master Edition `token-metadata` accounts. There are instructions to `verify_collection` and `unverify_collection`, as well as a `set_and_verify_collection` instruction for the case where the collection was set during the mint. `mint_to_collection_v1` is an instruction can be used to mint and verify a collection at the same time. Currently `decompress_v1` will fail for verified collection compressed assets, and will only be successful for unverified / no collection compressed assets. The complete flow for decompressing a verified asset would be to unverify its collection, decompress, and reverify collection through traditional means.
 All of these require either the true Collection Authority to be a a signer, or a delegated Collection Authority to be a signer along with providing a Collection Authority Record PDA.  See the Metaplex documentation on [`Certified Collections`](https://docs.metaplex.com/programs/token-metadata/certified-collections) for more information on verifying collections.
 
-### Transfer ownership, delegate authority, and burn a cNFT.
+### Transfer ownership, delegate authority, and burn a cNFT
 
 Compressed NFTs support transferring ownership, delegating authority, and burning the cNFT.  See the [Instructions](##Instructions) section below for details.
 
-### Redeem a cNFT and decompress it into an uncompressed Metaplex cNFT
+### Redeem a cNFT and decompress it into an uncompressed Token Metadata NFT
 
-Redeeming a cNFT removes the leaf from the Merkle tree and creates a voucher PDA account.  The voucher account can be sent to the `decompress_v1` instruction to decompress the cNFT into an uncompressed Metaplex cNFT.  As mentioned above this will cost rent for the Metadata and Master Edition `token-metadata` accounts that are created during the decompression process.  Note that after a compressed cNFT is redeemed but before it is decompressed, the process can be reversed using `cancel_redeem`.  This puts the compressed cNFT back into the Merkle tree.
+Redeeming a cNFT removes the leaf from the Merkle tree and creates a voucher PDA account.  The voucher account can be sent to the `decompress_v1` instruction to decompress the cNFT into a Token Metadata NFT.  As mentioned above this will cost rent for the Metadata and Master Edition `token-metadata` accounts that are created during the decompression process.  Note that after a cNFT is redeemed but before it is decompressed, the process can be reversed using `cancel_redeem`.  This puts the cNFT back into the Merkle tree.
 
 ## Accounts
 
@@ -88,7 +88,7 @@ The account data is represented by the [`TreeConfig`](program/src/state/mod.rs#L
 
 ### 📄 `voucher`
 
-The `voucher` PDA account is used when a compressed cNFT is redeemed and decompressed.  It is initialized by `redeem` and represented by the [`Voucher`](program/src/state/mod.rs#L39) struct, which includes a reference to the [`LeafSchema`](program/src/state/leaf_schema.rs#L40) struct.
+The `voucher` PDA account is used when a cNFT is redeemed and decompressed.  It is initialized by `redeem` and represented by the [`Voucher`](program/src/state/mod.rs#L39) struct, which includes a reference to the [`LeafSchema`](program/src/state/leaf_schema.rs#L40) struct.
 
 | Field                             | Offset | Size | Description
 | --------------------------------- | ------ | ---- | --
@@ -154,7 +154,7 @@ None.
 
 ### 📄 `mint_v1`
 
-This instruction mints a compressed cNFT.  Note that Merkle proofs are *not* required for minting.
+This instruction mints a cNFT.  Note that Merkle proofs are *not* required for minting.
 
 <details>
   <summary>Accounts</summary>
@@ -184,7 +184,7 @@ This instruction mints a compressed cNFT.  Note that Merkle proofs are *not* req
 
 ### 📄 `mint_to_collection_v1`
 
-This instruction mints a compressed cNFT.  Note that Merkle proofs are *not* required for minting.
+This instruction mints a cNFT as a verified member of a collection.  Note that Merkle proofs are *not* required for minting.
 
 <details>
   <summary>Accounts</summary>
@@ -221,7 +221,7 @@ This instruction mints a compressed cNFT.  Note that Merkle proofs are *not* req
 
 ### 📄 `update_metadata`
 
-This instruction updates the metadata for a compressed cNFT.
+This instruction updates the metadata for a cNFT.
 
 <details>
   <summary>Accounts</summary>
@@ -507,7 +507,7 @@ Cancel the redemption of a cNFT (Put the cNFT back into the Merkle tree).
 
 ### 📄 `decompress_v1`
 
-Decompress a cNFT into an uncompressed Metaplex cNFT.  This will cost rent for the token-metadata Metadata and Master Edition accounts that are created.  Note that Merkle proofs are *not* required for decompression because the leaf (cNFT) was already removed from the tree.
+Decompress a cNFT into an uncompressed Token Metadata NFT.  This will cost rent for the token-metadata Metadata and Master Edition accounts that are created.  Note that Merkle proofs are *not* required for decompression because the leaf (cNFT) was already removed from the tree.
 
 <details>
   <summary>Accounts</summary>
