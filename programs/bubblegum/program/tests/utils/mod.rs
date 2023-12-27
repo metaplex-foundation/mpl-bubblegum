@@ -41,7 +41,7 @@ pub fn program_test() -> ProgramTest {
         spl_account_compression::id(),
         None,
     );
-    test.add_program("mpl_token_metadata", mpl_token_metadata::id(), None);
+    test.add_program("mpl_token_metadata", mpl_token_metadata::ID, None);
     test.set_compute_max_units(1_400_000);
     test
 }
@@ -137,4 +137,11 @@ impl Airdrop for Keypair {
 
         context.banks_client.process_transaction(tx).await
     }
+}
+
+/// Pads the string to the desired size with `0u8`s.
+/// NOTE: it is assumed that the string's size is never larger than the given size.
+pub fn puffed_out_string(s: &str, size: usize) -> String {
+    let padding = vec![0u8; size - s.len()];
+    s.to_string() + &String::from_utf8(padding).unwrap()
 }

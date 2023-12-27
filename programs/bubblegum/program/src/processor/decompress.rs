@@ -1,5 +1,9 @@
 use anchor_lang::prelude::*;
 use anchor_spl::{associated_token::AssociatedToken, token::Token};
+use mpl_token_metadata::{
+    instructions::{CreateMasterEditionV3CpiBuilder, CreateMetadataAccountV3CpiBuilder},
+    types::DataV2,
+};
 use solana_program::{
     program::{invoke, invoke_signed},
     program_pack::Pack,
@@ -71,12 +75,14 @@ pub struct DecompressV1<'info> {
 }
 
 pub(crate) fn decompress_v1(ctx: Context<DecompressV1>, metadata: MetadataArgs) -> Result<()> {
-    // Allocate and create mint
-    let incoming_data_hash = hash_metadata(&metadata)?;
+    // Validate the incoming metadata
+
     match ctx.accounts.voucher.leaf_schema {
         LeafSchema::V1 {
             owner, data_hash, ..
         } => {
+            let incoming_data_hash = hash_metadata(&metadata)?;
+
             if !cmp_bytes(&data_hash, &incoming_data_hash, 32) {
                 return Err(BubblegumError::HashingMismatch.into());
             }
@@ -180,82 +186,53 @@ pub(crate) fn decompress_v1(ctx: Context<DecompressV1>, metadata: MetadataArgs) 
         ]],
     )?;
 
-    let metadata_infos = vec![
-        ctx.accounts.metadata.to_account_info(),
-        ctx.accounts.mint.to_account_info(),
-        ctx.accounts.mint_authority.to_account_info(),
-        ctx.accounts.leaf_owner.to_account_info(),
-        ctx.accounts.token_metadata_program.to_account_info(),
-        ctx.accounts.token_program.to_account_info(),
-        ctx.accounts.system_program.to_account_info(),
-        ctx.accounts.sysvar_rent.to_account_info(),
-    ];
-
-    let master_edition_infos = vec![
-        ctx.accounts.master_edition.to_account_info(),
-        ctx.accounts.mint.to_account_info(),
-        ctx.accounts.mint_authority.to_account_info(),
-        ctx.accounts.leaf_owner.to_account_info(),
-        ctx.accounts.metadata.to_account_info(),
-        ctx.accounts.token_metadata_program.to_account_info(),
-        ctx.accounts.token_program.to_account_info(),
-        ctx.accounts.system_program.to_account_info(),
-        ctx.accounts.sysvar_rent.to_account_info(),
-    ];
-
-    msg!("Creating metadata!");
-    invoke_signed(
-        &mpl_token_metadata::instruction::create_metadata_accounts_v3(
-            ctx.accounts.token_metadata_program.key(),
-            ctx.accounts.metadata.key(),
-            ctx.accounts.mint.key(),
-            ctx.accounts.mint_authority.key(),
-            ctx.accounts.leaf_owner.key(),
-            ctx.accounts.mint_authority.key(),
-            metadata.name.clone(),
-            metadata.symbol.clone(),
-            metadata.uri.clone(),
-            if !metadata.creators.is_empty() {
-                Some(metadata.creators.iter().map(|c| c.adapt()).collect())
-            } else {
+    msg!("Creating metadata");
+    CreateMetadataAccountV3CpiBuilder::new(&ctx.accounts.token_metadata_program)
+        .metadata(&ctx.accounts.metadata)
+        .mint(&ctx.accounts.mint)
+        .mint_authority(&ctx.accounts.mint_authority)
+        .payer(&ctx.accounts.leaf_owner)
+        .update_authority(&ctx.accounts.mint_authority, true)
+        .system_program(&ctx.accounts.system_program)
+        .data(DataV2 {
+            name: metadata.name.clone(),
+            symbol: metadata.symbol.clone(),
+            uri: metadata.uri.clone(),
+            creators: if metadata.creators.is_empty() {
                 None
+            } else {
+                Some(metadata.creators.iter().map(|c| c.adapt()).collect())
             },
-            metadata.seller_fee_basis_points,
-            true,
-            metadata.is_mutable,
-            metadata.collection.map(|c| c.adapt()),
-            metadata.uses.map(|u| u.adapt()),
-            None,
-        ),
-        metadata_infos.as_slice(),
-        &[&[
+            collection: metadata.collection.map(|c| c.adapt()),
+            seller_fee_basis_points: metadata.seller_fee_basis_points,
+            uses: metadata.uses.map(|u| u.adapt()),
+        })
+        .is_mutable(metadata.is_mutable)
+        .invoke_signed(&[&[
             ctx.accounts.mint.key().as_ref(),
             &[ctx.bumps["mint_authority"]],
-        ]],
-    )?;
+        ]])?;
 
-    msg!("Creating master edition!");
-    invoke_signed(
-        &mpl_token_metadata::instruction::create_master_edition_v3(
-            ctx.accounts.token_metadata_program.key(),
-            ctx.accounts.master_edition.key(),
-            ctx.accounts.mint.key(),
-            ctx.accounts.mint_authority.key(),
-            ctx.accounts.mint_authority.key(),
-            ctx.accounts.metadata.key(),
-            ctx.accounts.leaf_owner.key(),
-            Some(0),
-        ),
-        master_edition_infos.as_slice(),
-        &[&[
+    msg!("Creating master edition");
+    CreateMasterEditionV3CpiBuilder::new(&ctx.accounts.token_metadata_program)
+        .edition(&ctx.accounts.master_edition)
+        .mint(&ctx.accounts.mint)
+        .mint_authority(&ctx.accounts.mint_authority)
+        .update_authority(&ctx.accounts.mint_authority)
+        .metadata(&ctx.accounts.metadata)
+        .payer(&ctx.accounts.leaf_owner)
+        .system_program(&ctx.accounts.system_program)
+        .token_program(&ctx.accounts.token_program)
+        .max_supply(0)
+        .invoke_signed(&[&[
             ctx.accounts.mint.key().as_ref(),
             &[ctx.bumps["mint_authority"]],
-        ]],
-    )?;
+        ]])?;
 
     ctx.accounts
         .mint_authority
         .to_account_info()
         .assign(&System::id());
+
     Ok(())
 }

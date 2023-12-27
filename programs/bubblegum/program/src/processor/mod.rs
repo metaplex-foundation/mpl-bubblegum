@@ -1,13 +1,14 @@
 use anchor_lang::prelude::*;
 use mpl_token_metadata::{
-    assertions::collection::assert_collection_verify_is_valid, state::CollectionDetails,
+    instructions::BubblegumSetCollectionSizeCpiBuilder,
+    types::{CollectionDetails, SetCollectionSizeArgs},
 };
-use solana_program::{account_info::AccountInfo, program::invoke_signed, pubkey::Pubkey};
+use solana_program::{account_info::AccountInfo, pubkey::Pubkey};
 use spl_account_compression::wrap_application_data_v1;
 
 use crate::{
-    asserts::assert_has_collection_authority,
-    error::{metadata_error_into_bubblegum, BubblegumError},
+    asserts::{assert_collection_membership, assert_has_collection_authority},
+    error::BubblegumError,
     state::{
         leaf_schema::LeafSchema,
         metaplex_adapter::{self, Creator, MetadataArgs},
@@ -192,14 +193,12 @@ fn process_collection_verification_mpl_only<'info>(
 
     // If the NFT has collection data, we set it to the correct value after doing some validation.
     if let Some(collection) = &mut message.collection {
-        // Collection verify assert from token-metadata program.
-        assert_collection_verify_is_valid(
+        assert_collection_membership(
             &Some(collection.adapt()),
             collection_metadata,
-            collection_mint,
+            collection_mint.key,
             edition_account,
-        )
-        .map_err(metadata_error_into_bubblegum)?;
+        )?;
 
         assert_has_collection_authority(
             collection_metadata,
@@ -230,31 +229,16 @@ fn process_collection_verification_mpl_only<'info>(
             }
         };
 
-        // CPI into to token-metadata program to change the collection size.
-        let mut bubblegum_set_collection_size_infos = vec![
-            collection_metadata.to_account_info(),
-            collection_authority.clone(),
-            collection_mint.clone(),
-            bubblegum_signer.clone(),
-        ];
+        // CPI into Token Metadata program to change the collection size.
 
-        if let Some(record) = collection_authority_record {
-            bubblegum_set_collection_size_infos.push(record.clone());
-        }
-
-        invoke_signed(
-            &mpl_token_metadata::instruction::bubblegum_set_collection_size(
-                token_metadata_program.key(),
-                collection_metadata.to_account_info().key(),
-                collection_authority.key(),
-                collection_mint.key(),
-                bubblegum_signer.key(),
-                collection_authority_record.map(|r| r.key()),
-                new_size,
-            ),
-            bubblegum_set_collection_size_infos.as_slice(),
-            &[&[COLLECTION_CPI_PREFIX.as_bytes(), &[bubblegum_bump]]],
-        )?;
+        BubblegumSetCollectionSizeCpiBuilder::new(token_metadata_program)
+            .collection_metadata(&collection_metadata.to_account_info())
+            .collection_authority(collection_authority)
+            .collection_mint(collection_mint)
+            .bubblegum_signer(bubblegum_signer)
+            .collection_authority_record(collection_authority_record)
+            .set_collection_size_args(SetCollectionSizeArgs { size: new_size })
+            .invoke_signed(&[&[COLLECTION_CPI_PREFIX.as_bytes(), &[bubblegum_bump]]])?;
     } else {
         return Err(BubblegumError::CollectionMustBeSized.into());
     }
