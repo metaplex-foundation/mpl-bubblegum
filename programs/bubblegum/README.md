@@ -77,7 +77,7 @@ Redeeming a cNFT removes the leaf from the Merkle tree and creates a voucher PDA
 ### 📄 `tree_authority`
 
 The `tree_authority` PDA account data stores information about a Merkle tree.  It is initialized by `create_tree` and is updated by all other Bubblegum instructions except for decompression.
-The account data is represented by the [`TreeConfig`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/mod.rs#L17) struct.
+The account data is represented by the [`TreeConfig`](program/src/state/mod.rs#L17) struct.
 
 | Field                              | Offset | Size | Description
 | ---------------------------------- | ------ | ---- | --
@@ -88,7 +88,7 @@ The account data is represented by the [`TreeConfig`](https://github.com/metaple
 
 ### 📄 `voucher`
 
-The `voucher` PDA account is used when a compressed cNFT is redeemed and decompressed.  It is initialized by `redeem` and represented by the [`Voucher`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/mod.rs#L36) struct, which includes a reference to the [`LeafSchema`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/leaf_schema.rs#L45) struct.
+The `voucher` PDA account is used when a compressed cNFT is redeemed and decompressed.  It is initialized by `redeem` and represented by the [`Voucher`](program/src/state/mod.rs#L39) struct, which includes a reference to the [`LeafSchema`](program/src/state/leaf_schema.rs#L40) struct.
 
 | Field                             | Offset | Size | Description
 | --------------------------------- | ------ | ---- | --
@@ -108,7 +108,7 @@ This instruction creates a Merkle Tree.
 
 | Name                              | Writable | Signer | Optional | Description
 | --------------------------------- | :------: | :----: | :------: | --
-| `tree_authority`                  |    ✅    |        |          | The [`TreeConfig`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/mod.rs#L17) PDA account that is initialized by this ed by this instruction.
+| `tree_authority`                  |    ✅    |        |          | The [`TreeConfig`](program/src/state/mod.rs#L17) PDA account that is initialized by this instruction.
 | `merkle_tree`                     |    ✅    |        |          | The account that will contain the Merkle tree.
 | `payer`                           |          |   ✅   |          | Payer.
 | `tree_creator`                    |          |   ✅   |          | The creator/owner of the Merkle tree.
@@ -137,7 +137,7 @@ This instruction delegates authority for a previously created Merkle tree.
 
 | Name                              | Writable | Signer | Optional |  Description
 | --------------------------------- | :------: | :----: | :------: |  --
-| `tree_authority`                  |    ✅    |        |          |  The [`TreeConfig`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/mod.rs#L17) PDA account previously initialized by lized by ` create_tree`.
+| `tree_authority`                  |    ✅    |        |          |  The [`TreeConfig`](program/src/state/mod.rs#L17) PDA account previously initialized by `create_tree`.
 | `tree_creator`                    |          |   ✅   |          |  The creator/owner of the Merkle tree.
 | `new_tree_delegate`               |          |        |          |  The wallet to which to delegate tree authority.
 | `merkle_tree`                     |    ✅    |        |          |  The account that contains the Merkle tree, initialized by `create_tree`.
@@ -161,7 +161,7 @@ This instruction mints a compressed cNFT.  Note that Merkle proofs are *not* req
 
 | Name                              | Writable | Signer | Optional | Description
 | -----------------------------     | :------: | :----: | :------: | --
-| `tree_authority`                  |    ✅    |        |          | The [`TreeConfig`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/mod.rs#L17) PDA account previously initialized by lized by `create_tree`.
+| `tree_authority`                  |    ✅    |        |          | The [`TreeConfig`](program/src/state/mod.rs#L17) PDA account previously initialized by `create_tree`.
 | `leaf_owner`                      |          |        |          | The wallet that will be the cNFT owner.
 | `leaf_delegate`                   |          |        |          | The wallet that will be the cNFT delegate.
 | `merkle_tree`                     |    ✅    |        |          | The account that contains the Merkle tree, initialized by `create_tree`.
@@ -178,7 +178,7 @@ This instruction mints a compressed cNFT.  Note that Merkle proofs are *not* req
 
 | Argument                          | Offset | Size | Description
 | --------------------------------- | ------ | ---- | --
-| `data`                            | 0      | ~    | [`MetadataArgs`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/metaplex_adapter.rs#L81) object.
+| `message`                         | 0      | ~    | [`MetadataArgs`](program/src/state/metaplex_adapter.rs#L83) struct.
 
 </details>
 
@@ -191,7 +191,7 @@ This instruction mints a compressed cNFT.  Note that Merkle proofs are *not* req
 
 | Name                              | Writable | Signer | Optional | Description
 | -----------------------------     | :------: | :----: | :------: | --
-| `tree_authority`                  |    ✅    |        |          | The [`TreeConfig`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/mod.rs#L17) PDA account previously initialized by lized by `create_tree`.
+| `tree_authority`                  |    ✅    |        |          | The [`TreeConfig`](program/src/state/mod.rs#L17) PDA account previously initialized by `create_tree`.
 | `leaf_owner`                      |          |        |          | The wallet that will be the cNFT owner.
 | `leaf_delegate`                   |          |        |          | The wallet that will be the cNFT delegate.
 | `merkle_tree`                     |    ✅    |        |          | The account that contains the Merkle tree, initialized by `create_tree`.
@@ -210,6 +210,15 @@ This instruction mints a compressed cNFT.  Note that Merkle proofs are *not* req
 
 </details>
 
+<details>
+  <summary>Arguments</summary>
+
+| Argument                          | Offset | Size | Description
+| --------------------------------- | ------ | ---- | --
+| `metadata_args`                   | 0      | ~    | [`MetadataArgs`](program/src/state/metaplex_adapter.rs#L83) struct.
+
+</details>
+
 ### 📄 `update_metadata`
 
 This instruction updates the metadata for a compressed cNFT.
@@ -219,7 +228,7 @@ This instruction updates the metadata for a compressed cNFT.
 
 | Name                              | Writable | Signer | Optional | Description
 | -----------------------------     | :------: | :----: | :------: | --
-| `tree_authority`                  |    ✅    |        |          | The [`TreeConfig`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/mod.rs#L17) PDA account previously initialized by lized by `create_tree`.
+| `tree_authority`                  |    ✅    |        |          | The [`TreeConfig`](program/src/state/mod.rs#L17) PDA account previously initialized by `create_tree`.
 | `authority`                       |          |   ✅   |          | Either a collection authority or tree owner/delegate.  If the item is in a verified collection, a valid collection authority must sign (collection update authority or a dey or a delegate).  Otherwise a tree/owner delegate must sign.
 | `collection_mint`                 |          |        |    ✅    | Mint account of the collection.
 | `collection_metadata`             |   ❓✅   |        |    ✅    | Metadata account of the collection.
@@ -241,7 +250,12 @@ This instruction updates the metadata for a compressed cNFT.
 
 | Argument                          | Offset | Size | Description
 | --------------------------------- | ------ | ---- | --
-| `data`                            | 0      | ~    | [`MetadataArgs`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/metaplex_adapter.rs#L81) object.
+| `root`                            | 0      | 32   | The Merkle root for the tree.  Can be retrieved from off-chain data store.
+| `nonce`                           | 32     | 8    | A nonce ("number used once") value used to make the Merkle tree leaves unique.  This is the value of `num_minted` for the tree stored in the [`TreeConfig`](program/src/state/mod.rs#L17) account at the time the cNFT was minted.  The unique value for each asset can be retrieved from off-chain data store.
+| `index`                           | 40     | 4    | The index of the leaf node in the Merkle tree.  Can be retrieved from off-chain data store.
+| `current_metadata_args`           | 44     | ~    | [`MetadataArgs`](program/src/state/metaplex_adapter.rs#L83) struct.
+| `update_args`                     | ~      | ~    | [`UpdateArgs`](program/src/state/metaplex_adapter.rs#L109) object.
+
 
 </details>
 
@@ -255,7 +269,7 @@ Verify or unverify a creator that exists in the cNFT's creators array.
 
 | Name                              | Writable | Signer | Optional | Description
 | --------------------------------- | :------: | :----: | :------: | --
-| `tree_authority`                  |    ✅    |        |          | The [`TreeConfig`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/mod.rs#L17) PDA account previously initialized by lized by `create_tree`.
+| `tree_authority`                  |    ✅    |        |          |The [`TreeConfig`](program/src/state/mod.rs#L17) PDA account previously initialized by `create_tree`.
 | `leaf_owner`                      |          |        |          | The cNFT owner.
 | `leaf_delegate`                   |          |        |          | The cNFT delegate.
 | `merkle_tree`                     |    ✅    |        |          | The account that contains the Merkle tree, initialized by `create_tree`.
@@ -277,9 +291,9 @@ Verify or unverify a creator that exists in the cNFT's creators array.
 | `root`                            | 0      | 32   | The Merkle root for the tree.  Can be retrieved from off-chain data store.
 | `data_hash`                       | 32     | 32   | The Keccak256 hash of the NFTs existing metadata (**without** the `verified` flag for the creator changed).  The metadata is retrieved from off-chain data store.
 | `creator_hash`                    | 64     | 32   | The Keccak256 hash of the NFTs existing creators array (**without** the `verified` flag for the creator changed).  The creators array is retrieved from off-chain data store.
-| `nonce`                           | 96     | 8    | A nonce ("number used once") value used to make the Merkle tree leaves unique.  This is the value of `num_minted` for the tree stored in the [`TreeConfig`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/mod.rs#L17) account at the time the cNFT was minted.  The unique value for each asset can be retrieved from off-chain data store.
+| `nonce`                           | 96     | 8    | A nonce ("number used once") value used to make the Merkle tree leaves unique.  This is the value of `num_minted` for the tree stored in the [`TreeConfig`](program/src/state/mod.rs#L17) account at the time the cNFT was minted.  The unique value for each asset can be retrieved from off-chain data store.
 | `index`                           | 104    | 4    | The index of the leaf node in the Merkle tree.  Can be retrieved from off-chain data store.
-| `data`                            | 108    | ~    | [`MetadataArgs`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/metaplex_adapter.rs#L81) object (**without** the `verified` flag for the creator changed).  Can be retrieved from off-chain data store.
+| `data`                            | 108    | ~    | Existing [`MetadataArgs`](program/src/state/metaplex_adapter.rs#L83) struct (**without** the `verified` flag for the creator changed).  Can be retrieved from off-chain data store.
 
 </details>
 
@@ -292,7 +306,7 @@ Verify or unverify a cNFT as a member of a Metaplex [`Certified Collection`](htt
 
 | Name                              | Writable | Signer | Optional | Description
 | ----------------------------------| :------: | :----: | :------: | --
-| `tree_authority`                  |    ✅    |        |          | The [`TreeConfig`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/mod.rs#L17) PDA account previously initialized by lized by `create_tree`.
+| `tree_authority`                  |    ✅    |        |          | The [`TreeConfig`](program/src/state/mod.rs#L17) PDA account previously initialized by `create_tree`.
 | `leaf_owner`                      |          |        |          | The cNFT owner.
 | `leaf_delegate`                   |          |        |          | The cNFT delegate.
 | `merkle_tree`                     |    ✅    |        |          | The account that contains the Merkle tree, initialized by `create_tree`.
@@ -320,9 +334,9 @@ Verify or unverify a cNFT as a member of a Metaplex [`Certified Collection`](htt
 | `root`                            | 0      | 32   | The Merkle root for the tree.  Can be retrieved from off-chain data store.
 | `data_hash`                       | 32     | 32   | The Keccak256 hash of the NFTs existing metadata (**without** the `verified` flag for the creator changed).  The metadata is retrieved from off-chain data store.
 | `creator_hash`                    | 64     | 32   | The Keccak256 hash of the NFTs existing creators array (**without** the `verified` flag for the creator changed).  The creators array is retrieved from off-chain data store.
-| `nonce`                           | 96     | 8    | A nonce ("number used once") value used to make the Merkle tree leaves unique.  This is the value of `num_minted` for the tree stored in the [`TreeConfig`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/mod.rs#L17) account at the time the cNFT was minted.  The unique value for each asset can be retrieved from off-chain data store.
+| `nonce`                           | 96     | 8    | A nonce ("number used once") value used to make the Merkle tree leaves unique.  This is the value of `num_minted` for the tree stored in the [`TreeConfig`](program/src/state/mod.rs#L17) account at the time the cNFT was minted.  The unique value for each asset can be retrieved from off-chain data store.
 | `index`                           | 104    | 4    | The index of the leaf node in the Merkle tree.  Can be retrieved from off-chain data store.
-| `data`                            | 108    | ~    | [`MetadataArgs`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/metaplex_adapter.rs#L81) object (**without** the `verified` flag for the collection changed).  Can be retrieved from off-chain data store.
+| `data`                            | 108    | ~    | Existing [`MetadataArgs`](program/src/state/metaplex_adapter.rs#L83) struct (**without** the `verified` flag for the collection changed).  Can be retrieved from off-chain data store.
 | _collection_                      | ~      | 32   | Mint address of a new Collection cNFT.  **Note this is only an argument for `set_and_verify_collection`**
 
 </details>
@@ -335,8 +349,8 @@ Transfer a cNFT to a different owner.  When NFTs are transferred there is no lon
   <summary>Accounts</summary>
 
 | Name                              | Writable | Signer | Optional | Description
-| --------------------------------- | -------- | ------ | -------- | --
-| `tree_authority`                  |    ✅    |        |          | The [`TreeConfig`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/mod.rs#L17) PDA account previously initialized by lized by `create_tree`.
+| --------------------------------- | :------: | :----: | :------: | --
+| `tree_authority`                  |    ✅    |        |          | The [`TreeConfig`](program/src/state/mod.rs#L17) PDA account previously initialized by `create_tree`.
 | `leaf_owner`                      |          |  ❓✅  |          | The cNFT owner.  Transfers must be signed by either the cNFT owner or cNFT delegate.
 | `leaf_delegate`                   |          |  ❓✅  |          | The cNFT delegate.  Transfers must be signed by either the cNFT owner or cNFT delegate.
 | `new_leaf_owner`                  |          |        |          | The wallet that will be the new cNFT owner.
@@ -356,7 +370,7 @@ Transfer a cNFT to a different owner.  When NFTs are transferred there is no lon
 | `root`                            | 0      | 32   | The Merkle root for the tree.  Can be retrieved from off-chain data store.
 | `data_hash`                       | 32     | 32   | The Keccak256 hash of the NFTs existing metadata (**without** the `verified` flag for the creator changed).  The metadata is retrieved from off-chain data store.
 | `creator_hash`                    | 64     | 32   | The Keccak256 hash of the NFTs existing creators array (**without** the `verified` flag for the creator changed).  The creators array is retrieved from off-chain data store.
-| `nonce`                           | 96     | 8    | A nonce ("number used once") value used to make the Merkle tree leaves unique.  This is the value of `num_minted` for the tree stored in the [`TreeConfig`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/mod.rs#L17) account at the time the cNFT was minted.  The unique value for each asset can be retrieved from off-chain data store.
+| `nonce`                           | 96     | 8    | A nonce ("number used once") value used to make the Merkle tree leaves unique.  This is the value of `num_minted` for the tree stored in the [`TreeConfig`](program/src/state/mod.rs#L17) account at the time the cNFT was minted.  The unique value for each asset can be retrieved from off-chain data store.
 | `index`                           | 104    | 4    | The index of the leaf node in the Merkle tree.  Can be retrieved from off-chain data store.
 
 </details>
@@ -369,8 +383,8 @@ Delegate authority of a cNFT to a different wallet.
   <summary>Accounts</summary>
 
 | Name                              | Writable | Signer | Optional | Description
-| --------------------------------- | -------- | ------ | -------- | --
-| `tree_authority`                  |    ✅    |        |          | The [`TreeConfig`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/mod.rs#L17) PDA account previously initialized by lized by `create_tree`.
+| --------------------------------- | :------: | :----: | :------: | --
+| `tree_authority`                  |    ✅    |        |          | The [`TreeConfig`](program/src/state/mod.rs#L17) PDA account previously initialized by `create_tree`.
 | `leaf_owner`                      |          |   ✅   |          | The cNFT owner.
 | `previous_leaf_delegate`          |          |        |          | The previous cNFT delegate.
 | `new_leaf_delegate`               |          |        |          | The wallet that will be the new cNFT delegate.
@@ -390,7 +404,7 @@ Delegate authority of a cNFT to a different wallet.
 | `root`                            | 0      | 32   | The Merkle root for the tree.  Can be retrieved from off-chain data store.
 | `data_hash`                       | 32     | 32   | The Keccak256 hash of the NFTs existing metadata (**without** the `verified` flag for the creator changed).  The metadata is retrieved from off-chain data store.
 | `creator_hash`                    | 64     | 32   | The Keccak256 hash of the NFTs existing creators array (**without** the `verified` flag for the creator changed).  The creators array is retrieved from off-chain data store.
-| `nonce`                           | 96     | 8    | A nonce ("number used once") value used to make the Merkle tree leaves unique.  This is the value of `num_minted` for the tree stored in the [`TreeConfig`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/mod.rs#L17) account at the time the cNFT was minted.  The unique value for each asset can be retrieved from off-chain data store.
+| `nonce`                           | 96     | 8    | A nonce ("number used once") value used to make the Merkle tree leaves unique.  This is the value of `num_minted` for the tree stored in the [`TreeConfig`](program/src/state/mod.rs#L17) account at the time the cNFT was minted.  The unique value for each asset can be retrieved from off-chain data store.
 | `index`                           | 104    | 4    | The index of the leaf node in the Merkle tree.  Can be retrieved from off-chain data store.
 
 </details>
@@ -403,8 +417,8 @@ Burn a cNFT.
   <summary>Accounts</summary>
 
 | Name                              | Writable | Signer | Optional | Description
-| --------------------------------- | -------- | ------ | -------- | --
-| `tree_authority`                  |    ✅    |        |          | The [`TreeConfig`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/mod.rs#L17) PDA account previously initialized by lized by `create_tree`.
+| --------------------------------- | :------: | :----: | :------: | --
+| `tree_authority`                  |    ✅    |        |          | The [`TreeConfig`](program/src/state/mod.rs#L17) PDA account previously initialized by `create_tree`.
 | `leaf_owner`                      |          |  ❓✅  |          | The cNFT owner.  Burn must be signed by either the cNFT owner or cNFT delegate.
 | `leaf_delegate`                   |          |  ❓✅  |          | The cNFT delegate.  Burn must be signed by either the cNFT owner or cNFT delegate.
 | `merkle_tree`                     |    ✅    |        |          | The account that contains the Merkle tree, initialized by `create_tree`.
@@ -423,7 +437,7 @@ Burn a cNFT.
 | `root`                            | 0      | 32   | The Merkle root for the tree.  Can be retrieved from off-chain data store.
 | `data_hash`                       | 32     | 32   | The Keccak256 hash of the NFTs existing metadata (**without** the `verified` flag for the creator changed).  The metadata is retrieved from off-chain data store.
 | `creator_hash`                    | 64     | 32   | The Keccak256 hash of the NFTs existing creators array (**without** the `verified` flag for the creator changed).  The creators array is retrieved from off-chain data store.
-| `nonce`                           | 96     | 8    | A nonce ("number used once") value used to make the Merkle tree leaves unique.  This is the value of `num_minted` for the tree stored in the [`TreeConfig`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/mod.rs#L17) account at the time the cNFT was minted.  The unique value for each asset can be retrieved from off-chain data store.
+| `nonce`                           | 96     | 8    | A nonce ("number used once") value used to make the Merkle tree leaves unique.  This is the value of `num_minted` for the tree stored in the [`TreeConfig`](program/src/state/mod.rs#L17) account at the time the cNFT was minted.  The unique value for each asset can be retrieved from off-chain data store.
 | `index`                           | 104    | 4    | The index of the leaf node in the Merkle tree.  Can be retrieved from off-chain data store.
 
 </details>
@@ -436,12 +450,12 @@ Redeem a cNFT (remove from tree and store in a voucher PDA).
   <summary>Accounts</summary>
 
 | Name                              | Writable | Signer | Optional | Description
-| --------------------------------- | -------- | ------ | -------- | --
-| `tree_authority`                  |    ✅    |        |          | The [`TreeConfig`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/mod.rs#L17) PDA account previously initialized by lized by `create_tree`.
+| --------------------------------- | :------: | :----: | :------: | --
+| `tree_authority`                  |    ✅    |        |          | The [`TreeConfig`](program/src/state/mod.rs#L17) PDA account previously initialized by `create_tree`.
 | `leaf_owner`                      |          |  ✅    |          | The cNFT owner.
 | `leaf_delegate`                   |          |        |          | The cNFT delegate.
 | `merkle_tree`                     |    ✅    |        |          | The account that contains the Merkle tree, initialized by `create_tree`.
-| `voucher`                         |    ✅    |        |          | [`Voucher`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/mod.rs#L36) PDA account that is initialized by this instruct instruction.
+| `voucher`                         |    ✅    |        |          | [`Voucher`](program/src/state/mod.rs#L39) PDA account that is initialized by this instruction.
 | `log_wrapper`                     |          |        |          | The Solana Program Library Wrapper (spl-noop) program ID.
 | `compression_program`             |          |        |          | The Solana Program Library spl-account-compression program ID.
 | `system_program`                  |          |        |          | The Solana System Program ID.
@@ -457,7 +471,7 @@ Redeem a cNFT (remove from tree and store in a voucher PDA).
 | `root`                            | 0      | 32   | The Merkle root for the tree.  Can be retrieved from off-chain data store.
 | `data_hash`                       | 32     | 32   | The Keccak256 hash of the NFTs existing metadata (**without** the `verified` flag for the creator changed).  The metadata is retrieved from off-chain data store.
 | `creator_hash`                    | 64     | 32   | The Keccak256 hash of the NFTs existing creators array (**without** the `verified` flag for the creator changed).  The creators array is retrieved from off-chain data store.
-| `nonce`                           | 96     | 8    | A nonce ("number used once") value used to make the Merkle tree leaves unique.  This is the value of `num_minted` for the tree stored in the [`TreeConfig`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/mod.rs#L17) account at the time the cNFT was minted.  The unique value for each asset can be retrieved from off-chain data store.
+| `nonce`                           | 96     | 8    | A nonce ("number used once") value used to make the Merkle tree leaves unique.  This is the value of `num_minted` for the tree stored in the [`TreeConfig`](program/src/state/mod.rs#L17) account at the time the cNFT was minted.  The unique value for each asset can be retrieved from off-chain data store.
 | `index`                           | 104    | 4    | The index of the leaf node in the Merkle tree.  Can be retrieved from off-chain data store.
 
 </details>
@@ -470,11 +484,11 @@ Cancel the redemption of a cNFT (Put the cNFT back into the Merkle tree).
   <summary>Accounts</summary>
 
 | Name                              | Writable | Signer | Optional | Description
-| --------------------------------- | -------- | ------ | -------- | --
-| `tree_authority`                  |    ✅    |        |          | The [`TreeConfig`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/mod.rs#L17) PDA account previously initialized by `create_tree`.
+| --------------------------------- | :------: | :----: | :------: | --
+| `tree_authority`                  |    ✅    |        |          | The [`TreeConfig`](program/src/state/mod.rs#L17) PDA account previously initialized by `create_tree`.
 | `leaf_owner`                      |          |  ✅    |          | The cNFT owner.
 | `merkle_tree`                     |    ✅    |        |          | The account that contains the Merkle tree, initialized by `create_tree`.
-| `voucher`                         |    ✅    |        |          | [`Voucher`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/mod.rs#L36) PDA account previously initialized by `redeem`.
+| `voucher`                         |    ✅    |        |          | [`Voucher`](program/src/state/mod.rs#L39) PDA account previously initialized by `redeem`.
 | `log_wrapper`                     |          |        |          | The Solana Program Library Wrapper (spl-noop) program ID.
 | `compression_program`             |          |        |          | The Solana Program Library spl-account-compression program ID.
 | `system_program`                  |          |        |          | The Solana System Program ID.
@@ -500,7 +514,7 @@ Decompress a cNFT into an uncompressed Metaplex cNFT.  This will cost rent for t
 
 | Name                              | Writable | Signer | Optional | Description
 | ----------------------------------| :------: | :----: | :------: | --
-| `voucher`                         |    ✅    |        |          | [`Voucher`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/mod.rs#L36) PDA account previously initialized by `redeem`.redeem`.
+| `voucher`                         |    ✅    |        |          | [`Voucher`](program/src/state/mod.rs#L39) PDA account previously initialized by `redeem`.
 | `leaf_owner`                      |          |   ✅   |          | The cNFT owner.
 | `token_account`                   |    ✅    |        |          | Token account for the cNFT.  This is created if it doesn't exist.
 | `mint`                            |    ✅    |        |          | Mint PDA account for the cNFT.  This is created if it doesn't exist.
@@ -521,6 +535,6 @@ Decompress a cNFT into an uncompressed Metaplex cNFT.  This will cost rent for t
 
 | Argument                          | Offset | Size | Description
 | --------------------------------- | ------ | ---- | --
-| `data`                            | 0      | ~    | [`MetadataArgs`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/metaplex_adapter.rs#L81) object.
+| `data`                            | 0      | ~    | [`MetadataArgs`](program/src/state/metaplex_adapter.rs#L83) struct.
 
 </details>
