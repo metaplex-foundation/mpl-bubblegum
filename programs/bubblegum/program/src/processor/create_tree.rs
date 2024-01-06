@@ -32,7 +32,7 @@ pub(crate) fn create_tree(
 ) -> Result<()> {
     let merkle_tree = ctx.accounts.merkle_tree.to_account_info();
     let seed = merkle_tree.key();
-    let seeds = &[seed.as_ref(), &[*ctx.bumps.get("tree_authority").unwrap()]];
+    let seeds = &[seed.as_ref(), &[ctx.bumps.tree_authority]];
     let authority = &mut ctx.accounts.tree_authority;
     authority.set_inner(TreeConfig {
         tree_creator: ctx.accounts.tree_creator.key(),

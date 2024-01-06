@@ -73,7 +73,7 @@ pub(crate) fn mint_v1(ctx: Context<MintV1>, message: MetadataArgs) -> Result<()>
         owner,
         delegate,
         metadata_auth,
-        *ctx.bumps.get("tree_authority").unwrap(),
+        ctx.bumps.tree_authority,
         authority,
         merkle_tree,
         &ctx.accounts.log_wrapper,
