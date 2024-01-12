@@ -9,12 +9,12 @@ import {
 import test from 'ava';
 import {
   MetadataArgsArgs,
+  UpdateArgsArgs,
   fetchMerkleTree,
   getCurrentRoot,
   hashLeaf,
   updateMetadata,
   mintV1,
-  UpdateArgs,
   findLeafAssetIdPda,
   getAssetWithProof,
   getMerkleProof,
@@ -66,14 +66,9 @@ test('it update the metadata of a minted compressed NFT', async (t) => {
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(leaf));
 
   // And when metadata is updated.
-  const update_args: UpdateArgs = {
+  const updateArgs: UpdateArgsArgs = {
     name: some('New name'),
-    symbol: none(),
     uri: some('https://updated-example.com/my-nft.json'),
-    creators: none(),
-    sellerFeeBasisPoints: none(),
-    primarySaleHappened: none(),
-    isMutable: none(),
   };
 
   await updateMetadata(umi, {
@@ -84,7 +79,7 @@ test('it update the metadata of a minted compressed NFT', async (t) => {
     index: 0,
     currentMetadata: metadata,
     proof: [],
-    updateArgs: update_args,
+    updateArgs,
   }).sendAndConfirm(umi);
 
   // Then the leaf was updated in the merkle tree.
@@ -159,20 +154,15 @@ test('it can update metadata using the getAssetWithProof helper', async (t) => {
   const assetWithProof = await getAssetWithProof(umi, assetId);
 
   // Then we can use it to update metadata for the NFT.
-  const update_args: UpdateArgs = {
+  const updateArgs: UpdateArgsArgs = {
     name: some('New name'),
-    symbol: none(),
     uri: some('https://updated-example.com/my-nft.json'),
-    creators: none(),
-    sellerFeeBasisPoints: none(),
-    primarySaleHappened: none(),
-    isMutable: none(),
   };
 
   await updateMetadata(umi, {
     ...assetWithProof,
     currentMetadata: metadata,
-    updateArgs: update_args,
+    updateArgs,
   }).sendAndConfirm(umi);
 
   // And the full asset and proof responses can be retrieved.
