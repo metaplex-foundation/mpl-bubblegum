@@ -397,7 +397,10 @@ describe('Bubblegum tests', () => {
 
         it('Cannot use collection_authority', async () => {
           const collectionAuthority = new Keypair();
-          const airdropSig = await connection.requestAirdrop(collectionAuthority.publicKey, LAMPORTS_PER_SOL);
+          const airdropSig = await connection.requestAirdrop(
+            collectionAuthority.publicKey,
+            LAMPORTS_PER_SOL,
+          );
           const latestBlockhash = await connection.getLatestBlockhash();
           await connection.confirmTransaction({
             blockhash: latestBlockhash.blockhash,
@@ -583,7 +586,10 @@ describe('Bubblegum tests', () => {
 
         it('Cannot unverify currently verified creator if not signer', async () => {
           // Verify second creator.
-          const airdropSig = await connection.requestAirdrop(secondCreator.publicKey, LAMPORTS_PER_SOL);
+          const airdropSig = await connection.requestAirdrop(
+            secondCreator.publicKey,
+            LAMPORTS_PER_SOL,
+          );
           const latestBlockhash = await connection.getLatestBlockhash();
           await connection.confirmTransaction({
             blockhash: latestBlockhash.blockhash,
@@ -819,7 +825,10 @@ describe('Bubblegum tests', () => {
         });
         it('Linked to verified collection update', async () => {
           const collectionAuthority = new Keypair();
-          const airdropSig = await connection.requestAirdrop(collectionAuthority.publicKey, LAMPORTS_PER_SOL);
+          const airdropSig = await connection.requestAirdrop(
+            collectionAuthority.publicKey,
+            LAMPORTS_PER_SOL,
+          );
           const latestBlockhash = await connection.getLatestBlockhash();
           await connection.confirmTransaction({
             blockhash: latestBlockhash.blockhash,
@@ -954,7 +963,10 @@ describe('Bubblegum tests', () => {
 
         it('Cannot use tree_owner when item in collection', async () => {
           const collectionAuthority = new Keypair();
-          const airdropSig = await connection.requestAirdrop(collectionAuthority.publicKey, LAMPORTS_PER_SOL);
+          const airdropSig = await connection.requestAirdrop(
+            collectionAuthority.publicKey,
+            LAMPORTS_PER_SOL,
+          );
           const latestBlockhash = await connection.getLatestBlockhash();
           await connection.confirmTransaction({
             blockhash: latestBlockhash.blockhash,
@@ -1062,9 +1074,7 @@ describe('Bubblegum tests', () => {
               commitment: 'confirmed',
               skipPreflight: true,
             });
-            assert.fail(
-              'Metadata update using tree owner should fail for item in collection',
-            );
+            assert.fail('Metadata update using tree owner should fail for item in collection');
           } catch (err) {
             assert(
               err.message.includes('"Custom":6028'),
