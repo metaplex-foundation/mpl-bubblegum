@@ -419,6 +419,7 @@ kinobi.update(
           "verifyCreator",
           "unverifyCreator",
           "verifyLeaf",
+          "updateMetadata"
         ].includes(node.name),
       transformer: (node) => {
         k.assertInstructionNode(node);
@@ -450,6 +451,23 @@ kinobi.update(
   new k.UnwrapTupleEnumWithSingleStructVisitor([
     "ConcurrentMerkleTreeHeaderData",
   ])
+);
+
+kinobi.update(
+  new k.UpdateInstructionsVisitor({
+    updateMetadata: {
+      accounts: {
+        collectionMetadata: {
+          defaultsTo: k.conditionalDefault("account", "collectionMint", {
+            ifTrue: k.pdaDefault("metadata", {
+              importFrom: "mplTokenMetadata",
+              seeds: { mint: k.accountDefault("collectionMint") },
+            }),
+          }),
+        },
+      },
+    },
+  })
 );
 
 // Render JavaScript.
