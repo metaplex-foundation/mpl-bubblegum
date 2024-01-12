@@ -295,9 +295,6 @@ test('it can update metadata using collection update authority when collection i
     updateArgs,
     authority: collectionAuthority,
     collectionMint: collectionMint.publicKey,
-    collectionMetadata: findMetadataPda(umi, {
-      mint: collectionMint.publicKey,
-    }),
   }).sendAndConfirm(umi);
 
   // Then the leaf was updated in the merkle tree.
@@ -371,9 +368,6 @@ test('it cannot update metadata using tree owner when collection is verified', a
     updateArgs,
     authority: treeCreator,
     collectionMint: collectionMint.publicKey,
-    collectionMetadata: findMetadataPda(umi, {
-      mint: collectionMint.publicKey,
-    }),
   }).sendAndConfirm(umi);
 
   // Then we expect a program error.

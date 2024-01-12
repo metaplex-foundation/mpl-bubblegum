@@ -6,6 +6,7 @@
  * @see https://github.com/metaplex-foundation/kinobi
  */
 
+import { findMetadataPda } from '@metaplex-foundation/mpl-token-metadata';
 import {
   Context,
   Pda,
@@ -198,6 +199,13 @@ export function updateMetadata(
   }
   if (!resolvedAccounts.authority.value) {
     resolvedAccounts.authority.value = context.identity;
+  }
+  if (!resolvedAccounts.collectionMetadata.value) {
+    if (resolvedAccounts.collectionMint.value) {
+      resolvedAccounts.collectionMetadata.value = findMetadataPda(context, {
+        mint: expectPublicKey(resolvedAccounts.collectionMint.value),
+      });
+    }
   }
   if (!resolvedAccounts.leafDelegate.value) {
     resolvedAccounts.leafDelegate.value = expectSome(

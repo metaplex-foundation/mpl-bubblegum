@@ -453,6 +453,23 @@ kinobi.update(
   ])
 );
 
+kinobi.update(
+  new k.UpdateInstructionsVisitor({
+    updateMetadata: {
+      accounts: {
+        collectionMetadata: {
+          defaultsTo: k.conditionalDefault("account", "collectionMint", {
+            ifTrue: k.pdaDefault("metadata", {
+              importFrom: "mplTokenMetadata",
+              seeds: { mint: k.accountDefault("collectionMint") },
+            }),
+          }),
+        },
+      },
+    },
+  })
+);
+
 // Render JavaScript.
 const jsDir = path.join(clientDir, "js", "src", "generated");
 const prettier = require(path.join(clientDir, "js", ".prettierrc.json"));
