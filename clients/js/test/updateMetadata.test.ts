@@ -4,6 +4,7 @@ import {
   none,
   some,
   publicKey,
+  PublicKey,
 } from '@metaplex-foundation/umi';
 import test from 'ava';
 import {
@@ -14,8 +15,17 @@ import {
   updateMetadata,
   mintV1,
   UpdateArgs,
+  findLeafAssetIdPda,
+  getAssetWithProof,
+  getMerkleProof,
+  hashMetadataCreators,
+  hashMetadataData,
 } from '../src';
-import { createTree, createUmi } from './_setup';
+import { mint, createTree, createUmi } from './_setup';
+import {
+  DasApiAsset,
+  GetAssetProofRpcResponse,
+} from '@metaplex-foundation/digital-asset-standard-api';
 
 test('it update the metadata of a minted compressed NFT', async (t) => {
   // Given an empty Bubblegum tree.
@@ -73,7 +83,7 @@ test('it update the metadata of a minted compressed NFT', async (t) => {
     nonce: 0,
     index: 0,
     currentMetadata: metadata,
-    //proof: [],
+    proof: [],
     updateArgs: update_args,
   }).sendAndConfirm(umi);
 
@@ -90,4 +100,82 @@ test('it update the metadata of a minted compressed NFT', async (t) => {
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(updatedLeaf));
+});
+
+test('it can update metadata using the getAssetWithProof helper', async (t) => {
+  // Given we increase the timeout for this test.
+  t.timeout(20000);
+
+  // And given a tree with several minted NFTs so that the proof is required.
+  const umi = await createUmi();
+  const merkleTree = await createTree(umi, { maxDepth: 5, maxBufferSize: 8 });
+  const preMints = [
+    await mint(umi, { merkleTree, leafIndex: 0 }),
+    await mint(umi, { merkleTree, leafIndex: 1 }),
+    await mint(umi, { merkleTree, leafIndex: 2 }),
+    await mint(umi, { merkleTree, leafIndex: 3 }),
+    await mint(umi, { merkleTree, leafIndex: 4 }),
+    await mint(umi, { merkleTree, leafIndex: 5 }),
+    await mint(umi, { merkleTree, leafIndex: 6 }),
+    await mint(umi, { merkleTree, leafIndex: 7 }),
+  ];
+
+  // And a 9th minted NFT that we will use for the test.
+  const { metadata, leaf, leafIndex } = await mint(umi, {
+    merkleTree,
+    leafIndex: 8,
+  });
+
+  // And given we mock the RPC client to return the following asset and proof.
+  const merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  const [assetId] = findLeafAssetIdPda(umi, { merkleTree, leafIndex });
+  const rpcAsset = {
+    ownership: { owner: umi.identity.publicKey },
+    compression: {
+      leaf_id: leafIndex,
+      data_hash: publicKey(hashMetadataData(metadata)),
+      creator_hash: publicKey(hashMetadataCreators(metadata.creators)),
+    },
+  } as DasApiAsset;
+  const rpcAssetProof = {
+    proof: getMerkleProof([...preMints.map((m) => m.leaf), leaf], 5, leaf),
+    root: publicKey(getCurrentRoot(merkleTreeAccount.tree)),
+    tree_id: merkleTree,
+    node_index: leafIndex + 2 ** 5,
+  } as GetAssetProofRpcResponse;
+  umi.rpc = {
+    ...umi.rpc,
+    getAsset: async (givenAssetId: PublicKey) => {
+      t.is(givenAssetId, assetId);
+      return rpcAsset;
+    },
+    getAssetProof: async (givenAssetId: PublicKey) => {
+      t.is(givenAssetId, assetId);
+      return rpcAssetProof;
+    },
+  };
+
+  // When we use the getAssetWithProof helper.
+  const assetWithProof = await getAssetWithProof(umi, assetId);
+
+  // Then we can use it to update metadata for the NFT.
+  const update_args: UpdateArgs = {
+    name: some('New name'),
+    symbol: none(),
+    uri: some('https://updated-example.com/my-nft.json'),
+    creators: none(),
+    sellerFeeBasisPoints: none(),
+    primarySaleHappened: none(),
+    isMutable: none(),
+  };
+
+  await updateMetadata(umi, {
+    ...assetWithProof,
+    currentMetadata: metadata,
+    updateArgs: update_args,
+  }).sendAndConfirm(umi);
+
+  // And the full asset and proof responses can be retrieved.
+  t.is(assetWithProof.rpcAsset, rpcAsset);
+  t.is(assetWithProof.rpcAssetProof, rpcAssetProof);
 });

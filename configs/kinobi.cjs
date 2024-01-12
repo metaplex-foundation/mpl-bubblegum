@@ -419,6 +419,7 @@ kinobi.update(
           "verifyCreator",
           "unverifyCreator",
           "verifyLeaf",
+          "updateMetadata"
         ].includes(node.name),
       transformer: (node) => {
         k.assertInstructionNode(node);

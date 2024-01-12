@@ -26,6 +26,7 @@ import {
 } from '@metaplex-foundation/umi/serializers';
 import { findTreeConfigPda } from '../accounts';
 import {
+  PickPartial,
   ResolvedAccount,
   ResolvedAccountsWithIndices,
   expectPublicKey,
@@ -113,8 +114,14 @@ export function getUpdateMetadataInstructionDataSerializer(): Serializer<
   >;
 }
 
+// Extra Args.
+export type UpdateMetadataInstructionExtraArgs = { proof: Array<PublicKey> };
+
 // Args.
-export type UpdateMetadataInstructionArgs = UpdateMetadataInstructionDataArgs;
+export type UpdateMetadataInstructionArgs = PickPartial<
+  UpdateMetadataInstructionDataArgs & UpdateMetadataInstructionExtraArgs,
+  'proof'
+>;
 
 // Instruction.
 export function updateMetadata(
@@ -228,11 +235,22 @@ export function updateMetadata(
     );
     resolvedAccounts.systemProgram.isWritable = false;
   }
+  if (!resolvedArgs.proof) {
+    resolvedArgs.proof = [];
+  }
 
   // Accounts in order.
   const orderedAccounts: ResolvedAccount[] = Object.values(
     resolvedAccounts
   ).sort((a, b) => a.index - b.index);
+
+  // Remaining Accounts.
+  const remainingAccounts = resolvedArgs.proof.map((value, index) => ({
+    index,
+    value,
+    isWritable: false,
+  }));
+  orderedAccounts.push(...remainingAccounts);
 
   // Keys and Signers.
   const [keys, signers] = getAccountMetasAndSigners(
