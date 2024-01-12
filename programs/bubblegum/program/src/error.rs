@@ -72,6 +72,18 @@ pub enum BubblegumError {
     UnknownExternalError,
     #[msg("Decompression is disabled for this tree.")]
     DecompressionDisabled,
+    #[msg("Missing collection mint account")]
+    MissingCollectionMintAccount,
+    #[msg("Missing collection metadata account")]
+    MissingCollectionMetadataAccount,
+    #[msg("Collection mismatch")]
+    CollectionMismatch,
+    #[msg("Metadata not mutable")]
+    MetadataImmutable,
+    #[msg("Can only update primary sale to true")]
+    PrimarySaleCanOnlyBeFlippedToTrue,
+    #[msg("Creator did not unverify the metadata")]
+    CreatorDidNotUnverify,
 }
 
 // Converts certain Token Metadata errors into Bubblegum equivalents

@@ -491,6 +491,93 @@ export class DecompressionDisabledError extends ProgramError {
 codeToErrorMap.set(0x1791, DecompressionDisabledError);
 nameToErrorMap.set('DecompressionDisabled', DecompressionDisabledError);
 
+/** MissingCollectionMintAccount: Missing collection mint account */
+export class MissingCollectionMintAccountError extends ProgramError {
+  readonly name: string = 'MissingCollectionMintAccount';
+
+  readonly code: number = 0x1792; // 6034
+
+  constructor(program: Program, cause?: Error) {
+    super('Missing collection mint account', program, cause);
+  }
+}
+codeToErrorMap.set(0x1792, MissingCollectionMintAccountError);
+nameToErrorMap.set(
+  'MissingCollectionMintAccount',
+  MissingCollectionMintAccountError
+);
+
+/** MissingCollectionMetadataAccount: Missing collection metadata account */
+export class MissingCollectionMetadataAccountError extends ProgramError {
+  readonly name: string = 'MissingCollectionMetadataAccount';
+
+  readonly code: number = 0x1793; // 6035
+
+  constructor(program: Program, cause?: Error) {
+    super('Missing collection metadata account', program, cause);
+  }
+}
+codeToErrorMap.set(0x1793, MissingCollectionMetadataAccountError);
+nameToErrorMap.set(
+  'MissingCollectionMetadataAccount',
+  MissingCollectionMetadataAccountError
+);
+
+/** CollectionMismatch: Collection mismatch */
+export class CollectionMismatchError extends ProgramError {
+  readonly name: string = 'CollectionMismatch';
+
+  readonly code: number = 0x1794; // 6036
+
+  constructor(program: Program, cause?: Error) {
+    super('Collection mismatch', program, cause);
+  }
+}
+codeToErrorMap.set(0x1794, CollectionMismatchError);
+nameToErrorMap.set('CollectionMismatch', CollectionMismatchError);
+
+/** MetadataImmutable: Metadata not mutable */
+export class MetadataImmutableError extends ProgramError {
+  readonly name: string = 'MetadataImmutable';
+
+  readonly code: number = 0x1795; // 6037
+
+  constructor(program: Program, cause?: Error) {
+    super('Metadata not mutable', program, cause);
+  }
+}
+codeToErrorMap.set(0x1795, MetadataImmutableError);
+nameToErrorMap.set('MetadataImmutable', MetadataImmutableError);
+
+/** PrimarySaleCanOnlyBeFlippedToTrue: Can only update primary sale to true */
+export class PrimarySaleCanOnlyBeFlippedToTrueError extends ProgramError {
+  readonly name: string = 'PrimarySaleCanOnlyBeFlippedToTrue';
+
+  readonly code: number = 0x1796; // 6038
+
+  constructor(program: Program, cause?: Error) {
+    super('Can only update primary sale to true', program, cause);
+  }
+}
+codeToErrorMap.set(0x1796, PrimarySaleCanOnlyBeFlippedToTrueError);
+nameToErrorMap.set(
+  'PrimarySaleCanOnlyBeFlippedToTrue',
+  PrimarySaleCanOnlyBeFlippedToTrueError
+);
+
+/** CreatorDidNotUnverify: Creator did not unverify the metadata */
+export class CreatorDidNotUnverifyError extends ProgramError {
+  readonly name: string = 'CreatorDidNotUnverify';
+
+  readonly code: number = 0x1797; // 6039
+
+  constructor(program: Program, cause?: Error) {
+    super('Creator did not unverify the metadata', program, cause);
+  }
+}
+codeToErrorMap.set(0x1797, CreatorDidNotUnverifyError);
+nameToErrorMap.set('CreatorDidNotUnverify', CreatorDidNotUnverifyError);
+
 /**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors

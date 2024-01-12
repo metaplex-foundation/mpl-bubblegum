@@ -10,7 +10,10 @@ pub mod state;
 pub mod utils;
 
 use processor::*;
-use state::{metaplex_adapter::MetadataArgs, DecompressibleState};
+use state::{
+    metaplex_adapter::{MetadataArgs, UpdateArgs},
+    DecompressibleState,
+};
 
 declare_id!("BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY");
 
@@ -32,6 +35,7 @@ pub enum InstructionName {
     SetAndVerifyCollection,
     MintToCollectionV1,
     SetDecompressibleState,
+    UpdateMetadata,
 }
 
 pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
@@ -59,7 +63,7 @@ pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
         [82, 104, 152, 6, 149, 111, 100, 13] => InstructionName::SetDecompressibleState,
         // `SetDecompressableState` instruction mapped to `SetDecompressibleState` instruction
         [18, 135, 238, 168, 246, 195, 61, 115] => InstructionName::SetDecompressibleState,
-
+        [170, 182, 43, 239, 97, 78, 225, 186] => InstructionName::UpdateMetadata,
         _ => InstructionName::Unknown,
     }
 }
@@ -259,5 +263,17 @@ pub mod bubblegum {
         message: MetadataArgs,
     ) -> Result<()> {
         processor::verify_creator(ctx, root, data_hash, creator_hash, nonce, index, message)
+    }
+
+    /// Updates metadata for a leaf node that is not part of a verified collection.
+    pub fn update_metadata<'info>(
+        ctx: Context<'_, '_, '_, 'info, UpdateMetadata<'info>>,
+        root: [u8; 32],
+        nonce: u64,
+        index: u32,
+        current_metadata: MetadataArgs,
+        update_args: UpdateArgs,
+    ) -> Result<()> {
+        processor::update_metadata(ctx, root, nonce, index, current_metadata, update_args)
     }
 }

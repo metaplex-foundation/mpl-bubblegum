@@ -33,6 +33,7 @@ mod set_tree_delegate;
 mod transfer;
 mod unverify_collection;
 mod unverify_creator;
+mod update_metadata;
 mod verify_collection;
 mod verify_creator;
 
@@ -51,6 +52,7 @@ pub(crate) use set_tree_delegate::*;
 pub(crate) use transfer::*;
 pub(crate) use unverify_collection::*;
 pub(crate) use unverify_creator::*;
+pub(crate) use update_metadata::*;
 pub(crate) use verify_collection::*;
 pub(crate) use verify_creator::*;
 

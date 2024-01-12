@@ -1,6 +1,7 @@
-use solana_program::keccak;
+#![allow(clippy::derivable_impls)]
+use solana_program::{keccak, pubkey::Pubkey};
 
-use crate::types::{LeafSchema, Version};
+use crate::types::{LeafSchema, UpdateArgs, Version};
 
 // LeafSchema
 
@@ -32,6 +33,42 @@ impl LeafSchema {
             LeafSchema::V1 { .. } => Version::V1,
         }
     }
+
+    pub fn id(&self) -> Pubkey {
+        match self {
+            LeafSchema::V1 { id, .. } => *id,
+        }
+    }
+
+    pub fn owner(&self) -> Pubkey {
+        match self {
+            LeafSchema::V1 { owner, .. } => *owner,
+        }
+    }
+
+    pub fn delegate(&self) -> Pubkey {
+        match self {
+            LeafSchema::V1 { delegate, .. } => *delegate,
+        }
+    }
+
+    pub fn nonce(&self) -> u64 {
+        match self {
+            LeafSchema::V1 { nonce, .. } => *nonce,
+        }
+    }
+
+    pub fn data_hash(&self) -> [u8; 32] {
+        match self {
+            LeafSchema::V1 { data_hash, .. } => *data_hash,
+        }
+    }
+
+    pub fn creator_hash(&self) -> [u8; 32] {
+        match self {
+            LeafSchema::V1 { creator_hash, .. } => *creator_hash,
+        }
+    }
 }
 
 impl Default for LeafSchema {
@@ -61,5 +98,21 @@ impl Version {
 impl Default for Version {
     fn default() -> Self {
         Version::V1
+    }
+}
+
+// UpdateArgs
+
+impl Default for UpdateArgs {
+    fn default() -> Self {
+        Self {
+            creators: None,
+            is_mutable: None,
+            name: None,
+            primary_sale_happened: None,
+            seller_fee_basis_points: None,
+            symbol: None,
+            uri: None,
+        }
     }
 }

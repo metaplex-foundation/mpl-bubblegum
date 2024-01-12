@@ -1474,6 +1474,123 @@
           }
         }
       ]
+    },
+    {
+      "name": "updateMetadata",
+      "docs": [
+        "Updates metadata for a leaf node that is not part of a verified collection."
+      ],
+      "accounts": [
+        {
+          "name": "treeAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "Either collection authority or tree owner/delegate, depending",
+            "on whether the item is in a verified collection"
+          ]
+        },
+        {
+          "name": "collectionMint",
+          "isMut": false,
+          "isSigner": false,
+          "isOptional": true,
+          "docs": [
+            "Used when item is in a verified collection"
+          ]
+        },
+        {
+          "name": "collectionMetadata",
+          "isMut": false,
+          "isSigner": false,
+          "isOptional": true,
+          "docs": [
+            "Used when item is in a verified collection"
+          ]
+        },
+        {
+          "name": "collectionAuthorityRecordPda",
+          "isMut": false,
+          "isSigner": false,
+          "isOptional": true
+        },
+        {
+          "name": "leafOwner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "leafDelegate",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "merkleTree",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "logWrapper",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "compressionProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMetadataProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "root",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "nonce",
+          "type": "u64"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        },
+        {
+          "name": "currentMetadata",
+          "type": {
+            "defined": "MetadataArgs"
+          }
+        },
+        {
+          "name": "updateArgs",
+          "type": {
+            "defined": "UpdateArgs"
+          }
+        }
+      ]
     }
   ],
   "accounts": [
@@ -1699,6 +1816,60 @@
       }
     },
     {
+      "name": "UpdateArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "name",
+            "type": {
+              "option": "string"
+            }
+          },
+          {
+            "name": "symbol",
+            "type": {
+              "option": "string"
+            }
+          },
+          {
+            "name": "uri",
+            "type": {
+              "option": "string"
+            }
+          },
+          {
+            "name": "creators",
+            "type": {
+              "option": {
+                "vec": {
+                  "defined": "Creator"
+                }
+              }
+            }
+          },
+          {
+            "name": "sellerFeeBasisPoints",
+            "type": {
+              "option": "u16"
+            }
+          },
+          {
+            "name": "primarySaleHappened",
+            "type": {
+              "option": "bool"
+            }
+          },
+          {
+            "name": "isMutable",
+            "type": {
+              "option": "bool"
+            }
+          }
+        ]
+      }
+    },
+    {
       "name": "Version",
       "type": {
         "kind": "enum",
@@ -1890,6 +2061,9 @@
           },
           {
             "name": "SetDecompressibleState"
+          },
+          {
+            "name": "UpdateMetadata"
           }
         ]
       }
@@ -2065,6 +2239,36 @@
       "code": 6033,
       "name": "DecompressionDisabled",
       "msg": "Decompression is disabled for this tree."
+    },
+    {
+      "code": 6034,
+      "name": "MissingCollectionMintAccount",
+      "msg": "Missing collection mint account"
+    },
+    {
+      "code": 6035,
+      "name": "MissingCollectionMetadataAccount",
+      "msg": "Missing collection metadata account"
+    },
+    {
+      "code": 6036,
+      "name": "CollectionMismatch",
+      "msg": "Collection mismatch"
+    },
+    {
+      "code": 6037,
+      "name": "MetadataImmutable",
+      "msg": "Metadata not mutable"
+    },
+    {
+      "code": 6038,
+      "name": "PrimarySaleCanOnlyBeFlippedToTrue",
+      "msg": "Can only update primary sale to true"
+    },
+    {
+      "code": 6039,
+      "name": "CreatorDidNotUnverify",
+      "msg": "Creator did not unverify the metadata"
     }
   ],
   "metadata": {

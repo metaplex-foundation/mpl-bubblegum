@@ -719,6 +719,135 @@ createErrorFromCodeLookup.set(0x1791, () => new DecompressionDisabledError());
 createErrorFromNameLookup.set('DecompressionDisabled', () => new DecompressionDisabledError());
 
 /**
+ * MissingCollectionMintAccount: 'Missing collection mint account'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingCollectionMintAccountError extends Error {
+  readonly code: number = 0x1792;
+  readonly name: string = 'MissingCollectionMintAccount';
+  constructor() {
+    super('Missing collection mint account');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingCollectionMintAccountError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1792, () => new MissingCollectionMintAccountError());
+createErrorFromNameLookup.set(
+  'MissingCollectionMintAccount',
+  () => new MissingCollectionMintAccountError(),
+);
+
+/**
+ * MissingCollectionMetadataAccount: 'Missing collection metadata account'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingCollectionMetadataAccountError extends Error {
+  readonly code: number = 0x1793;
+  readonly name: string = 'MissingCollectionMetadataAccount';
+  constructor() {
+    super('Missing collection metadata account');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingCollectionMetadataAccountError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1793, () => new MissingCollectionMetadataAccountError());
+createErrorFromNameLookup.set(
+  'MissingCollectionMetadataAccount',
+  () => new MissingCollectionMetadataAccountError(),
+);
+
+/**
+ * CollectionMismatch: 'Collection mismatch'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class CollectionMismatchError extends Error {
+  readonly code: number = 0x1794;
+  readonly name: string = 'CollectionMismatch';
+  constructor() {
+    super('Collection mismatch');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, CollectionMismatchError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1794, () => new CollectionMismatchError());
+createErrorFromNameLookup.set('CollectionMismatch', () => new CollectionMismatchError());
+
+/**
+ * MetadataImmutable: 'Metadata not mutable'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MetadataImmutableError extends Error {
+  readonly code: number = 0x1795;
+  readonly name: string = 'MetadataImmutable';
+  constructor() {
+    super('Metadata not mutable');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MetadataImmutableError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1795, () => new MetadataImmutableError());
+createErrorFromNameLookup.set('MetadataImmutable', () => new MetadataImmutableError());
+
+/**
+ * PrimarySaleCanOnlyBeFlippedToTrue: 'Can only update primary sale to true'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class PrimarySaleCanOnlyBeFlippedToTrueError extends Error {
+  readonly code: number = 0x1796;
+  readonly name: string = 'PrimarySaleCanOnlyBeFlippedToTrue';
+  constructor() {
+    super('Can only update primary sale to true');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, PrimarySaleCanOnlyBeFlippedToTrueError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1796, () => new PrimarySaleCanOnlyBeFlippedToTrueError());
+createErrorFromNameLookup.set(
+  'PrimarySaleCanOnlyBeFlippedToTrue',
+  () => new PrimarySaleCanOnlyBeFlippedToTrueError(),
+);
+
+/**
+ * CreatorDidNotUnverify: 'Creator did not unverify the metadata'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class CreatorDidNotUnverifyError extends Error {
+  readonly code: number = 0x1797;
+  readonly name: string = 'CreatorDidNotUnverify';
+  constructor() {
+    super('Creator did not unverify the metadata');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, CreatorDidNotUnverifyError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1797, () => new CreatorDidNotUnverifyError());
+createErrorFromNameLookup.set('CreatorDidNotUnverify', () => new CreatorDidNotUnverifyError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated
