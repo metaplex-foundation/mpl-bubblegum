@@ -312,6 +312,118 @@ test('it can update metadata using collection update authority when collection i
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(updatedLeaf));
 });
 
+test('it can update metadata using the getAssetWithProof helper with verified collection', async (t) => {
+  // Given we increase the timeout for this test.
+  t.timeout(20000);
+
+  // And given a tree with several minted NFTs so that the proof is required.
+  const umi = await createUmi();
+  const merkleTree = await createTree(umi, { maxDepth: 5, maxBufferSize: 8 });
+  const preMints = [
+    await mint(umi, { merkleTree, leafIndex: 0 }),
+    await mint(umi, { merkleTree, leafIndex: 1 }),
+    await mint(umi, { merkleTree, leafIndex: 2 }),
+    await mint(umi, { merkleTree, leafIndex: 3 }),
+    await mint(umi, { merkleTree, leafIndex: 4 }),
+    await mint(umi, { merkleTree, leafIndex: 5 }),
+    await mint(umi, { merkleTree, leafIndex: 6 }),
+    await mint(umi, { merkleTree, leafIndex: 7 }),
+  ];
+
+  // And a Collection NFT.
+  const collectionMint = generateSigner(umi);
+  const collectionAuthority = generateSigner(umi);
+  await createNft(umi, {
+    mint: collectionMint,
+    authority: collectionAuthority,
+    name: 'My Collection',
+    uri: 'https://example.com/my-collection.json',
+    sellerFeeBasisPoints: percentAmount(5.5), // 5.5%
+    isCollection: true,
+  }).sendAndConfirm(umi);
+
+  // And a 9th minted NFT owned by leafOwner, with collection verified.
+  const metadata: MetadataArgsArgs = {
+    name: 'My NFT',
+    uri: 'https://example.com/my-nft.json',
+    sellerFeeBasisPoints: 550, // 5.5%
+    collection: {
+      key: collectionMint.publicKey,
+      verified: true,
+    },
+    creators: [],
+  };
+  const leafIndex = Number(
+    (await fetchMerkleTree(umi, merkleTree)).tree.activeIndex
+  );
+  const leafOwner = generateSigner(umi).publicKey;
+  await mintToCollectionV1(umi, {
+    leafOwner,
+    merkleTree,
+    metadata,
+    collectionMint: collectionMint.publicKey,
+    collectionAuthority: collectionAuthority,
+  }).sendAndConfirm(umi);
+  const leaf = publicKey(
+    hashLeaf(umi, {
+      merkleTree,
+      owner: leafOwner,
+      leafIndex,
+      metadata,
+    })
+  );
+
+  // And given we mock the RPC client to return the following asset and proof.
+  const merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  const [assetId] = findLeafAssetIdPda(umi, { merkleTree, leafIndex });
+  const rpcAsset = {
+    ownership: { owner: leafOwner },
+    compression: {
+      leaf_id: leafIndex,
+      data_hash: publicKey(hashMetadataData(metadata)),
+      creator_hash: publicKey(hashMetadataCreators(metadata.creators)),
+    },
+  } as DasApiAsset;
+  const rpcAssetProof = {
+    proof: getMerkleProof([...preMints.map((m) => m.leaf), leaf], 5, leaf),
+    root: publicKey(getCurrentRoot(merkleTreeAccount.tree)),
+    tree_id: merkleTree,
+    node_index: leafIndex + 2 ** 5,
+  } as GetAssetProofRpcResponse;
+  umi.rpc = {
+    ...umi.rpc,
+    getAsset: async (givenAssetId: PublicKey) => {
+      t.is(givenAssetId, assetId);
+      return rpcAsset;
+    },
+    getAssetProof: async (givenAssetId: PublicKey) => {
+      t.is(givenAssetId, assetId);
+      return rpcAssetProof;
+    },
+  };
+
+  // When we use the getAssetWithProof helper.
+  const assetWithProof = await getAssetWithProof(umi, assetId);
+
+  // Then we can use it to update metadata for the NFT using collection authority.
+  const updateArgs: UpdateArgsArgs = {
+    name: some('New name'),
+    uri: some('https://updated-example.com/my-nft.json'),
+  };
+  await updateMetadata(umi, {
+    ...assetWithProof,
+    leafOwner,
+    currentMetadata: metadata,
+    updateArgs,
+    authority: collectionAuthority,
+    collectionMint: collectionMint.publicKey,
+  }).sendAndConfirm(umi);
+
+  // And the full asset and proof responses can be retrieved.
+  t.is(assetWithProof.rpcAsset, rpcAsset);
+  t.is(assetWithProof.rpcAssetProof, rpcAssetProof);
+});
+
 test('it cannot update metadata using tree owner when collection is verified', async (t) => {
   // Given an empty Bubblegum tree.
   const umi = await createUmi();
