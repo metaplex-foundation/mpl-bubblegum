@@ -353,10 +353,8 @@ test('it can update metadata using the getAssetWithProof helper with verified co
     },
     creators: [],
   };
-  const leafIndex = Number(
-    (await fetchMerkleTree(umi, merkleTree)).tree.activeIndex
-  );
   const leafOwner = generateSigner(umi).publicKey;
+  const leafIndex = 8;
   await mintToCollectionV1(umi, {
     leafOwner,
     merkleTree,

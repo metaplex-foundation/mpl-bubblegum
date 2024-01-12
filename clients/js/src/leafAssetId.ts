@@ -1,6 +1,15 @@
-import { Context, Pda, PublicKey, TransactionSignature } from '@metaplex-foundation/umi';
+import {
+  Context,
+  Pda,
+  PublicKey,
+  TransactionSignature,
+} from '@metaplex-foundation/umi';
 import { publicKey, string, u64 } from '@metaplex-foundation/umi/serializers';
-import { LeafSchema, MPL_BUBBLEGUM_PROGRAM_ID, getLeafSchemaSerializer } from './generated';
+import {
+  LeafSchema,
+  MPL_BUBBLEGUM_PROGRAM_ID,
+  getLeafSchemaSerializer,
+} from './generated';
 
 export function findLeafAssetIdPda(
   context: Pick<Context, 'programs' | 'eddsa'>,
@@ -28,7 +37,9 @@ export async function parseLeafFromMintV1Transaction(
   const innerInstructions = transaction?.meta.innerInstructions;
 
   if (innerInstructions) {
-    const leaf = getLeafSchemaSerializer().deserialize(innerInstructions[0].instructions[0].data.slice(8));
+    const leaf = getLeafSchemaSerializer().deserialize(
+      innerInstructions[0].instructions[0].data.slice(8)
+    );
     return leaf[0];
   }
 
@@ -43,7 +54,9 @@ export async function parseLeafFromMintToCollectionV1Transaction(
   const innerInstructions = transaction?.meta.innerInstructions;
 
   if (innerInstructions) {
-    const leaf = getLeafSchemaSerializer().deserialize(innerInstructions[0].instructions[1].data.slice(8));
+    const leaf = getLeafSchemaSerializer().deserialize(
+      innerInstructions[0].instructions[1].data.slice(8)
+    );
     return leaf[0];
   }
 
