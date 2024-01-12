@@ -6,7 +6,15 @@ import {
 } from '@metaplex-foundation/umi';
 import { createNft } from '@metaplex-foundation/mpl-token-metadata';
 import test from 'ava';
-import { MetadataArgsArgs, fetchMerkleTree, findLeafAssetIdPda, mintToCollectionV1, mintV1, parseLeafFromMintToCollectionV1Transaction, parseLeafFromMintV1Transaction } from '../src';
+import {
+  MetadataArgsArgs,
+  fetchMerkleTree,
+  findLeafAssetIdPda,
+  mintToCollectionV1,
+  mintV1,
+  parseLeafFromMintToCollectionV1Transaction,
+  parseLeafFromMintV1Transaction,
+} from '../src';
 import { createTree, createUmi } from './_setup';
 
 test('it can parse the leaf from mint instructions', async (t) => {
@@ -32,13 +40,17 @@ test('it can parse the leaf from mint instructions', async (t) => {
 
   // Test with 10 different leaves to be sure they increment correctly.
   for (let nonce = 0; nonce < 10; nonce += 1) {
-    const { signature } = await mintV1(umi, { leafOwner, merkleTree, metadata }).sendAndConfirm(umi, { confirm: { commitment: 'confirmed' } });
+    const { signature } = await mintV1(umi, {
+      leafOwner,
+      merkleTree,
+      metadata,
+    }).sendAndConfirm(umi, { confirm: { commitment: 'confirmed' } });
     const leaf = await parseLeafFromMintV1Transaction(umi, signature);
     const assetId = findLeafAssetIdPda(umi, { merkleTree, leafIndex: nonce });
 
     t.is(leafOwner, leaf.owner);
     t.is(Number(leaf.nonce), nonce);
-    t.is(leaf.id, assetId[0])
+    t.is(leaf.id, assetId[0]);
   }
 });
 
@@ -85,11 +97,14 @@ test('it can parse the leaf from mintToCollection instructions)', async (t) => {
       collectionMint: collectionMint.publicKey,
     }).sendAndConfirm(umi);
 
-    const leaf = await parseLeafFromMintToCollectionV1Transaction(umi, signature);
+    const leaf = await parseLeafFromMintToCollectionV1Transaction(
+      umi,
+      signature
+    );
     const assetId = findLeafAssetIdPda(umi, { merkleTree, leafIndex: nonce });
 
     t.is(leafOwner, leaf.owner);
     t.is(Number(leaf.nonce), nonce);
-    t.is(leaf.id, assetId[0])
+    t.is(leaf.id, assetId[0]);
   }
 });
