@@ -1,7 +1,7 @@
 {
   "name": "@metaplex-foundation/mpl-bubblegum",
-  "version": "0.9.0",
-  "programVersion": "0.8.0",
+  "version": "0.10.0",
+  "programVersion": "0.11.1",
   "description": "SDK for MPL Bubblegum contract",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
