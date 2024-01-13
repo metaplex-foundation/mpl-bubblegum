@@ -1,7 +1,4 @@
-import {
-  createNft,
-  findMetadataPda,
-} from '@metaplex-foundation/mpl-token-metadata';
+import { createNft } from '@metaplex-foundation/mpl-token-metadata';
 import {
   defaultPublicKey,
   generateSigner,
@@ -222,9 +219,6 @@ test('it cannot update metadata using collection update authority when collectio
     updateArgs,
     authority: collectionAuthority,
     collectionMint: collectionMint.publicKey,
-    collectionMetadata: findMetadataPda(umi, {
-      mint: collectionMint.publicKey,
-    }),
   }).sendAndConfirm(umi);
 
   // Then we expect a program error.
@@ -489,6 +483,75 @@ test('it cannot update metadata using tree owner when collection is verified', a
     owner: leafOwner,
     leafIndex: 0,
     metadata,
+  });
+  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(notUpdatedLeaf));
+});
+
+test('it cannot update immutable metadata', async (t) => {
+  // Given an empty Bubblegum tree.
+  const umi = await createUmi();
+  const merkleTree = await createTree(umi);
+  const leafOwner = generateSigner(umi).publicKey;
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+
+  // When we mint a new NFT from the tree.
+  const { metadata, leafIndex } = await mint(umi, {
+    leafOwner,
+    merkleTree,
+  });
+
+  // And we set the NFT to immutable.
+  await updateMetadata(umi, {
+    leafOwner,
+    merkleTree,
+    root: getCurrentRoot(merkleTreeAccount.tree),
+    nonce: leafIndex,
+    index: leafIndex,
+    currentMetadata: metadata,
+    proof: [],
+    updateArgs: { isMutable: false },
+  }).sendAndConfirm(umi);
+
+  // And the leaf was updated in the merkle tree.
+  let immutableMetadata = {
+    ...metadata,
+    isMutable: false,
+  };
+  const updatedLeaf = hashLeaf(umi, {
+    merkleTree,
+    owner: leafOwner,
+    leafIndex: 0,
+    metadata: immutableMetadata,
+  });
+  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(updatedLeaf));
+
+  // Then we attempt to update metadata.
+  const updateArgs: UpdateArgsArgs = {
+    name: some('New name'),
+    uri: some('https://updated-example.com/my-nft.json'),
+  };
+  let promise = updateMetadata(umi, {
+    leafOwner,
+    merkleTree,
+    root: getCurrentRoot(merkleTreeAccount.tree),
+    nonce: leafIndex,
+    index: leafIndex,
+    currentMetadata: immutableMetadata,
+    proof: [],
+    updateArgs,
+  }).sendAndConfirm(umi);
+
+  // Then we expect a program error.
+  await t.throwsAsync(promise, { name: 'MetadataImmutable' });
+
+  // And the leaf was not updated in the merkle tree.
+  const notUpdatedLeaf = hashLeaf(umi, {
+    merkleTree,
+    owner: leafOwner,
+    leafIndex,
+    metadata: immutableMetadata,
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(notUpdatedLeaf));
