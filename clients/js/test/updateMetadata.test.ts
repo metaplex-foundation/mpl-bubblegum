@@ -513,7 +513,7 @@ test('it cannot update immutable metadata', async (t) => {
     updateArgs: { isMutable: false },
   }).sendAndConfirm(umi);
 
-  // And the leaf was updated in the merkle tree.
+  // And the leaf was updated to be immutable in the merkle tree.
   let immutableMetadata = {
     ...metadata,
     isMutable: false,
@@ -543,7 +543,7 @@ test('it cannot update immutable metadata', async (t) => {
     updateArgs,
   }).sendAndConfirm(umi);
 
-  // Then we expect a program error.
+  // And we expect a program error.
   await t.throwsAsync(promise, { name: 'MetadataImmutable' });
 
   // And the leaf was not updated in the merkle tree.
