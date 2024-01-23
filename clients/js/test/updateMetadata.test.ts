@@ -593,7 +593,13 @@ test('it cannot verify currently unverified creator if not signer', async (t) =>
     root: getCurrentRoot(merkleTreeAccount.tree),
     nonce: leafIndex,
     index: leafIndex,
-    currentMetadata: metadata,
+    currentMetadata: {
+      ...metadata,
+      creators: [
+        { address: creatorA.publicKey, verified: true, share: 60 },
+        { address: creatorB.publicKey, verified: false, share: 40 },
+      ],
+    },
     proof: [],
     updateArgs: {
       name: 'New name',
@@ -702,12 +708,18 @@ test('it cannot unverify currently verified creator if not signer', async (t) =>
     root: getCurrentRoot(merkleTreeAccount.tree),
     nonce: leafIndex,
     index: leafIndex,
-    currentMetadata: metadata,
+    currentMetadata: {
+      ...metadata,
+      creators: [
+        { address: creatorA.publicKey, verified: true, share: 60 },
+        { address: creatorB.publicKey, verified: false, share: 40 },
+      ],
+    },
     proof: [],
     updateArgs,
   }).sendAndConfirm(umi);
 
-  await t.throwsAsync(promise, { name: 'PublicKeyMismatch' });
+  await t.throwsAsync(promise, { name: 'CreatorDidNotUnverify' });
 });
 
 test('it can unverify currently verified creator if signer', async (t) => {
