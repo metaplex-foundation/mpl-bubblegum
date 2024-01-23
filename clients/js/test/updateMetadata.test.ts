@@ -11,6 +11,10 @@ import {
 import { generateSignerWithSol } from '@metaplex-foundation/umi-bundle-tests';
 import test from 'ava';
 import {
+  DasApiAsset,
+  GetAssetProofRpcResponse,
+} from '@metaplex-foundation/digital-asset-standard-api';
+import {
   MetadataArgsArgs,
   UpdateArgsArgs,
   fetchMerkleTree,
@@ -24,12 +28,9 @@ import {
   hashMetadataCreators,
   hashMetadataData,
   mintToCollectionV1,
+  verifyCreator,
 } from '../src';
 import { mint, createTree, createUmi } from './_setup';
-import {
-  DasApiAsset,
-  GetAssetProofRpcResponse,
-} from '@metaplex-foundation/digital-asset-standard-api';
 
 test('it can update the metadata of a minted compressed NFT', async (t) => {
   // Given an empty Bubblegum tree.
@@ -208,7 +209,7 @@ test('it cannot update metadata using collection update authority when collectio
     name: some('New name'),
     uri: some('https://updated-example.com/my-nft.json'),
   };
-  let promise = updateMetadata(umi, {
+  const promise = updateMetadata(umi, {
     leafOwner,
     merkleTree,
     root: getCurrentRoot(merkleTreeAccount.tree),
@@ -270,7 +271,7 @@ test('it can update metadata using collection update authority when collection i
     merkleTree,
     metadata,
     collectionMint: collectionMint.publicKey,
-    collectionAuthority: collectionAuthority,
+    collectionAuthority,
   }).sendAndConfirm(umi);
 
   // And when metadata is updated.
@@ -354,7 +355,7 @@ test('it can update metadata using the getAssetWithProof helper with verified co
     merkleTree,
     metadata,
     collectionMint: collectionMint.publicKey,
-    collectionAuthority: collectionAuthority,
+    collectionAuthority,
   }).sendAndConfirm(umi);
   const leaf = publicKey(
     hashLeaf(umi, {
@@ -452,7 +453,7 @@ test('it cannot update metadata using tree owner when collection is verified', a
     merkleTree,
     metadata,
     collectionMint: collectionMint.publicKey,
-    collectionAuthority: collectionAuthority,
+    collectionAuthority,
     treeCreatorOrDelegate: treeCreator,
   }).sendAndConfirm(umi);
 
@@ -461,7 +462,7 @@ test('it cannot update metadata using tree owner when collection is verified', a
     name: some('New name'),
     uri: some('https://updated-example.com/my-nft.json'),
   };
-  let promise = updateMetadata(umi, {
+  const promise = updateMetadata(umi, {
     leafOwner,
     merkleTree,
     root: getCurrentRoot(merkleTreeAccount.tree),
@@ -514,7 +515,7 @@ test('it cannot update immutable metadata', async (t) => {
   }).sendAndConfirm(umi);
 
   // And the leaf was updated to be immutable in the merkle tree.
-  let immutableMetadata = {
+  const immutableMetadata = {
     ...metadata,
     isMutable: false,
   };
@@ -532,7 +533,7 @@ test('it cannot update immutable metadata', async (t) => {
     name: some('New name'),
     uri: some('https://updated-example.com/my-nft.json'),
   };
-  let promise = updateMetadata(umi, {
+  const promise = updateMetadata(umi, {
     leafOwner,
     merkleTree,
     root: getCurrentRoot(merkleTreeAccount.tree),
@@ -555,4 +556,219 @@ test('it cannot update immutable metadata', async (t) => {
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(notUpdatedLeaf));
+});
+
+test('it cannot verify currently unverified creator if not signer', async (t) => {
+  const umi = await createUmi();
+  const creatorA = generateSigner(umi);
+  const creatorB = generateSigner(umi);
+  const merkleTree = await createTree(umi);
+  const merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  const leafOwner = generateSigner(umi).publicKey;
+  const { metadata, leafIndex } = await mint(umi, {
+    merkleTree,
+    leafOwner,
+    metadata: {
+      creators: [
+        { address: creatorA.publicKey, verified: false, share: 60 },
+        { address: creatorB.publicKey, verified: false, share: 40 },
+      ],
+    },
+  });
+
+  await verifyCreator(umi, {
+    leafOwner,
+    creator: creatorA,
+    merkleTree,
+    root: getCurrentRoot(merkleTreeAccount.tree),
+    nonce: leafIndex,
+    index: leafIndex,
+    metadata,
+    proof: [],
+  }).sendAndConfirm(umi);
+
+  const promise = updateMetadata(umi, {
+    leafOwner,
+    merkleTree,
+    root: getCurrentRoot(merkleTreeAccount.tree),
+    nonce: leafIndex,
+    index: leafIndex,
+    currentMetadata: {
+      ...metadata,
+      creators: [
+        { address: creatorA.publicKey, verified: true, share: 60 },
+        { address: creatorB.publicKey, verified: false, share: 40 },
+      ],
+    },
+    proof: [],
+    updateArgs: {
+      name: 'New name',
+      creators: [
+        { address: creatorA.publicKey, verified: true, share: 60 },
+        { address: creatorB.publicKey, verified: true, share: 40 },
+      ],
+    },
+  }).sendAndConfirm(umi);
+
+  // Then we expect a program error.
+  await t.throwsAsync(promise, { name: 'CreatorDidNotVerify' });
+});
+
+test('it can verify currently unverified creator if signer', async (t) => {
+  const umi = await createUmi();
+  const creatorA = umi.identity;
+  const creatorB = generateSigner(umi);
+  const merkleTree = await createTree(umi);
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  const leafOwner = generateSigner(umi).publicKey;
+  const { metadata, leafIndex } = await mint(umi, {
+    merkleTree,
+    leafOwner,
+    metadata: {
+      creators: [
+        { address: creatorA.publicKey, verified: false, share: 60 },
+        { address: creatorB.publicKey, verified: false, share: 40 },
+      ],
+    },
+  });
+
+  const updateArgs = {
+    name: 'New name',
+    creators: [
+      { address: creatorA.publicKey, verified: true, share: 60 },
+      { address: creatorB.publicKey, verified: false, share: 40 },
+    ],
+  };
+
+  await updateMetadata(umi, {
+    leafOwner,
+    merkleTree,
+    root: getCurrentRoot(merkleTreeAccount.tree),
+    nonce: leafIndex,
+    index: leafIndex,
+    currentMetadata: metadata,
+    proof: [],
+    updateArgs,
+  }).sendAndConfirm(umi);
+
+  // Then the leaf was updated in the merkle tree.
+  const updatedLeaf = hashLeaf(umi, {
+    merkleTree,
+    owner: leafOwner,
+    leafIndex,
+    metadata: {
+      ...metadata,
+      ...updateArgs,
+    },
+  });
+  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(updatedLeaf));
+});
+
+test('it cannot unverify currently verified creator if not signer', async (t) => {
+  const umi = await createUmi();
+  const creatorA = generateSigner(umi);
+  const creatorB = generateSigner(umi);
+  const merkleTree = await createTree(umi);
+  const merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  const leafOwner = generateSigner(umi).publicKey;
+  const { metadata, leafIndex } = await mint(umi, {
+    merkleTree,
+    leafOwner,
+    metadata: {
+      creators: [
+        { address: creatorA.publicKey, verified: false, share: 60 },
+        { address: creatorB.publicKey, verified: false, share: 40 },
+      ],
+    },
+  });
+
+  await verifyCreator(umi, {
+    leafOwner,
+    creator: creatorA,
+    merkleTree,
+    root: getCurrentRoot(merkleTreeAccount.tree),
+    nonce: leafIndex,
+    index: leafIndex,
+    metadata,
+    proof: [],
+  }).sendAndConfirm(umi);
+
+  const updateArgs = {
+    name: 'New name',
+    creators: [
+      { address: creatorA.publicKey, verified: false, share: 60 },
+      { address: creatorB.publicKey, verified: false, share: 40 },
+    ],
+  };
+
+  const promise = updateMetadata(umi, {
+    leafOwner,
+    merkleTree,
+    root: getCurrentRoot(merkleTreeAccount.tree),
+    nonce: leafIndex,
+    index: leafIndex,
+    currentMetadata: {
+      ...metadata,
+      creators: [
+        { address: creatorA.publicKey, verified: true, share: 60 },
+        { address: creatorB.publicKey, verified: false, share: 40 },
+      ],
+    },
+    proof: [],
+    updateArgs,
+  }).sendAndConfirm(umi);
+
+  await t.throwsAsync(promise, { name: 'CreatorDidNotUnverify' });
+});
+
+test('it can unverify currently verified creator if signer', async (t) => {
+  const umi = await createUmi();
+  const creatorA = umi.identity;
+  const creatorB = generateSigner(umi);
+  const merkleTree = await createTree(umi);
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  const leafOwner = generateSigner(umi).publicKey;
+  const { metadata, leafIndex } = await mint(umi, {
+    merkleTree,
+    leafOwner,
+    metadata: {
+      creators: [
+        { address: creatorA.publicKey, verified: true, share: 60 },
+        { address: creatorB.publicKey, verified: false, share: 40 },
+      ],
+    },
+  });
+
+  const updateArgs = {
+    name: 'New name',
+    creators: [
+      { address: creatorA.publicKey, verified: false, share: 60 },
+      { address: creatorB.publicKey, verified: false, share: 40 },
+    ],
+  };
+
+  await updateMetadata(umi, {
+    leafOwner,
+    merkleTree,
+    root: getCurrentRoot(merkleTreeAccount.tree),
+    nonce: leafIndex,
+    index: leafIndex,
+    currentMetadata: metadata,
+    proof: [],
+    updateArgs,
+  }).sendAndConfirm(umi);
+
+  // Then the leaf was updated in the merkle tree.
+  const updatedLeaf = hashLeaf(umi, {
+    merkleTree,
+    owner: leafOwner,
+    leafIndex,
+    metadata: {
+      ...metadata,
+      ...updateArgs,
+    },
+  });
+  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(updatedLeaf));
 });
