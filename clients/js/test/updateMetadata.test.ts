@@ -708,7 +708,6 @@ test('it cannot unverify currently verified creator if not signer', async (t) =>
   }).sendAndConfirm(umi);
 
   await t.throwsAsync(promise, { name: 'PublicKeyMismatch' });
-
 });
 
 test('it can unverify currently verified creator if signer', async (t) => {
