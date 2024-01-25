@@ -144,7 +144,7 @@ fn process_creator_verification<'info>(
 
     replace_leaf(
         &merkle_tree.key(),
-        *ctx.bumps.get("tree_authority").unwrap(),
+        ctx.bumps.tree_authority,
         &ctx.accounts.compression_program.to_account_info(),
         &ctx.accounts.tree_authority.to_account_info(),
         &ctx.accounts.merkle_tree.to_account_info(),
@@ -305,7 +305,7 @@ fn process_collection_verification<'info>(
         &collection_authority_record_pda,
         &edition_account,
         &bubblegum_signer,
-        ctx.bumps["bubblegum_signer"],
+        ctx.bumps.bubblegum_signer,
         &token_metadata_program,
         &mut message,
         verify,
@@ -337,7 +337,7 @@ fn process_collection_verification<'info>(
 
     replace_leaf(
         &merkle_tree.key(),
-        *ctx.bumps.get("tree_authority").unwrap(),
+        ctx.bumps.tree_authority,
         &ctx.accounts.compression_program.to_account_info(),
         &ctx.accounts.tree_authority.to_account_info(),
         &ctx.accounts.merkle_tree.to_account_info(),
