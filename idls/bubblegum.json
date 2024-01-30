@@ -137,85 +137,6 @@
       ]
     },
     {
-      "name": "compress",
-      "docs": [
-        "Compresses a metadata account."
-      ],
-      "accounts": [
-        {
-          "name": "treeAuthority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "leafOwner",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "leafDelegate",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "merkleTree",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "mint",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "metadata",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "masterEdition",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "logWrapper",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "compressionProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenMetadataProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": []
-    },
-    {
       "name": "createTree",
       "docs": [
         "Creates a new tree."
@@ -829,32 +750,6 @@
         {
           "name": "collection",
           "type": "publicKey"
-        }
-      ]
-    },
-    {
-      "name": "setDecompressableState",
-      "docs": [
-        "Sets the `decompressible_state` of a tree."
-      ],
-      "accounts": [
-        {
-          "name": "treeAuthority",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "treeCreator",
-          "isMut": false,
-          "isSigner": true
-        }
-      ],
-      "args": [
-        {
-          "name": "decompressableState",
-          "type": {
-            "defined": "DecompressibleState"
-          }
         }
       ]
     },
@@ -2002,68 +1897,6 @@
           },
           {
             "name": "Disabled"
-          }
-        ]
-      }
-    },
-    {
-      "name": "InstructionName",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "Unknown"
-          },
-          {
-            "name": "MintV1"
-          },
-          {
-            "name": "Redeem"
-          },
-          {
-            "name": "CancelRedeem"
-          },
-          {
-            "name": "Transfer"
-          },
-          {
-            "name": "Delegate"
-          },
-          {
-            "name": "DecompressV1"
-          },
-          {
-            "name": "Compress"
-          },
-          {
-            "name": "Burn"
-          },
-          {
-            "name": "CreateTree"
-          },
-          {
-            "name": "VerifyCreator"
-          },
-          {
-            "name": "UnverifyCreator"
-          },
-          {
-            "name": "VerifyCollection"
-          },
-          {
-            "name": "UnverifyCollection"
-          },
-          {
-            "name": "SetAndVerifyCollection"
-          },
-          {
-            "name": "MintToCollectionV1"
-          },
-          {
-            "name": "SetDecompressibleState"
-          },
-          {
-            "name": "UpdateMetadata"
           }
         ]
       }
