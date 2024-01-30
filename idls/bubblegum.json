@@ -1906,32 +1906,32 @@
     {
       "code": 6000,
       "name": "AssetOwnerMismatch",
-      "msg": "Asset Owner Does not match"
+      "msg": ""
     },
     {
       "code": 6001,
       "name": "PublicKeyMismatch",
-      "msg": "PublicKeyMismatch"
+      "msg": ""
     },
     {
       "code": 6002,
       "name": "HashingMismatch",
-      "msg": "Hashing Mismatch Within Leaf Schema"
+      "msg": ""
     },
     {
       "code": 6003,
       "name": "UnsupportedSchemaVersion",
-      "msg": "Unsupported Schema Version"
+      "msg": ""
     },
     {
       "code": 6004,
       "name": "CreatorShareTotalMustBe100",
-      "msg": "Creator shares must sum to 100"
+      "msg": ""
     },
     {
       "code": 6005,
       "name": "DuplicateCreatorAddress",
-      "msg": "No duplicate creator addresses in metadata"
+      "msg": ""
     },
     {
       "code": 6006,
@@ -1941,7 +1941,7 @@
     {
       "code": 6007,
       "name": "CreatorNotFound",
-      "msg": "Creator not found in creator Vec"
+      "msg": ""
     },
     {
       "code": 6008,
@@ -1951,12 +1951,12 @@
     {
       "code": 6009,
       "name": "CreatorHashMismatch",
-      "msg": "User-provided creator Vec must result in same user-provided creator hash"
+      "msg": "Provided creator Vec must result in provided creator hash"
     },
     {
       "code": 6010,
       "name": "DataHashMismatch",
-      "msg": "User-provided metadata must result in same user-provided data hash"
+      "msg": "Provided metadata must result in provided data hash"
     },
     {
       "code": 6011,
@@ -1966,22 +1966,22 @@
     {
       "code": 6012,
       "name": "MetadataNameTooLong",
-      "msg": "Name in metadata is too long"
+      "msg": ""
     },
     {
       "code": 6013,
       "name": "MetadataSymbolTooLong",
-      "msg": "Symbol in metadata is too long"
+      "msg": ""
     },
     {
       "code": 6014,
       "name": "MetadataUriTooLong",
-      "msg": "Uri in metadata is too long"
+      "msg": ""
     },
     {
       "code": 6015,
       "name": "MetadataBasisPointsTooHigh",
-      "msg": "Basis points in metadata cannot exceed 10000"
+      "msg": "Basis points cannot exceed 10000"
     },
     {
       "code": 6016,
@@ -1996,17 +1996,17 @@
     {
       "code": 6018,
       "name": "NumericalOverflowError",
-      "msg": "NumericalOverflowError"
+      "msg": ""
     },
     {
       "code": 6019,
       "name": "IncorrectOwner",
-      "msg": "Incorrect account owner"
+      "msg": "r"
     },
     {
       "code": 6020,
       "name": "CollectionCannotBeVerifiedInThisInstruction",
-      "msg": "Cannot Verify Collection in this Instruction"
+      "msg": ""
     },
     {
       "code": 6021,
@@ -2016,12 +2016,12 @@
     {
       "code": 6022,
       "name": "AlreadyVerified",
-      "msg": "Collection item is already verified."
+      "msg": ""
     },
     {
       "code": 6023,
       "name": "AlreadyUnverified",
-      "msg": "Collection item is already unverified."
+      "msg": ""
     },
     {
       "code": 6024,
@@ -2031,12 +2031,12 @@
     {
       "code": 6025,
       "name": "LeafAuthorityMustSign",
-      "msg": "This transaction must be signed by either the leaf owner or leaf delegate"
+      "msg": "Tx must be signed by leaf owner or leaf delegate"
     },
     {
       "code": 6026,
       "name": "CollectionMustBeSized",
-      "msg": "Collection Not Compatable with Compression, Must be Sized"
+      "msg": ""
     },
     {
       "code": 6027,
@@ -2046,12 +2046,12 @@
     {
       "code": 6028,
       "name": "InvalidCollectionAuthority",
-      "msg": "Invalid collection authority"
+      "msg": ""
     },
     {
       "code": 6029,
       "name": "InvalidDelegateRecord",
-      "msg": "Invalid delegate record pda derivation"
+      "msg": ""
     },
     {
       "code": 6030,
@@ -2066,12 +2066,12 @@
     {
       "code": 6032,
       "name": "UnknownExternalError",
-      "msg": "Could not convert external error to BubblegumError"
+      "msg": "Could not convert to BubblegumError"
     },
     {
       "code": 6033,
       "name": "DecompressionDisabled",
-      "msg": "Decompression is disabled for this tree."
+      "msg": "Decompression disabled for this tree."
     },
     {
       "code": 6034,
