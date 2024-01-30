@@ -137,6 +137,85 @@
       ]
     },
     {
+      "name": "compress",
+      "docs": [
+        "Compresses a metadata account."
+      ],
+      "accounts": [
+        {
+          "name": "treeAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "leafOwner",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "leafDelegate",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "merkleTree",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "mint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "metadata",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "masterEdition",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "logWrapper",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "compressionProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMetadataProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "createTree",
       "docs": [
         "Creates a new tree."
@@ -750,6 +829,32 @@
         {
           "name": "collection",
           "type": "publicKey"
+        }
+      ]
+    },
+    {
+      "name": "setDecompressableState",
+      "docs": [
+        "Sets the `decompressible_state` of a tree."
+      ],
+      "accounts": [
+        {
+          "name": "treeAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "treeCreator",
+          "isMut": false,
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "decompressableState",
+          "type": {
+            "defined": "DecompressibleState"
+          }
         }
       ]
     },
@@ -1900,38 +2005,100 @@
           }
         ]
       }
+    },
+    {
+      "name": "InstructionName",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Unknown"
+          },
+          {
+            "name": "MintV1"
+          },
+          {
+            "name": "Redeem"
+          },
+          {
+            "name": "CancelRedeem"
+          },
+          {
+            "name": "Transfer"
+          },
+          {
+            "name": "Delegate"
+          },
+          {
+            "name": "DecompressV1"
+          },
+          {
+            "name": "Compress"
+          },
+          {
+            "name": "Burn"
+          },
+          {
+            "name": "CreateTree"
+          },
+          {
+            "name": "VerifyCreator"
+          },
+          {
+            "name": "UnverifyCreator"
+          },
+          {
+            "name": "VerifyCollection"
+          },
+          {
+            "name": "UnverifyCollection"
+          },
+          {
+            "name": "SetAndVerifyCollection"
+          },
+          {
+            "name": "MintToCollectionV1"
+          },
+          {
+            "name": "SetDecompressibleState"
+          },
+          {
+            "name": "UpdateMetadata"
+          }
+        ]
+      }
     }
   ],
   "errors": [
     {
       "code": 6000,
       "name": "AssetOwnerMismatch",
-      "msg": ""
+      "msg": "Asset Owner Does not match"
     },
     {
       "code": 6001,
       "name": "PublicKeyMismatch",
-      "msg": ""
+      "msg": "PublicKeyMismatch"
     },
     {
       "code": 6002,
       "name": "HashingMismatch",
-      "msg": ""
+      "msg": "Hashing Mismatch Within Leaf Schema"
     },
     {
       "code": 6003,
       "name": "UnsupportedSchemaVersion",
-      "msg": ""
+      "msg": "Unsupported Schema Version"
     },
     {
       "code": 6004,
       "name": "CreatorShareTotalMustBe100",
-      "msg": ""
+      "msg": "Creator shares must sum to 100"
     },
     {
       "code": 6005,
       "name": "DuplicateCreatorAddress",
-      "msg": ""
+      "msg": "No duplicate creator addresses in metadata"
     },
     {
       "code": 6006,
@@ -1941,7 +2108,7 @@
     {
       "code": 6007,
       "name": "CreatorNotFound",
-      "msg": ""
+      "msg": "Creator not found in creator Vec"
     },
     {
       "code": 6008,
@@ -1951,12 +2118,12 @@
     {
       "code": 6009,
       "name": "CreatorHashMismatch",
-      "msg": "Provided creator Vec must result in provided creator hash"
+      "msg": "User-provided creator Vec must result in same user-provided creator hash"
     },
     {
       "code": 6010,
       "name": "DataHashMismatch",
-      "msg": "Provided metadata must result in provided data hash"
+      "msg": "User-provided metadata must result in same user-provided data hash"
     },
     {
       "code": 6011,
@@ -1966,22 +2133,22 @@
     {
       "code": 6012,
       "name": "MetadataNameTooLong",
-      "msg": ""
+      "msg": "Name in metadata is too long"
     },
     {
       "code": 6013,
       "name": "MetadataSymbolTooLong",
-      "msg": ""
+      "msg": "Symbol in metadata is too long"
     },
     {
       "code": 6014,
       "name": "MetadataUriTooLong",
-      "msg": ""
+      "msg": "Uri in metadata is too long"
     },
     {
       "code": 6015,
       "name": "MetadataBasisPointsTooHigh",
-      "msg": "Basis points cannot exceed 10000"
+      "msg": "Basis points in metadata cannot exceed 10000"
     },
     {
       "code": 6016,
@@ -1996,17 +2163,17 @@
     {
       "code": 6018,
       "name": "NumericalOverflowError",
-      "msg": ""
+      "msg": "NumericalOverflowError"
     },
     {
       "code": 6019,
       "name": "IncorrectOwner",
-      "msg": "r"
+      "msg": "Incorrect account owner"
     },
     {
       "code": 6020,
       "name": "CollectionCannotBeVerifiedInThisInstruction",
-      "msg": ""
+      "msg": "Cannot Verify Collection in this Instruction"
     },
     {
       "code": 6021,
@@ -2016,12 +2183,12 @@
     {
       "code": 6022,
       "name": "AlreadyVerified",
-      "msg": ""
+      "msg": "Collection item is already verified."
     },
     {
       "code": 6023,
       "name": "AlreadyUnverified",
-      "msg": ""
+      "msg": "Collection item is already unverified."
     },
     {
       "code": 6024,
@@ -2031,12 +2198,12 @@
     {
       "code": 6025,
       "name": "LeafAuthorityMustSign",
-      "msg": "Tx must be signed by leaf owner or leaf delegate"
+      "msg": "This transaction must be signed by either the leaf owner or leaf delegate"
     },
     {
       "code": 6026,
       "name": "CollectionMustBeSized",
-      "msg": ""
+      "msg": "Collection Not Compatable with Compression, Must be Sized"
     },
     {
       "code": 6027,
@@ -2046,12 +2213,12 @@
     {
       "code": 6028,
       "name": "InvalidCollectionAuthority",
-      "msg": ""
+      "msg": "Invalid collection authority"
     },
     {
       "code": 6029,
       "name": "InvalidDelegateRecord",
-      "msg": ""
+      "msg": "Invalid delegate record pda derivation"
     },
     {
       "code": 6030,
@@ -2066,12 +2233,12 @@
     {
       "code": 6032,
       "name": "UnknownExternalError",
-      "msg": "Could not convert to BubblegumError"
+      "msg": "Could not convert external error to BubblegumError"
     },
     {
       "code": 6033,
       "name": "DecompressionDisabled",
-      "msg": "Decompression disabled for this tree."
+      "msg": "Decompression is disabled for this tree."
     },
     {
       "code": 6034,
