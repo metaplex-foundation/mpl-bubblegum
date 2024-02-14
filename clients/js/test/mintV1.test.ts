@@ -3,9 +3,16 @@ import {
   generateSigner,
   none,
   publicKey,
+  some,
 } from '@metaplex-foundation/umi';
 import test from 'ava';
-import { MetadataArgsArgs, fetchMerkleTree, hashLeaf, mintV1 } from '../src';
+import {
+  MetadataArgsArgs,
+  TokenStandard,
+  fetchMerkleTree,
+  hashLeaf,
+  mintV1,
+} from '../src';
 import { createTree, createUmi } from './_setup';
 
 test('it can mint an NFT from a Bubblegum tree', async (t) => {
@@ -45,4 +52,52 @@ test('it can mint an NFT from a Bubblegum tree', async (t) => {
     metadata,
   });
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(leaf));
+});
+
+test('it cannot mint an NFT from a Bubblegum tree because token standard is empty', async (t) => {
+  // Given an empty Bubblegum tree.
+  const umi = await createUmi();
+  const merkleTree = await createTree(umi);
+  const leafOwner = generateSigner(umi).publicKey;
+
+  // When we mint a new NFT from the tree using the following metadata.
+  const metadata: MetadataArgsArgs = {
+    name: 'My NFT',
+    uri: 'https://example.com/my-nft.json',
+    sellerFeeBasisPoints: 500, // 5%
+    collection: none(),
+    creators: [],
+    tokenStandard: none(),
+  };
+  const promise = mintV1(umi, {
+    leafOwner,
+    merkleTree,
+    metadata,
+  }).sendAndConfirm(umi);
+  // Then we expect a program error because metadata's token standard is empty.
+  await t.throwsAsync(promise, { name: 'InvalidTokenStandard' });
+});
+
+test('it cannot mint an NFT from a Bubblegum tree because token standard is wrong', async (t) => {
+  // Given an empty Bubblegum tree.
+  const umi = await createUmi();
+  const merkleTree = await createTree(umi);
+  const leafOwner = generateSigner(umi).publicKey;
+
+  // When we mint a new NFT from the tree using the following metadata.
+  const metadata: MetadataArgsArgs = {
+    name: 'My NFT',
+    uri: 'https://example.com/my-nft.json',
+    sellerFeeBasisPoints: 500, // 5%
+    collection: none(),
+    creators: [],
+    tokenStandard: some(TokenStandard.FungibleAsset),
+  };
+  const promise = mintV1(umi, {
+    leafOwner,
+    merkleTree,
+    metadata,
+  }).sendAndConfirm(umi);
+  // Then we expect a program error because metadata's token standard is FungibleAsset which is wrong.
+  await t.throwsAsync(promise, { name: 'InvalidTokenStandard' });
 });
