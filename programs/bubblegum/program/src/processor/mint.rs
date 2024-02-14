@@ -1,11 +1,10 @@
-use std::collections::HashSet;
-
 use anchor_lang::prelude::*;
 use solana_program::keccak;
 use spl_account_compression::{program::SplAccountCompression, wrap_application_data_v1, Noop};
+use std::collections::HashSet;
 
 use crate::{
-    asserts::assert_metadata_is_mpl_compatible,
+    asserts::{assert_metadata_is_mpl_compatible, assert_metadata_token_standard},
     error::BubblegumError,
     state::{leaf_schema::LeafSchema, metaplex_adapter::MetadataArgs, TreeConfig},
     utils::{append_leaf, get_asset_id},
@@ -41,6 +40,7 @@ pub(crate) fn mint_v1(ctx: Context<MintV1>, message: MetadataArgs) -> Result<()>
     let delegate = ctx.accounts.leaf_delegate.key();
     let authority = &mut ctx.accounts.tree_authority;
     let merkle_tree = &ctx.accounts.merkle_tree;
+
     if !authority.is_public {
         require!(
             incoming_tree_delegate == authority.tree_creator
@@ -106,6 +106,8 @@ pub(crate) fn process_mint_v1<'info>(
             }
         }
     }
+
+    assert_metadata_token_standard(&message)?;
 
     // @dev: seller_fee_basis points is encoded twice so that it can be passed to marketplace
     // instructions, without passing the entire, un-hashed MetadataArgs struct

@@ -4,8 +4,10 @@ pub mod utils;
 use anchor_lang::solana_program::instruction::InstructionError;
 
 use solana_program_test::{tokio, BanksClientError};
-use solana_sdk::signature::{Keypair, Signer};
-use solana_sdk::transaction::TransactionError;
+use solana_sdk::{
+    signature::{Keypair, Signer},
+    transaction::TransactionError,
+};
 
 use crate::utils::Error::BanksClient;
 use utils::{

@@ -84,6 +84,8 @@ pub enum BubblegumError {
     PrimarySaleCanOnlyBeFlippedToTrue,
     #[msg("Creator did not unverify the metadata")]
     CreatorDidNotUnverify,
+    #[msg("Only NonFungible standard is supported")]
+    InvalidTokenStandard,
 }
 
 // Converts certain Token Metadata errors into Bubblegum equivalents
