@@ -538,7 +538,10 @@
             "defined": "MetadataArgs"
           }
         }
-      ]
+      ],
+      "returns": {
+        "defined": "LeafSchema"
+      }
     },
     {
       "name": "mintV1",
@@ -599,7 +602,10 @@
             "defined": "MetadataArgs"
           }
         }
-      ]
+      ],
+      "returns": {
+        "defined": "LeafSchema"
+      }
     },
     {
       "name": "redeem",
