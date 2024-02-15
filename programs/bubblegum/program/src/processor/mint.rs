@@ -32,7 +32,7 @@ pub struct MintV1<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub(crate) fn mint_v1(ctx: Context<MintV1>, message: MetadataArgs) -> Result<()> {
+pub(crate) fn mint_v1(ctx: Context<MintV1>, message: MetadataArgs) -> Result<LeafSchema> {
     // TODO -> Separate V1 / V1 into seperate instructions
     let payer = ctx.accounts.payer.key();
     let incoming_tree_delegate = ctx.accounts.tree_delegate.key();
@@ -68,7 +68,7 @@ pub(crate) fn mint_v1(ctx: Context<MintV1>, message: MetadataArgs) -> Result<()>
             .map(|a| a.key()),
     );
 
-    process_mint_v1(
+    let leaf = process_mint_v1(
         message,
         owner,
         delegate,
@@ -83,7 +83,7 @@ pub(crate) fn mint_v1(ctx: Context<MintV1>, message: MetadataArgs) -> Result<()>
 
     authority.increment_mint_count();
 
-    Ok(())
+    Ok(leaf)
 }
 
 pub(crate) fn process_mint_v1<'info>(
@@ -97,7 +97,7 @@ pub(crate) fn process_mint_v1<'info>(
     wrapper: &Program<'info, Noop>,
     compression_program: &AccountInfo<'info>,
     allow_verified_collection: bool,
-) -> Result<()> {
+) -> Result<LeafSchema> {
     assert_metadata_is_mpl_compatible(&message)?;
     if !allow_verified_collection {
         if let Some(collection) = &message.collection {
@@ -160,5 +160,7 @@ pub(crate) fn process_mint_v1<'info>(
         &merkle_tree.to_account_info(),
         &wrapper.to_account_info(),
         leaf.to_node(),
-    )
+    )?;
+
+    Ok(leaf)
 }
