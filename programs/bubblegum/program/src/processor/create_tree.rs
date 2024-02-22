@@ -41,6 +41,7 @@ pub(crate) fn create_tree(
         num_minted: 0,
         is_public: public.unwrap_or(false),
         is_decompressible: DecompressibleState::Disabled,
+        merkle_tree: merkle_tree.key(),
     });
     let authority_pda_signer = &[&seeds[..]];
     let cpi_ctx = CpiContext::new_with_signer(

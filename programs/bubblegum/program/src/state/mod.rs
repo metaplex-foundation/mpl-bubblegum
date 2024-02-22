@@ -6,7 +6,7 @@ use anchor_lang::prelude::*;
 use borsh::{BorshDeserialize, BorshSerialize};
 use leaf_schema::LeafSchema;
 
-pub const TREE_AUTHORITY_SIZE: usize = 8 + 32 + 32 + 8 + 8 + 1 + 1 + 6; // 6 bytes padding
+pub const TREE_AUTHORITY_SIZE: usize = 8 + 32 + 32 + 8 + 8 + 1 + 1 + 32 + 6; // 6 bytes padding
 pub const VOUCHER_SIZE: usize = 8 + 1 + 32 + 32 + 32 + 8 + 32 + 32 + 4 + 32;
 pub const VOUCHER_PREFIX: &str = "voucher";
 pub const ASSET_PREFIX: &str = "asset";
@@ -21,6 +21,7 @@ pub struct TreeConfig {
     pub num_minted: u64,
     pub is_public: bool,
     pub is_decompressible: DecompressibleState,
+    pub merkle_tree: Pubkey,
 }
 
 impl TreeConfig {
