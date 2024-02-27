@@ -1,4 +1,8 @@
-use crate::{error::BubblegumError, state::metaplex_adapter::MetadataArgs, utils::cmp_pubkeys};
+use crate::{
+    error::BubblegumError,
+    state::metaplex_adapter::{MetadataArgs, TokenStandard as MetadataTokenStandard},
+    utils::cmp_pubkeys,
+};
 use anchor_lang::prelude::*;
 use mpl_token_metadata::{
     accounts::{CollectionAuthorityRecord, Metadata, MetadataDelegateRecord},
@@ -186,4 +190,13 @@ pub fn assert_collection_membership(
     }
 
     Ok(())
+}
+
+/// Assert that the provided MetadataArgs contains info about Token Standard
+/// and ensures that it's NonFungible
+pub fn assert_metadata_token_standard(metadata: &MetadataArgs) -> Result<()> {
+    match metadata.token_standard {
+        Some(MetadataTokenStandard::NonFungible) => Ok(()),
+        _ => Err(BubblegumError::InvalidTokenStandard.into()),
+    }
 }

@@ -4,7 +4,9 @@ use super::{
     clone_keypair, digital_asset::DigitalAsset, program_test, tree::Tree, BanksResult, DirtyClone,
     Error, LeafArgs, Result,
 };
-use bubblegum::state::metaplex_adapter::{Collection, Creator, MetadataArgs, TokenProgramVersion};
+use bubblegum::state::metaplex_adapter::{
+    Collection, Creator, MetadataArgs, TokenProgramVersion, TokenStandard as MetadataTokenStandard,
+};
 use mpl_token_metadata::{
     accounts::CollectionAuthorityRecord,
     instructions::ApproveCollectionAuthorityBuilder,
@@ -130,7 +132,7 @@ impl BubblegumTestContext {
             primary_sale_happened: false,
             is_mutable: false,
             edition_nonce: None,
-            token_standard: None,
+            token_standard: Some(MetadataTokenStandard::NonFungible),
             token_program_version: TokenProgramVersion::Original,
             collection: Some(Collection {
                 verified: false,

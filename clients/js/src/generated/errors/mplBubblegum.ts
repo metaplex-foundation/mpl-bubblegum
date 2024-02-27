@@ -578,6 +578,19 @@ export class CreatorDidNotUnverifyError extends ProgramError {
 codeToErrorMap.set(0x1797, CreatorDidNotUnverifyError);
 nameToErrorMap.set('CreatorDidNotUnverify', CreatorDidNotUnverifyError);
 
+/** InvalidTokenStandard: Only NonFungible standard is supported */
+export class InvalidTokenStandardError extends ProgramError {
+  readonly name: string = 'InvalidTokenStandard';
+
+  readonly code: number = 0x1798; // 6040
+
+  constructor(program: Program, cause?: Error) {
+    super('Only NonFungible standard is supported', program, cause);
+  }
+}
+codeToErrorMap.set(0x1798, InvalidTokenStandardError);
+nameToErrorMap.set('InvalidTokenStandard', InvalidTokenStandardError);
+
 /**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors

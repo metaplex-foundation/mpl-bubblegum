@@ -130,6 +130,9 @@ pub enum MplBubblegumError {
     /// 6039 (0x1797) - Creator did not unverify the metadata
     #[error("Creator did not unverify the metadata")]
     CreatorDidNotUnverify,
+    /// 6040 (0x1798) - Only NonFungible standard is supported
+    #[error("Only NonFungible standard is supported")]
+    InvalidTokenStandard,
 }
 
 impl solana_program::program_error::PrintProgramError for MplBubblegumError {
