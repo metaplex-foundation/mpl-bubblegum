@@ -4,9 +4,9 @@ use spl_account_compression::{program::SplAccountCompression, wrap_application_d
 use std::collections::HashSet;
 
 use crate::{
-    asserts::{assert_metadata_is_mpl_compatible, assert_metadata_token_standard},
-    error::BubblegumError,
-    state::{leaf_schema::LeafSchema, metaplex_adapter::MetadataArgs, TreeConfig},
+    asserts::assert_metadata_is_node_compatible,
+    error::PrimitivesError,
+    state::{leaf_schema::LeafSchema, metaplex_adapter::NodeArgs, TreeConfig},
     utils::{append_leaf, get_asset_id},
 };
 
@@ -32,7 +32,7 @@ pub struct MintV1<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub(crate) fn mint_v1(ctx: Context<MintV1>, message: MetadataArgs) -> Result<()> {
+pub(crate) fn mint_node_v1(ctx: Context<MintV1>, message: NodeArgs) -> Result<()> {
     // TODO -> Separate V1 / V1 into seperate instructions
     let payer = ctx.accounts.payer.key();
     let incoming_tree_delegate = ctx.accounts.tree_delegate.key();
@@ -45,12 +45,12 @@ pub(crate) fn mint_v1(ctx: Context<MintV1>, message: MetadataArgs) -> Result<()>
         require!(
             incoming_tree_delegate == authority.tree_creator
                 || incoming_tree_delegate == authority.tree_delegate,
-            BubblegumError::TreeAuthorityIncorrect,
+            PrimitivesError::TreeAuthorityIncorrect,
         );
     }
 
     if !authority.contains_mint_capacity(1) {
-        return Err(BubblegumError::InsufficientMintCapacity.into());
+        return Err(PrimitivesError::InsufficientMintCapacity.into());
     }
 
     // Create a HashSet to store signers to use with creator validation.  Any signer can be
@@ -68,7 +68,7 @@ pub(crate) fn mint_v1(ctx: Context<MintV1>, message: MetadataArgs) -> Result<()>
             .map(|a| a.key()),
     );
 
-    process_mint_v1(
+    process_node_mint_v1(
         message,
         owner,
         delegate,
@@ -78,7 +78,6 @@ pub(crate) fn mint_v1(ctx: Context<MintV1>, message: MetadataArgs) -> Result<()>
         merkle_tree,
         &ctx.accounts.log_wrapper,
         &ctx.accounts.compression_program,
-        false,
     )?;
 
     authority.increment_mint_count();
@@ -86,8 +85,8 @@ pub(crate) fn mint_v1(ctx: Context<MintV1>, message: MetadataArgs) -> Result<()>
     Ok(())
 }
 
-pub(crate) fn process_mint_v1<'info>(
-    message: MetadataArgs,
+pub(crate) fn process_node_mint_v1<'info>(
+    message: NodeArgs,
     owner: Pubkey,
     delegate: Pubkey,
     metadata_auth: HashSet<Pubkey>,
@@ -96,26 +95,13 @@ pub(crate) fn process_mint_v1<'info>(
     merkle_tree: &AccountInfo<'info>,
     wrapper: &Program<'info, Noop>,
     compression_program: &AccountInfo<'info>,
-    allow_verified_collection: bool,
 ) -> Result<()> {
-    assert_metadata_is_mpl_compatible(&message)?;
-    if !allow_verified_collection {
-        if let Some(collection) = &message.collection {
-            if collection.verified {
-                return Err(BubblegumError::CollectionCannotBeVerifiedInThisInstruction.into());
-            }
-        }
-    }
-
-    assert_metadata_token_standard(&message)?;
+    assert_metadata_is_node_compatible(&message)?;
 
     // @dev: seller_fee_basis points is encoded twice so that it can be passed to marketplace
     // instructions, without passing the entire, un-hashed MetadataArgs struct
     let metadata_args_hash = keccak::hashv(&[message.try_to_vec()?.as_slice()]);
-    let data_hash = keccak::hashv(&[
-        &metadata_args_hash.to_bytes(),
-        &message.seller_fee_basis_points.to_le_bytes(),
-    ]);
+    let data_hash = keccak::hashv(&[&metadata_args_hash.to_bytes()]);
 
     // Use the metadata auth to check whether we can allow `verified` to be set to true in the
     // creator Vec.
@@ -124,7 +110,7 @@ pub(crate) fn process_mint_v1<'info>(
         .iter()
         .map(|c| {
             if c.verified && !metadata_auth.contains(&c.address) {
-                Err(BubblegumError::CreatorDidNotVerify.into())
+                Err(PrimitivesError::CreatorDidNotVerify.into())
             } else {
                 Ok([c.address.as_ref(), &[c.verified as u8], &[c.share]].concat())
             }

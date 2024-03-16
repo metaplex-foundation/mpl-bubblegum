@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 use spl_account_compression::{program::SplAccountCompression, Node, Noop};
 
 use crate::{
-    error::BubblegumError,
+    error::PrimitivesError,
     state::{leaf_schema::LeafSchema, TreeConfig},
     utils::{get_asset_id, replace_leaf},
 };
@@ -40,7 +40,7 @@ pub(crate) fn burn<'info>(
     // Burn must be initiated by either the leaf owner or leaf delegate.
     require!(
         owner.is_signer || delegate.is_signer,
-        BubblegumError::LeafAuthorityMustSign
+        PrimitivesError::LeafAuthorityMustSign
     );
     let merkle_tree = ctx.accounts.merkle_tree.to_account_info();
     let asset_id = get_asset_id(&merkle_tree.key(), nonce);

@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 
 use crate::{
     processor::{process_creator_verification, verify_creator::CreatorVerification},
-    state::metaplex_adapter::MetadataArgs,
+    state::metaplex_adapter::NodeArgs,
 };
 
 pub(crate) fn unverify_creator<'info>(
@@ -12,7 +12,7 @@ pub(crate) fn unverify_creator<'info>(
     creator_hash: [u8; 32],
     nonce: u64,
     index: u32,
-    message: MetadataArgs,
+    message: NodeArgs,
 ) -> Result<()> {
     process_creator_verification(
         ctx,

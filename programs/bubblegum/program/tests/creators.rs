@@ -2,7 +2,7 @@
 pub mod utils;
 use crate::utils::{Error::BanksClient, LeafArgs};
 use anchor_lang::solana_program::instruction::InstructionError;
-use bubblegum::{error::BubblegumError, state::metaplex_adapter::Creator};
+use bubblegum::{error::PrimitivesError, state::metaplex_adapter::Creator};
 use solana_program_test::{tokio, BanksClientError};
 use solana_sdk::{signature::Keypair, signer::Signer, transaction::TransactionError};
 use utils::context::BubblegumTestContext;
@@ -42,7 +42,7 @@ async fn mint_with_verified_creator() {
                 e,
                 TransactionError::InstructionError(
                     0,
-                    InstructionError::Custom(BubblegumError::CreatorDidNotVerify.into()),
+                    InstructionError::Custom(PrimitivesError::CreatorDidNotVerify.into()),
                 )
             );
         } else {
@@ -96,7 +96,7 @@ async fn mint_to_collection_with_verified_creator() {
                 e,
                 TransactionError::InstructionError(
                     0,
-                    InstructionError::Custom(BubblegumError::CreatorDidNotVerify.into()),
+                    InstructionError::Custom(PrimitivesError::CreatorDidNotVerify.into()),
                 )
             );
         } else {

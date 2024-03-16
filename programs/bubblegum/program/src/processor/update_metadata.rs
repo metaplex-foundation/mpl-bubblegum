@@ -2,11 +2,11 @@ use anchor_lang::prelude::*;
 use spl_account_compression::{program::SplAccountCompression, wrap_application_data_v1, Noop};
 
 use crate::{
-    asserts::{assert_has_collection_authority, assert_metadata_is_mpl_compatible},
-    error::BubblegumError,
+    asserts::{assert_has_collection_authority, assert_metadata_is_node_compatible},
+    error::PrimitivesError,
     state::{
         leaf_schema::LeafSchema,
-        metaplex_adapter::{Collection, Creator, MetadataArgs, UpdateArgs},
+        metaplex_adapter::{Collection, Creator, NodeArgs, UpdateNodeArgs},
         metaplex_anchor::{MplTokenMetadata, TokenMetadata},
         TreeConfig,
     },
@@ -57,22 +57,22 @@ fn assert_authority_matches_collection<'info>(
     // Mint account must match Collection mint
     require!(
         collection_mint.key() == collection.key,
-        BubblegumError::CollectionMismatch
+        PrimitivesError::CollectionMismatch
     );
     // Metadata mint must match Collection mint
     require!(
         collection_metadata.mint == collection.key,
-        BubblegumError::CollectionMismatch
+        PrimitivesError::CollectionMismatch
     );
     // Verify correct account ownerships.
     require!(
         *collection_metadata_account_info.owner == token_metadata_program.key(),
-        BubblegumError::IncorrectOwner
+        PrimitivesError::IncorrectOwner
     );
     // Collection mint must be owned by SPL token
     require!(
         *collection_mint.owner == spl_token::id(),
-        BubblegumError::IncorrectOwner
+        PrimitivesError::IncorrectOwner
     );
 
     let collection_authority_record = collection_authority_record_pda
@@ -111,32 +111,28 @@ fn process_update_metadata<'info>(
     log_wrapper: &Program<'info, Noop>,
     remaining_accounts: &[AccountInfo<'info>],
     root: [u8; 32],
-    current_metadata: MetadataArgs,
-    update_args: UpdateArgs,
+    current_metadata: NodeArgs,
+    update_args: UpdateNodeArgs,
     nonce: u64,
     index: u32,
 ) -> Result<()> {
     // Old metadata must be mutable to allow metadata update
     require!(
         current_metadata.is_mutable,
-        BubblegumError::MetadataImmutable
+        PrimitivesError::MetadataImmutable
     );
 
     let current_data_hash = hash_metadata(&current_metadata)?;
     let current_creator_hash = hash_creators(&current_metadata.creators)?;
-
-    // Update metadata
     let mut updated_metadata = current_metadata;
-    if let Some(name) = update_args.name {
-        updated_metadata.name = name;
+    if let Some(label) = update_args.label.into() {
+        updated_metadata.label = label;
     };
-    if let Some(symbol) = update_args.symbol {
-        updated_metadata.symbol = symbol;
+    if let Some(properties) = update_args.properties.into() {
+        updated_metadata.properties = properties;
     };
-    if let Some(uri) = update_args.uri {
-        updated_metadata.uri = uri;
-    };
-    if let Some(updated_creators) = update_args.creators {
+
+    if let Some(updated_creators) = update_args.creators.into() {
         let current_creators = updated_metadata.creators;
 
         // Make sure no new creator is verified (unless it is the tree delegate).
@@ -147,7 +143,7 @@ fn process_update_metadata<'info>(
         );
         require!(
             no_new_creators_verified,
-            BubblegumError::CreatorDidNotVerify
+            PrimitivesError::CreatorDidNotVerify
         );
 
         // Make sure no current verified creator is unverified or removed (unless it is the tree
@@ -159,27 +155,17 @@ fn process_update_metadata<'info>(
         );
         require!(
             no_current_creators_unverified,
-            BubblegumError::CreatorDidNotUnverify
+            PrimitivesError::CreatorDidNotUnverify
         );
 
         updated_metadata.creators = updated_creators;
     }
-    if let Some(seller_fee_basis_points) = update_args.seller_fee_basis_points {
-        updated_metadata.seller_fee_basis_points = seller_fee_basis_points
-    };
-    if let Some(primary_sale_happened) = update_args.primary_sale_happened {
-        // a new value of primary_sale_happened should only be specified if primary_sale_happened was false in the original metadata
-        require!(
-            !updated_metadata.primary_sale_happened,
-            BubblegumError::PrimarySaleCanOnlyBeFlippedToTrue
-        );
-        updated_metadata.primary_sale_happened = primary_sale_happened;
-    };
-    if let Some(is_mutable) = update_args.is_mutable {
+
+    if let Some(is_mutable) = update_args.is_mutable.into() {
         updated_metadata.is_mutable = is_mutable;
     };
 
-    assert_metadata_is_mpl_compatible(&updated_metadata)?;
+    assert_metadata_is_node_compatible(&updated_metadata)?;
     let updated_data_hash = hash_metadata(&updated_metadata)?;
     let updated_creator_hash = hash_creators(&updated_metadata.creators)?;
 
@@ -223,44 +209,9 @@ pub fn update_metadata<'info>(
     root: [u8; 32],
     nonce: u64,
     index: u32,
-    current_metadata: MetadataArgs,
-    update_args: UpdateArgs,
+    current_metadata: NodeArgs,
+    update_args: UpdateNodeArgs,
 ) -> Result<()> {
-    match &current_metadata.collection {
-        // Verified collection case.
-        Some(collection) if collection.verified => {
-            let collection_mint = ctx
-                .accounts
-                .collection_mint
-                .as_ref()
-                .ok_or(BubblegumError::MissingCollectionMintAccount)?;
-
-            let collection_metadata = ctx
-                .accounts
-                .collection_metadata
-                .as_ref()
-                .ok_or(BubblegumError::MissingCollectionMetadataAccount)?;
-
-            assert_authority_matches_collection(
-                collection,
-                &ctx.accounts.authority.to_account_info(),
-                &ctx.accounts.collection_authority_record_pda,
-                collection_mint,
-                &collection_metadata.to_account_info(),
-                collection_metadata,
-                &ctx.accounts.token_metadata_program,
-            )?;
-        }
-        // No collection or unverified collection case.
-        _ => {
-            require!(
-                ctx.accounts.authority.key() == ctx.accounts.tree_authority.tree_creator
-                    || ctx.accounts.authority.key() == ctx.accounts.tree_authority.tree_delegate,
-                BubblegumError::TreeAuthorityIncorrect,
-            );
-        }
-    }
-
     process_update_metadata(
         &ctx.accounts.merkle_tree.to_account_info(),
         &ctx.accounts.authority,

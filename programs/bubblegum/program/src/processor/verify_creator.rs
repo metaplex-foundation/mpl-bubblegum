@@ -3,7 +3,7 @@ use spl_account_compression::{program::SplAccountCompression, Noop};
 
 use crate::{
     processor::process_creator_verification,
-    state::{metaplex_adapter::MetadataArgs, TreeConfig},
+    state::{metaplex_adapter::NodeArgs, TreeConfig},
 };
 
 #[derive(Accounts)]
@@ -34,7 +34,7 @@ pub(crate) fn verify_creator<'info>(
     creator_hash: [u8; 32],
     nonce: u64,
     index: u32,
-    message: MetadataArgs,
+    message: NodeArgs,
 ) -> Result<()> {
     process_creator_verification(
         ctx,

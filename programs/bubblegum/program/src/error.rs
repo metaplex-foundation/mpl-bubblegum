@@ -3,7 +3,7 @@ use mpl_token_metadata::errors::MplTokenMetadataError;
 use num_traits::FromPrimitive;
 
 #[error_code]
-pub enum BubblegumError {
+pub enum PrimitivesError {
     #[msg("Asset Owner Does not match")]
     AssetOwnerMismatch,
     #[msg("PublicKeyMismatch")]
@@ -37,6 +37,8 @@ pub enum BubblegumError {
     #[msg("Basis points in metadata cannot exceed 10000")]
     MetadataBasisPointsTooHigh,
     #[msg("Tree creator or tree delegate must sign.")]
+    MetadataPropertiesTooLong,
+    #[msg("Values in properties exceeded the size limit")]
     TreeAuthorityIncorrect,
     #[msg("Not enough unapproved mints left")]
     InsufficientMintCapacity,
@@ -68,7 +70,7 @@ pub enum BubblegumError {
     CollectionMasterEditionAccountInvalid,
     #[msg("Collection Must Be a Unique Master Edition v2")]
     CollectionMustBeAUniqueMasterEdition,
-    #[msg("Could not convert external error to BubblegumError")]
+    #[msg("Could not convert external error to PrimitivesError")]
     UnknownExternalError,
     #[msg("Decompression is disabled for this tree.")]
     DecompressionDisabled,
@@ -89,23 +91,23 @@ pub enum BubblegumError {
 }
 
 // Converts certain Token Metadata errors into Bubblegum equivalents
-pub fn metadata_error_into_bubblegum(error: ProgramError) -> BubblegumError {
+pub fn metadata_error_into_bubblegum(error: ProgramError) -> PrimitivesError {
     match error {
         ProgramError::Custom(e) => {
             let metadata_error =
                 FromPrimitive::from_u32(e).expect("Unknown error code from token-metadata");
 
             match metadata_error {
-                MplTokenMetadataError::CollectionNotFound => BubblegumError::CollectionNotFound,
+                MplTokenMetadataError::CollectionNotFound => PrimitivesError::CollectionNotFound,
                 MplTokenMetadataError::CollectionMustBeAUniqueMasterEdition => {
-                    BubblegumError::CollectionMustBeAUniqueMasterEdition
+                    PrimitivesError::CollectionMustBeAUniqueMasterEdition
                 }
 
                 MplTokenMetadataError::CollectionMasterEditionAccountInvalid => {
-                    BubblegumError::CollectionMasterEditionAccountInvalid
+                    PrimitivesError::CollectionMasterEditionAccountInvalid
                 }
 
-                _ => BubblegumError::UnknownExternalError,
+                _ => PrimitivesError::UnknownExternalError,
             }
         }
         _ => panic!("Unsupported program error code"),
