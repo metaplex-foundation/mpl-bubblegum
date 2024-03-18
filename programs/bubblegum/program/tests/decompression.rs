@@ -1,7 +1,7 @@
 #![cfg(feature = "test-sbf")]
 pub mod utils;
 
-use bubblegum::error::BubblegumError;
+use bubblegum::error::PrimitivesError;
 use mpl_token_metadata::{
     accounts::{MasterEdition, Metadata},
     types::TokenStandard,
@@ -181,7 +181,7 @@ async fn test_decompress_fails_when_disabled() {
             e,
             TransactionError::InstructionError(
                 0,
-                InstructionError::Custom(BubblegumError::DecompressionDisabled.into()),
+                InstructionError::Custom(PrimitivesError::DecompressionDisabled.into()),
             )
         );
     } else {

@@ -10,10 +10,7 @@ pub mod state;
 pub mod utils;
 
 use processor::*;
-use state::{
-    metaplex_adapter::{MetadataArgs, UpdateArgs},
-    DecompressibleState,
-};
+use state::{metaplex_adapter::NodeArgs, metaplex_adapter::UpdateNodeArgs, DecompressibleState};
 
 declare_id!("BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY");
 
@@ -71,6 +68,8 @@ pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
 #[program]
 pub mod bubblegum {
 
+    use self::state::metaplex_adapter::NodeArgs;
+
     use super::*;
 
     /// Burns a leaf node from the tree.
@@ -85,19 +84,6 @@ pub mod bubblegum {
         processor::burn(ctx, root, data_hash, creator_hash, nonce, index)
     }
 
-    /// Cancels a redeem.
-    pub fn cancel_redeem<'info>(
-        ctx: Context<'_, '_, '_, 'info, CancelRedeem<'info>>,
-        root: [u8; 32],
-    ) -> Result<()> {
-        processor::cancel_redeem(ctx, root)
-    }
-
-    /// Compresses a metadata account.
-    pub fn compress(ctx: Context<Compress>) -> Result<()> {
-        processor::compress(ctx)
-    }
-
     /// Creates a new tree.
     pub fn create_tree(
         ctx: Context<CreateTree>,
@@ -108,71 +94,9 @@ pub mod bubblegum {
         processor::create_tree(ctx, max_depth, max_buffer_size, public)
     }
 
-    /// Decompresses a leaf node from the tree.
-    pub fn decompress_v1(ctx: Context<DecompressV1>, metadata: MetadataArgs) -> Result<()> {
-        processor::decompress_v1(ctx, metadata)
-    }
-
-    /// Sets a delegate for a leaf node.
-    pub fn delegate<'info>(
-        ctx: Context<'_, '_, '_, 'info, Delegate<'info>>,
-        root: [u8; 32],
-        data_hash: [u8; 32],
-        creator_hash: [u8; 32],
-        nonce: u64,
-        index: u32,
-    ) -> Result<()> {
-        processor::delegate(ctx, root, data_hash, creator_hash, nonce, index)
-    }
-
-    /// Mints a new asset and adds it to a collection.
-    pub fn mint_to_collection_v1(
-        ctx: Context<MintToCollectionV1>,
-        metadata_args: MetadataArgs,
-    ) -> Result<()> {
-        processor::mint_to_collection_v1(ctx, metadata_args)
-    }
-
     /// Mints a new asset.
-    pub fn mint_v1(ctx: Context<MintV1>, message: MetadataArgs) -> Result<()> {
-        processor::mint_v1(ctx, message)
-    }
-
-    /// Redeems a vouches.
-    ///
-    /// Once a vouch is redeemed, the corresponding leaf node is removed from the tree.
-    pub fn redeem<'info>(
-        ctx: Context<'_, '_, '_, 'info, Redeem<'info>>,
-        root: [u8; 32],
-        data_hash: [u8; 32],
-        creator_hash: [u8; 32],
-        nonce: u64,
-        index: u32,
-    ) -> Result<()> {
-        processor::redeem(ctx, root, data_hash, creator_hash, nonce, index)
-    }
-
-    /// Sets and verifies a collection to a leaf node
-    pub fn set_and_verify_collection<'info>(
-        ctx: Context<'_, '_, '_, 'info, CollectionVerification<'info>>,
-        root: [u8; 32],
-        data_hash: [u8; 32],
-        creator_hash: [u8; 32],
-        nonce: u64,
-        index: u32,
-        message: MetadataArgs,
-        collection: Pubkey,
-    ) -> Result<()> {
-        processor::set_and_verify_collection(
-            ctx,
-            root,
-            data_hash,
-            creator_hash,
-            nonce,
-            index,
-            message,
-            collection,
-        )
+    pub fn mint_node_v1(ctx: Context<MintV1>, message: NodeArgs) -> Result<()> {
+        processor::mint_node_v1(ctx, message)
     }
 
     /// Sets the `decompressible_state` of a tree.
@@ -201,31 +125,6 @@ pub mod bubblegum {
         processor::set_tree_delegate(ctx)
     }
 
-    /// Transfers a leaf node from one account to another.
-    pub fn transfer<'info>(
-        ctx: Context<'_, '_, '_, 'info, Transfer<'info>>,
-        root: [u8; 32],
-        data_hash: [u8; 32],
-        creator_hash: [u8; 32],
-        nonce: u64,
-        index: u32,
-    ) -> Result<()> {
-        processor::transfer(ctx, root, data_hash, creator_hash, nonce, index)
-    }
-
-    /// Unverifies a collection from a leaf node.
-    pub fn unverify_collection<'info>(
-        ctx: Context<'_, '_, '_, 'info, CollectionVerification<'info>>,
-        root: [u8; 32],
-        data_hash: [u8; 32],
-        creator_hash: [u8; 32],
-        nonce: u64,
-        index: u32,
-        message: MetadataArgs,
-    ) -> Result<()> {
-        processor::unverify_collection(ctx, root, data_hash, creator_hash, nonce, index, message)
-    }
-
     /// Unverifies a creator from a leaf node.
     pub fn unverify_creator<'info>(
         ctx: Context<'_, '_, '_, 'info, CreatorVerification<'info>>,
@@ -234,22 +133,9 @@ pub mod bubblegum {
         creator_hash: [u8; 32],
         nonce: u64,
         index: u32,
-        message: MetadataArgs,
+        message: NodeArgs,
     ) -> Result<()> {
         processor::unverify_creator(ctx, root, data_hash, creator_hash, nonce, index, message)
-    }
-
-    /// Verifies a collection for a leaf node.
-    pub fn verify_collection<'info>(
-        ctx: Context<'_, '_, '_, 'info, CollectionVerification<'info>>,
-        root: [u8; 32],
-        data_hash: [u8; 32],
-        creator_hash: [u8; 32],
-        nonce: u64,
-        index: u32,
-        message: MetadataArgs,
-    ) -> Result<()> {
-        processor::verify_collection(ctx, root, data_hash, creator_hash, nonce, index, message)
     }
 
     /// Verifies a creator for a leaf node.
@@ -260,7 +146,7 @@ pub mod bubblegum {
         creator_hash: [u8; 32],
         nonce: u64,
         index: u32,
-        message: MetadataArgs,
+        message: NodeArgs,
     ) -> Result<()> {
         processor::verify_creator(ctx, root, data_hash, creator_hash, nonce, index, message)
     }
@@ -271,8 +157,8 @@ pub mod bubblegum {
         root: [u8; 32],
         nonce: u64,
         index: u32,
-        current_metadata: MetadataArgs,
-        update_args: UpdateArgs,
+        current_metadata: NodeArgs,
+        update_args: UpdateNodeArgs,
     ) -> Result<()> {
         processor::update_metadata(ctx, root, nonce, index, current_metadata, update_args)
     }

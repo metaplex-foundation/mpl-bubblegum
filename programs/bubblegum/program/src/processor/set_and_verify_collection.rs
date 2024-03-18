@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 
 use crate::{
-    error::BubblegumError,
+    error::PrimitivesError,
     processor::{process_collection_verification, verify_collection::CollectionVerification},
     state::metaplex_adapter::MetadataArgs,
 };
@@ -39,7 +39,7 @@ pub(crate) fn set_and_verify_collection<'info>(
 
     require!(
         tree_authority_signed || tree_authority_is_collection_update_authority,
-        BubblegumError::UpdateAuthorityIncorrect
+        PrimitivesError::UpdateAuthorityIncorrect
     );
 
     process_collection_verification(

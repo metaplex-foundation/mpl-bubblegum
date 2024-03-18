@@ -1,5 +1,5 @@
 use crate::state::{
-    metaplex_adapter::{Creator, MetadataArgs},
+    metaplex_adapter::{Creator, NodeArgs},
     ASSET_PREFIX,
 };
 use anchor_lang::{
@@ -26,14 +26,10 @@ pub fn hash_creators(creators: &[Creator]) -> Result<[u8; 32]> {
     .to_bytes())
 }
 
-pub fn hash_metadata(metadata: &MetadataArgs) -> Result<[u8; 32]> {
+pub fn hash_metadata(metadata: &NodeArgs) -> Result<[u8; 32]> {
     let metadata_args_hash = keccak::hashv(&[metadata.try_to_vec()?.as_slice()]);
     // Calculate new data hash.
-    Ok(keccak::hashv(&[
-        &metadata_args_hash.to_bytes(),
-        &metadata.seller_fee_basis_points.to_le_bytes(),
-    ])
-    .to_bytes())
+    Ok(keccak::hashv(&[&metadata_args_hash.to_bytes()]).to_bytes())
 }
 
 pub fn replace_leaf<'info>(
