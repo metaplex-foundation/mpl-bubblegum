@@ -18,10 +18,12 @@ import test from 'ava';
 import {
   MetadataArgsArgs,
   fetchMerkleTree,
+  findLeafAssetIdPda,
+  getLeafSchemaSerializer,
   hashLeaf,
   mintToCollectionV1,
 } from '../src';
-import { createTree, createUmi } from './_setup';
+import { createTree, createUmi, getReturnLog } from './_setup';
 
 test('it can mint an NFT from a collection (collection unverified in passed-in metadata)', async (t) => {
   // Given an empty Bubblegum tree.
@@ -278,4 +280,54 @@ test('it can mint an NFT from a collection using a legacy collection delegate', 
     },
   });
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(leaf));
+});
+
+test('it can mint an NFT from a collection (collection verified in passed-in metadata) && can get created LeafSchema from returnedValue ', async (t) => {
+  // Given an empty Bubblegum tree.
+  const umi = await createUmi();
+  const merkleTree = await createTree(umi);
+  const leafOwner = generateSigner(umi).publicKey;
+
+  // And a Collection NFT.
+  const collectionMint = generateSigner(umi);
+  await createNft(umi, {
+    mint: collectionMint,
+    name: 'My Collection',
+    uri: 'https://example.com/my-collection.json',
+    sellerFeeBasisPoints: percentAmount(5.5), // 5.5%
+    isCollection: true,
+  }).sendAndConfirm(umi);
+
+  // When we mint a new NFT from the tree using the following metadata, with collection verified.
+  const metadata: MetadataArgsArgs = {
+    name: 'My NFT',
+    uri: 'https://example.com/my-nft.json',
+    sellerFeeBasisPoints: 550, // 5.5%
+    collection: {
+      key: collectionMint.publicKey,
+      verified: true,
+    },
+    creators: [],
+  };
+
+  const transactionResult = await mintToCollectionV1(umi, {
+    leafOwner,
+    merkleTree,
+    metadata,
+    collectionMint: collectionMint.publicKey,
+  }).sendAndConfirm(umi);
+  const transaction = await umi.rpc.getTransaction(transactionResult.signature);
+
+  const unparsedLogs = getReturnLog(transaction);
+  if (unparsedLogs != null) {
+    const buffer = unparsedLogs[2];
+    const leaf = getLeafSchemaSerializer().deserialize(buffer)[0];
+    const assetId = findLeafAssetIdPda(umi, { merkleTree, leafIndex: 0 });
+
+    t.is(leafOwner, leaf.owner);
+    t.is(Number(leaf.nonce), 0);
+    t.is(leaf.id, assetId[0]);
+  } else {
+    t.fail();
+  }
 });

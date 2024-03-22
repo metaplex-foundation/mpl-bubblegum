@@ -6,6 +6,7 @@ use spl_account_compression::{program::SplAccountCompression, Noop};
 use crate::{
     error::BubblegumError,
     state::{
+        leaf_schema::LeafSchema,
         metaplex_adapter::MetadataArgs,
         metaplex_anchor::{MplTokenMetadata, TokenMetadata},
         TreeConfig, COLLECTION_CPI_PREFIX,
@@ -57,7 +58,7 @@ pub struct MintToCollectionV1<'info> {
 pub(crate) fn mint_to_collection_v1(
     ctx: Context<MintToCollectionV1>,
     metadata_args: MetadataArgs,
-) -> Result<()> {
+) -> Result<LeafSchema> {
     let mut message = metadata_args;
     // TODO -> Separate V1 / V1 into seperate instructions
     let payer = ctx.accounts.payer.key();
@@ -118,7 +119,7 @@ pub(crate) fn mint_to_collection_v1(
         true,
     )?;
 
-    process_mint_v1(
+    let leaf = process_mint_v1(
         message,
         owner,
         delegate,
@@ -133,5 +134,5 @@ pub(crate) fn mint_to_collection_v1(
 
     authority.increment_mint_count();
 
-    Ok(())
+    Ok(leaf)
 }

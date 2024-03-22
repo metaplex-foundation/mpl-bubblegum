@@ -11,6 +11,7 @@ pub mod utils;
 
 use processor::*;
 use state::{
+    leaf_schema::LeafSchema,
     metaplex_adapter::{MetadataArgs, UpdateArgs},
     DecompressibleState,
 };
@@ -70,7 +71,6 @@ pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
 
 #[program]
 pub mod bubblegum {
-
     use super::*;
 
     /// Burns a leaf node from the tree.
@@ -129,12 +129,12 @@ pub mod bubblegum {
     pub fn mint_to_collection_v1(
         ctx: Context<MintToCollectionV1>,
         metadata_args: MetadataArgs,
-    ) -> Result<()> {
+    ) -> Result<LeafSchema> {
         processor::mint_to_collection_v1(ctx, metadata_args)
     }
 
     /// Mints a new asset.
-    pub fn mint_v1(ctx: Context<MintV1>, message: MetadataArgs) -> Result<()> {
+    pub fn mint_v1(ctx: Context<MintV1>, message: MetadataArgs) -> Result<LeafSchema> {
         processor::mint_v1(ctx, message)
     }
 

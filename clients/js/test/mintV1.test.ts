@@ -7,13 +7,15 @@ import {
 } from '@metaplex-foundation/umi';
 import test from 'ava';
 import {
-  MetadataArgsArgs,
   TokenStandard,
+  MetadataArgsArgs,
   fetchMerkleTree,
+  findLeafAssetIdPda,
+  getLeafSchemaSerializer,
   hashLeaf,
   mintV1,
 } from '../src';
-import { createTree, createUmi } from './_setup';
+import { createTree, createUmi, getReturnLog } from './_setup';
 
 test('it can mint an NFT from a Bubblegum tree', async (t) => {
   // Given an empty Bubblegum tree.
@@ -100,4 +102,40 @@ test('it cannot mint an NFT from a Bubblegum tree because token standard is wron
   }).sendAndConfirm(umi);
   // Then we expect a program error because metadata's token standard is FungibleAsset which is wrong.
   await t.throwsAsync(promise, { name: 'InvalidTokenStandard' });
+});
+
+test('it can get LeafSchema from mint without CPI', async (t) => {
+  // Given an empty Bubblegum tree.
+  const umi = await createUmi();
+
+  const merkleTree = await createTree(umi);
+  const leafOwner = generateSigner(umi).publicKey;
+
+  // When we mint a new NFT from the tree using the following metadata.
+  const metadata: MetadataArgsArgs = {
+    name: 'My NFT',
+    uri: 'https://example.com/my-nft.json',
+    sellerFeeBasisPoints: 500, // 5%
+    collection: none(),
+    creators: [],
+  };
+  const transactionResult = await mintV1(umi, {
+    leafOwner,
+    merkleTree,
+    metadata,
+  }).sendAndConfirm(umi);
+  const transaction = await umi.rpc.getTransaction(transactionResult.signature);
+
+  const unparsedLogs = getReturnLog(transaction);
+  if (unparsedLogs != null) {
+    const buffer = unparsedLogs[2];
+    const leaf = getLeafSchemaSerializer().deserialize(buffer)[0];
+    const assetId = findLeafAssetIdPda(umi, { merkleTree, leafIndex: 0 });
+
+    t.is(leafOwner, leaf.owner);
+    t.is(Number(leaf.nonce), 0);
+    t.is(leaf.id, assetId[0]);
+  } else {
+    t.fail();
+  }
 });
