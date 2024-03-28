@@ -1,4 +1,8 @@
-use crate::{error::PrimitivesError, state::metaplex_adapter::NodeArgs, utils::cmp_pubkeys};
+use crate::{
+    error::PrimitivesError,
+    state::metaplex_adapter::{EdgeArgs, NodeArgs},
+    utils::cmp_pubkeys,
+};
 use anchor_lang::prelude::*;
 use mpl_token_metadata::{
     accounts::{CollectionAuthorityRecord, Metadata, MetadataDelegateRecord},
@@ -8,6 +12,41 @@ use mpl_token_metadata::{
 /// Assert that the provided MetadataArgs are compatible with MPL `Data`
 pub fn assert_metadata_is_node_compatible(metadata: &NodeArgs) -> Result<()> {
     if metadata.label.len() > mpl_token_metadata::MAX_NAME_LENGTH {
+        return Err(PrimitivesError::MetadataNameTooLong.into());
+    }
+    if !check_properties_size(&metadata.properties) {
+        return Err(PrimitivesError::MetadataPropertiesTooLong.into());
+    }
+
+    if !metadata.creators.is_empty() {
+        if metadata.creators.len() > mpl_token_metadata::MAX_CREATOR_LIMIT {
+            return Err(PrimitivesError::CreatorsTooLong.into());
+        }
+
+        let mut total: u8 = 0;
+        for i in 0..metadata.creators.len() {
+            let creator = &metadata.creators[i];
+            for iter in metadata.creators.iter().skip(i + 1) {
+                if iter.address == creator.address {
+                    return Err(PrimitivesError::DuplicateCreatorAddress.into());
+                }
+            }
+            total = total
+                .checked_add(creator.share)
+                .ok_or(PrimitivesError::CreatorShareTotalMustBe100)?;
+        }
+        if total != 100 {
+            return Err(PrimitivesError::CreatorShareTotalMustBe100.into());
+        }
+    }
+    Ok(())
+}
+/// Assert that the provided MetadataArgs are compatible with MPL `Data`
+pub fn assert_edge_is_node_compatible(metadata: &EdgeArgs) -> Result<()> {
+    if metadata.start_id.len() > mpl_token_metadata::MAX_NAME_LENGTH {
+        return Err(PrimitivesError::MetadataNameTooLong.into());
+    }
+    if metadata.end_id.len() > mpl_token_metadata::MAX_NAME_LENGTH {
         return Err(PrimitivesError::MetadataNameTooLong.into());
     }
     if !check_properties_size(&metadata.properties) {

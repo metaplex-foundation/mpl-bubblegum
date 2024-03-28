@@ -11,7 +11,7 @@ use crate::{
 };
 
 #[derive(Accounts)]
-pub struct MintV1<'info> {
+pub struct MintNodeV1<'info> {
     #[account(
         mut,
         seeds = [merkle_tree.key().as_ref()],
@@ -32,7 +32,7 @@ pub struct MintV1<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub(crate) fn mint_node_v1(ctx: Context<MintV1>, message: NodeArgs) -> Result<()> {
+pub(crate) fn mint_node_v1(ctx: Context<MintNodeV1>, message: NodeArgs) -> Result<()> {
     // TODO -> Separate V1 / V1 into seperate instructions
     let payer = ctx.accounts.payer.key();
     let incoming_tree_delegate = ctx.accounts.tree_delegate.key();

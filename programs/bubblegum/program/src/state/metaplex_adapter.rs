@@ -100,3 +100,25 @@ pub struct UpdateNodeArgs {
     pub is_mutable: bool,
     pub creators: Vec<Creator>,
 }
+#[derive(AnchorSerialize, AnchorDeserialize, PartialEq, Eq, Debug, Clone)]
+pub struct EdgeArgs {
+    /// The name of the asset
+    pub start_id: String,
+    pub end_id: String,
+    // key value pair of properties
+    pub properties: Vec<(String, String)>,
+    // Whether or not the data struct is mutable, default is not
+    pub is_mutable: bool,
+    pub creators: Vec<Creator>,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, PartialEq, Eq, Debug, Clone, Default)]
+pub struct UpdateEdgeArgs {
+    /// The name of the asset
+    pub label: String,
+    // key value pair of properties
+    pub properties: Vec<(String, String)>,
+    // Whether or not the data struct is mutable, default is not
+    pub is_mutable: bool,
+    pub creators: Vec<Creator>,
+}

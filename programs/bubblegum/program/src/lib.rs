@@ -10,7 +10,10 @@ pub mod state;
 pub mod utils;
 
 use processor::*;
-use state::{metaplex_adapter::NodeArgs, metaplex_adapter::UpdateNodeArgs, DecompressibleState};
+use state::{
+    metaplex_adapter::EdgeArgs, metaplex_adapter::NodeArgs, metaplex_adapter::UpdateNodeArgs,
+    DecompressibleState,
+};
 
 declare_id!("BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY");
 
@@ -68,7 +71,7 @@ pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
 #[program]
 pub mod bubblegum {
 
-    use self::state::metaplex_adapter::NodeArgs;
+    use self::state::metaplex_adapter::{EdgeArgs, NodeArgs};
 
     use super::*;
 
@@ -95,8 +98,12 @@ pub mod bubblegum {
     }
 
     /// Mints a new asset.
-    pub fn mint_node_v1(ctx: Context<MintV1>, message: NodeArgs) -> Result<()> {
+    pub fn mint_node_v1(ctx: Context<MintNodeV1>, message: NodeArgs) -> Result<()> {
         processor::mint_node_v1(ctx, message)
+    }
+    /// Mints a new asset.
+    pub fn mint_edge_v1(ctx: Context<MintEdgeV1>, message: EdgeArgs) -> Result<()> {
+        processor::mint_edge_v1(ctx, message)
     }
 
     /// Sets the `decompressible_state` of a tree.
