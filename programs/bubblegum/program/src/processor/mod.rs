@@ -12,7 +12,8 @@ use crate::{
 
 mod burn;
 mod create_tree;
-mod mint;
+mod mint_edge;
+mod mint_node;
 mod set_decompressible_state;
 mod set_tree_delegate;
 mod unverify_creator;
@@ -21,7 +22,8 @@ mod verify_creator;
 
 pub(crate) use burn::*;
 pub(crate) use create_tree::*;
-pub(crate) use mint::*;
+pub(crate) use mint_edge::*;
+pub(crate) use mint_node::*;
 pub(crate) use set_decompressible_state::*;
 pub(crate) use set_tree_delegate::*;
 pub(crate) use unverify_creator::*;
