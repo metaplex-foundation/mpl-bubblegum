@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop */
 import {
   defaultPublicKey,
   generateSigner,
@@ -22,7 +23,7 @@ test('it can parse the leaf from mint instructions', async (t) => {
   const umi = await createUmi();
   const merkleTree = await createTree(umi);
   const leafOwner = generateSigner(umi).publicKey;
-  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  const merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.sequenceNumber, 0n);
   t.is(merkleTreeAccount.tree.activeIndex, 0n);
   t.is(merkleTreeAccount.tree.bufferSize, 1n);
@@ -59,7 +60,7 @@ test('it can parse the leaf from mintToCollection instructions)', async (t) => {
   const umi = await createUmi();
   const merkleTree = await createTree(umi);
   const leafOwner = generateSigner(umi).publicKey;
-  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  const merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.sequenceNumber, 0n);
   t.is(merkleTreeAccount.tree.activeIndex, 0n);
   t.is(merkleTreeAccount.tree.bufferSize, 1n);

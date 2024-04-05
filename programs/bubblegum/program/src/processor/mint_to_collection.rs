@@ -6,10 +6,8 @@ use spl_account_compression::{program::SplAccountCompression, Noop};
 use crate::{
     error::BubblegumError,
     state::{
-        leaf_schema::LeafSchema,
-        metaplex_adapter::MetadataArgs,
-        metaplex_anchor::{MplTokenMetadata, TokenMetadata},
-        TreeConfig, COLLECTION_CPI_PREFIX,
+        leaf_schema::LeafSchema, metaplex_adapter::MetadataArgs, metaplex_anchor::TokenMetadata,
+        TreeConfig,
     },
 };
 
@@ -43,15 +41,12 @@ pub struct MintToCollectionV1<'info> {
     pub collection_metadata: Box<Account<'info, TokenMetadata>>,
     /// CHECK: This account is checked in the instruction
     pub edition_account: UncheckedAccount<'info>,
-    /// CHECK: This is just used as a signing PDA.
-    #[account(
-        seeds = [COLLECTION_CPI_PREFIX.as_ref()],
-        bump,
-    )]
+    /// CHECK: This is no longer needed but kept for backwards compatibility.
     pub bubblegum_signer: UncheckedAccount<'info>,
     pub log_wrapper: Program<'info, Noop>,
     pub compression_program: Program<'info, SplAccountCompression>,
-    pub token_metadata_program: Program<'info, MplTokenMetadata>,
+    /// CHECK: This is no longer needed but kept for backwards compatibility.
+    pub token_metadata_program: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
 }
 
@@ -76,8 +71,6 @@ pub(crate) fn mint_to_collection_v1(
         .accounts
         .collection_authority_record_pda
         .to_account_info();
-    let bubblegum_signer = ctx.accounts.bubblegum_signer.to_account_info();
-    let token_metadata_program = ctx.accounts.token_metadata_program.to_account_info();
 
     if !authority.is_public {
         require!(
@@ -112,9 +105,6 @@ pub(crate) fn mint_to_collection_v1(
         &collection_authority,
         &collection_authority_record_pda,
         &edition_account,
-        &bubblegum_signer,
-        ctx.bumps["bubblegum_signer"],
-        &token_metadata_program,
         &mut message,
         true,
     )?;

@@ -55,7 +55,7 @@ export async function parseLeafFromMintToCollectionV1Transaction(
 
   if (innerInstructions) {
     const leaf = getLeafSchemaSerializer().deserialize(
-      innerInstructions[0].instructions[1].data.slice(8)
+      innerInstructions[0].instructions[0].data.slice(8)
     );
     return leaf[0];
   }

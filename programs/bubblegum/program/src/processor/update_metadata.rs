@@ -7,7 +7,7 @@ use crate::{
     state::{
         leaf_schema::LeafSchema,
         metaplex_adapter::{Collection, Creator, MetadataArgs, UpdateArgs},
-        metaplex_anchor::{MplTokenMetadata, TokenMetadata},
+        metaplex_anchor::TokenMetadata,
         TreeConfig,
     },
     utils::{get_asset_id, hash_creators, hash_metadata, replace_leaf},
@@ -41,7 +41,8 @@ pub struct UpdateMetadata<'info> {
     pub merkle_tree: UncheckedAccount<'info>,
     pub log_wrapper: Program<'info, Noop>,
     pub compression_program: Program<'info, SplAccountCompression>,
-    pub token_metadata_program: Program<'info, MplTokenMetadata>,
+    /// CHECK: This is no longer needed but kept for backwards compatibility.
+    pub token_metadata_program: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
 }
 
@@ -52,7 +53,6 @@ fn assert_authority_matches_collection<'info>(
     collection_mint: &AccountInfo<'info>,
     collection_metadata_account_info: &AccountInfo,
     collection_metadata: &TokenMetadata,
-    token_metadata_program: &Program<'info, MplTokenMetadata>,
 ) -> Result<()> {
     // Mint account must match Collection mint
     require!(
@@ -66,7 +66,7 @@ fn assert_authority_matches_collection<'info>(
     );
     // Verify correct account ownerships.
     require!(
-        *collection_metadata_account_info.owner == token_metadata_program.key(),
+        *collection_metadata_account_info.owner == mpl_token_metadata::ID,
         BubblegumError::IncorrectOwner
     );
     // Collection mint must be owned by SPL token
@@ -248,7 +248,6 @@ pub fn update_metadata<'info>(
                 collection_mint,
                 &collection_metadata.to_account_info(),
                 collection_metadata,
-                &ctx.accounts.token_metadata_program,
             )?;
         }
         // No collection or unverified collection case.

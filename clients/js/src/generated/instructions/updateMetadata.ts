@@ -13,6 +13,7 @@ import {
   PublicKey,
   Signer,
   TransactionBuilder,
+  publicKey,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
 import {
@@ -230,11 +231,9 @@ export function updateMetadata(
     resolvedAccounts.compressionProgram.isWritable = false;
   }
   if (!resolvedAccounts.tokenMetadataProgram.value) {
-    resolvedAccounts.tokenMetadataProgram.value = context.programs.getPublicKey(
-      'mplTokenMetadata',
-      'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'
+    resolvedAccounts.tokenMetadataProgram.value = publicKey(
+      'BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'
     );
-    resolvedAccounts.tokenMetadataProgram.isWritable = false;
   }
   if (!resolvedAccounts.systemProgram.value) {
     resolvedAccounts.systemProgram.value = context.programs.getPublicKey(

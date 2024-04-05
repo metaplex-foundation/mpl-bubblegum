@@ -254,7 +254,7 @@ export function verifyCollection(
   }
   if (!resolvedAccounts.bubblegumSigner.value) {
     resolvedAccounts.bubblegumSigner.value = publicKey(
-      '4ewWZC5gT6TGpm5LZNDs9wVonfUT2q5PP5sc9kVbwMAK'
+      'BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'
     );
   }
   if (!resolvedAccounts.logWrapper.value) {
@@ -272,11 +272,9 @@ export function verifyCollection(
     resolvedAccounts.compressionProgram.isWritable = false;
   }
   if (!resolvedAccounts.tokenMetadataProgram.value) {
-    resolvedAccounts.tokenMetadataProgram.value = context.programs.getPublicKey(
-      'mplTokenMetadata',
-      'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'
+    resolvedAccounts.tokenMetadataProgram.value = publicKey(
+      'BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'
     );
-    resolvedAccounts.tokenMetadataProgram.isWritable = false;
   }
   if (!resolvedAccounts.systemProgram.value) {
     resolvedAccounts.systemProgram.value = context.programs.getPublicKey(
