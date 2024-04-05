@@ -8,7 +8,7 @@ const idlDir = path.join(__dirname, "..", "idls");
 // Instanciate Kinobi withtout DefaultVisitor.
 const kinobi = k.createFromIdls(
   [
-    path.join(idlDir, "bubblegum.json"),
+    path.join(idlDir, "primitives-protocol.json"),
     path.join(idlDir, "spl_account_compression.json"),
     path.join(idlDir, "spl_noop.json"),
   ],
@@ -419,7 +419,7 @@ kinobi.update(
           "verifyCreator",
           "unverifyCreator",
           "verifyLeaf",
-          "updateMetadata"
+          "updateMetadata",
         ].includes(node.name),
       transformer: (node) => {
         k.assertInstructionNode(node);

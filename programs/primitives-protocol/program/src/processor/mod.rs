@@ -14,7 +14,6 @@ mod burn;
 mod create_tree;
 mod mint_edge;
 mod mint_node;
-mod set_decompressible_state;
 mod set_tree_delegate;
 mod unverify_creator;
 mod update_metadata;
@@ -24,7 +23,6 @@ pub(crate) use burn::*;
 pub(crate) use create_tree::*;
 pub(crate) use mint_edge::*;
 pub(crate) use mint_node::*;
-pub(crate) use set_decompressible_state::*;
 pub(crate) use set_tree_delegate::*;
 pub(crate) use unverify_creator::*;
 pub(crate) use update_metadata::*;
@@ -118,7 +116,7 @@ fn process_creator_verification<'info>(
 
     replace_leaf(
         &merkle_tree.key(),
-        *ctx.bumps.get("tree_authority").unwrap(),
+        ctx.bumps.tree_authority,
         &ctx.accounts.compression_program.to_account_info(),
         &ctx.accounts.tree_authority.to_account_info(),
         &ctx.accounts.merkle_tree.to_account_info(),

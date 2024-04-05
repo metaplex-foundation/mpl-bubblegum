@@ -4,14 +4,14 @@ use spl_account_compression::{program::SplAccountCompression, wrap_application_d
 use std::collections::HashSet;
 
 use crate::{
-    asserts::assert_metadata_is_node_compatible,
+    asserts::assert_edge_is_node_compatible,
     error::PrimitivesError,
-    state::{leaf_schema::LeafSchema, metaplex_adapter::NodeArgs, TreeConfig},
+    state::{leaf_schema::LeafSchema, metaplex_adapter::EdgeArgs, TreeConfig},
     utils::{append_leaf, get_asset_id},
 };
 
 #[derive(Accounts)]
-pub struct MintNodeV1<'info> {
+pub struct MintEdgeV1<'info> {
     #[account(
         mut,
         seeds = [merkle_tree.key().as_ref()],
@@ -32,7 +32,7 @@ pub struct MintNodeV1<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub(crate) fn mint_node_v1(ctx: Context<MintNodeV1>, message: NodeArgs) -> Result<()> {
+pub(crate) fn mint_edge_v1(ctx: Context<MintEdgeV1>, message: EdgeArgs) -> Result<()> {
     // TODO -> Separate V1 / V1 into seperate instructions
     let payer = ctx.accounts.payer.key();
     let incoming_tree_delegate = ctx.accounts.tree_delegate.key();
@@ -68,12 +68,12 @@ pub(crate) fn mint_node_v1(ctx: Context<MintNodeV1>, message: NodeArgs) -> Resul
             .map(|a| a.key()),
     );
 
-    process_node_mint_v1(
+    process_edge_mint_v1(
         message,
         owner,
         delegate,
         metadata_auth,
-        *ctx.bumps.get("tree_authority").unwrap(),
+        ctx.bumps.tree_authority,
         authority,
         merkle_tree,
         &ctx.accounts.log_wrapper,
@@ -85,8 +85,8 @@ pub(crate) fn mint_node_v1(ctx: Context<MintNodeV1>, message: NodeArgs) -> Resul
     Ok(())
 }
 
-pub(crate) fn process_node_mint_v1<'info>(
-    message: NodeArgs,
+pub(crate) fn process_edge_mint_v1<'info>(
+    message: EdgeArgs,
     owner: Pubkey,
     delegate: Pubkey,
     metadata_auth: HashSet<Pubkey>,
@@ -96,7 +96,7 @@ pub(crate) fn process_node_mint_v1<'info>(
     wrapper: &Program<'info, Noop>,
     compression_program: &AccountInfo<'info>,
 ) -> Result<()> {
-    assert_metadata_is_node_compatible(&message)?;
+    assert_edge_is_node_compatible(&message)?;
 
     // @dev: seller_fee_basis points is encoded twice so that it can be passed to marketplace
     // instructions, without passing the entire, un-hashed MetadataArgs struct

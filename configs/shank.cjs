@@ -7,11 +7,11 @@ const programDir = path.join(__dirname, "..", "programs");
 
 generateIdl({
   generator: "anchor",
-  programName: "bubblegum",
+  programName: "primitives-protocol",
   programId: "BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY",
   idlDir,
   binaryInstallDir,
-  programDir: path.join(programDir, "bubblegum", "program"),
+  programDir: path.join(programDir, "primitives-protocol", "program"),
   rustbin: {
     locked: true,
     versionRangeFallback: "0.27.0",

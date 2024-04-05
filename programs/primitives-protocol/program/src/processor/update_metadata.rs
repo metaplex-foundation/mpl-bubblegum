@@ -2,11 +2,11 @@ use anchor_lang::prelude::*;
 use spl_account_compression::{program::SplAccountCompression, wrap_application_data_v1, Noop};
 
 use crate::{
-    asserts::{assert_has_collection_authority, assert_metadata_is_node_compatible},
+    asserts::assert_metadata_is_node_compatible,
     error::PrimitivesError,
     state::{
         leaf_schema::LeafSchema,
-        metaplex_adapter::{Collection, Creator, NodeArgs, UpdateNodeArgs},
+        metaplex_adapter::{Creator, NodeArgs, UpdateNodeArgs},
         metaplex_anchor::{MplTokenMetadata, TokenMetadata},
         TreeConfig,
     },
@@ -43,51 +43,6 @@ pub struct UpdateMetadata<'info> {
     pub compression_program: Program<'info, SplAccountCompression>,
     pub token_metadata_program: Program<'info, MplTokenMetadata>,
     pub system_program: Program<'info, System>,
-}
-
-fn assert_authority_matches_collection<'info>(
-    collection: &Collection,
-    collection_authority: &AccountInfo<'info>,
-    collection_authority_record_pda: &Option<UncheckedAccount<'info>>,
-    collection_mint: &AccountInfo<'info>,
-    collection_metadata_account_info: &AccountInfo,
-    collection_metadata: &TokenMetadata,
-    token_metadata_program: &Program<'info, MplTokenMetadata>,
-) -> Result<()> {
-    // Mint account must match Collection mint
-    require!(
-        collection_mint.key() == collection.key,
-        PrimitivesError::CollectionMismatch
-    );
-    // Metadata mint must match Collection mint
-    require!(
-        collection_metadata.mint == collection.key,
-        PrimitivesError::CollectionMismatch
-    );
-    // Verify correct account ownerships.
-    require!(
-        *collection_metadata_account_info.owner == token_metadata_program.key(),
-        PrimitivesError::IncorrectOwner
-    );
-    // Collection mint must be owned by SPL token
-    require!(
-        *collection_mint.owner == spl_token::id(),
-        PrimitivesError::IncorrectOwner
-    );
-
-    let collection_authority_record = collection_authority_record_pda
-        .as_ref()
-        .map(|authority_record_pda| authority_record_pda.to_account_info());
-
-    // Assert that the correct Collection Authority was provided using token-metadata
-    assert_has_collection_authority(
-        collection_metadata,
-        collection_mint.key,
-        collection_authority.key,
-        collection_authority_record.as_ref(),
-    )?;
-
-    Ok(())
 }
 
 fn all_verified_creators_in_a_are_in_b(a: &[Creator], b: &[Creator], exception: Pubkey) -> bool {
@@ -219,7 +174,7 @@ pub fn update_metadata<'info>(
         &ctx.accounts.leaf_delegate,
         &ctx.accounts.compression_program.to_account_info(),
         &ctx.accounts.tree_authority.to_account_info(),
-        *ctx.bumps.get("tree_authority").unwrap(),
+        ctx.bumps.tree_authority,
         &ctx.accounts.log_wrapper,
         ctx.remaining_accounts,
         root,
