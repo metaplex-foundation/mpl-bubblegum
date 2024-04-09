@@ -266,7 +266,7 @@ impl UpdateMetadataBuilder {
         self.compression_program = Some(compression_program);
         self
     }
-    /// `[optional account, default to 'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s']`
+    /// `[optional account, default to 'BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY']`
     #[inline(always)]
     pub fn token_metadata_program(
         &mut self,
@@ -344,7 +344,7 @@ impl UpdateMetadataBuilder {
                     "cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK"
                 )),
                 token_metadata_program: self.token_metadata_program.unwrap_or(
-                    solana_program::pubkey!("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"),
+                    solana_program::pubkey!("BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY"),
                 ),
                 system_program: self
                     .system_program

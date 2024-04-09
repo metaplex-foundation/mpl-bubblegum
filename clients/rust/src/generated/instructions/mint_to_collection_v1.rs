@@ -266,7 +266,7 @@ impl MintToCollectionV1Builder {
         self.collection_edition = Some(collection_edition);
         self
     }
-    /// `[optional account, default to '4ewWZC5gT6TGpm5LZNDs9wVonfUT2q5PP5sc9kVbwMAK']`
+    /// `[optional account, default to 'BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY']`
     #[inline(always)]
     pub fn bubblegum_signer(
         &mut self,
@@ -290,7 +290,7 @@ impl MintToCollectionV1Builder {
         self.compression_program = Some(compression_program);
         self
     }
-    /// `[optional account, default to 'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s']`
+    /// `[optional account, default to 'BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY']`
     #[inline(always)]
     pub fn token_metadata_program(
         &mut self,
@@ -352,7 +352,7 @@ impl MintToCollectionV1Builder {
                     .collection_edition
                     .expect("collection_edition is not set"),
                 bubblegum_signer: self.bubblegum_signer.unwrap_or(solana_program::pubkey!(
-                    "4ewWZC5gT6TGpm5LZNDs9wVonfUT2q5PP5sc9kVbwMAK"
+                    "BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY"
                 )),
                 log_wrapper: self.log_wrapper.unwrap_or(solana_program::pubkey!(
                     "noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV"
@@ -361,7 +361,7 @@ impl MintToCollectionV1Builder {
                     "cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK"
                 )),
                 token_metadata_program: self.token_metadata_program.unwrap_or(
-                    solana_program::pubkey!("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"),
+                    solana_program::pubkey!("BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY"),
                 ),
                 system_program: self
                     .system_program

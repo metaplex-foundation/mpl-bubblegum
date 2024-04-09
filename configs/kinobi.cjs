@@ -5,7 +5,7 @@ const k = require("@metaplex-foundation/kinobi");
 const clientDir = path.join(__dirname, "..", "clients");
 const idlDir = path.join(__dirname, "..", "idls");
 
-// Instanciate Kinobi withtout DefaultVisitor.
+// Instantiate Kinobi without DefaultVisitor.
 const kinobi = k.createFromIdls(
   [
     path.join(idlDir, "bubblegum.json"),
@@ -148,7 +148,24 @@ kinobi.update(
   ])
 );
 
-// Set default account values accross multiple instructions.
+const deprecatedTmIxes = [
+  "mintToCollectionV1",
+  "setAndVerifyCollection",
+  "unverifyCollection",
+  "updateMetadata",
+  "verifyCollection",
+];
+let deprecatedIxUpdaters = [];
+for (let ix of deprecatedTmIxes) {
+  deprecatedIxUpdaters.push(
+    {
+      account: "tokenMetadataProgram",
+      instruction: ix,
+      ...k.publicKeyDefault("BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY"),
+    })
+}
+
+// Set default account values across multiple instructions.
 kinobi.update(
   new k.SetInstructionAccountDefaultValuesVisitor([
     {
@@ -198,7 +215,7 @@ kinobi.update(
     {
       account: "bubblegumSigner",
       ignoreIfOptional: true,
-      ...k.publicKeyDefault("4ewWZC5gT6TGpm5LZNDs9wVonfUT2q5PP5sc9kVbwMAK"),
+      ...k.publicKeyDefault("BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY"),
     },
     {
       account: "collectionMetadata",
@@ -226,6 +243,7 @@ kinobi.update(
       ignoreIfOptional: true,
       ...k.identityDefault(),
     },
+    ...deprecatedIxUpdaters,
   ])
 );
 

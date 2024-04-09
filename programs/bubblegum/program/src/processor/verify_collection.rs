@@ -1,11 +1,7 @@
 use anchor_lang::prelude::*;
 use spl_account_compression::{program::SplAccountCompression, Noop};
 
-use crate::state::{
-    metaplex_adapter::MetadataArgs,
-    metaplex_anchor::{MplTokenMetadata, TokenMetadata},
-    TreeConfig, COLLECTION_CPI_PREFIX,
-};
+use crate::state::{metaplex_adapter::MetadataArgs, metaplex_anchor::TokenMetadata, TreeConfig};
 
 use super::process_collection_verification;
 
@@ -40,15 +36,12 @@ pub struct CollectionVerification<'info> {
     pub collection_metadata: Box<Account<'info, TokenMetadata>>,
     /// CHECK: This account is checked in the instruction
     pub edition_account: UncheckedAccount<'info>,
-    /// CHECK: This is just used as a signing PDA.
-    #[account(
-        seeds = [COLLECTION_CPI_PREFIX.as_ref()],
-        bump,
-    )]
+    /// CHECK: This is no longer needed but kept for backwards compatibility.
     pub bubblegum_signer: UncheckedAccount<'info>,
     pub log_wrapper: Program<'info, Noop>,
     pub compression_program: Program<'info, SplAccountCompression>,
-    pub token_metadata_program: Program<'info, MplTokenMetadata>,
+    /// CHECK: This is no longer needed but kept for backwards compatibility.
+    pub token_metadata_program: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
 }
 

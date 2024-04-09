@@ -1,8 +1,4 @@
 use anchor_lang::prelude::*;
-use mpl_token_metadata::{
-    instructions::BubblegumSetCollectionSizeCpiBuilder,
-    types::{CollectionDetails, SetCollectionSizeArgs},
-};
 use solana_program::{account_info::AccountInfo, pubkey::Pubkey};
 use spl_account_compression::wrap_application_data_v1;
 
@@ -13,7 +9,6 @@ use crate::{
         leaf_schema::LeafSchema,
         metaplex_adapter::{self, Creator, MetadataArgs},
         metaplex_anchor::TokenMetadata,
-        COLLECTION_CPI_PREFIX,
     },
     utils::{get_asset_id, hash_creators, hash_metadata, replace_leaf},
 };
@@ -164,9 +159,6 @@ fn process_collection_verification_mpl_only<'info>(
     collection_authority: &AccountInfo<'info>,
     collection_authority_record_pda: &AccountInfo<'info>,
     edition_account: &AccountInfo<'info>,
-    bubblegum_signer: &AccountInfo<'info>,
-    bubblegum_bump: u8,
-    token_metadata_program: &AccountInfo<'info>,
     message: &mut MetadataArgs,
     verify: bool,
 ) -> Result<()> {
@@ -179,7 +171,7 @@ fn process_collection_verification_mpl_only<'info>(
 
     // Verify correct account ownerships.
     require!(
-        *collection_metadata.to_account_info().owner == token_metadata_program.key(),
+        *collection_metadata.to_account_info().owner == mpl_token_metadata::ID,
         BubblegumError::IncorrectOwner
     );
     require!(
@@ -187,7 +179,7 @@ fn process_collection_verification_mpl_only<'info>(
         BubblegumError::IncorrectOwner
     );
     require!(
-        *edition_account.owner == token_metadata_program.key(),
+        *edition_account.owner == mpl_token_metadata::ID,
         BubblegumError::IncorrectOwner
     );
 
@@ -212,35 +204,6 @@ fn process_collection_verification_mpl_only<'info>(
         collection.verified = verify;
     } else {
         return Err(BubblegumError::CollectionNotFound.into());
-    }
-
-    // If this is a sized collection, then increment or decrement collection size.
-    if let Some(details) = &collection_metadata.collection_details {
-        // Increment or decrement existing size.
-        let new_size = match details {
-            CollectionDetails::V1 { size } => {
-                if verify {
-                    size.checked_add(1)
-                        .ok_or(BubblegumError::NumericalOverflowError)?
-                } else {
-                    size.checked_sub(1)
-                        .ok_or(BubblegumError::NumericalOverflowError)?
-                }
-            }
-        };
-
-        // CPI into Token Metadata program to change the collection size.
-
-        BubblegumSetCollectionSizeCpiBuilder::new(token_metadata_program)
-            .collection_metadata(&collection_metadata.to_account_info())
-            .collection_authority(collection_authority)
-            .collection_mint(collection_mint)
-            .bubblegum_signer(bubblegum_signer)
-            .collection_authority_record(collection_authority_record)
-            .set_collection_size_args(SetCollectionSizeArgs { size: new_size })
-            .invoke_signed(&[&[COLLECTION_CPI_PREFIX.as_bytes(), &[bubblegum_bump]]])?;
-    } else {
-        return Err(BubblegumError::CollectionMustBeSized.into());
     }
 
     Ok(())
@@ -268,8 +231,6 @@ fn process_collection_verification<'info>(
         .accounts
         .collection_authority_record_pda
         .to_account_info();
-    let bubblegum_signer = ctx.accounts.bubblegum_signer.to_account_info();
-    let token_metadata_program = ctx.accounts.token_metadata_program.to_account_info();
 
     // User-provided metadata must result in same user-provided data hash.
     let incoming_data_hash = hash_metadata(&message)?;
@@ -304,9 +265,6 @@ fn process_collection_verification<'info>(
         &collection_authority,
         &collection_authority_record_pda,
         &edition_account,
-        &bubblegum_signer,
-        ctx.bumps["bubblegum_signer"],
-        &token_metadata_program,
         &mut message,
         verify,
     )?;
