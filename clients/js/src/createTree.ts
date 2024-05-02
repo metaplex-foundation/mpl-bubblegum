@@ -1,9 +1,9 @@
 /* eslint-disable no-bitwise */
 import { createAccount } from '@metaplex-foundation/mpl-toolbox';
 import {
-  Context,
-  Signer,
-  TransactionBuilder,
+  type Context,
+  type Signer,
+  type TransactionBuilder,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
 import {
