@@ -17,93 +17,71 @@ import {
 import {
   Serializer,
   array,
-  bytes,
   mapSerializer,
   struct,
-  u32,
-  u64,
   u8,
 } from '@metaplex-foundation/umi/serializers';
 import { findTreeConfigPda } from '../accounts';
 import {
-  PickPartial,
   ResolvedAccount,
   ResolvedAccountsWithIndices,
   expectPublicKey,
   expectSome,
   getAccountMetasAndSigners,
 } from '../shared';
+import { NodeArgs, NodeArgsArgs, getNodeArgsSerializer } from '../types';
 
 // Accounts.
-export type TransferInstructionAccounts = {
+export type MintNodeV1InstructionAccounts = {
   treeConfig?: PublicKey | Pda;
-  leafOwner: PublicKey | Pda | Signer;
-  leafDelegate?: PublicKey | Pda | Signer;
-  newLeafOwner: PublicKey | Pda;
+  leafOwner: PublicKey | Pda;
+  leafDelegate?: PublicKey | Pda;
   merkleTree: PublicKey | Pda;
+  payer?: Signer;
+  treeCreatorOrDelegate?: Signer;
   logWrapper?: PublicKey | Pda;
   compressionProgram?: PublicKey | Pda;
   systemProgram?: PublicKey | Pda;
 };
 
 // Data.
-export type TransferInstructionData = {
+export type MintNodeV1InstructionData = {
   discriminator: Array<number>;
-  root: Uint8Array;
-  dataHash: Uint8Array;
-  creatorHash: Uint8Array;
-  nonce: bigint;
-  index: number;
+  metadata: NodeArgs;
 };
 
-export type TransferInstructionDataArgs = {
-  root: Uint8Array;
-  dataHash: Uint8Array;
-  creatorHash: Uint8Array;
-  nonce: number | bigint;
-  index: number;
-};
+export type MintNodeV1InstructionDataArgs = { metadata: NodeArgsArgs };
 
-export function getTransferInstructionDataSerializer(): Serializer<
-  TransferInstructionDataArgs,
-  TransferInstructionData
+export function getMintNodeV1InstructionDataSerializer(): Serializer<
+  MintNodeV1InstructionDataArgs,
+  MintNodeV1InstructionData
 > {
   return mapSerializer<
-    TransferInstructionDataArgs,
+    MintNodeV1InstructionDataArgs,
     any,
-    TransferInstructionData
+    MintNodeV1InstructionData
   >(
-    struct<TransferInstructionData>(
+    struct<MintNodeV1InstructionData>(
       [
         ['discriminator', array(u8(), { size: 8 })],
-        ['root', bytes({ size: 32 })],
-        ['dataHash', bytes({ size: 32 })],
-        ['creatorHash', bytes({ size: 32 })],
-        ['nonce', u64()],
-        ['index', u32()],
+        ['metadata', getNodeArgsSerializer()],
       ],
-      { description: 'TransferInstructionData' }
+      { description: 'MintNodeV1InstructionData' }
     ),
     (value) => ({
       ...value,
-      discriminator: [163, 52, 200, 231, 140, 3, 69, 186],
+      discriminator: [125, 111, 232, 245, 86, 29, 233, 87],
     })
-  ) as Serializer<TransferInstructionDataArgs, TransferInstructionData>;
+  ) as Serializer<MintNodeV1InstructionDataArgs, MintNodeV1InstructionData>;
 }
 
-// Extra Args.
-export type TransferInstructionExtraArgs = { proof: Array<PublicKey> };
-
 // Args.
-export type TransferInstructionArgs = PickPartial<
-  TransferInstructionDataArgs & TransferInstructionExtraArgs,
-  'proof'
->;
+export type MintNodeV1InstructionArgs = MintNodeV1InstructionDataArgs;
 
 // Instruction.
-export function transfer(
-  context: Pick<Context, 'eddsa' | 'programs'>,
-  input: TransferInstructionAccounts & TransferInstructionArgs
+export function mintNodeV1(
+  context: Pick<Context, 'eddsa' | 'identity' | 'payer' | 'programs'>,
+  input: MintNodeV1InstructionAccounts & MintNodeV1InstructionArgs
 ): TransactionBuilder {
   // Program ID.
   const programId = context.programs.getPublicKey(
@@ -113,42 +91,39 @@ export function transfer(
 
   // Accounts.
   const resolvedAccounts: ResolvedAccountsWithIndices = {
-    treeConfig: {
-      index: 0,
-      isWritable: false,
-      value: input.treeConfig ?? null,
-    },
+    treeConfig: { index: 0, isWritable: true, value: input.treeConfig ?? null },
     leafOwner: { index: 1, isWritable: false, value: input.leafOwner ?? null },
     leafDelegate: {
       index: 2,
       isWritable: false,
       value: input.leafDelegate ?? null,
     },
-    newLeafOwner: {
-      index: 3,
-      isWritable: false,
-      value: input.newLeafOwner ?? null,
-    },
-    merkleTree: { index: 4, isWritable: true, value: input.merkleTree ?? null },
-    logWrapper: {
+    merkleTree: { index: 3, isWritable: true, value: input.merkleTree ?? null },
+    payer: { index: 4, isWritable: false, value: input.payer ?? null },
+    treeCreatorOrDelegate: {
       index: 5,
+      isWritable: false,
+      value: input.treeCreatorOrDelegate ?? null,
+    },
+    logWrapper: {
+      index: 6,
       isWritable: false,
       value: input.logWrapper ?? null,
     },
     compressionProgram: {
-      index: 6,
+      index: 7,
       isWritable: false,
       value: input.compressionProgram ?? null,
     },
     systemProgram: {
-      index: 7,
+      index: 8,
       isWritable: false,
       value: input.systemProgram ?? null,
     },
   };
 
   // Arguments.
-  const resolvedArgs: TransferInstructionArgs = { ...input };
+  const resolvedArgs: MintNodeV1InstructionArgs = { ...input };
 
   // Default values.
   if (!resolvedAccounts.treeConfig.value) {
@@ -160,6 +135,12 @@ export function transfer(
     resolvedAccounts.leafDelegate.value = expectSome(
       resolvedAccounts.leafOwner.value
     );
+  }
+  if (!resolvedAccounts.payer.value) {
+    resolvedAccounts.payer.value = context.payer;
+  }
+  if (!resolvedAccounts.treeCreatorOrDelegate.value) {
+    resolvedAccounts.treeCreatorOrDelegate.value = context.identity;
   }
   if (!resolvedAccounts.logWrapper.value) {
     resolvedAccounts.logWrapper.value = context.programs.getPublicKey(
@@ -182,22 +163,11 @@ export function transfer(
     );
     resolvedAccounts.systemProgram.isWritable = false;
   }
-  if (!resolvedArgs.proof) {
-    resolvedArgs.proof = [];
-  }
 
   // Accounts in order.
   const orderedAccounts: ResolvedAccount[] = Object.values(
     resolvedAccounts
   ).sort((a, b) => a.index - b.index);
-
-  // Remaining Accounts.
-  const remainingAccounts = resolvedArgs.proof.map((value, index) => ({
-    index,
-    value,
-    isWritable: false,
-  }));
-  orderedAccounts.push(...remainingAccounts);
 
   // Keys and Signers.
   const [keys, signers] = getAccountMetasAndSigners(
@@ -207,8 +177,8 @@ export function transfer(
   );
 
   // Data.
-  const data = getTransferInstructionDataSerializer().serialize(
-    resolvedArgs as TransferInstructionDataArgs
+  const data = getMintNodeV1InstructionDataSerializer().serialize(
+    resolvedArgs as MintNodeV1InstructionDataArgs
   );
 
   // Bytes Created On Chain.

@@ -5,12 +5,13 @@
 //! [https://github.com/metaplex-foundation/kinobi]
 //!
 
-use crate::generated::types::MetadataArgs;
+use crate::generated::types::Creator;
+use crate::generated::types::Properties;
 use borsh::BorshDeserialize;
 use borsh::BorshSerialize;
 
 /// Accounts.
-pub struct MintToCollectionV1 {
+pub struct MintEdgeV1 {
     pub tree_config: solana_program::pubkey::Pubkey,
 
     pub leaf_owner: solana_program::pubkey::Pubkey,
@@ -23,42 +24,27 @@ pub struct MintToCollectionV1 {
 
     pub tree_creator_or_delegate: solana_program::pubkey::Pubkey,
 
-    pub collection_authority: solana_program::pubkey::Pubkey,
-    /// If there is no collecton authority record PDA then
-    /// this must be the Bubblegum program address.
-    pub collection_authority_record_pda: Option<solana_program::pubkey::Pubkey>,
-
-    pub collection_mint: solana_program::pubkey::Pubkey,
-
-    pub collection_metadata: solana_program::pubkey::Pubkey,
-
-    pub collection_edition: solana_program::pubkey::Pubkey,
-
-    pub bubblegum_signer: solana_program::pubkey::Pubkey,
-
     pub log_wrapper: solana_program::pubkey::Pubkey,
 
     pub compression_program: solana_program::pubkey::Pubkey,
 
-    pub token_metadata_program: solana_program::pubkey::Pubkey,
-
     pub system_program: solana_program::pubkey::Pubkey,
 }
 
-impl MintToCollectionV1 {
+impl MintEdgeV1 {
     pub fn instruction(
         &self,
-        args: MintToCollectionV1InstructionArgs,
+        args: MintEdgeV1InstructionArgs,
     ) -> solana_program::instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
         &self,
-        args: MintToCollectionV1InstructionArgs,
+        args: MintEdgeV1InstructionArgs,
         remaining_accounts: &[solana_program::instruction::AccountMeta],
     ) -> solana_program::instruction::Instruction {
-        let mut accounts = Vec::with_capacity(16 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(9 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new(
             self.tree_config,
             false,
@@ -83,37 +69,6 @@ impl MintToCollectionV1 {
             true,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            self.collection_authority,
-            true,
-        ));
-        if let Some(collection_authority_record_pda) = self.collection_authority_record_pda {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-                collection_authority_record_pda,
-                false,
-            ));
-        } else {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-                crate::MPL_BUBBLEGUM_ID,
-                false,
-            ));
-        }
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            self.collection_mint,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.collection_metadata,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            self.collection_edition,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            self.bubblegum_signer,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.log_wrapper,
             false,
         ));
@@ -122,17 +77,11 @@ impl MintToCollectionV1 {
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            self.token_metadata_program,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.system_program,
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let mut data = MintToCollectionV1InstructionData::new()
-            .try_to_vec()
-            .unwrap();
+        let mut data = MintEdgeV1InstructionData::new().try_to_vec().unwrap();
         let mut args = args.try_to_vec().unwrap();
         data.append(&mut args);
 
@@ -145,48 +94,49 @@ impl MintToCollectionV1 {
 }
 
 #[derive(BorshDeserialize, BorshSerialize)]
-struct MintToCollectionV1InstructionData {
+struct MintEdgeV1InstructionData {
     discriminator: [u8; 8],
 }
 
-impl MintToCollectionV1InstructionData {
+impl MintEdgeV1InstructionData {
     fn new() -> Self {
         Self {
-            discriminator: [153, 18, 178, 47, 197, 158, 86, 15],
+            discriminator: [243, 61, 233, 237, 235, 72, 173, 66],
         }
     }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct MintToCollectionV1InstructionArgs {
-    pub metadata: MetadataArgs,
+pub struct MintEdgeV1InstructionArgs {
+    pub start_id: String,
+    pub end_id: String,
+    pub properties: Vec<Properties>,
+    pub is_mutable: bool,
+    pub creators: Vec<Creator>,
 }
 
 /// Instruction builder.
 #[derive(Default)]
-pub struct MintToCollectionV1Builder {
+pub struct MintEdgeV1Builder {
     tree_config: Option<solana_program::pubkey::Pubkey>,
     leaf_owner: Option<solana_program::pubkey::Pubkey>,
     leaf_delegate: Option<solana_program::pubkey::Pubkey>,
     merkle_tree: Option<solana_program::pubkey::Pubkey>,
     payer: Option<solana_program::pubkey::Pubkey>,
     tree_creator_or_delegate: Option<solana_program::pubkey::Pubkey>,
-    collection_authority: Option<solana_program::pubkey::Pubkey>,
-    collection_authority_record_pda: Option<solana_program::pubkey::Pubkey>,
-    collection_mint: Option<solana_program::pubkey::Pubkey>,
-    collection_metadata: Option<solana_program::pubkey::Pubkey>,
-    collection_edition: Option<solana_program::pubkey::Pubkey>,
-    bubblegum_signer: Option<solana_program::pubkey::Pubkey>,
     log_wrapper: Option<solana_program::pubkey::Pubkey>,
     compression_program: Option<solana_program::pubkey::Pubkey>,
-    token_metadata_program: Option<solana_program::pubkey::Pubkey>,
     system_program: Option<solana_program::pubkey::Pubkey>,
-    metadata: Option<MetadataArgs>,
+    start_id: Option<String>,
+    end_id: Option<String>,
+    properties: Option<Vec<Properties>>,
+    is_mutable: Option<bool>,
+    creators: Option<Vec<Creator>>,
     __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
 
-impl MintToCollectionV1Builder {
+impl MintEdgeV1Builder {
     pub fn new() -> Self {
         Self::default()
     }
@@ -223,58 +173,6 @@ impl MintToCollectionV1Builder {
         self.tree_creator_or_delegate = Some(tree_creator_or_delegate);
         self
     }
-    #[inline(always)]
-    pub fn collection_authority(
-        &mut self,
-        collection_authority: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
-        self.collection_authority = Some(collection_authority);
-        self
-    }
-    /// `[optional account]`
-    /// If there is no collecton authority record PDA then
-    /// this must be the Bubblegum program address.
-    #[inline(always)]
-    pub fn collection_authority_record_pda(
-        &mut self,
-        collection_authority_record_pda: Option<solana_program::pubkey::Pubkey>,
-    ) -> &mut Self {
-        self.collection_authority_record_pda = collection_authority_record_pda;
-        self
-    }
-    #[inline(always)]
-    pub fn collection_mint(
-        &mut self,
-        collection_mint: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
-        self.collection_mint = Some(collection_mint);
-        self
-    }
-    #[inline(always)]
-    pub fn collection_metadata(
-        &mut self,
-        collection_metadata: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
-        self.collection_metadata = Some(collection_metadata);
-        self
-    }
-    #[inline(always)]
-    pub fn collection_edition(
-        &mut self,
-        collection_edition: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
-        self.collection_edition = Some(collection_edition);
-        self
-    }
-    /// `[optional account, default to '4ewWZC5gT6TGpm5LZNDs9wVonfUT2q5PP5sc9kVbwMAK']`
-    #[inline(always)]
-    pub fn bubblegum_signer(
-        &mut self,
-        bubblegum_signer: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
-        self.bubblegum_signer = Some(bubblegum_signer);
-        self
-    }
     /// `[optional account, default to 'noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV']`
     #[inline(always)]
     pub fn log_wrapper(&mut self, log_wrapper: solana_program::pubkey::Pubkey) -> &mut Self {
@@ -290,15 +188,6 @@ impl MintToCollectionV1Builder {
         self.compression_program = Some(compression_program);
         self
     }
-    /// `[optional account, default to 'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s']`
-    #[inline(always)]
-    pub fn token_metadata_program(
-        &mut self,
-        token_metadata_program: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
-        self.token_metadata_program = Some(token_metadata_program);
-        self
-    }
     /// `[optional account, default to '11111111111111111111111111111111']`
     #[inline(always)]
     pub fn system_program(&mut self, system_program: solana_program::pubkey::Pubkey) -> &mut Self {
@@ -306,8 +195,28 @@ impl MintToCollectionV1Builder {
         self
     }
     #[inline(always)]
-    pub fn metadata(&mut self, metadata: MetadataArgs) -> &mut Self {
-        self.metadata = Some(metadata);
+    pub fn start_id(&mut self, start_id: String) -> &mut Self {
+        self.start_id = Some(start_id);
+        self
+    }
+    #[inline(always)]
+    pub fn end_id(&mut self, end_id: String) -> &mut Self {
+        self.end_id = Some(end_id);
+        self
+    }
+    #[inline(always)]
+    pub fn properties(&mut self, properties: Vec<Properties>) -> &mut Self {
+        self.properties = Some(properties);
+        self
+    }
+    #[inline(always)]
+    pub fn is_mutable(&mut self, is_mutable: bool) -> &mut Self {
+        self.is_mutable = Some(is_mutable);
+        self
+    }
+    #[inline(always)]
+    pub fn creators(&mut self, creators: Vec<Creator>) -> &mut Self {
+        self.creators = Some(creators);
         self
     }
     /// Add an aditional account to the instruction.
@@ -330,53 +239,39 @@ impl MintToCollectionV1Builder {
     }
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
-        let accounts =
-            MintToCollectionV1 {
-                tree_config: self.tree_config.expect("tree_config is not set"),
-                leaf_owner: self.leaf_owner.expect("leaf_owner is not set"),
-                leaf_delegate: self.leaf_delegate.expect("leaf_delegate is not set"),
-                merkle_tree: self.merkle_tree.expect("merkle_tree is not set"),
-                payer: self.payer.expect("payer is not set"),
-                tree_creator_or_delegate: self
-                    .tree_creator_or_delegate
-                    .expect("tree_creator_or_delegate is not set"),
-                collection_authority: self
-                    .collection_authority
-                    .expect("collection_authority is not set"),
-                collection_authority_record_pda: self.collection_authority_record_pda,
-                collection_mint: self.collection_mint.expect("collection_mint is not set"),
-                collection_metadata: self
-                    .collection_metadata
-                    .expect("collection_metadata is not set"),
-                collection_edition: self
-                    .collection_edition
-                    .expect("collection_edition is not set"),
-                bubblegum_signer: self.bubblegum_signer.unwrap_or(solana_program::pubkey!(
-                    "4ewWZC5gT6TGpm5LZNDs9wVonfUT2q5PP5sc9kVbwMAK"
-                )),
-                log_wrapper: self.log_wrapper.unwrap_or(solana_program::pubkey!(
-                    "noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV"
-                )),
-                compression_program: self.compression_program.unwrap_or(solana_program::pubkey!(
-                    "cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK"
-                )),
-                token_metadata_program: self.token_metadata_program.unwrap_or(
-                    solana_program::pubkey!("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"),
-                ),
-                system_program: self
-                    .system_program
-                    .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
-            };
-        let args = MintToCollectionV1InstructionArgs {
-            metadata: self.metadata.clone().expect("metadata is not set"),
+        let accounts = MintEdgeV1 {
+            tree_config: self.tree_config.expect("tree_config is not set"),
+            leaf_owner: self.leaf_owner.expect("leaf_owner is not set"),
+            leaf_delegate: self.leaf_delegate.expect("leaf_delegate is not set"),
+            merkle_tree: self.merkle_tree.expect("merkle_tree is not set"),
+            payer: self.payer.expect("payer is not set"),
+            tree_creator_or_delegate: self
+                .tree_creator_or_delegate
+                .expect("tree_creator_or_delegate is not set"),
+            log_wrapper: self.log_wrapper.unwrap_or(solana_program::pubkey!(
+                "noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV"
+            )),
+            compression_program: self.compression_program.unwrap_or(solana_program::pubkey!(
+                "cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK"
+            )),
+            system_program: self
+                .system_program
+                .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
+        };
+        let args = MintEdgeV1InstructionArgs {
+            start_id: self.start_id.clone().expect("start_id is not set"),
+            end_id: self.end_id.clone().expect("end_id is not set"),
+            properties: self.properties.clone().expect("properties is not set"),
+            is_mutable: self.is_mutable.clone().expect("is_mutable is not set"),
+            creators: self.creators.clone().expect("creators is not set"),
         };
 
         accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
     }
 }
 
-/// `mint_to_collection_v1` CPI accounts.
-pub struct MintToCollectionV1CpiAccounts<'a, 'b> {
+/// `mint_edge_v1` CPI accounts.
+pub struct MintEdgeV1CpiAccounts<'a, 'b> {
     pub tree_config: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub leaf_owner: &'b solana_program::account_info::AccountInfo<'a>,
@@ -389,30 +284,15 @@ pub struct MintToCollectionV1CpiAccounts<'a, 'b> {
 
     pub tree_creator_or_delegate: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub collection_authority: &'b solana_program::account_info::AccountInfo<'a>,
-    /// If there is no collecton authority record PDA then
-    /// this must be the Bubblegum program address.
-    pub collection_authority_record_pda: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-
-    pub collection_mint: &'b solana_program::account_info::AccountInfo<'a>,
-
-    pub collection_metadata: &'b solana_program::account_info::AccountInfo<'a>,
-
-    pub collection_edition: &'b solana_program::account_info::AccountInfo<'a>,
-
-    pub bubblegum_signer: &'b solana_program::account_info::AccountInfo<'a>,
-
     pub log_wrapper: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub compression_program: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub token_metadata_program: &'b solana_program::account_info::AccountInfo<'a>,
-
     pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
 }
 
-/// `mint_to_collection_v1` CPI instruction.
-pub struct MintToCollectionV1Cpi<'a, 'b> {
+/// `mint_edge_v1` CPI instruction.
+pub struct MintEdgeV1Cpi<'a, 'b> {
     /// The program to invoke.
     pub __program: &'b solana_program::account_info::AccountInfo<'a>,
 
@@ -428,35 +308,20 @@ pub struct MintToCollectionV1Cpi<'a, 'b> {
 
     pub tree_creator_or_delegate: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub collection_authority: &'b solana_program::account_info::AccountInfo<'a>,
-    /// If there is no collecton authority record PDA then
-    /// this must be the Bubblegum program address.
-    pub collection_authority_record_pda: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-
-    pub collection_mint: &'b solana_program::account_info::AccountInfo<'a>,
-
-    pub collection_metadata: &'b solana_program::account_info::AccountInfo<'a>,
-
-    pub collection_edition: &'b solana_program::account_info::AccountInfo<'a>,
-
-    pub bubblegum_signer: &'b solana_program::account_info::AccountInfo<'a>,
-
     pub log_wrapper: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub compression_program: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub token_metadata_program: &'b solana_program::account_info::AccountInfo<'a>,
-
     pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
-    pub __args: MintToCollectionV1InstructionArgs,
+    pub __args: MintEdgeV1InstructionArgs,
 }
 
-impl<'a, 'b> MintToCollectionV1Cpi<'a, 'b> {
+impl<'a, 'b> MintEdgeV1Cpi<'a, 'b> {
     pub fn new(
         program: &'b solana_program::account_info::AccountInfo<'a>,
-        accounts: MintToCollectionV1CpiAccounts<'a, 'b>,
-        args: MintToCollectionV1InstructionArgs,
+        accounts: MintEdgeV1CpiAccounts<'a, 'b>,
+        args: MintEdgeV1InstructionArgs,
     ) -> Self {
         Self {
             __program: program,
@@ -466,15 +331,8 @@ impl<'a, 'b> MintToCollectionV1Cpi<'a, 'b> {
             merkle_tree: accounts.merkle_tree,
             payer: accounts.payer,
             tree_creator_or_delegate: accounts.tree_creator_or_delegate,
-            collection_authority: accounts.collection_authority,
-            collection_authority_record_pda: accounts.collection_authority_record_pda,
-            collection_mint: accounts.collection_mint,
-            collection_metadata: accounts.collection_metadata,
-            collection_edition: accounts.collection_edition,
-            bubblegum_signer: accounts.bubblegum_signer,
             log_wrapper: accounts.log_wrapper,
             compression_program: accounts.compression_program,
-            token_metadata_program: accounts.token_metadata_program,
             system_program: accounts.system_program,
             __args: args,
         }
@@ -512,7 +370,7 @@ impl<'a, 'b> MintToCollectionV1Cpi<'a, 'b> {
             bool,
         )],
     ) -> solana_program::entrypoint::ProgramResult {
-        let mut accounts = Vec::with_capacity(16 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(9 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new(
             *self.tree_config.key,
             false,
@@ -538,46 +396,11 @@ impl<'a, 'b> MintToCollectionV1Cpi<'a, 'b> {
             true,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            *self.collection_authority.key,
-            true,
-        ));
-        if let Some(collection_authority_record_pda) = self.collection_authority_record_pda {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-                *collection_authority_record_pda.key,
-                false,
-            ));
-        } else {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-                crate::MPL_BUBBLEGUM_ID,
-                false,
-            ));
-        }
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            *self.collection_mint.key,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.collection_metadata.key,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            *self.collection_edition.key,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            *self.bubblegum_signer.key,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             *self.log_wrapper.key,
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             *self.compression_program.key,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            *self.token_metadata_program.key,
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
@@ -591,9 +414,7 @@ impl<'a, 'b> MintToCollectionV1Cpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let mut data = MintToCollectionV1InstructionData::new()
-            .try_to_vec()
-            .unwrap();
+        let mut data = MintEdgeV1InstructionData::new().try_to_vec().unwrap();
         let mut args = self.__args.try_to_vec().unwrap();
         data.append(&mut args);
 
@@ -602,7 +423,7 @@ impl<'a, 'b> MintToCollectionV1Cpi<'a, 'b> {
             accounts,
             data,
         };
-        let mut account_infos = Vec::with_capacity(16 + 1 + remaining_accounts.len());
+        let mut account_infos = Vec::with_capacity(9 + 1 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
         account_infos.push(self.tree_config.clone());
         account_infos.push(self.leaf_owner.clone());
@@ -610,17 +431,8 @@ impl<'a, 'b> MintToCollectionV1Cpi<'a, 'b> {
         account_infos.push(self.merkle_tree.clone());
         account_infos.push(self.payer.clone());
         account_infos.push(self.tree_creator_or_delegate.clone());
-        account_infos.push(self.collection_authority.clone());
-        if let Some(collection_authority_record_pda) = self.collection_authority_record_pda {
-            account_infos.push(collection_authority_record_pda.clone());
-        }
-        account_infos.push(self.collection_mint.clone());
-        account_infos.push(self.collection_metadata.clone());
-        account_infos.push(self.collection_edition.clone());
-        account_infos.push(self.bubblegum_signer.clone());
         account_infos.push(self.log_wrapper.clone());
         account_infos.push(self.compression_program.clone());
-        account_infos.push(self.token_metadata_program.clone());
         account_infos.push(self.system_program.clone());
         remaining_accounts
             .iter()
@@ -634,14 +446,14 @@ impl<'a, 'b> MintToCollectionV1Cpi<'a, 'b> {
     }
 }
 
-/// `mint_to_collection_v1` CPI instruction builder.
-pub struct MintToCollectionV1CpiBuilder<'a, 'b> {
-    instruction: Box<MintToCollectionV1CpiBuilderInstruction<'a, 'b>>,
+/// `mint_edge_v1` CPI instruction builder.
+pub struct MintEdgeV1CpiBuilder<'a, 'b> {
+    instruction: Box<MintEdgeV1CpiBuilderInstruction<'a, 'b>>,
 }
 
-impl<'a, 'b> MintToCollectionV1CpiBuilder<'a, 'b> {
+impl<'a, 'b> MintEdgeV1CpiBuilder<'a, 'b> {
     pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
-        let instruction = Box::new(MintToCollectionV1CpiBuilderInstruction {
+        let instruction = Box::new(MintEdgeV1CpiBuilderInstruction {
             __program: program,
             tree_config: None,
             leaf_owner: None,
@@ -649,17 +461,14 @@ impl<'a, 'b> MintToCollectionV1CpiBuilder<'a, 'b> {
             merkle_tree: None,
             payer: None,
             tree_creator_or_delegate: None,
-            collection_authority: None,
-            collection_authority_record_pda: None,
-            collection_mint: None,
-            collection_metadata: None,
-            collection_edition: None,
-            bubblegum_signer: None,
             log_wrapper: None,
             compression_program: None,
-            token_metadata_program: None,
             system_program: None,
-            metadata: None,
+            start_id: None,
+            end_id: None,
+            properties: None,
+            is_mutable: None,
+            creators: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
@@ -710,57 +519,6 @@ impl<'a, 'b> MintToCollectionV1CpiBuilder<'a, 'b> {
         self
     }
     #[inline(always)]
-    pub fn collection_authority(
-        &mut self,
-        collection_authority: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
-        self.instruction.collection_authority = Some(collection_authority);
-        self
-    }
-    /// `[optional account]`
-    /// If there is no collecton authority record PDA then
-    /// this must be the Bubblegum program address.
-    #[inline(always)]
-    pub fn collection_authority_record_pda(
-        &mut self,
-        collection_authority_record_pda: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    ) -> &mut Self {
-        self.instruction.collection_authority_record_pda = collection_authority_record_pda;
-        self
-    }
-    #[inline(always)]
-    pub fn collection_mint(
-        &mut self,
-        collection_mint: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
-        self.instruction.collection_mint = Some(collection_mint);
-        self
-    }
-    #[inline(always)]
-    pub fn collection_metadata(
-        &mut self,
-        collection_metadata: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
-        self.instruction.collection_metadata = Some(collection_metadata);
-        self
-    }
-    #[inline(always)]
-    pub fn collection_edition(
-        &mut self,
-        collection_edition: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
-        self.instruction.collection_edition = Some(collection_edition);
-        self
-    }
-    #[inline(always)]
-    pub fn bubblegum_signer(
-        &mut self,
-        bubblegum_signer: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
-        self.instruction.bubblegum_signer = Some(bubblegum_signer);
-        self
-    }
-    #[inline(always)]
     pub fn log_wrapper(
         &mut self,
         log_wrapper: &'b solana_program::account_info::AccountInfo<'a>,
@@ -777,14 +535,6 @@ impl<'a, 'b> MintToCollectionV1CpiBuilder<'a, 'b> {
         self
     }
     #[inline(always)]
-    pub fn token_metadata_program(
-        &mut self,
-        token_metadata_program: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
-        self.instruction.token_metadata_program = Some(token_metadata_program);
-        self
-    }
-    #[inline(always)]
     pub fn system_program(
         &mut self,
         system_program: &'b solana_program::account_info::AccountInfo<'a>,
@@ -793,8 +543,28 @@ impl<'a, 'b> MintToCollectionV1CpiBuilder<'a, 'b> {
         self
     }
     #[inline(always)]
-    pub fn metadata(&mut self, metadata: MetadataArgs) -> &mut Self {
-        self.instruction.metadata = Some(metadata);
+    pub fn start_id(&mut self, start_id: String) -> &mut Self {
+        self.instruction.start_id = Some(start_id);
+        self
+    }
+    #[inline(always)]
+    pub fn end_id(&mut self, end_id: String) -> &mut Self {
+        self.instruction.end_id = Some(end_id);
+        self
+    }
+    #[inline(always)]
+    pub fn properties(&mut self, properties: Vec<Properties>) -> &mut Self {
+        self.instruction.properties = Some(properties);
+        self
+    }
+    #[inline(always)]
+    pub fn is_mutable(&mut self, is_mutable: bool) -> &mut Self {
+        self.instruction.is_mutable = Some(is_mutable);
+        self
+    }
+    #[inline(always)]
+    pub fn creators(&mut self, creators: Vec<Creator>) -> &mut Self {
+        self.instruction.creators = Some(creators);
         self
     }
     /// Add an additional account to the instruction.
@@ -838,14 +608,30 @@ impl<'a, 'b> MintToCollectionV1CpiBuilder<'a, 'b> {
         &self,
         signers_seeds: &[&[&[u8]]],
     ) -> solana_program::entrypoint::ProgramResult {
-        let args = MintToCollectionV1InstructionArgs {
-            metadata: self
+        let args = MintEdgeV1InstructionArgs {
+            start_id: self
                 .instruction
-                .metadata
+                .start_id
                 .clone()
-                .expect("metadata is not set"),
+                .expect("start_id is not set"),
+            end_id: self.instruction.end_id.clone().expect("end_id is not set"),
+            properties: self
+                .instruction
+                .properties
+                .clone()
+                .expect("properties is not set"),
+            is_mutable: self
+                .instruction
+                .is_mutable
+                .clone()
+                .expect("is_mutable is not set"),
+            creators: self
+                .instruction
+                .creators
+                .clone()
+                .expect("creators is not set"),
         };
-        let instruction = MintToCollectionV1Cpi {
+        let instruction = MintEdgeV1Cpi {
             __program: self.instruction.__program,
 
             tree_config: self
@@ -872,33 +658,6 @@ impl<'a, 'b> MintToCollectionV1CpiBuilder<'a, 'b> {
                 .tree_creator_or_delegate
                 .expect("tree_creator_or_delegate is not set"),
 
-            collection_authority: self
-                .instruction
-                .collection_authority
-                .expect("collection_authority is not set"),
-
-            collection_authority_record_pda: self.instruction.collection_authority_record_pda,
-
-            collection_mint: self
-                .instruction
-                .collection_mint
-                .expect("collection_mint is not set"),
-
-            collection_metadata: self
-                .instruction
-                .collection_metadata
-                .expect("collection_metadata is not set"),
-
-            collection_edition: self
-                .instruction
-                .collection_edition
-                .expect("collection_edition is not set"),
-
-            bubblegum_signer: self
-                .instruction
-                .bubblegum_signer
-                .expect("bubblegum_signer is not set"),
-
             log_wrapper: self
                 .instruction
                 .log_wrapper
@@ -908,11 +667,6 @@ impl<'a, 'b> MintToCollectionV1CpiBuilder<'a, 'b> {
                 .instruction
                 .compression_program
                 .expect("compression_program is not set"),
-
-            token_metadata_program: self
-                .instruction
-                .token_metadata_program
-                .expect("token_metadata_program is not set"),
 
             system_program: self
                 .instruction
@@ -927,7 +681,7 @@ impl<'a, 'b> MintToCollectionV1CpiBuilder<'a, 'b> {
     }
 }
 
-struct MintToCollectionV1CpiBuilderInstruction<'a, 'b> {
+struct MintEdgeV1CpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_program::account_info::AccountInfo<'a>,
     tree_config: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     leaf_owner: Option<&'b solana_program::account_info::AccountInfo<'a>>,
@@ -935,17 +689,14 @@ struct MintToCollectionV1CpiBuilderInstruction<'a, 'b> {
     merkle_tree: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     payer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     tree_creator_or_delegate: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    collection_authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    collection_authority_record_pda: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    collection_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    collection_metadata: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    collection_edition: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    bubblegum_signer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     log_wrapper: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     compression_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_metadata_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    metadata: Option<MetadataArgs>,
+    start_id: Option<String>,
+    end_id: Option<String>,
+    properties: Option<Vec<Properties>>,
+    is_mutable: Option<bool>,
+    creators: Option<Vec<Creator>>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(
         &'b solana_program::account_info::AccountInfo<'a>,

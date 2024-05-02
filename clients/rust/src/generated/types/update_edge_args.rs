@@ -6,17 +6,16 @@
 //!
 
 use crate::generated::types::Creator;
+use crate::generated::types::Properties;
 use borsh::BorshDeserialize;
 use borsh::BorshSerialize;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct UpdateArgs {
-    pub name: Option<String>,
-    pub symbol: Option<String>,
-    pub uri: Option<String>,
-    pub creators: Option<Vec<Creator>>,
-    pub seller_fee_basis_points: Option<u16>,
-    pub primary_sale_happened: Option<bool>,
-    pub is_mutable: Option<bool>,
+pub struct UpdateEdgeArgs {
+    /// The name of the asset
+    pub label: String,
+    pub properties: Vec<Properties>,
+    pub is_mutable: bool,
+    pub creators: Vec<Creator>,
 }

@@ -5,7 +5,7 @@
 //! [https://github.com/metaplex-foundation/kinobi]
 //!
 
-use crate::generated::types::MetadataArgs;
+use crate::generated::types::NodeArgs;
 use borsh::BorshDeserialize;
 use borsh::BorshSerialize;
 
@@ -113,7 +113,7 @@ pub struct UnverifyCreatorInstructionArgs {
     pub creator_hash: [u8; 32],
     pub nonce: u64,
     pub index: u32,
-    pub metadata: MetadataArgs,
+    pub metadata: NodeArgs,
 }
 
 /// Instruction builder.
@@ -133,7 +133,7 @@ pub struct UnverifyCreatorBuilder {
     creator_hash: Option<[u8; 32]>,
     nonce: Option<u64>,
     index: Option<u32>,
-    metadata: Option<MetadataArgs>,
+    metadata: Option<NodeArgs>,
     __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
 
@@ -218,7 +218,7 @@ impl UnverifyCreatorBuilder {
         self
     }
     #[inline(always)]
-    pub fn metadata(&mut self, metadata: MetadataArgs) -> &mut Self {
+    pub fn metadata(&mut self, metadata: NodeArgs) -> &mut Self {
         self.metadata = Some(metadata);
         self
     }
@@ -571,7 +571,7 @@ impl<'a, 'b> UnverifyCreatorCpiBuilder<'a, 'b> {
         self
     }
     #[inline(always)]
-    pub fn metadata(&mut self, metadata: MetadataArgs) -> &mut Self {
+    pub fn metadata(&mut self, metadata: NodeArgs) -> &mut Self {
         self.instruction.metadata = Some(metadata);
         self
     }
@@ -699,7 +699,7 @@ struct UnverifyCreatorCpiBuilderInstruction<'a, 'b> {
     creator_hash: Option<[u8; 32]>,
     nonce: Option<u64>,
     index: Option<u32>,
-    metadata: Option<MetadataArgs>,
+    metadata: Option<NodeArgs>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(
         &'b solana_program::account_info::AccountInfo<'a>,

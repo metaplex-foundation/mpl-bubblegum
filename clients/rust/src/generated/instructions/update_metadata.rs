@@ -5,8 +5,9 @@
 //! [https://github.com/metaplex-foundation/kinobi]
 //!
 
-use crate::generated::types::MetadataArgs;
-use crate::generated::types::UpdateArgs;
+use crate::generated::types::Creator;
+use crate::generated::types::NodeArgs;
+use crate::generated::types::Properties;
 use borsh::BorshDeserialize;
 use borsh::BorshSerialize;
 
@@ -158,8 +159,11 @@ pub struct UpdateMetadataInstructionArgs {
     pub root: [u8; 32],
     pub nonce: u64,
     pub index: u32,
-    pub current_metadata: MetadataArgs,
-    pub update_args: UpdateArgs,
+    pub current_metadata: NodeArgs,
+    pub label: String,
+    pub properties: Vec<Properties>,
+    pub is_mutable: bool,
+    pub creators: Vec<Creator>,
 }
 
 /// Instruction builder.
@@ -181,8 +185,11 @@ pub struct UpdateMetadataBuilder {
     root: Option<[u8; 32]>,
     nonce: Option<u64>,
     index: Option<u32>,
-    current_metadata: Option<MetadataArgs>,
-    update_args: Option<UpdateArgs>,
+    current_metadata: Option<NodeArgs>,
+    label: Option<String>,
+    properties: Option<Vec<Properties>>,
+    is_mutable: Option<bool>,
+    creators: Option<Vec<Creator>>,
     __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
 
@@ -297,13 +304,28 @@ impl UpdateMetadataBuilder {
         self
     }
     #[inline(always)]
-    pub fn current_metadata(&mut self, current_metadata: MetadataArgs) -> &mut Self {
+    pub fn current_metadata(&mut self, current_metadata: NodeArgs) -> &mut Self {
         self.current_metadata = Some(current_metadata);
         self
     }
     #[inline(always)]
-    pub fn update_args(&mut self, update_args: UpdateArgs) -> &mut Self {
-        self.update_args = Some(update_args);
+    pub fn label(&mut self, label: String) -> &mut Self {
+        self.label = Some(label);
+        self
+    }
+    #[inline(always)]
+    pub fn properties(&mut self, properties: Vec<Properties>) -> &mut Self {
+        self.properties = Some(properties);
+        self
+    }
+    #[inline(always)]
+    pub fn is_mutable(&mut self, is_mutable: bool) -> &mut Self {
+        self.is_mutable = Some(is_mutable);
+        self
+    }
+    #[inline(always)]
+    pub fn creators(&mut self, creators: Vec<Creator>) -> &mut Self {
+        self.creators = Some(creators);
         self
     }
     /// Add an aditional account to the instruction.
@@ -358,7 +380,10 @@ impl UpdateMetadataBuilder {
                 .current_metadata
                 .clone()
                 .expect("current_metadata is not set"),
-            update_args: self.update_args.clone().expect("update_args is not set"),
+            label: self.label.clone().expect("label is not set"),
+            properties: self.properties.clone().expect("properties is not set"),
+            is_mutable: self.is_mutable.clone().expect("is_mutable is not set"),
+            creators: self.creators.clone().expect("creators is not set"),
         };
 
         accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
@@ -636,7 +661,10 @@ impl<'a, 'b> UpdateMetadataCpiBuilder<'a, 'b> {
             nonce: None,
             index: None,
             current_metadata: None,
-            update_args: None,
+            label: None,
+            properties: None,
+            is_mutable: None,
+            creators: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
@@ -765,13 +793,28 @@ impl<'a, 'b> UpdateMetadataCpiBuilder<'a, 'b> {
         self
     }
     #[inline(always)]
-    pub fn current_metadata(&mut self, current_metadata: MetadataArgs) -> &mut Self {
+    pub fn current_metadata(&mut self, current_metadata: NodeArgs) -> &mut Self {
         self.instruction.current_metadata = Some(current_metadata);
         self
     }
     #[inline(always)]
-    pub fn update_args(&mut self, update_args: UpdateArgs) -> &mut Self {
-        self.instruction.update_args = Some(update_args);
+    pub fn label(&mut self, label: String) -> &mut Self {
+        self.instruction.label = Some(label);
+        self
+    }
+    #[inline(always)]
+    pub fn properties(&mut self, properties: Vec<Properties>) -> &mut Self {
+        self.instruction.properties = Some(properties);
+        self
+    }
+    #[inline(always)]
+    pub fn is_mutable(&mut self, is_mutable: bool) -> &mut Self {
+        self.instruction.is_mutable = Some(is_mutable);
+        self
+    }
+    #[inline(always)]
+    pub fn creators(&mut self, creators: Vec<Creator>) -> &mut Self {
+        self.instruction.creators = Some(creators);
         self
     }
     /// Add an additional account to the instruction.
@@ -824,11 +867,22 @@ impl<'a, 'b> UpdateMetadataCpiBuilder<'a, 'b> {
                 .current_metadata
                 .clone()
                 .expect("current_metadata is not set"),
-            update_args: self
+            label: self.instruction.label.clone().expect("label is not set"),
+            properties: self
                 .instruction
-                .update_args
+                .properties
                 .clone()
-                .expect("update_args is not set"),
+                .expect("properties is not set"),
+            is_mutable: self
+                .instruction
+                .is_mutable
+                .clone()
+                .expect("is_mutable is not set"),
+            creators: self
+                .instruction
+                .creators
+                .clone()
+                .expect("creators is not set"),
         };
         let instruction = UpdateMetadataCpi {
             __program: self.instruction.__program,
@@ -906,8 +960,11 @@ struct UpdateMetadataCpiBuilderInstruction<'a, 'b> {
     root: Option<[u8; 32]>,
     nonce: Option<u64>,
     index: Option<u32>,
-    current_metadata: Option<MetadataArgs>,
-    update_args: Option<UpdateArgs>,
+    current_metadata: Option<NodeArgs>,
+    label: Option<String>,
+    properties: Option<Vec<Properties>>,
+    is_mutable: Option<bool>,
+    creators: Option<Vec<Creator>>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(
         &'b solana_program::account_info::AccountInfo<'a>,

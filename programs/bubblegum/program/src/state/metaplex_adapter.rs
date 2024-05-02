@@ -16,6 +16,12 @@ pub struct Creator {
     pub share: u8,
 }
 
+#[derive(AnchorSerialize, AnchorDeserialize, PartialEq, Eq, Debug, Clone)]
+pub struct Properties {
+    pub key: String,
+    pub value: String,
+}
+
 impl Creator {
     pub fn adapt(&self) -> mpl_token_metadata::types::Creator {
         mpl_token_metadata::types::Creator {
@@ -84,7 +90,7 @@ pub struct NodeArgs {
     /// The name of the asset
     pub label: String,
     // key value pair of properties
-    pub properties: Vec<(String, String)>,
+    pub properties: Vec<Properties>,
     // Whether or not the data struct is mutable, default is not
     pub is_mutable: bool,
     pub creators: Vec<Creator>,
@@ -95,7 +101,7 @@ pub struct UpdateNodeArgs {
     /// The name of the asset
     pub label: String,
     // key value pair of properties
-    pub properties: Vec<(String, String)>,
+    pub properties: Vec<Properties>,
     // Whether or not the data struct is mutable, default is not
     pub is_mutable: bool,
     pub creators: Vec<Creator>,
@@ -106,7 +112,7 @@ pub struct EdgeArgs {
     pub start_id: String,
     pub end_id: String,
     // key value pair of properties
-    pub properties: Vec<(String, String)>,
+    pub properties: Vec<Properties>,
     // Whether or not the data struct is mutable, default is not
     pub is_mutable: bool,
     pub creators: Vec<Creator>,
@@ -117,7 +123,7 @@ pub struct UpdateEdgeArgs {
     /// The name of the asset
     pub label: String,
     // key value pair of properties
-    pub properties: Vec<(String, String)>,
+    pub properties: Vec<Properties>,
     // Whether or not the data struct is mutable, default is not
     pub is_mutable: bool,
     pub creators: Vec<Creator>,

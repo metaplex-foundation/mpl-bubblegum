@@ -7,20 +7,11 @@
  */
 
 export * from './burn';
-export * from './cancelRedeem';
 export * from './createTreeConfig';
-export * from './decompressV1';
-export * from './delegate';
-export * from './mintToCollectionV1';
-export * from './mintV1';
-export * from './redeem';
-export * from './setAndVerifyCollection';
-export * from './setDecompressibleState';
+export * from './mintEdgeV1';
+export * from './mintNodeV1';
 export * from './setTreeDelegate';
-export * from './transfer';
-export * from './unverifyCollection';
 export * from './unverifyCreator';
 export * from './updateMetadata';
-export * from './verifyCollection';
 export * from './verifyCreator';
 export * from './verifyLeaf';

@@ -237,9 +237,9 @@ nameToErrorMap.set(
   MetadataBasisPointsTooHighError
 );
 
-/** TreeAuthorityIncorrect: Tree creator or tree delegate must sign. */
-export class TreeAuthorityIncorrectError extends ProgramError {
-  readonly name: string = 'TreeAuthorityIncorrect';
+/** MetadataPropertiesTooLong: Tree creator or tree delegate must sign. */
+export class MetadataPropertiesTooLongError extends ProgramError {
+  readonly name: string = 'MetadataPropertiesTooLong';
 
   readonly code: number = 0x1780; // 6016
 
@@ -247,59 +247,72 @@ export class TreeAuthorityIncorrectError extends ProgramError {
     super('Tree creator or tree delegate must sign.', program, cause);
   }
 }
-codeToErrorMap.set(0x1780, TreeAuthorityIncorrectError);
+codeToErrorMap.set(0x1780, MetadataPropertiesTooLongError);
+nameToErrorMap.set('MetadataPropertiesTooLong', MetadataPropertiesTooLongError);
+
+/** TreeAuthorityIncorrect: Values in properties exceeded the size limit */
+export class TreeAuthorityIncorrectError extends ProgramError {
+  readonly name: string = 'TreeAuthorityIncorrect';
+
+  readonly code: number = 0x1781; // 6017
+
+  constructor(program: Program, cause?: Error) {
+    super('Values in properties exceeded the size limit', program, cause);
+  }
+}
+codeToErrorMap.set(0x1781, TreeAuthorityIncorrectError);
 nameToErrorMap.set('TreeAuthorityIncorrect', TreeAuthorityIncorrectError);
 
 /** InsufficientMintCapacity: Not enough unapproved mints left */
 export class InsufficientMintCapacityError extends ProgramError {
   readonly name: string = 'InsufficientMintCapacity';
 
-  readonly code: number = 0x1781; // 6017
+  readonly code: number = 0x1782; // 6018
 
   constructor(program: Program, cause?: Error) {
     super('Not enough unapproved mints left', program, cause);
   }
 }
-codeToErrorMap.set(0x1781, InsufficientMintCapacityError);
+codeToErrorMap.set(0x1782, InsufficientMintCapacityError);
 nameToErrorMap.set('InsufficientMintCapacity', InsufficientMintCapacityError);
 
 /** NumericalOverflowError: NumericalOverflowError */
 export class NumericalOverflowErrorError extends ProgramError {
   readonly name: string = 'NumericalOverflowError';
 
-  readonly code: number = 0x1782; // 6018
+  readonly code: number = 0x1783; // 6019
 
   constructor(program: Program, cause?: Error) {
     super('NumericalOverflowError', program, cause);
   }
 }
-codeToErrorMap.set(0x1782, NumericalOverflowErrorError);
+codeToErrorMap.set(0x1783, NumericalOverflowErrorError);
 nameToErrorMap.set('NumericalOverflowError', NumericalOverflowErrorError);
 
 /** IncorrectOwner: Incorrect account owner */
 export class IncorrectOwnerError extends ProgramError {
   readonly name: string = 'IncorrectOwner';
 
-  readonly code: number = 0x1783; // 6019
+  readonly code: number = 0x1784; // 6020
 
   constructor(program: Program, cause?: Error) {
     super('Incorrect account owner', program, cause);
   }
 }
-codeToErrorMap.set(0x1783, IncorrectOwnerError);
+codeToErrorMap.set(0x1784, IncorrectOwnerError);
 nameToErrorMap.set('IncorrectOwner', IncorrectOwnerError);
 
 /** CollectionCannotBeVerifiedInThisInstruction: Cannot Verify Collection in this Instruction */
 export class CollectionCannotBeVerifiedInThisInstructionError extends ProgramError {
   readonly name: string = 'CollectionCannotBeVerifiedInThisInstruction';
 
-  readonly code: number = 0x1784; // 6020
+  readonly code: number = 0x1785; // 6021
 
   constructor(program: Program, cause?: Error) {
     super('Cannot Verify Collection in this Instruction', program, cause);
   }
 }
-codeToErrorMap.set(0x1784, CollectionCannotBeVerifiedInThisInstructionError);
+codeToErrorMap.set(0x1785, CollectionCannotBeVerifiedInThisInstructionError);
 nameToErrorMap.set(
   'CollectionCannotBeVerifiedInThisInstruction',
   CollectionCannotBeVerifiedInThisInstructionError
@@ -309,59 +322,59 @@ nameToErrorMap.set(
 export class CollectionNotFoundError extends ProgramError {
   readonly name: string = 'CollectionNotFound';
 
-  readonly code: number = 0x1785; // 6021
+  readonly code: number = 0x1786; // 6022
 
   constructor(program: Program, cause?: Error) {
     super('Collection Not Found on Metadata', program, cause);
   }
 }
-codeToErrorMap.set(0x1785, CollectionNotFoundError);
+codeToErrorMap.set(0x1786, CollectionNotFoundError);
 nameToErrorMap.set('CollectionNotFound', CollectionNotFoundError);
 
 /** AlreadyVerified: Collection item is already verified. */
 export class AlreadyVerifiedError extends ProgramError {
   readonly name: string = 'AlreadyVerified';
 
-  readonly code: number = 0x1786; // 6022
+  readonly code: number = 0x1787; // 6023
 
   constructor(program: Program, cause?: Error) {
     super('Collection item is already verified.', program, cause);
   }
 }
-codeToErrorMap.set(0x1786, AlreadyVerifiedError);
+codeToErrorMap.set(0x1787, AlreadyVerifiedError);
 nameToErrorMap.set('AlreadyVerified', AlreadyVerifiedError);
 
 /** AlreadyUnverified: Collection item is already unverified. */
 export class AlreadyUnverifiedError extends ProgramError {
   readonly name: string = 'AlreadyUnverified';
 
-  readonly code: number = 0x1787; // 6023
+  readonly code: number = 0x1788; // 6024
 
   constructor(program: Program, cause?: Error) {
     super('Collection item is already unverified.', program, cause);
   }
 }
-codeToErrorMap.set(0x1787, AlreadyUnverifiedError);
+codeToErrorMap.set(0x1788, AlreadyUnverifiedError);
 nameToErrorMap.set('AlreadyUnverified', AlreadyUnverifiedError);
 
 /** UpdateAuthorityIncorrect: Incorrect leaf metadata update authority. */
 export class UpdateAuthorityIncorrectError extends ProgramError {
   readonly name: string = 'UpdateAuthorityIncorrect';
 
-  readonly code: number = 0x1788; // 6024
+  readonly code: number = 0x1789; // 6025
 
   constructor(program: Program, cause?: Error) {
     super('Incorrect leaf metadata update authority.', program, cause);
   }
 }
-codeToErrorMap.set(0x1788, UpdateAuthorityIncorrectError);
+codeToErrorMap.set(0x1789, UpdateAuthorityIncorrectError);
 nameToErrorMap.set('UpdateAuthorityIncorrect', UpdateAuthorityIncorrectError);
 
 /** LeafAuthorityMustSign: This transaction must be signed by either the leaf owner or leaf delegate */
 export class LeafAuthorityMustSignError extends ProgramError {
   readonly name: string = 'LeafAuthorityMustSign';
 
-  readonly code: number = 0x1789; // 6025
+  readonly code: number = 0x178a; // 6026
 
   constructor(program: Program, cause?: Error) {
     super(
@@ -371,14 +384,14 @@ export class LeafAuthorityMustSignError extends ProgramError {
     );
   }
 }
-codeToErrorMap.set(0x1789, LeafAuthorityMustSignError);
+codeToErrorMap.set(0x178a, LeafAuthorityMustSignError);
 nameToErrorMap.set('LeafAuthorityMustSign', LeafAuthorityMustSignError);
 
 /** CollectionMustBeSized: Collection Not Compatable with Compression, Must be Sized */
 export class CollectionMustBeSizedError extends ProgramError {
   readonly name: string = 'CollectionMustBeSized';
 
-  readonly code: number = 0x178a; // 6026
+  readonly code: number = 0x178b; // 6027
 
   constructor(program: Program, cause?: Error) {
     super(
@@ -388,33 +401,33 @@ export class CollectionMustBeSizedError extends ProgramError {
     );
   }
 }
-codeToErrorMap.set(0x178a, CollectionMustBeSizedError);
+codeToErrorMap.set(0x178b, CollectionMustBeSizedError);
 nameToErrorMap.set('CollectionMustBeSized', CollectionMustBeSizedError);
 
 /** MetadataMintMismatch: Metadata mint does not match collection mint */
 export class MetadataMintMismatchError extends ProgramError {
   readonly name: string = 'MetadataMintMismatch';
 
-  readonly code: number = 0x178b; // 6027
+  readonly code: number = 0x178c; // 6028
 
   constructor(program: Program, cause?: Error) {
     super('Metadata mint does not match collection mint', program, cause);
   }
 }
-codeToErrorMap.set(0x178b, MetadataMintMismatchError);
+codeToErrorMap.set(0x178c, MetadataMintMismatchError);
 nameToErrorMap.set('MetadataMintMismatch', MetadataMintMismatchError);
 
 /** InvalidCollectionAuthority: Invalid collection authority */
 export class InvalidCollectionAuthorityError extends ProgramError {
   readonly name: string = 'InvalidCollectionAuthority';
 
-  readonly code: number = 0x178c; // 6028
+  readonly code: number = 0x178d; // 6029
 
   constructor(program: Program, cause?: Error) {
     super('Invalid collection authority', program, cause);
   }
 }
-codeToErrorMap.set(0x178c, InvalidCollectionAuthorityError);
+codeToErrorMap.set(0x178d, InvalidCollectionAuthorityError);
 nameToErrorMap.set(
   'InvalidCollectionAuthority',
   InvalidCollectionAuthorityError
@@ -424,26 +437,26 @@ nameToErrorMap.set(
 export class InvalidDelegateRecordError extends ProgramError {
   readonly name: string = 'InvalidDelegateRecord';
 
-  readonly code: number = 0x178d; // 6029
+  readonly code: number = 0x178e; // 6030
 
   constructor(program: Program, cause?: Error) {
     super('Invalid delegate record pda derivation', program, cause);
   }
 }
-codeToErrorMap.set(0x178d, InvalidDelegateRecordError);
+codeToErrorMap.set(0x178e, InvalidDelegateRecordError);
 nameToErrorMap.set('InvalidDelegateRecord', InvalidDelegateRecordError);
 
 /** CollectionMasterEditionAccountInvalid: Edition account doesnt match collection */
 export class CollectionMasterEditionAccountInvalidError extends ProgramError {
   readonly name: string = 'CollectionMasterEditionAccountInvalid';
 
-  readonly code: number = 0x178e; // 6030
+  readonly code: number = 0x178f; // 6031
 
   constructor(program: Program, cause?: Error) {
     super('Edition account doesnt match collection', program, cause);
   }
 }
-codeToErrorMap.set(0x178e, CollectionMasterEditionAccountInvalidError);
+codeToErrorMap.set(0x178f, CollectionMasterEditionAccountInvalidError);
 nameToErrorMap.set(
   'CollectionMasterEditionAccountInvalid',
   CollectionMasterEditionAccountInvalidError
@@ -453,55 +466,59 @@ nameToErrorMap.set(
 export class CollectionMustBeAUniqueMasterEditionError extends ProgramError {
   readonly name: string = 'CollectionMustBeAUniqueMasterEdition';
 
-  readonly code: number = 0x178f; // 6031
+  readonly code: number = 0x1790; // 6032
 
   constructor(program: Program, cause?: Error) {
     super('Collection Must Be a Unique Master Edition v2', program, cause);
   }
 }
-codeToErrorMap.set(0x178f, CollectionMustBeAUniqueMasterEditionError);
+codeToErrorMap.set(0x1790, CollectionMustBeAUniqueMasterEditionError);
 nameToErrorMap.set(
   'CollectionMustBeAUniqueMasterEdition',
   CollectionMustBeAUniqueMasterEditionError
 );
 
-/** UnknownExternalError: Could not convert external error to BubblegumError */
+/** UnknownExternalError: Could not convert external error to PrimitivesError */
 export class UnknownExternalErrorError extends ProgramError {
   readonly name: string = 'UnknownExternalError';
 
-  readonly code: number = 0x1790; // 6032
+  readonly code: number = 0x1791; // 6033
 
   constructor(program: Program, cause?: Error) {
-    super('Could not convert external error to BubblegumError', program, cause);
+    super(
+      'Could not convert external error to PrimitivesError',
+      program,
+      cause
+    );
   }
 }
-codeToErrorMap.set(0x1790, UnknownExternalErrorError);
+codeToErrorMap.set(0x1791, UnknownExternalErrorError);
 nameToErrorMap.set('UnknownExternalError', UnknownExternalErrorError);
 
 /** DecompressionDisabled: Decompression is disabled for this tree. */
 export class DecompressionDisabledError extends ProgramError {
   readonly name: string = 'DecompressionDisabled';
 
-  readonly code: number = 0x1791; // 6033
+  readonly code: number = 0x1792; // 6034
 
   constructor(program: Program, cause?: Error) {
     super('Decompression is disabled for this tree.', program, cause);
   }
 }
-codeToErrorMap.set(0x1791, DecompressionDisabledError);
+codeToErrorMap.set(0x1792, DecompressionDisabledError);
 nameToErrorMap.set('DecompressionDisabled', DecompressionDisabledError);
 
 /** MissingCollectionMintAccount: Missing collection mint account */
 export class MissingCollectionMintAccountError extends ProgramError {
   readonly name: string = 'MissingCollectionMintAccount';
 
-  readonly code: number = 0x1792; // 6034
+  readonly code: number = 0x1793; // 6035
 
   constructor(program: Program, cause?: Error) {
     super('Missing collection mint account', program, cause);
   }
 }
-codeToErrorMap.set(0x1792, MissingCollectionMintAccountError);
+codeToErrorMap.set(0x1793, MissingCollectionMintAccountError);
 nameToErrorMap.set(
   'MissingCollectionMintAccount',
   MissingCollectionMintAccountError
@@ -511,13 +528,13 @@ nameToErrorMap.set(
 export class MissingCollectionMetadataAccountError extends ProgramError {
   readonly name: string = 'MissingCollectionMetadataAccount';
 
-  readonly code: number = 0x1793; // 6035
+  readonly code: number = 0x1794; // 6036
 
   constructor(program: Program, cause?: Error) {
     super('Missing collection metadata account', program, cause);
   }
 }
-codeToErrorMap.set(0x1793, MissingCollectionMetadataAccountError);
+codeToErrorMap.set(0x1794, MissingCollectionMetadataAccountError);
 nameToErrorMap.set(
   'MissingCollectionMetadataAccount',
   MissingCollectionMetadataAccountError
@@ -527,39 +544,39 @@ nameToErrorMap.set(
 export class CollectionMismatchError extends ProgramError {
   readonly name: string = 'CollectionMismatch';
 
-  readonly code: number = 0x1794; // 6036
+  readonly code: number = 0x1795; // 6037
 
   constructor(program: Program, cause?: Error) {
     super('Collection mismatch', program, cause);
   }
 }
-codeToErrorMap.set(0x1794, CollectionMismatchError);
+codeToErrorMap.set(0x1795, CollectionMismatchError);
 nameToErrorMap.set('CollectionMismatch', CollectionMismatchError);
 
 /** MetadataImmutable: Metadata not mutable */
 export class MetadataImmutableError extends ProgramError {
   readonly name: string = 'MetadataImmutable';
 
-  readonly code: number = 0x1795; // 6037
+  readonly code: number = 0x1796; // 6038
 
   constructor(program: Program, cause?: Error) {
     super('Metadata not mutable', program, cause);
   }
 }
-codeToErrorMap.set(0x1795, MetadataImmutableError);
+codeToErrorMap.set(0x1796, MetadataImmutableError);
 nameToErrorMap.set('MetadataImmutable', MetadataImmutableError);
 
 /** PrimarySaleCanOnlyBeFlippedToTrue: Can only update primary sale to true */
 export class PrimarySaleCanOnlyBeFlippedToTrueError extends ProgramError {
   readonly name: string = 'PrimarySaleCanOnlyBeFlippedToTrue';
 
-  readonly code: number = 0x1796; // 6038
+  readonly code: number = 0x1797; // 6039
 
   constructor(program: Program, cause?: Error) {
     super('Can only update primary sale to true', program, cause);
   }
 }
-codeToErrorMap.set(0x1796, PrimarySaleCanOnlyBeFlippedToTrueError);
+codeToErrorMap.set(0x1797, PrimarySaleCanOnlyBeFlippedToTrueError);
 nameToErrorMap.set(
   'PrimarySaleCanOnlyBeFlippedToTrue',
   PrimarySaleCanOnlyBeFlippedToTrueError
@@ -569,26 +586,26 @@ nameToErrorMap.set(
 export class CreatorDidNotUnverifyError extends ProgramError {
   readonly name: string = 'CreatorDidNotUnverify';
 
-  readonly code: number = 0x1797; // 6039
+  readonly code: number = 0x1798; // 6040
 
   constructor(program: Program, cause?: Error) {
     super('Creator did not unverify the metadata', program, cause);
   }
 }
-codeToErrorMap.set(0x1797, CreatorDidNotUnverifyError);
+codeToErrorMap.set(0x1798, CreatorDidNotUnverifyError);
 nameToErrorMap.set('CreatorDidNotUnverify', CreatorDidNotUnverifyError);
 
 /** InvalidTokenStandard: Only NonFungible standard is supported */
 export class InvalidTokenStandardError extends ProgramError {
   readonly name: string = 'InvalidTokenStandard';
 
-  readonly code: number = 0x1798; // 6040
+  readonly code: number = 0x1799; // 6041
 
   constructor(program: Program, cause?: Error) {
     super('Only NonFungible standard is supported', program, cause);
   }
 }
-codeToErrorMap.set(0x1798, InvalidTokenStandardError);
+codeToErrorMap.set(0x1799, InvalidTokenStandardError);
 nameToErrorMap.set('InvalidTokenStandard', InvalidTokenStandardError);
 
 /**

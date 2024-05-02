@@ -14,9 +14,9 @@ pub fn assert_metadata_is_node_compatible(metadata: &NodeArgs) -> Result<()> {
     if metadata.label.len() > mpl_token_metadata::MAX_NAME_LENGTH {
         return Err(PrimitivesError::MetadataNameTooLong.into());
     }
-    if !check_properties_size(&metadata.properties) {
-        return Err(PrimitivesError::MetadataPropertiesTooLong.into());
-    }
+    // if !check_properties_size(&metadata.properties) {
+    //     return Err(PrimitivesError::MetadataPropertiesTooLong.into());
+    // }
 
     if !metadata.creators.is_empty() {
         if metadata.creators.len() > mpl_token_metadata::MAX_CREATOR_LIMIT {
@@ -49,9 +49,9 @@ pub fn assert_edge_is_node_compatible(metadata: &EdgeArgs) -> Result<()> {
     if metadata.end_id.len() > mpl_token_metadata::MAX_NAME_LENGTH {
         return Err(PrimitivesError::MetadataNameTooLong.into());
     }
-    if !check_properties_size(&metadata.properties) {
-        return Err(PrimitivesError::MetadataPropertiesTooLong.into());
-    }
+    // if !check_properties_size(&metadata.properties) {
+    //     return Err(PrimitivesError::MetadataPropertiesTooLong.into());
+    // }
 
     if !metadata.creators.is_empty() {
         if metadata.creators.len() > mpl_token_metadata::MAX_CREATOR_LIMIT {

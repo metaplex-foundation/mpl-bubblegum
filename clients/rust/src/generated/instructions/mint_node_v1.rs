@@ -5,18 +5,23 @@
 //! [https://github.com/metaplex-foundation/kinobi]
 //!
 
+use crate::generated::types::NodeArgs;
 use borsh::BorshDeserialize;
 use borsh::BorshSerialize;
 
 /// Accounts.
-pub struct CancelRedeem {
+pub struct MintNodeV1 {
     pub tree_config: solana_program::pubkey::Pubkey,
 
     pub leaf_owner: solana_program::pubkey::Pubkey,
 
+    pub leaf_delegate: solana_program::pubkey::Pubkey,
+
     pub merkle_tree: solana_program::pubkey::Pubkey,
 
-    pub voucher: solana_program::pubkey::Pubkey,
+    pub payer: solana_program::pubkey::Pubkey,
+
+    pub tree_creator_or_delegate: solana_program::pubkey::Pubkey,
 
     pub log_wrapper: solana_program::pubkey::Pubkey,
 
@@ -25,35 +30,42 @@ pub struct CancelRedeem {
     pub system_program: solana_program::pubkey::Pubkey,
 }
 
-impl CancelRedeem {
+impl MintNodeV1 {
     pub fn instruction(
         &self,
-        args: CancelRedeemInstructionArgs,
+        args: MintNodeV1InstructionArgs,
     ) -> solana_program::instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
         &self,
-        args: CancelRedeemInstructionArgs,
+        args: MintNodeV1InstructionArgs,
         remaining_accounts: &[solana_program::instruction::AccountMeta],
     ) -> solana_program::instruction::Instruction {
-        let mut accounts = Vec::with_capacity(7 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        let mut accounts = Vec::with_capacity(9 + remaining_accounts.len());
+        accounts.push(solana_program::instruction::AccountMeta::new(
             self.tree_config,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.leaf_owner,
-            true,
+            false,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            self.leaf_delegate,
+            false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new(
             self.merkle_tree,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.voucher,
-            false,
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            self.payer, true,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            self.tree_creator_or_delegate,
+            true,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.log_wrapper,
@@ -68,7 +80,7 @@ impl CancelRedeem {
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let mut data = CancelRedeemInstructionData::new().try_to_vec().unwrap();
+        let mut data = MintNodeV1InstructionData::new().try_to_vec().unwrap();
         let mut args = args.try_to_vec().unwrap();
         data.append(&mut args);
 
@@ -81,39 +93,41 @@ impl CancelRedeem {
 }
 
 #[derive(BorshDeserialize, BorshSerialize)]
-struct CancelRedeemInstructionData {
+struct MintNodeV1InstructionData {
     discriminator: [u8; 8],
 }
 
-impl CancelRedeemInstructionData {
+impl MintNodeV1InstructionData {
     fn new() -> Self {
         Self {
-            discriminator: [111, 76, 232, 50, 39, 175, 48, 242],
+            discriminator: [125, 111, 232, 245, 86, 29, 233, 87],
         }
     }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct CancelRedeemInstructionArgs {
-    pub root: [u8; 32],
+pub struct MintNodeV1InstructionArgs {
+    pub metadata: NodeArgs,
 }
 
 /// Instruction builder.
 #[derive(Default)]
-pub struct CancelRedeemBuilder {
+pub struct MintNodeV1Builder {
     tree_config: Option<solana_program::pubkey::Pubkey>,
     leaf_owner: Option<solana_program::pubkey::Pubkey>,
+    leaf_delegate: Option<solana_program::pubkey::Pubkey>,
     merkle_tree: Option<solana_program::pubkey::Pubkey>,
-    voucher: Option<solana_program::pubkey::Pubkey>,
+    payer: Option<solana_program::pubkey::Pubkey>,
+    tree_creator_or_delegate: Option<solana_program::pubkey::Pubkey>,
     log_wrapper: Option<solana_program::pubkey::Pubkey>,
     compression_program: Option<solana_program::pubkey::Pubkey>,
     system_program: Option<solana_program::pubkey::Pubkey>,
-    root: Option<[u8; 32]>,
+    metadata: Option<NodeArgs>,
     __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
 
-impl CancelRedeemBuilder {
+impl MintNodeV1Builder {
     pub fn new() -> Self {
         Self::default()
     }
@@ -128,13 +142,26 @@ impl CancelRedeemBuilder {
         self
     }
     #[inline(always)]
+    pub fn leaf_delegate(&mut self, leaf_delegate: solana_program::pubkey::Pubkey) -> &mut Self {
+        self.leaf_delegate = Some(leaf_delegate);
+        self
+    }
+    #[inline(always)]
     pub fn merkle_tree(&mut self, merkle_tree: solana_program::pubkey::Pubkey) -> &mut Self {
         self.merkle_tree = Some(merkle_tree);
         self
     }
     #[inline(always)]
-    pub fn voucher(&mut self, voucher: solana_program::pubkey::Pubkey) -> &mut Self {
-        self.voucher = Some(voucher);
+    pub fn payer(&mut self, payer: solana_program::pubkey::Pubkey) -> &mut Self {
+        self.payer = Some(payer);
+        self
+    }
+    #[inline(always)]
+    pub fn tree_creator_or_delegate(
+        &mut self,
+        tree_creator_or_delegate: solana_program::pubkey::Pubkey,
+    ) -> &mut Self {
+        self.tree_creator_or_delegate = Some(tree_creator_or_delegate);
         self
     }
     /// `[optional account, default to 'noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV']`
@@ -159,8 +186,8 @@ impl CancelRedeemBuilder {
         self
     }
     #[inline(always)]
-    pub fn root(&mut self, root: [u8; 32]) -> &mut Self {
-        self.root = Some(root);
+    pub fn metadata(&mut self, metadata: NodeArgs) -> &mut Self {
+        self.metadata = Some(metadata);
         self
     }
     /// Add an aditional account to the instruction.
@@ -183,11 +210,15 @@ impl CancelRedeemBuilder {
     }
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
-        let accounts = CancelRedeem {
+        let accounts = MintNodeV1 {
             tree_config: self.tree_config.expect("tree_config is not set"),
             leaf_owner: self.leaf_owner.expect("leaf_owner is not set"),
+            leaf_delegate: self.leaf_delegate.expect("leaf_delegate is not set"),
             merkle_tree: self.merkle_tree.expect("merkle_tree is not set"),
-            voucher: self.voucher.expect("voucher is not set"),
+            payer: self.payer.expect("payer is not set"),
+            tree_creator_or_delegate: self
+                .tree_creator_or_delegate
+                .expect("tree_creator_or_delegate is not set"),
             log_wrapper: self.log_wrapper.unwrap_or(solana_program::pubkey!(
                 "noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV"
             )),
@@ -198,23 +229,27 @@ impl CancelRedeemBuilder {
                 .system_program
                 .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
         };
-        let args = CancelRedeemInstructionArgs {
-            root: self.root.clone().expect("root is not set"),
+        let args = MintNodeV1InstructionArgs {
+            metadata: self.metadata.clone().expect("metadata is not set"),
         };
 
         accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
     }
 }
 
-/// `cancel_redeem` CPI accounts.
-pub struct CancelRedeemCpiAccounts<'a, 'b> {
+/// `mint_node_v1` CPI accounts.
+pub struct MintNodeV1CpiAccounts<'a, 'b> {
     pub tree_config: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub leaf_owner: &'b solana_program::account_info::AccountInfo<'a>,
 
+    pub leaf_delegate: &'b solana_program::account_info::AccountInfo<'a>,
+
     pub merkle_tree: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub voucher: &'b solana_program::account_info::AccountInfo<'a>,
+    pub payer: &'b solana_program::account_info::AccountInfo<'a>,
+
+    pub tree_creator_or_delegate: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub log_wrapper: &'b solana_program::account_info::AccountInfo<'a>,
 
@@ -223,8 +258,8 @@ pub struct CancelRedeemCpiAccounts<'a, 'b> {
     pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
 }
 
-/// `cancel_redeem` CPI instruction.
-pub struct CancelRedeemCpi<'a, 'b> {
+/// `mint_node_v1` CPI instruction.
+pub struct MintNodeV1Cpi<'a, 'b> {
     /// The program to invoke.
     pub __program: &'b solana_program::account_info::AccountInfo<'a>,
 
@@ -232,9 +267,13 @@ pub struct CancelRedeemCpi<'a, 'b> {
 
     pub leaf_owner: &'b solana_program::account_info::AccountInfo<'a>,
 
+    pub leaf_delegate: &'b solana_program::account_info::AccountInfo<'a>,
+
     pub merkle_tree: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub voucher: &'b solana_program::account_info::AccountInfo<'a>,
+    pub payer: &'b solana_program::account_info::AccountInfo<'a>,
+
+    pub tree_creator_or_delegate: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub log_wrapper: &'b solana_program::account_info::AccountInfo<'a>,
 
@@ -242,21 +281,23 @@ pub struct CancelRedeemCpi<'a, 'b> {
 
     pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
-    pub __args: CancelRedeemInstructionArgs,
+    pub __args: MintNodeV1InstructionArgs,
 }
 
-impl<'a, 'b> CancelRedeemCpi<'a, 'b> {
+impl<'a, 'b> MintNodeV1Cpi<'a, 'b> {
     pub fn new(
         program: &'b solana_program::account_info::AccountInfo<'a>,
-        accounts: CancelRedeemCpiAccounts<'a, 'b>,
-        args: CancelRedeemInstructionArgs,
+        accounts: MintNodeV1CpiAccounts<'a, 'b>,
+        args: MintNodeV1InstructionArgs,
     ) -> Self {
         Self {
             __program: program,
             tree_config: accounts.tree_config,
             leaf_owner: accounts.leaf_owner,
+            leaf_delegate: accounts.leaf_delegate,
             merkle_tree: accounts.merkle_tree,
-            voucher: accounts.voucher,
+            payer: accounts.payer,
+            tree_creator_or_delegate: accounts.tree_creator_or_delegate,
             log_wrapper: accounts.log_wrapper,
             compression_program: accounts.compression_program,
             system_program: accounts.system_program,
@@ -296,22 +337,30 @@ impl<'a, 'b> CancelRedeemCpi<'a, 'b> {
             bool,
         )],
     ) -> solana_program::entrypoint::ProgramResult {
-        let mut accounts = Vec::with_capacity(7 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        let mut accounts = Vec::with_capacity(9 + remaining_accounts.len());
+        accounts.push(solana_program::instruction::AccountMeta::new(
             *self.tree_config.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             *self.leaf_owner.key,
-            true,
+            false,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            *self.leaf_delegate.key,
+            false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new(
             *self.merkle_tree.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.voucher.key,
-            false,
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            *self.payer.key,
+            true,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            *self.tree_creator_or_delegate.key,
+            true,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             *self.log_wrapper.key,
@@ -332,7 +381,7 @@ impl<'a, 'b> CancelRedeemCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let mut data = CancelRedeemInstructionData::new().try_to_vec().unwrap();
+        let mut data = MintNodeV1InstructionData::new().try_to_vec().unwrap();
         let mut args = self.__args.try_to_vec().unwrap();
         data.append(&mut args);
 
@@ -341,12 +390,14 @@ impl<'a, 'b> CancelRedeemCpi<'a, 'b> {
             accounts,
             data,
         };
-        let mut account_infos = Vec::with_capacity(7 + 1 + remaining_accounts.len());
+        let mut account_infos = Vec::with_capacity(9 + 1 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
         account_infos.push(self.tree_config.clone());
         account_infos.push(self.leaf_owner.clone());
+        account_infos.push(self.leaf_delegate.clone());
         account_infos.push(self.merkle_tree.clone());
-        account_infos.push(self.voucher.clone());
+        account_infos.push(self.payer.clone());
+        account_infos.push(self.tree_creator_or_delegate.clone());
         account_infos.push(self.log_wrapper.clone());
         account_infos.push(self.compression_program.clone());
         account_infos.push(self.system_program.clone());
@@ -362,23 +413,25 @@ impl<'a, 'b> CancelRedeemCpi<'a, 'b> {
     }
 }
 
-/// `cancel_redeem` CPI instruction builder.
-pub struct CancelRedeemCpiBuilder<'a, 'b> {
-    instruction: Box<CancelRedeemCpiBuilderInstruction<'a, 'b>>,
+/// `mint_node_v1` CPI instruction builder.
+pub struct MintNodeV1CpiBuilder<'a, 'b> {
+    instruction: Box<MintNodeV1CpiBuilderInstruction<'a, 'b>>,
 }
 
-impl<'a, 'b> CancelRedeemCpiBuilder<'a, 'b> {
+impl<'a, 'b> MintNodeV1CpiBuilder<'a, 'b> {
     pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
-        let instruction = Box::new(CancelRedeemCpiBuilderInstruction {
+        let instruction = Box::new(MintNodeV1CpiBuilderInstruction {
             __program: program,
             tree_config: None,
             leaf_owner: None,
+            leaf_delegate: None,
             merkle_tree: None,
-            voucher: None,
+            payer: None,
+            tree_creator_or_delegate: None,
             log_wrapper: None,
             compression_program: None,
             system_program: None,
-            root: None,
+            metadata: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
@@ -400,6 +453,14 @@ impl<'a, 'b> CancelRedeemCpiBuilder<'a, 'b> {
         self
     }
     #[inline(always)]
+    pub fn leaf_delegate(
+        &mut self,
+        leaf_delegate: &'b solana_program::account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.leaf_delegate = Some(leaf_delegate);
+        self
+    }
+    #[inline(always)]
     pub fn merkle_tree(
         &mut self,
         merkle_tree: &'b solana_program::account_info::AccountInfo<'a>,
@@ -408,11 +469,16 @@ impl<'a, 'b> CancelRedeemCpiBuilder<'a, 'b> {
         self
     }
     #[inline(always)]
-    pub fn voucher(
+    pub fn payer(&mut self, payer: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+        self.instruction.payer = Some(payer);
+        self
+    }
+    #[inline(always)]
+    pub fn tree_creator_or_delegate(
         &mut self,
-        voucher: &'b solana_program::account_info::AccountInfo<'a>,
+        tree_creator_or_delegate: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
-        self.instruction.voucher = Some(voucher);
+        self.instruction.tree_creator_or_delegate = Some(tree_creator_or_delegate);
         self
     }
     #[inline(always)]
@@ -440,8 +506,8 @@ impl<'a, 'b> CancelRedeemCpiBuilder<'a, 'b> {
         self
     }
     #[inline(always)]
-    pub fn root(&mut self, root: [u8; 32]) -> &mut Self {
-        self.instruction.root = Some(root);
+    pub fn metadata(&mut self, metadata: NodeArgs) -> &mut Self {
+        self.instruction.metadata = Some(metadata);
         self
     }
     /// Add an additional account to the instruction.
@@ -485,10 +551,14 @@ impl<'a, 'b> CancelRedeemCpiBuilder<'a, 'b> {
         &self,
         signers_seeds: &[&[&[u8]]],
     ) -> solana_program::entrypoint::ProgramResult {
-        let args = CancelRedeemInstructionArgs {
-            root: self.instruction.root.clone().expect("root is not set"),
+        let args = MintNodeV1InstructionArgs {
+            metadata: self
+                .instruction
+                .metadata
+                .clone()
+                .expect("metadata is not set"),
         };
-        let instruction = CancelRedeemCpi {
+        let instruction = MintNodeV1Cpi {
             __program: self.instruction.__program,
 
             tree_config: self
@@ -498,12 +568,22 @@ impl<'a, 'b> CancelRedeemCpiBuilder<'a, 'b> {
 
             leaf_owner: self.instruction.leaf_owner.expect("leaf_owner is not set"),
 
+            leaf_delegate: self
+                .instruction
+                .leaf_delegate
+                .expect("leaf_delegate is not set"),
+
             merkle_tree: self
                 .instruction
                 .merkle_tree
                 .expect("merkle_tree is not set"),
 
-            voucher: self.instruction.voucher.expect("voucher is not set"),
+            payer: self.instruction.payer.expect("payer is not set"),
+
+            tree_creator_or_delegate: self
+                .instruction
+                .tree_creator_or_delegate
+                .expect("tree_creator_or_delegate is not set"),
 
             log_wrapper: self
                 .instruction
@@ -528,16 +608,18 @@ impl<'a, 'b> CancelRedeemCpiBuilder<'a, 'b> {
     }
 }
 
-struct CancelRedeemCpiBuilderInstruction<'a, 'b> {
+struct MintNodeV1CpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_program::account_info::AccountInfo<'a>,
     tree_config: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     leaf_owner: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    leaf_delegate: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     merkle_tree: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    voucher: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    payer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    tree_creator_or_delegate: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     log_wrapper: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     compression_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    root: Option<[u8; 32]>,
+    metadata: Option<NodeArgs>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(
         &'b solana_program::account_info::AccountInfo<'a>,

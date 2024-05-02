@@ -60,77 +60,80 @@ pub enum MplBubblegumError {
     MetadataBasisPointsTooHigh,
     /// 6016 (0x1780) - Tree creator or tree delegate must sign.
     #[error("Tree creator or tree delegate must sign.")]
+    MetadataPropertiesTooLong,
+    /// 6017 (0x1781) - Values in properties exceeded the size limit
+    #[error("Values in properties exceeded the size limit")]
     TreeAuthorityIncorrect,
-    /// 6017 (0x1781) - Not enough unapproved mints left
+    /// 6018 (0x1782) - Not enough unapproved mints left
     #[error("Not enough unapproved mints left")]
     InsufficientMintCapacity,
-    /// 6018 (0x1782) - NumericalOverflowError
+    /// 6019 (0x1783) - NumericalOverflowError
     #[error("NumericalOverflowError")]
     NumericalOverflowError,
-    /// 6019 (0x1783) - Incorrect account owner
+    /// 6020 (0x1784) - Incorrect account owner
     #[error("Incorrect account owner")]
     IncorrectOwner,
-    /// 6020 (0x1784) - Cannot Verify Collection in this Instruction
+    /// 6021 (0x1785) - Cannot Verify Collection in this Instruction
     #[error("Cannot Verify Collection in this Instruction")]
     CollectionCannotBeVerifiedInThisInstruction,
-    /// 6021 (0x1785) - Collection Not Found on Metadata
+    /// 6022 (0x1786) - Collection Not Found on Metadata
     #[error("Collection Not Found on Metadata")]
     CollectionNotFound,
-    /// 6022 (0x1786) - Collection item is already verified.
+    /// 6023 (0x1787) - Collection item is already verified.
     #[error("Collection item is already verified.")]
     AlreadyVerified,
-    /// 6023 (0x1787) - Collection item is already unverified.
+    /// 6024 (0x1788) - Collection item is already unverified.
     #[error("Collection item is already unverified.")]
     AlreadyUnverified,
-    /// 6024 (0x1788) - Incorrect leaf metadata update authority.
+    /// 6025 (0x1789) - Incorrect leaf metadata update authority.
     #[error("Incorrect leaf metadata update authority.")]
     UpdateAuthorityIncorrect,
-    /// 6025 (0x1789) - This transaction must be signed by either the leaf owner or leaf delegate
+    /// 6026 (0x178A) - This transaction must be signed by either the leaf owner or leaf delegate
     #[error("This transaction must be signed by either the leaf owner or leaf delegate")]
     LeafAuthorityMustSign,
-    /// 6026 (0x178A) - Collection Not Compatable with Compression, Must be Sized
+    /// 6027 (0x178B) - Collection Not Compatable with Compression, Must be Sized
     #[error("Collection Not Compatable with Compression, Must be Sized")]
     CollectionMustBeSized,
-    /// 6027 (0x178B) - Metadata mint does not match collection mint
+    /// 6028 (0x178C) - Metadata mint does not match collection mint
     #[error("Metadata mint does not match collection mint")]
     MetadataMintMismatch,
-    /// 6028 (0x178C) - Invalid collection authority
+    /// 6029 (0x178D) - Invalid collection authority
     #[error("Invalid collection authority")]
     InvalidCollectionAuthority,
-    /// 6029 (0x178D) - Invalid delegate record pda derivation
+    /// 6030 (0x178E) - Invalid delegate record pda derivation
     #[error("Invalid delegate record pda derivation")]
     InvalidDelegateRecord,
-    /// 6030 (0x178E) - Edition account doesnt match collection
+    /// 6031 (0x178F) - Edition account doesnt match collection
     #[error("Edition account doesnt match collection")]
     CollectionMasterEditionAccountInvalid,
-    /// 6031 (0x178F) - Collection Must Be a Unique Master Edition v2
+    /// 6032 (0x1790) - Collection Must Be a Unique Master Edition v2
     #[error("Collection Must Be a Unique Master Edition v2")]
     CollectionMustBeAUniqueMasterEdition,
-    /// 6032 (0x1790) - Could not convert external error to BubblegumError
-    #[error("Could not convert external error to BubblegumError")]
+    /// 6033 (0x1791) - Could not convert external error to PrimitivesError
+    #[error("Could not convert external error to PrimitivesError")]
     UnknownExternalError,
-    /// 6033 (0x1791) - Decompression is disabled for this tree.
+    /// 6034 (0x1792) - Decompression is disabled for this tree.
     #[error("Decompression is disabled for this tree.")]
     DecompressionDisabled,
-    /// 6034 (0x1792) - Missing collection mint account
+    /// 6035 (0x1793) - Missing collection mint account
     #[error("Missing collection mint account")]
     MissingCollectionMintAccount,
-    /// 6035 (0x1793) - Missing collection metadata account
+    /// 6036 (0x1794) - Missing collection metadata account
     #[error("Missing collection metadata account")]
     MissingCollectionMetadataAccount,
-    /// 6036 (0x1794) - Collection mismatch
+    /// 6037 (0x1795) - Collection mismatch
     #[error("Collection mismatch")]
     CollectionMismatch,
-    /// 6037 (0x1795) - Metadata not mutable
+    /// 6038 (0x1796) - Metadata not mutable
     #[error("Metadata not mutable")]
     MetadataImmutable,
-    /// 6038 (0x1796) - Can only update primary sale to true
+    /// 6039 (0x1797) - Can only update primary sale to true
     #[error("Can only update primary sale to true")]
     PrimarySaleCanOnlyBeFlippedToTrue,
-    /// 6039 (0x1797) - Creator did not unverify the metadata
+    /// 6040 (0x1798) - Creator did not unverify the metadata
     #[error("Creator did not unverify the metadata")]
     CreatorDidNotUnverify,
-    /// 6040 (0x1798) - Only NonFungible standard is supported
+    /// 6041 (0x1799) - Only NonFungible standard is supported
     #[error("Only NonFungible standard is supported")]
     InvalidTokenStandard,
 }

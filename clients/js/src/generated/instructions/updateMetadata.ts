@@ -18,8 +18,10 @@ import {
 import {
   Serializer,
   array,
+  bool,
   bytes,
   mapSerializer,
+  string,
   struct,
   u32,
   u64,
@@ -35,12 +37,15 @@ import {
   getAccountMetasAndSigners,
 } from '../shared';
 import {
-  MetadataArgs,
-  MetadataArgsArgs,
-  UpdateArgs,
-  UpdateArgsArgs,
-  getMetadataArgsSerializer,
-  getUpdateArgsSerializer,
+  Creator,
+  CreatorArgs,
+  NodeArgs,
+  NodeArgsArgs,
+  Properties,
+  PropertiesArgs,
+  getCreatorSerializer,
+  getNodeArgsSerializer,
+  getPropertiesSerializer,
 } from '../types';
 
 // Accounts.
@@ -73,16 +78,24 @@ export type UpdateMetadataInstructionData = {
   root: Uint8Array;
   nonce: bigint;
   index: number;
-  currentMetadata: MetadataArgs;
-  updateArgs: UpdateArgs;
+  currentMetadata: NodeArgs;
+  /** The name of the asset */
+  label: string;
+  properties: Array<Properties>;
+  isMutable: boolean;
+  creators: Array<Creator>;
 };
 
 export type UpdateMetadataInstructionDataArgs = {
   root: Uint8Array;
   nonce: number | bigint;
   index: number;
-  currentMetadata: MetadataArgsArgs;
-  updateArgs: UpdateArgsArgs;
+  currentMetadata: NodeArgsArgs;
+  /** The name of the asset */
+  label: string;
+  properties: Array<PropertiesArgs>;
+  isMutable: boolean;
+  creators: Array<CreatorArgs>;
 };
 
 export function getUpdateMetadataInstructionDataSerializer(): Serializer<
@@ -100,8 +113,11 @@ export function getUpdateMetadataInstructionDataSerializer(): Serializer<
         ['root', bytes({ size: 32 })],
         ['nonce', u64()],
         ['index', u32()],
-        ['currentMetadata', getMetadataArgsSerializer()],
-        ['updateArgs', getUpdateArgsSerializer()],
+        ['currentMetadata', getNodeArgsSerializer()],
+        ['label', string()],
+        ['properties', array(getPropertiesSerializer())],
+        ['isMutable', bool()],
+        ['creators', array(getCreatorSerializer())],
       ],
       { description: 'UpdateMetadataInstructionData' }
     ),

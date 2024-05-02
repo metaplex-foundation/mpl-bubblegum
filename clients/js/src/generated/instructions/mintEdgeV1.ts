@@ -17,7 +17,9 @@ import {
 import {
   Serializer,
   array,
+  bool,
   mapSerializer,
+  string,
   struct,
   u8,
 } from '@metaplex-foundation/umi/serializers';
@@ -30,13 +32,16 @@ import {
   getAccountMetasAndSigners,
 } from '../shared';
 import {
-  MetadataArgs,
-  MetadataArgsArgs,
-  getMetadataArgsSerializer,
+  Creator,
+  CreatorArgs,
+  Properties,
+  PropertiesArgs,
+  getCreatorSerializer,
+  getPropertiesSerializer,
 } from '../types';
 
 // Accounts.
-export type MintV1InstructionAccounts = {
+export type MintEdgeV1InstructionAccounts = {
   treeConfig?: PublicKey | Pda;
   leafOwner: PublicKey | Pda;
   leafDelegate?: PublicKey | Pda;
@@ -49,39 +54,59 @@ export type MintV1InstructionAccounts = {
 };
 
 // Data.
-export type MintV1InstructionData = {
+export type MintEdgeV1InstructionData = {
   discriminator: Array<number>;
-  metadata: MetadataArgs;
+  /** The name of the asset */
+  startId: string;
+  endId: string;
+  properties: Array<Properties>;
+  isMutable: boolean;
+  creators: Array<Creator>;
 };
 
-export type MintV1InstructionDataArgs = { metadata: MetadataArgsArgs };
+export type MintEdgeV1InstructionDataArgs = {
+  /** The name of the asset */
+  startId: string;
+  endId: string;
+  properties: Array<PropertiesArgs>;
+  isMutable: boolean;
+  creators: Array<CreatorArgs>;
+};
 
-export function getMintV1InstructionDataSerializer(): Serializer<
-  MintV1InstructionDataArgs,
-  MintV1InstructionData
+export function getMintEdgeV1InstructionDataSerializer(): Serializer<
+  MintEdgeV1InstructionDataArgs,
+  MintEdgeV1InstructionData
 > {
-  return mapSerializer<MintV1InstructionDataArgs, any, MintV1InstructionData>(
-    struct<MintV1InstructionData>(
+  return mapSerializer<
+    MintEdgeV1InstructionDataArgs,
+    any,
+    MintEdgeV1InstructionData
+  >(
+    struct<MintEdgeV1InstructionData>(
       [
         ['discriminator', array(u8(), { size: 8 })],
-        ['metadata', getMetadataArgsSerializer()],
+        ['startId', string()],
+        ['endId', string()],
+        ['properties', array(getPropertiesSerializer())],
+        ['isMutable', bool()],
+        ['creators', array(getCreatorSerializer())],
       ],
-      { description: 'MintV1InstructionData' }
+      { description: 'MintEdgeV1InstructionData' }
     ),
     (value) => ({
       ...value,
-      discriminator: [145, 98, 192, 118, 184, 147, 118, 104],
+      discriminator: [243, 61, 233, 237, 235, 72, 173, 66],
     })
-  ) as Serializer<MintV1InstructionDataArgs, MintV1InstructionData>;
+  ) as Serializer<MintEdgeV1InstructionDataArgs, MintEdgeV1InstructionData>;
 }
 
 // Args.
-export type MintV1InstructionArgs = MintV1InstructionDataArgs;
+export type MintEdgeV1InstructionArgs = MintEdgeV1InstructionDataArgs;
 
 // Instruction.
-export function mintV1(
+export function mintEdgeV1(
   context: Pick<Context, 'eddsa' | 'identity' | 'payer' | 'programs'>,
-  input: MintV1InstructionAccounts & MintV1InstructionArgs
+  input: MintEdgeV1InstructionAccounts & MintEdgeV1InstructionArgs
 ): TransactionBuilder {
   // Program ID.
   const programId = context.programs.getPublicKey(
@@ -123,7 +148,7 @@ export function mintV1(
   };
 
   // Arguments.
-  const resolvedArgs: MintV1InstructionArgs = { ...input };
+  const resolvedArgs: MintEdgeV1InstructionArgs = { ...input };
 
   // Default values.
   if (!resolvedAccounts.treeConfig.value) {
@@ -177,8 +202,8 @@ export function mintV1(
   );
 
   // Data.
-  const data = getMintV1InstructionDataSerializer().serialize(
-    resolvedArgs as MintV1InstructionDataArgs
+  const data = getMintEdgeV1InstructionDataSerializer().serialize(
+    resolvedArgs as MintEdgeV1InstructionDataArgs
   );
 
   // Bytes Created On Chain.
