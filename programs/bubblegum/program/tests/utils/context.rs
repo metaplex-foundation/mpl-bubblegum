@@ -168,7 +168,7 @@ impl BubblegumTestContext {
         &self,
     ) -> Result<Tree<MAX_DEPTH, MAX_BUFFER_SIZE>> {
         let payer = self.payer();
-        let mut tree = Tree::<MAX_DEPTH, MAX_BUFFER_SIZE>::with_creator(&payer, self.client());
+        let mut tree = Tree::<MAX_DEPTH, MAX_BUFFER_SIZE>::with_creator_and_canopy(&payer, None, self.client());
         tree.alloc(&payer).await?;
         tree.create(&payer).await?;
         Ok(tree)
@@ -178,9 +178,23 @@ impl BubblegumTestContext {
         &self,
     ) -> Result<Tree<MAX_DEPTH, MAX_BUFFER_SIZE>> {
         let payer = self.payer();
-        let mut tree = Tree::<MAX_DEPTH, MAX_BUFFER_SIZE>::with_creator(&payer, self.client());
+        let mut tree = Tree::<MAX_DEPTH, MAX_BUFFER_SIZE>::with_creator_and_canopy(&payer, None, self.client());
         tree.alloc(&payer).await?;
         tree.create_public(&payer).await?;
+        Ok(tree)
+    }
+
+    pub async fn create_tree_with_canopy<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize>(
+        &self,
+        canopy: u32,
+        is_public: bool,
+    ) -> Result<Tree<MAX_DEPTH, MAX_BUFFER_SIZE>> {
+        let payer = self.payer();
+        let mut tree = Tree::<MAX_DEPTH, MAX_BUFFER_SIZE>::with_creator_and_canopy(&payer, Some(canopy), self.client());
+        tree.alloc(&payer).await?;
+        if is_public {
+            tree.create_public(&payer).await?;
+        }
         Ok(tree)
     }
 
