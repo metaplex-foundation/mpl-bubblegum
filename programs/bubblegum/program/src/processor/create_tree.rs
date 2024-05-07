@@ -1,9 +1,18 @@
 use std::mem::size_of;
 
 use anchor_lang::{prelude::*, system_program::System};
-use spl_account_compression::{program::SplAccountCompression, state::{merkle_tree_get_size, ConcurrentMerkleTreeHeader, CONCURRENT_MERKLE_TREE_HEADER_SIZE_V1}, Node, Noop};
+use spl_account_compression::{
+    program::SplAccountCompression,
+    state::{
+        merkle_tree_get_size, ConcurrentMerkleTreeHeader, CONCURRENT_MERKLE_TREE_HEADER_SIZE_V1,
+    },
+    Node, Noop,
+};
 
-use crate::{error::BubblegumError, state::{DecompressibleState, TreeConfig, TREE_AUTHORITY_SIZE}};
+use crate::{
+    error::BubblegumError,
+    state::{DecompressibleState, TreeConfig, TREE_AUTHORITY_SIZE},
+};
 
 pub const MAX_ACC_PROOFS_SIZE: u32 = 17;
 
@@ -62,11 +71,14 @@ pub(crate) fn create_tree(
     spl_account_compression::cpi::init_empty_merkle_tree(cpi_ctx, max_depth, max_buffer_size)
 }
 
-fn check_canopy_size(ctx: &Context<CreateTree>, max_depth: u32, max_buffer_size: u32,) -> Result<()> {
+fn check_canopy_size(
+    ctx: &Context<CreateTree>,
+    max_depth: u32,
+    max_buffer_size: u32,
+) -> Result<()> {
     let merkle_tree_bytes = ctx.accounts.merkle_tree.data.borrow();
 
-    let (header_bytes, rest) =
-            merkle_tree_bytes.split_at(CONCURRENT_MERKLE_TREE_HEADER_SIZE_V1);
+    let (header_bytes, rest) = merkle_tree_bytes.split_at(CONCURRENT_MERKLE_TREE_HEADER_SIZE_V1);
 
     let mut header = ConcurrentMerkleTreeHeader::try_from_slice(header_bytes)?;
     header.initialize(
@@ -80,7 +92,11 @@ fn check_canopy_size(ctx: &Context<CreateTree>, max_depth: u32, max_buffer_size:
 
     let (_tree_bytes, canopy_bytes) = rest.split_at(merkle_tree_size);
 
-    let required_canopy = if max_depth > MAX_ACC_PROOFS_SIZE {max_depth - MAX_ACC_PROOFS_SIZE} else {0};
+    let required_canopy = if max_depth > MAX_ACC_PROOFS_SIZE {
+        max_depth - MAX_ACC_PROOFS_SIZE
+    } else {
+        0
+    };
 
     let actual_canopy_size = canopy_bytes.len() / size_of::<Node>();
 

@@ -250,10 +250,8 @@ async fn test_create_public_tree_with_canopy() {
     assert_eq!(cfg.tree_creator, payer.pubkey());
     assert_eq!(cfg.tree_delegate, payer.pubkey());
     assert!(cfg.is_public);
-    
-    let tree_create_result = context
-        .create_tree_with_canopy::<18, 64>(0, true)
-        .await;
+
+    let tree_create_result = context.create_tree_with_canopy::<18, 64>(0, true).await;
 
     if let Err(err) = tree_create_result {
         if let BanksClient(BanksClientError::TransactionError(e)) = *err {
