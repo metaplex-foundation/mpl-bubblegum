@@ -591,6 +591,19 @@ export class InvalidTokenStandardError extends ProgramError {
 codeToErrorMap.set(0x1798, InvalidTokenStandardError);
 nameToErrorMap.set('InvalidTokenStandard', InvalidTokenStandardError);
 
+/** InvalidCanopySize: Canopy size should be set bigger for this tree */
+export class InvalidCanopySizeError extends ProgramError {
+  readonly name: string = 'InvalidCanopySize';
+
+  readonly code: number = 0x1799; // 6041
+
+  constructor(program: Program, cause?: Error) {
+    super('Canopy size should be set bigger for this tree', program, cause);
+  }
+}
+codeToErrorMap.set(0x1799, InvalidCanopySizeError);
+nameToErrorMap.set('InvalidCanopySize', InvalidCanopySizeError);
+
 /**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors

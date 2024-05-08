@@ -133,6 +133,9 @@ pub enum MplBubblegumError {
     /// 6040 (0x1798) - Only NonFungible standard is supported
     #[error("Only NonFungible standard is supported")]
     InvalidTokenStandard,
+    /// 6041 (0x1799) - Canopy size should be set bigger for this tree
+    #[error("Canopy size should be set bigger for this tree")]
+    InvalidCanopySize,
 }
 
 impl solana_program::program_error::PrintProgramError for MplBubblegumError {
