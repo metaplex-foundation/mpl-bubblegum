@@ -92,17 +92,13 @@ fn check_canopy_size(
 
     let (_tree_bytes, canopy_bytes) = rest.split_at(merkle_tree_size);
 
-    let required_canopy = if max_depth > MAX_ACC_PROOFS_SIZE {
-        max_depth - MAX_ACC_PROOFS_SIZE
-    } else {
-        0
-    };
+    let required_canopy = max_depth.saturating_sub(MAX_ACC_PROOFS_SIZE);
 
     let actual_canopy_size = canopy_bytes.len() / size_of::<Node>();
 
     require!(
         (actual_canopy_size as u32) >= required_canopy,
-        BubblegumError::CanopySizeMismatch
+        BubblegumError::InvalidCanopySize
     );
 
     Ok(())

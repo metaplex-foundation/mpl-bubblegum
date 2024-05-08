@@ -206,6 +206,8 @@ impl BubblegumTestContext {
         tree.alloc(&payer).await?;
         if is_public {
             tree.create_public(&payer).await?;
+        } else {
+            tree.create(&payer).await?;
         }
         Ok(tree)
     }

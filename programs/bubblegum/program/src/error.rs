@@ -87,7 +87,7 @@ pub enum BubblegumError {
     #[msg("Only NonFungible standard is supported")]
     InvalidTokenStandard,
     #[msg("Canopy size should be set bigger for this tree")]
-    CanopySizeMismatch,
+    InvalidCanopySize,
 }
 
 // Converts certain Token Metadata errors into Bubblegum equivalents
