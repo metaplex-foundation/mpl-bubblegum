@@ -848,6 +848,46 @@ createErrorFromCodeLookup.set(0x1797, () => new CreatorDidNotUnverifyError());
 createErrorFromNameLookup.set('CreatorDidNotUnverify', () => new CreatorDidNotUnverifyError());
 
 /**
+ * InvalidTokenStandard: 'Only NonFungible standard is supported'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidTokenStandardError extends Error {
+  readonly code: number = 0x1798;
+  readonly name: string = 'InvalidTokenStandard';
+  constructor() {
+    super('Only NonFungible standard is supported');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidTokenStandardError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1798, () => new InvalidTokenStandardError());
+createErrorFromNameLookup.set('InvalidTokenStandard', () => new InvalidTokenStandardError());
+
+/**
+ * InvalidCanopySize: 'Canopy size should be set bigger for this tree'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidCanopySizeError extends Error {
+  readonly code: number = 0x1799;
+  readonly name: string = 'InvalidCanopySize';
+  constructor() {
+    super('Canopy size should be set bigger for this tree');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidCanopySizeError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1799, () => new InvalidCanopySizeError());
+createErrorFromNameLookup.set('InvalidCanopySize', () => new InvalidCanopySizeError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

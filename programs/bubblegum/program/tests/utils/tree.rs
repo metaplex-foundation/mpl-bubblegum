@@ -66,10 +66,14 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
     // customized some more via the public access, or we can add extra
     // methods to make things even easier.
     pub fn new(client: BanksClient) -> Self {
-        Self::with_creator(&Keypair::new(), client)
+        Self::with_creator_and_canopy(&Keypair::new(), None, client)
     }
 
-    pub fn with_creator(tree_creator: &Keypair, client: BanksClient) -> Self {
+    pub fn with_creator_and_canopy(
+        tree_creator: &Keypair,
+        canopy: Option<u32>,
+        client: BanksClient,
+    ) -> Self {
         // Default proof tree construction.
         let proof_tree = MerkleTree::new(vec![Node::default(); 1 << MAX_DEPTH].as_slice());
 
@@ -77,7 +81,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             tree_creator: clone_keypair(tree_creator),
             tree_delegate: clone_keypair(tree_creator),
             merkle_tree: Keypair::new(),
-            canopy_depth: 0,
+            canopy_depth: canopy.unwrap_or(0),
             client,
             proof_tree,
             num_minted: 0,
@@ -122,8 +126,10 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
     }
 
     pub fn merkle_tree_account_size(&self) -> usize {
+        let canopy_size = 32 * std::cmp::max((1 << (self.canopy_depth + 1)) - 2, 0);
         CONCURRENT_MERKLE_TREE_HEADER_SIZE_V1
             + size_of::<ConcurrentMerkleTree<MAX_DEPTH, MAX_BUFFER_SIZE>>()
+            + canopy_size
     }
 
     // Helper method to execute a transaction with the specified arguments
