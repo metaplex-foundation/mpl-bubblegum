@@ -2,7 +2,7 @@ use super::{
     clone_keypair, compute_metadata_hashes,
     tx_builder::{
         BurnBuilder, CancelRedeemBuilder, CollectionVerificationInner, CreateBuilder,
-        CreatorVerificationInner, DelegateBuilder, DelegateInner, MintToCollectionV1Builder,
+        CreatorVerificationInner, CreateWithRootBuilder, DelegateBuilder, DelegateInner, MintToCollectionV1Builder,
         MintV1Builder, RedeemBuilder, SetDecompressibleStateBuilder, SetTreeDelegateBuilder,
         TransferBuilder, TransferInner, TxBuilder, UnverifyCreatorBuilder, VerifyCollectionBuilder,
         VerifyCreatorBuilder,
@@ -85,6 +85,24 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             client,
             proof_tree,
             num_minted: 0,
+        }
+    }
+
+    pub fn with_preinitialised_tree(
+        tree_creator: &Keypair,
+        merkle_tree: &Keypair,
+        client: BanksClient,
+        proof_tree: MerkleTree,
+        num_minted: u64,
+    ) -> Self {
+        Tree {
+            tree_creator: clone_keypair(tree_creator),
+            tree_delegate: clone_keypair(tree_creator),
+            merkle_tree: clone_keypair(merkle_tree),
+            canopy_depth: 0,
+            client,
+            proof_tree,
+            num_minted,
         }
     }
 
@@ -251,6 +269,51 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
 
     pub async fn create_public(&mut self, payer: &Keypair) -> Result<()> {
         self.create_tree_tx(payer, true).execute().await
+    }
+
+    pub fn create_tree_with_root_tx(
+        &mut self,
+        payer: &Keypair,
+        public: bool,
+        max_depth: u32,
+        max_buffer_size: u32,
+        num_minted: u64,
+        root: [u8; 32],
+        leaf: [u8; 32],
+        index: u32,
+        metadata_url: String,
+        metadata_hash: String,
+        registrar: Pubkey,
+        voter: Pubkey,
+    ) -> CreateWithRootBuilder<MAX_DEPTH, MAX_BUFFER_SIZE> {
+        let tree_authority =
+            Pubkey::find_program_address(&[self.tree_pubkey().as_ref()], &bubblegum::id()).0;
+
+        let accounts = bubblegum::accounts::CreateTreeWithRoot {
+            tree_authority,
+            merkle_tree: self.tree_pubkey(),
+            payer: payer.pubkey(),
+            tree_creator: self.creator_pubkey(),
+            registrar,
+            voter,
+            log_wrapper: spl_noop::id(),
+            compression_program: spl_account_compression::id(),
+            system_program: system_program::id(),
+        };
+
+        let data = bubblegum::instruction::CreateTreeWithRoot {
+            max_depth,
+            max_buffer_size,
+            num_minted,
+            root,
+            leaf,
+            index,
+            metadata_url,
+            metadata_hash,
+            public: Some(public),
+        };
+
+        self.tx_builder(accounts, data, None, (), payer.pubkey(), &[payer])
     }
 
     pub fn mint_v1_non_owner_tx<'a>(

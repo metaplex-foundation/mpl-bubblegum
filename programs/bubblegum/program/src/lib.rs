@@ -37,6 +37,7 @@ pub enum InstructionName {
     MintToCollectionV1,
     SetDecompressibleState,
     UpdateMetadata,
+    CreateTreeWithRoot,
 }
 
 pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
@@ -55,6 +56,7 @@ pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
         [54, 85, 76, 70, 228, 250, 164, 81] => InstructionName::DecompressV1,
         [116, 110, 29, 56, 107, 219, 42, 93] => InstructionName::Burn,
         [82, 193, 176, 117, 176, 21, 115, 253] => InstructionName::Compress,
+        [101, 214, 253, 135, 176, 170, 11, 235] => InstructionName::CreateTreeWithRoot,
         [165, 83, 136, 142, 89, 202, 47, 220] => InstructionName::CreateTree,
         [52, 17, 96, 132, 71, 4, 85, 194] => InstructionName::VerifyCreator,
         [107, 178, 57, 39, 105, 115, 112, 152] => InstructionName::UnverifyCreator,
@@ -106,6 +108,32 @@ pub mod bubblegum {
         public: Option<bool>,
     ) -> Result<()> {
         processor::create_tree(ctx, max_depth, max_buffer_size, public)
+    }
+
+    pub(crate) fn create_tree_with_root<'info>(
+        ctx: Context<'_, '_, '_, 'info, CreateTreeWithRoot<'info>>,
+        max_depth: u32,
+        max_buffer_size: u32,
+        num_minted: u64,
+        root: [u8; 32],
+        leaf: [u8; 32],
+        index: u32,
+        metadata_url: String,
+        metadata_hash: String,
+        public: Option<bool>,
+    ) -> Result<()> {
+        processor::create_tree_with_root(
+            ctx,
+            max_depth,
+            max_buffer_size,
+            num_minted,
+            root,
+            leaf,
+            index,
+            metadata_url,
+            metadata_hash,
+            public,
+        )
     }
 
     /// Decompresses a leaf node from the tree.

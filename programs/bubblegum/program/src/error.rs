@@ -88,6 +88,8 @@ pub enum BubblegumError {
     InvalidTokenStandard,
     #[msg("Canopy size should be set bigger for this tree")]
     InvalidCanopySize,
+    #[msg("Not enough tokens staked to call this instruction")]
+    NotEnoughStakeForOperation,
 }
 
 // Converts certain Token Metadata errors into Bubblegum equivalents

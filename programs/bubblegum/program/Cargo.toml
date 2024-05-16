@@ -20,21 +20,22 @@ test-sbf = []
 default = []
 
 [dependencies]
-anchor-lang = { version = "0.28.0", features = ["init-if-needed"] }
-anchor-spl = "0.28.0"
+anchor-lang = { version = "0.29.0", features = ["init-if-needed"] }
+anchor-spl = "0.29.0"
 bytemuck = "1.13.0"
 mpl-token-metadata = "3.2.3"
 num-traits = "0.2.15"
-solana-program = "~1.16.8"
-spl-account-compression = { version="0.2.0", features = ["cpi"] }
+solana-program = "~1.18.11"
+spl-account-compression = { path="../../../solana-program-library/account-compression/programs/account-compression", features = ["cpi"] }
 spl-associated-token-account = { version = ">= 1.1.3, < 3.0", features = ["no-entrypoint"] }
 spl-token = { version = ">= 3.5.0, < 5.0", features = ["no-entrypoint"] }
+mplx-staking-states = { path="../../../mplx-staking/program-states"}
 
 [dev-dependencies]
 async-trait = "0.1.71"
-mpl-token-auth-rules = { version = "1.4.3", features = ["no-entrypoint"] }
-solana-program-test = "~1.16.5"
-solana-sdk = "~1.16.5"
-spl-concurrent-merkle-tree = "0.2.0"
-spl-merkle-tree-reference = "0.1.0"
-spl-noop = { version = "0.1.3", features = ["no-entrypoint"] }
+mpl-token-auth-rules = { path = "../../../mpl-token-auth-rules/programs/token-auth-rules/", features = ["no-entrypoint"] }
+solana-program-test = "~1.18.11"
+solana-sdk = "~1.18.11"
+spl-concurrent-merkle-tree = { path = "../../../solana-program-library/libraries/concurrent-merkle-tree" }
+spl-merkle-tree-reference = { path = "../../../solana-program-library/libraries/merkle-tree-reference" }
+spl-noop = { path="../../../solana-program-library/account-compression/programs/noop", features = ["no-entrypoint"] }

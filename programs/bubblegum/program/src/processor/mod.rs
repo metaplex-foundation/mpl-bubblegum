@@ -17,6 +17,7 @@ mod burn;
 mod cancel_redeem;
 mod compress;
 mod create_tree;
+mod create_tree_with_root;
 mod decompress;
 mod delegate;
 mod mint;
@@ -36,6 +37,7 @@ pub(crate) use burn::*;
 pub(crate) use cancel_redeem::*;
 pub(crate) use compress::*;
 pub(crate) use create_tree::*;
+pub(crate) use create_tree_with_root::*;
 pub(crate) use decompress::*;
 pub(crate) use delegate::*;
 pub(crate) use mint::*;
@@ -139,7 +141,7 @@ fn process_creator_verification<'info>(
 
     replace_leaf(
         &merkle_tree.key(),
-        *ctx.bumps.get("tree_authority").unwrap(),
+        ctx.bumps.tree_authority,
         &ctx.accounts.compression_program.to_account_info(),
         &ctx.accounts.tree_authority.to_account_info(),
         &ctx.accounts.merkle_tree.to_account_info(),
@@ -295,7 +297,7 @@ fn process_collection_verification<'info>(
 
     replace_leaf(
         &merkle_tree.key(),
-        *ctx.bumps.get("tree_authority").unwrap(),
+        ctx.bumps.tree_authority,
         &ctx.accounts.compression_program.to_account_info(),
         &ctx.accounts.tree_authority.to_account_info(),
         &ctx.accounts.merkle_tree.to_account_info(),
