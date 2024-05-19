@@ -604,6 +604,22 @@ export class InvalidCanopySizeError extends ProgramError {
 codeToErrorMap.set(0x1799, InvalidCanopySizeError);
 nameToErrorMap.set('InvalidCanopySize', InvalidCanopySizeError);
 
+/** NotEnoughStakeForOperation: Not enough tokens staked to call this instruction */
+export class NotEnoughStakeForOperationError extends ProgramError {
+  readonly name: string = 'NotEnoughStakeForOperation';
+
+  readonly code: number = 0x179a; // 6042
+
+  constructor(program: Program, cause?: Error) {
+    super('Not enough tokens staked to call this instruction', program, cause);
+  }
+}
+codeToErrorMap.set(0x179a, NotEnoughStakeForOperationError);
+nameToErrorMap.set(
+  'NotEnoughStakeForOperation',
+  NotEnoughStakeForOperationError
+);
+
 /**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors

@@ -275,6 +275,106 @@
       ]
     },
     {
+      "name": "createTreeWithRoot",
+      "accounts": [
+        {
+          "name": "treeAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "merkleTree",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "treeCreator",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "registrar",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "voter",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "logWrapper",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "compressionProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "maxDepth",
+          "type": "u32"
+        },
+        {
+          "name": "maxBufferSize",
+          "type": "u32"
+        },
+        {
+          "name": "numMinted",
+          "type": "u64"
+        },
+        {
+          "name": "root",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "leaf",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        },
+        {
+          "name": "metadataUrl",
+          "type": "string"
+        },
+        {
+          "name": "metadataHash",
+          "type": "string"
+        },
+        {
+          "name": "public",
+          "type": {
+            "option": "bool"
+          }
+        }
+      ]
+    },
+    {
       "name": "decompressV1",
       "docs": [
         "Decompresses a leaf node from the tree."
@@ -1911,7 +2011,7 @@
                 "type": "u64"
               },
               {
-                "name": "data_hash",
+                "name": "dataHash",
                 "type": {
                   "array": [
                     "u8",
@@ -1920,7 +2020,7 @@
                 }
               },
               {
-                "name": "creator_hash",
+                "name": "creatorHash",
                 "type": {
                   "array": [
                     "u8",
@@ -2070,6 +2170,9 @@
           },
           {
             "name": "UpdateMetadata"
+          },
+          {
+            "name": "CreateTreeWithRoot"
           }
         ]
       }
@@ -2285,12 +2388,17 @@
       "code": 6041,
       "name": "InvalidCanopySize",
       "msg": "Canopy size should be set bigger for this tree"
+    },
+    {
+      "code": 6042,
+      "name": "NotEnoughStakeForOperation",
+      "msg": "Not enough tokens staked to call this instruction"
     }
   ],
   "metadata": {
     "address": "BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY",
     "origin": "anchor",
-    "binaryVersion": "0.27.0",
-    "libVersion": "0.28.0"
+    "binaryVersion": "0.29.0",
+    "libVersion": "0.29.0"
   }
 }

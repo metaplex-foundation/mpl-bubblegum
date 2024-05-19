@@ -136,6 +136,9 @@ pub enum MplBubblegumError {
     /// 6041 (0x1799) - Canopy size should be set bigger for this tree
     #[error("Canopy size should be set bigger for this tree")]
     InvalidCanopySize,
+    /// 6042 (0x179A) - Not enough tokens staked to call this instruction
+    #[error("Not enough tokens staked to call this instruction")]
+    NotEnoughStakeForOperation,
 }
 
 impl solana_program::program_error::PrintProgramError for MplBubblegumError {
