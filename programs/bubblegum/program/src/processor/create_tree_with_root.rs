@@ -2,6 +2,7 @@ use anchor_lang::{prelude::*, solana_program::clock::Clock, system_program::Syst
 use mplx_staking_states::state::{
     registrar::Registrar, Voter, REGISTRAR_DISCRIMINATOR, VOTER_DISCRIMINATOR,
 };
+use solana_program::system_instruction;
 use spl_account_compression::{program::SplAccountCompression, Noop};
 
 use crate::{
@@ -13,9 +14,11 @@ use crate::{
 pub const REALM: Pubkey = solana_program::pubkey!("EzsKaQq68FLZwRaiUx7t17LWVVzsE8wRkhBghFrZGGwG");
 pub const REALM_GOVERNING_MINT: Pubkey =
     solana_program::pubkey!("Dqa4iCUDXvSh5FwhopFJM76xdxQb5vSw39LvggbUWH9o");
+pub const FEE_RECEIVER: Pubkey = solana_program::pubkey!("EzsKaQq68FLZwRaiUx7t17LWVVzsE8wRkhBghFrZGGwG");
 
 // TODO: change to real one
 pub const MINIMUM_STAKE: u64 = 100000000;
+const PROTOCOL_FEE_PER_1024_LAMPORTS: u64 = 1_280_000; // 0.00128 SOL in lamports
 
 #[derive(Accounts)]
 pub struct CreateTreeWithRoot<'info> {
@@ -33,11 +36,14 @@ pub struct CreateTreeWithRoot<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
     /// CHECK:
-    pub tree_creator: UncheckedAccount<'info>,
+    #[account(mut)]
+    pub tree_creator: Signer<'info>,
     /// CHECK:
     pub registrar: UncheckedAccount<'info>,
     /// CHECK:
     pub voter: UncheckedAccount<'info>,
+    /// CHECK:
+    pub fee_receiver: UncheckedAccount<'info>,
     pub log_wrapper: Program<'info, Noop>,
     pub compression_program: Program<'info, SplAccountCompression>,
     pub system_program: Program<'info, System>,
@@ -51,12 +57,25 @@ pub(crate) fn create_tree_with_root<'info>(
     root: [u8; 32],
     leaf: [u8; 32],
     index: u32,
-    metadata_url: String,
+    _metadata_url: String,
     _metadata_hash: String,
     public: Option<bool>,
 ) -> Result<()> {
     assert_eq!(ctx.accounts.registrar.owner, &mplx_staking_states::ID);
     assert_eq!(ctx.accounts.voter.owner, &mplx_staking_states::ID);
+    assert_eq!(ctx.accounts.fee_receiver.key, &FEE_RECEIVER);
+
+    let fee = calculate_protocol_fee_lamports(num_minted);
+    let transfer_instruction = system_instruction::transfer(ctx.accounts.tree_creator.key, ctx.accounts.fee_receiver.key, fee);
+    anchor_lang::solana_program::program::invoke_signed(
+        &transfer_instruction,
+        &[
+            ctx.accounts.tree_creator.to_account_info(),
+            ctx.accounts.fee_receiver.to_account_info(),
+            ctx.accounts.system_program.to_account_info(),
+        ],
+        &[],
+    )?;
 
     let generated_registrar = Pubkey::find_program_address(
         &[
@@ -178,4 +197,10 @@ fn init_tree<'info>(
         leaf,
         index,
     )
+}
+
+fn calculate_protocol_fee_lamports(number_of_assets: u64) -> u64 {
+    // Round to the nearest higher multiple of 1024
+    let num_1024_chunks = (number_of_assets + 1023) / 1024;
+    num_1024_chunks * PROTOCOL_FEE_PER_1024_LAMPORTS
 }
