@@ -7,7 +7,7 @@ use spl_account_compression::{program::SplAccountCompression, Noop};
 
 use crate::{
     error::BubblegumError,
-    state::{DecompressibleState, TreeConfig, TREE_AUTHORITY_SIZE},
+    state::{DecompressibleState, TreeConfig, MINIMUM_STAKE, REALM, REALM_GOVERNING_MINT, TREE_AUTHORITY_SIZE},
 };
 
 // TODO: set real keys before mainnet deploy
