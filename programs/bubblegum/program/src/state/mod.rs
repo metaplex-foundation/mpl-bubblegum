@@ -12,6 +12,14 @@ pub const VOUCHER_PREFIX: &str = "voucher";
 pub const ASSET_PREFIX: &str = "asset";
 pub const COLLECTION_CPI_PREFIX: &str = "collection_cpi";
 
+// TODO: set real keys before mainnet deploy
+pub const REALM: Pubkey = solana_program::pubkey!("EzsKaQq68FLZwRaiUx7t17LWVVzsE8wRkhBghFrZGGwG");
+pub const REALM_GOVERNING_MINT: Pubkey =
+    solana_program::pubkey!("Dqa4iCUDXvSh5FwhopFJM76xdxQb5vSw39LvggbUWH9o");
+
+// TODO: change to real one
+pub const MINIMUM_STAKE: u64 = 100000000;
+
 #[account]
 #[derive(Copy, Debug, PartialEq, Eq)]
 pub struct TreeConfig {

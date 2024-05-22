@@ -6,16 +6,8 @@ use spl_account_compression::{program::SplAccountCompression, Noop};
 
 use crate::{
     error::BubblegumError,
-    state::{DecompressibleState, TreeConfig, TREE_AUTHORITY_SIZE},
+    state::{DecompressibleState, TreeConfig, MINIMUM_STAKE, REALM, REALM_GOVERNING_MINT, TREE_AUTHORITY_SIZE},
 };
-
-// TODO: set real keys before mainnet deploy
-pub const REALM: Pubkey = solana_program::pubkey!("EzsKaQq68FLZwRaiUx7t17LWVVzsE8wRkhBghFrZGGwG");
-pub const REALM_GOVERNING_MINT: Pubkey =
-    solana_program::pubkey!("Dqa4iCUDXvSh5FwhopFJM76xdxQb5vSw39LvggbUWH9o");
-
-// TODO: change to real one
-pub const MINIMUM_STAKE: u64 = 100000000;
 
 #[derive(Accounts)]
 pub struct CreateTreeWithRoot<'info> {

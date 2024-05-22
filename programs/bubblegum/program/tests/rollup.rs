@@ -13,9 +13,11 @@ use solana_sdk::pubkey::Pubkey;
 use solana_sdk::signature::{Keypair, Signer};
 use spl_merkle_tree_reference::{MerkleTree, Node};
 use std::str::FromStr;
+use std::time::{SystemTime, UNIX_EPOCH};
 use test_data::rollup_tree::*;
 use utils::context::BubblegumTestContext;
 use utils::tree::Tree;
+use bubblegum::state::{REALM, REALM_GOVERNING_MINT};
 
 const MAX_DEPTH: usize = 10;
 const MAX_BUF_SIZE: usize = 32;
@@ -33,8 +35,6 @@ async fn test_rollup_creation() {
     // user
     let tree_creator = Keypair::from_bytes(TREE_CREATOR.as_ref()).unwrap();
 
-    let assets_owner = Keypair::from_bytes(ASSETS_OWNER.as_ref()).unwrap();
-
     let tree_key = Keypair::from_bytes(TREE_KEY.as_ref()).unwrap();
 
     // get test context
@@ -42,9 +42,6 @@ async fn test_rollup_creation() {
 
     let governance_program_id =
         Pubkey::from_str("CuyWCRdHT8pZLG793UR5R9z31AC49d47ZW9ggN6P7qZ4").unwrap();
-    let realm = Pubkey::from_str("29Aa9KiCccsRSgWXixmEifhNiMeKDMLEBJJCaNsspyxc").unwrap();
-    let realm_governing_token_mint =
-        Pubkey::from_str("9hWuEegh6zN96ZZHSZnZzZGC836QXrUsh9kGFGAJ18KP").unwrap();
     let realm_authority = Pubkey::from_str("Euec5oQGN3Y9kqVrz6PQRfTpYSn6jK3k1JonDiMTzAtA").unwrap();
     let voter_authority = program_context.test_context().payer.pubkey();
 
@@ -53,9 +50,9 @@ async fn test_rollup_creation() {
 
     let registrar_key = Pubkey::find_program_address(
         &[
-            realm.to_bytes().as_ref(),
+            REALM.to_bytes().as_ref(),
             b"registrar".as_ref(),
-            realm_governing_token_mint.to_bytes().as_ref(),
+            REALM_GOVERNING_MINT.to_bytes().as_ref(),
         ],
         &mplx_staking_states::ID,
     )
@@ -83,8 +80,8 @@ async fn test_rollup_creation() {
 
     let registrar = Registrar {
         governance_program_id,
-        realm,
-        realm_governing_token_mint,
+        realm: REALM,
+        realm_governing_token_mint: REALM_GOVERNING_MINT,
         realm_authority,
         voting_mints: [
             voting_mint_config,
@@ -96,9 +93,14 @@ async fn test_rollup_creation() {
         bump: 0,
     };
 
+    let current_time = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_millis() as u64;
+
     let lockup = Lockup {
         start_ts: 0,
-        end_ts: 0,
+        end_ts: current_time+100,
         cooldown_ends_at: 0,
         cooldown_requested: false,
         kind: LockupKind::Constant,
@@ -108,7 +110,7 @@ async fn test_rollup_creation() {
 
     let deposit_entry = DepositEntry {
         lockup: lockup.clone(),
-        amount_deposited_native: 100000,
+        amount_deposited_native: 100000000,
         voting_mint_config_idx: 0,
         is_used: true,
         _reserved1: [0; 6],
