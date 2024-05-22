@@ -2,6 +2,7 @@
 pub mod test_data;
 pub mod utils;
 
+use bubblegum::state::{REALM, REALM_GOVERNING_MINT};
 use mplx_staking_states::state::{
     DepositEntry, Lockup, LockupKind, LockupPeriod, Registrar, Voter, VotingMintConfig,
     REGISTRAR_DISCRIMINATOR, VOTER_DISCRIMINATOR,
@@ -17,7 +18,6 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use test_data::rollup_tree::*;
 use utils::context::BubblegumTestContext;
 use utils::tree::Tree;
-use bubblegum::state::{REALM, REALM_GOVERNING_MINT};
 
 const MAX_DEPTH: usize = 10;
 const MAX_BUF_SIZE: usize = 32;
@@ -100,7 +100,7 @@ async fn test_rollup_creation() {
 
     let lockup = Lockup {
         start_ts: 0,
-        end_ts: current_time+100,
+        end_ts: current_time + 100,
         cooldown_ends_at: 0,
         cooldown_requested: false,
         kind: LockupKind::Constant,
@@ -165,6 +165,10 @@ async fn test_rollup_creation() {
     );
 
     tree.alloc(&program_context.test_context().payer)
+        .await
+        .unwrap();
+    program_context
+        .fund_account(tree.creator_pubkey(), 10_000_000_000)
         .await
         .unwrap();
 

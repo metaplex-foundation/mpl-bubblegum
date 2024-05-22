@@ -22,6 +22,8 @@ pub struct CreateTreeWithRoot {
 
     pub voter: solana_program::pubkey::Pubkey,
 
+    pub fee_receiver: solana_program::pubkey::Pubkey,
+
     pub log_wrapper: solana_program::pubkey::Pubkey,
 
     pub compression_program: solana_program::pubkey::Pubkey,
@@ -42,7 +44,7 @@ impl CreateTreeWithRoot {
         args: CreateTreeWithRootInstructionArgs,
         remaining_accounts: &[solana_program::instruction::AccountMeta],
     ) -> solana_program::instruction::Instruction {
-        let mut accounts = Vec::with_capacity(9 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(10 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new(
             self.tree_config,
             false,
@@ -54,9 +56,9 @@ impl CreateTreeWithRoot {
         accounts.push(solana_program::instruction::AccountMeta::new(
             self.payer, true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_program::instruction::AccountMeta::new(
             self.tree_creator,
-            false,
+            true,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.registrar,
@@ -64,6 +66,10 @@ impl CreateTreeWithRoot {
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.voter, false,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new(
+            self.fee_receiver,
+            false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.log_wrapper,
@@ -128,6 +134,7 @@ pub struct CreateTreeWithRootBuilder {
     tree_creator: Option<solana_program::pubkey::Pubkey>,
     registrar: Option<solana_program::pubkey::Pubkey>,
     voter: Option<solana_program::pubkey::Pubkey>,
+    fee_receiver: Option<solana_program::pubkey::Pubkey>,
     log_wrapper: Option<solana_program::pubkey::Pubkey>,
     compression_program: Option<solana_program::pubkey::Pubkey>,
     system_program: Option<solana_program::pubkey::Pubkey>,
@@ -175,6 +182,11 @@ impl CreateTreeWithRootBuilder {
     #[inline(always)]
     pub fn voter(&mut self, voter: solana_program::pubkey::Pubkey) -> &mut Self {
         self.voter = Some(voter);
+        self
+    }
+    #[inline(always)]
+    pub fn fee_receiver(&mut self, fee_receiver: solana_program::pubkey::Pubkey) -> &mut Self {
+        self.fee_receiver = Some(fee_receiver);
         self
     }
     /// `[optional account, default to 'noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV']`
@@ -271,6 +283,7 @@ impl CreateTreeWithRootBuilder {
             tree_creator: self.tree_creator.expect("tree_creator is not set"),
             registrar: self.registrar.expect("registrar is not set"),
             voter: self.voter.expect("voter is not set"),
+            fee_receiver: self.fee_receiver.expect("fee_receiver is not set"),
             log_wrapper: self.log_wrapper.unwrap_or(solana_program::pubkey!(
                 "noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV"
             )),
@@ -317,6 +330,8 @@ pub struct CreateTreeWithRootCpiAccounts<'a, 'b> {
 
     pub voter: &'b solana_program::account_info::AccountInfo<'a>,
 
+    pub fee_receiver: &'b solana_program::account_info::AccountInfo<'a>,
+
     pub log_wrapper: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub compression_program: &'b solana_program::account_info::AccountInfo<'a>,
@@ -341,6 +356,8 @@ pub struct CreateTreeWithRootCpi<'a, 'b> {
 
     pub voter: &'b solana_program::account_info::AccountInfo<'a>,
 
+    pub fee_receiver: &'b solana_program::account_info::AccountInfo<'a>,
+
     pub log_wrapper: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub compression_program: &'b solana_program::account_info::AccountInfo<'a>,
@@ -364,6 +381,7 @@ impl<'a, 'b> CreateTreeWithRootCpi<'a, 'b> {
             tree_creator: accounts.tree_creator,
             registrar: accounts.registrar,
             voter: accounts.voter,
+            fee_receiver: accounts.fee_receiver,
             log_wrapper: accounts.log_wrapper,
             compression_program: accounts.compression_program,
             system_program: accounts.system_program,
@@ -403,7 +421,7 @@ impl<'a, 'b> CreateTreeWithRootCpi<'a, 'b> {
             bool,
         )],
     ) -> solana_program::entrypoint::ProgramResult {
-        let mut accounts = Vec::with_capacity(9 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(10 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new(
             *self.tree_config.key,
             false,
@@ -416,9 +434,9 @@ impl<'a, 'b> CreateTreeWithRootCpi<'a, 'b> {
             *self.payer.key,
             true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_program::instruction::AccountMeta::new(
             *self.tree_creator.key,
-            false,
+            true,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             *self.registrar.key,
@@ -426,6 +444,10 @@ impl<'a, 'b> CreateTreeWithRootCpi<'a, 'b> {
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             *self.voter.key,
+            false,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new(
+            *self.fee_receiver.key,
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
@@ -458,7 +480,7 @@ impl<'a, 'b> CreateTreeWithRootCpi<'a, 'b> {
             accounts,
             data,
         };
-        let mut account_infos = Vec::with_capacity(9 + 1 + remaining_accounts.len());
+        let mut account_infos = Vec::with_capacity(10 + 1 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
         account_infos.push(self.tree_config.clone());
         account_infos.push(self.merkle_tree.clone());
@@ -466,6 +488,7 @@ impl<'a, 'b> CreateTreeWithRootCpi<'a, 'b> {
         account_infos.push(self.tree_creator.clone());
         account_infos.push(self.registrar.clone());
         account_infos.push(self.voter.clone());
+        account_infos.push(self.fee_receiver.clone());
         account_infos.push(self.log_wrapper.clone());
         account_infos.push(self.compression_program.clone());
         account_infos.push(self.system_program.clone());
@@ -496,6 +519,7 @@ impl<'a, 'b> CreateTreeWithRootCpiBuilder<'a, 'b> {
             tree_creator: None,
             registrar: None,
             voter: None,
+            fee_receiver: None,
             log_wrapper: None,
             compression_program: None,
             system_program: None,
@@ -552,6 +576,14 @@ impl<'a, 'b> CreateTreeWithRootCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn voter(&mut self, voter: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.voter = Some(voter);
+        self
+    }
+    #[inline(always)]
+    pub fn fee_receiver(
+        &mut self,
+        fee_receiver: &'b solana_program::account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.fee_receiver = Some(fee_receiver);
         self
     }
     #[inline(always)]
@@ -720,6 +752,11 @@ impl<'a, 'b> CreateTreeWithRootCpiBuilder<'a, 'b> {
 
             voter: self.instruction.voter.expect("voter is not set"),
 
+            fee_receiver: self
+                .instruction
+                .fee_receiver
+                .expect("fee_receiver is not set"),
+
             log_wrapper: self
                 .instruction
                 .log_wrapper
@@ -751,6 +788,7 @@ struct CreateTreeWithRootCpiBuilderInstruction<'a, 'b> {
     tree_creator: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     registrar: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     voter: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    fee_receiver: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     log_wrapper: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     compression_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,

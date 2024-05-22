@@ -294,8 +294,8 @@
         },
         {
           "name": "treeCreator",
-          "isMut": false,
-          "isSigner": false
+          "isMut": true,
+          "isSigner": true
         },
         {
           "name": "registrar",
@@ -305,6 +305,11 @@
         {
           "name": "voter",
           "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "feeReceiver",
+          "isMut": true,
           "isSigner": false
         },
         {

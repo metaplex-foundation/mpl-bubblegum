@@ -42,9 +42,10 @@ export type CreateTreeWithRootInstructionAccounts = {
   treeConfig?: PublicKey | Pda;
   merkleTree: PublicKey | Pda;
   payer?: Signer;
-  treeCreator?: PublicKey | Pda;
+  treeCreator?: Signer;
   registrar: PublicKey | Pda;
   voter: PublicKey | Pda;
+  feeReceiver: PublicKey | Pda;
   logWrapper?: PublicKey | Pda;
   compressionProgram?: PublicKey | Pda;
   systemProgram?: PublicKey | Pda;
@@ -133,23 +134,28 @@ export function createTreeWithRoot(
     payer: { index: 2, isWritable: true, value: input.payer ?? null },
     treeCreator: {
       index: 3,
-      isWritable: false,
+      isWritable: true,
       value: input.treeCreator ?? null,
     },
     registrar: { index: 4, isWritable: false, value: input.registrar ?? null },
     voter: { index: 5, isWritable: false, value: input.voter ?? null },
-    logWrapper: {
+    feeReceiver: {
       index: 6,
+      isWritable: true,
+      value: input.feeReceiver ?? null,
+    },
+    logWrapper: {
+      index: 7,
       isWritable: false,
       value: input.logWrapper ?? null,
     },
     compressionProgram: {
-      index: 7,
+      index: 8,
       isWritable: false,
       value: input.compressionProgram ?? null,
     },
     systemProgram: {
-      index: 8,
+      index: 9,
       isWritable: false,
       value: input.systemProgram ?? null,
     },
@@ -168,7 +174,7 @@ export function createTreeWithRoot(
     resolvedAccounts.payer.value = context.payer;
   }
   if (!resolvedAccounts.treeCreator.value) {
-    resolvedAccounts.treeCreator.value = context.identity.publicKey;
+    resolvedAccounts.treeCreator.value = context.identity;
   }
   if (!resolvedAccounts.logWrapper.value) {
     resolvedAccounts.logWrapper.value = context.programs.getPublicKey(

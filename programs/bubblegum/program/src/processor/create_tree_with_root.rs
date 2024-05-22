@@ -2,22 +2,17 @@ use anchor_lang::{prelude::*, solana_program::clock::Clock, system_program::Syst
 use mplx_staking_states::state::{
     registrar::Registrar, Voter, REGISTRAR_DISCRIMINATOR, VOTER_DISCRIMINATOR,
 };
-use solana_program::system_instruction;
 use spl_account_compression::{program::SplAccountCompression, Noop};
 
+use crate::state::FEE_RECEIVER;
 use crate::{
     error::BubblegumError,
-    state::{DecompressibleState, TreeConfig, MINIMUM_STAKE, REALM, REALM_GOVERNING_MINT, TREE_AUTHORITY_SIZE},
+    state::{
+        DecompressibleState, TreeConfig, MINIMUM_STAKE, REALM, REALM_GOVERNING_MINT,
+        TREE_AUTHORITY_SIZE,
+    },
 };
 
-// TODO: set real keys before mainnet deploy
-pub const REALM: Pubkey = solana_program::pubkey!("EzsKaQq68FLZwRaiUx7t17LWVVzsE8wRkhBghFrZGGwG");
-pub const REALM_GOVERNING_MINT: Pubkey =
-    solana_program::pubkey!("Dqa4iCUDXvSh5FwhopFJM76xdxQb5vSw39LvggbUWH9o");
-pub const FEE_RECEIVER: Pubkey = solana_program::pubkey!("EzsKaQq68FLZwRaiUx7t17LWVVzsE8wRkhBghFrZGGwG");
-
-// TODO: change to real one
-pub const MINIMUM_STAKE: u64 = 100000000;
 const PROTOCOL_FEE_PER_1024_LAMPORTS: u64 = 1_280_000; // 0.00128 SOL in lamports
 
 #[derive(Accounts)]
@@ -43,6 +38,7 @@ pub struct CreateTreeWithRoot<'info> {
     /// CHECK:
     pub voter: UncheckedAccount<'info>,
     /// CHECK:
+    #[account(mut)]
     pub fee_receiver: UncheckedAccount<'info>,
     pub log_wrapper: Program<'info, Noop>,
     pub compression_program: Program<'info, SplAccountCompression>,
@@ -66,7 +62,11 @@ pub(crate) fn create_tree_with_root<'info>(
     assert_eq!(ctx.accounts.fee_receiver.key, &FEE_RECEIVER);
 
     let fee = calculate_protocol_fee_lamports(num_minted);
-    let transfer_instruction = system_instruction::transfer(ctx.accounts.tree_creator.key, ctx.accounts.fee_receiver.key, fee);
+    let transfer_instruction = anchor_lang::solana_program::system_instruction::transfer(
+        &ctx.accounts.tree_creator.key(),
+        &ctx.accounts.fee_receiver.key(),
+        fee,
+    );
     anchor_lang::solana_program::program::invoke_signed(
         &transfer_instruction,
         &[

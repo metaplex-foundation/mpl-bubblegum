@@ -2,15 +2,16 @@ use super::{
     clone_keypair, compute_metadata_hashes,
     tx_builder::{
         BurnBuilder, CancelRedeemBuilder, CollectionVerificationInner, CreateBuilder,
-        CreatorVerificationInner, CreateWithRootBuilder, DelegateBuilder, DelegateInner, MintToCollectionV1Builder,
-        MintV1Builder, RedeemBuilder, SetDecompressibleStateBuilder, SetTreeDelegateBuilder,
-        TransferBuilder, TransferInner, TxBuilder, UnverifyCreatorBuilder, VerifyCollectionBuilder,
-        VerifyCreatorBuilder,
+        CreateWithRootBuilder, CreatorVerificationInner, DelegateBuilder, DelegateInner,
+        MintToCollectionV1Builder, MintV1Builder, RedeemBuilder, SetDecompressibleStateBuilder,
+        SetTreeDelegateBuilder, TransferBuilder, TransferInner, TxBuilder, UnverifyCreatorBuilder,
+        VerifyCollectionBuilder, VerifyCreatorBuilder,
     },
     Error, LeafArgs, Result,
 };
 use crate::utils::tx_builder::DecompressV1Builder;
 use anchor_lang::{self, AccountDeserialize};
+use bubblegum::state::FEE_RECEIVER;
 use bubblegum::{
     state::{leaf_schema::LeafSchema, DecompressibleState, TreeConfig, Voucher, VOUCHER_PREFIX},
     utils::get_asset_id,
@@ -296,6 +297,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             tree_creator: self.creator_pubkey(),
             registrar,
             voter,
+            fee_receiver: FEE_RECEIVER,
             log_wrapper: spl_noop::id(),
             compression_program: spl_account_compression::id(),
             system_program: system_program::id(),
@@ -313,7 +315,15 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             public: Some(public),
         };
 
-        self.tx_builder(accounts, data, None, (), payer.pubkey(), &[payer])
+        let tree_creator_keypair = clone_keypair(&self.tree_creator);
+        self.tx_builder(
+            accounts,
+            data,
+            None,
+            (),
+            payer.pubkey(),
+            &[payer, &tree_creator_keypair],
+        )
     }
 
     pub fn mint_v1_non_owner_tx<'a>(
