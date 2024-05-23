@@ -1,11 +1,11 @@
-use crate::state::BubblegumEventType;
+use crate::state::ProtractorEventType;
 use anchor_lang::{prelude::*, solana_program::keccak};
 use borsh::{BorshDeserialize, BorshSerialize};
 use spl_account_compression::Node;
 
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct LeafSchemaEvent {
-    pub event_type: BubblegumEventType,
+    pub event_type: ProtractorEventType,
     pub version: Version,
     pub schema: LeafSchema,
     pub leaf_hash: [u8; 32],
@@ -14,7 +14,7 @@ pub struct LeafSchemaEvent {
 impl LeafSchemaEvent {
     pub fn new(version: Version, schema: LeafSchema, leaf_hash: [u8; 32]) -> Self {
         Self {
-            event_type: BubblegumEventType::LeafSchemaEvent,
+            event_type: ProtractorEventType::LeafSchemaEvent,
             version,
             schema,
             leaf_hash,

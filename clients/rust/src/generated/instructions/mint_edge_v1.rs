@@ -86,7 +86,7 @@ impl MintEdgeV1 {
         data.append(&mut args);
 
         solana_program::instruction::Instruction {
-            program_id: crate::MPL_BUBBLEGUM_ID,
+            program_id: crate::PRIMITIVES_PROTRACTOR_ID,
             accounts,
             data,
         }
@@ -116,7 +116,19 @@ pub struct MintEdgeV1InstructionArgs {
     pub creators: Vec<Creator>,
 }
 
-/// Instruction builder.
+/// Instruction builder for `MintEdgeV1`.
+///
+/// ### Accounts:
+///
+///   0. `[writable]` tree_config
+///   1. `[]` leaf_owner
+///   2. `[]` leaf_delegate
+///   3. `[writable]` merkle_tree
+///   4. `[signer]` payer
+///   5. `[signer]` tree_creator_or_delegate
+///   6. `[optional]` log_wrapper (default to `noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV`)
+///   7. `[optional]` compression_program (default to `cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK`)
+///   8. `[optional]` system_program (default to `11111111111111111111111111111111`)
 #[derive(Default)]
 pub struct MintEdgeV1Builder {
     tree_config: Option<solana_program::pubkey::Pubkey>,
@@ -419,7 +431,7 @@ impl<'a, 'b> MintEdgeV1Cpi<'a, 'b> {
         data.append(&mut args);
 
         let instruction = solana_program::instruction::Instruction {
-            program_id: crate::MPL_BUBBLEGUM_ID,
+            program_id: crate::PRIMITIVES_PROTRACTOR_ID,
             accounts,
             data,
         };
@@ -446,7 +458,19 @@ impl<'a, 'b> MintEdgeV1Cpi<'a, 'b> {
     }
 }
 
-/// `mint_edge_v1` CPI instruction builder.
+/// Instruction builder for `MintEdgeV1` via CPI.
+///
+/// ### Accounts:
+///
+///   0. `[writable]` tree_config
+///   1. `[]` leaf_owner
+///   2. `[]` leaf_delegate
+///   3. `[writable]` merkle_tree
+///   4. `[signer]` payer
+///   5. `[signer]` tree_creator_or_delegate
+///   6. `[]` log_wrapper
+///   7. `[]` compression_program
+///   8. `[]` system_program
 pub struct MintEdgeV1CpiBuilder<'a, 'b> {
     instruction: Box<MintEdgeV1CpiBuilderInstruction<'a, 'b>>,
 }

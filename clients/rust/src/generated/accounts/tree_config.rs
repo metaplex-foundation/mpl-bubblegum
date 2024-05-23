@@ -39,14 +39,14 @@ impl TreeConfig {
     ) -> Result<solana_program::pubkey::Pubkey, solana_program::pubkey::PubkeyError> {
         solana_program::pubkey::Pubkey::create_program_address(
             &[merkle_tree.as_ref(), &[bump]],
-            &crate::MPL_BUBBLEGUM_ID,
+            &crate::PRIMITIVES_PROTRACTOR_ID,
         )
     }
 
     pub fn find_pda(merkle_tree: &Pubkey) -> (solana_program::pubkey::Pubkey, u8) {
         solana_program::pubkey::Pubkey::find_program_address(
             &[merkle_tree.as_ref()],
-            &crate::MPL_BUBBLEGUM_ID,
+            &crate::PRIMITIVES_PROTRACTOR_ID,
         )
     }
 

@@ -25,6 +25,14 @@ pub struct Voucher {
 
 impl Voucher {
     pub const LEN: usize = 213;
+    /// Prefix values used to generate a PDA for this account.
+    ///
+    /// Values are positional and appear in the following order:
+    ///
+    ///   0. `Voucher::PREFIX`
+    ///   1. merkle_tree (`Pubkey`)
+    ///   2. nonce (`u64`)
+    pub const PREFIX: &'static [u8] = "voucher".as_bytes();
 
     pub fn create_pda(
         merkle_tree: Pubkey,
@@ -38,7 +46,7 @@ impl Voucher {
                 nonce.to_string().as_ref(),
                 &[bump],
             ],
-            &crate::MPL_BUBBLEGUM_ID,
+            &crate::PRIMITIVES_PROTRACTOR_ID,
         )
     }
 
@@ -49,7 +57,7 @@ impl Voucher {
                 merkle_tree.as_ref(),
                 nonce.to_string().as_ref(),
             ],
-            &crate::MPL_BUBBLEGUM_ID,
+            &crate::PRIMITIVES_PROTRACTOR_ID,
         )
     }
 

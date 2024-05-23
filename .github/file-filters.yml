@@ -11,12 +11,12 @@ program_common: &program_common
   - ".github/file-filters.yml"
   - ".github/.env"
 
-bubblegum_program: &bubblegum_program
+protractor_program: &protractor_program
   - *program_common
-  - "programs/bubblegum/**"
+  - "programs/protractor/**"
 
 programs: &programs
-  - *bubblegum_program
+  - *protractor_program
 
 # Clients.
 

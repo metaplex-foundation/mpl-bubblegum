@@ -7,11 +7,11 @@ const programDir = path.join(__dirname, "..", "programs");
 
 generateIdl({
   generator: "anchor",
-  programName: "bubblegum",
-  programId: "BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY",
+  programName: "protractor",
+  programId: "2NzwmRNVaGAy7hbRdJiJxUCcJRMu1iBFmJmZ87PG87yW",
   idlDir,
   binaryInstallDir,
-  programDir: path.join(programDir, "bubblegum", "program"),
+  programDir: path.join(programDir, "protractor", "program"),
   rustbin: {
     locked: true,
     versionRangeFallback: "0.27.0",

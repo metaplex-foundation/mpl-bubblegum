@@ -73,34 +73,38 @@ export function setTreeDelegate(
 ): TransactionBuilder {
   // Program ID.
   const programId = context.programs.getPublicKey(
-    'mplBubblegum',
-    'BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'
+    'primitivesProtractor',
+    '2NzwmRNVaGAy7hbRdJiJxUCcJRMu1iBFmJmZ87PG87yW'
   );
 
   // Accounts.
-  const resolvedAccounts: ResolvedAccountsWithIndices = {
-    treeConfig: { index: 0, isWritable: true, value: input.treeConfig ?? null },
+  const resolvedAccounts = {
+    treeConfig: {
+      index: 0,
+      isWritable: true as boolean,
+      value: input.treeConfig ?? null,
+    },
     treeCreator: {
       index: 1,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.treeCreator ?? null,
     },
     newTreeDelegate: {
       index: 2,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.newTreeDelegate ?? null,
     },
     merkleTree: {
       index: 3,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.merkleTree ?? null,
     },
     systemProgram: {
       index: 4,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.systemProgram ?? null,
     },
-  };
+  } satisfies ResolvedAccountsWithIndices;
 
   // Default values.
   if (!resolvedAccounts.treeConfig.value) {

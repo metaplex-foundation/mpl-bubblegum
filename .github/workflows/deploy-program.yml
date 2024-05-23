@@ -6,10 +6,10 @@ on:
       program:
         description: Program
         required: true
-        default: bubblegum
+        default: protractor
         type: choice
         options:
-          - bubblegum
+          - protractor
       cluster:
         description: Cluster environment
         required: true
@@ -86,14 +86,12 @@ jobs:
         with:
           version: ${{ env.ANCHOR_VERSION }}
           cache: ${{ env.CACHE }}
-          
-          
+
       - name: Install cargo-release
         uses: metaplex-foundation/actions/install-cargo-release@v1
         if: github.event.inputs.publish_crate == 'true'
         with:
           cache: ${{ env.CACHE }}
-
 
       - name: Install cargo-release
         uses: metaplex-foundation/actions/install-cargo-release@v1
@@ -111,10 +109,10 @@ jobs:
 
       - name: Identify program
         run: |
-          if [ "${{ inputs.program }}" == "bubblegum" ]; then
-            echo ${{ secrets.BUBBLEGUM_DEPLOY_KEY }} > ./deploy-key.json 
-            echo ${{ secrets.BUBBLEGUM_ID }} > ./program-id.json
-            echo PROGRAM_NAME="bubblegum" >> $GITHUB_ENV
+          if [ "${{ inputs.program }}" == "protractor" ]; then
+            echo ${{ secrets.protractor_DEPLOY_KEY }} > ./deploy-key.json 
+            echo ${{ secrets.protractor_ID }} > ./program-id.json
+            echo PROGRAM_NAME="protractor" >> $GITHUB_ENV
           fi
 
       - name: Bump program version
@@ -124,7 +122,7 @@ jobs:
           MAJOR=`echo ${VERSION} | cut -d. -f1`
           MINOR=`echo ${VERSION} | cut -d. -f2`
           PATCH=`echo ${VERSION} | cut -d. -f3`
-          
+
           if [ "${{ inputs.bump }}" == "major" ]; then
              MAJOR=$((MAJOR + 1))
              MINOR=0
@@ -135,7 +133,7 @@ jobs:
           else
              PATCH=$((PATCH + 1))
           fi
-          
+
           PROGRAM_VERSION="${MAJOR}.${MINOR}.${PATCH}"
 
           cp ./idls/${IDL_NAME}.json ./idls/${IDL_NAME}-previous.json
@@ -179,13 +177,13 @@ jobs:
           git stash
           git config user.name "${{ env.COMMIT_USER_NAME }}"
           git config user.email "${{ env.COMMIT_USER_EMAIL }}"
-          
+
           cargo login ${{ secrets.CRATES_TOKEN }}
           cargo release ${{ inputs.bump }} --no-confirm --no-push --no-tag --no-publish --execute
 
           git reset --soft HEAD~1
           git stash pop
-          
+
       - name: Commit and tag new version
         uses: stefanzweifel/git-auto-commit-action@v4
         if: github.event.inputs.publish_crate == 'true' && github.event.inputs.cluster == 'mainnet-beta'

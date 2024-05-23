@@ -5,8 +5,8 @@
 //! [https://github.com/metaplex-foundation/kinobi]
 //!
 
-pub(crate) mod mpl_bubblegum;
+pub(crate) mod primitives_protractor;
 pub(crate) mod spl_account_compression;
 
-pub use self::mpl_bubblegum::MplBubblegumError;
+pub use self::primitives_protractor::PrimitivesProtractorError;
 pub use self::spl_account_compression::SplAccountCompressionError;

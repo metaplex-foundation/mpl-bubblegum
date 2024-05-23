@@ -1,6 +1,6 @@
 {
   "version": "0.12.0",
-  "name": "bubblegum",
+  "name": "protractor",
   "instructions": [
     {
       "name": "burn",
@@ -999,7 +999,7 @@
       }
     },
     {
-      "name": "BubblegumEventType",
+      "name": "ProtractorEventType",
       "type": {
         "kind": "enum",
         "variants": [
@@ -1273,5 +1273,11 @@
       "name": "InvalidTokenStandard",
       "msg": "Only NonFungible standard is supported"
     }
-  ]
+  ],
+  "metadata": {
+    "address": "2NzwmRNVaGAy7hbRdJiJxUCcJRMu1iBFmJmZ87PG87yW",
+    "origin": "anchor",
+    "binaryVersion": "0.27.0",
+    "libVersion": "0.28.0"
+  }
 }

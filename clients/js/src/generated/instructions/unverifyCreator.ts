@@ -116,42 +116,58 @@ export function unverifyCreator(
 ): TransactionBuilder {
   // Program ID.
   const programId = context.programs.getPublicKey(
-    'mplBubblegum',
-    'BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'
+    'primitivesProtractor',
+    '2NzwmRNVaGAy7hbRdJiJxUCcJRMu1iBFmJmZ87PG87yW'
   );
 
   // Accounts.
-  const resolvedAccounts: ResolvedAccountsWithIndices = {
+  const resolvedAccounts = {
     treeConfig: {
       index: 0,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.treeConfig ?? null,
     },
-    leafOwner: { index: 1, isWritable: false, value: input.leafOwner ?? null },
+    leafOwner: {
+      index: 1,
+      isWritable: false as boolean,
+      value: input.leafOwner ?? null,
+    },
     leafDelegate: {
       index: 2,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.leafDelegate ?? null,
     },
-    merkleTree: { index: 3, isWritable: true, value: input.merkleTree ?? null },
-    payer: { index: 4, isWritable: false, value: input.payer ?? null },
-    creator: { index: 5, isWritable: false, value: input.creator ?? null },
+    merkleTree: {
+      index: 3,
+      isWritable: true as boolean,
+      value: input.merkleTree ?? null,
+    },
+    payer: {
+      index: 4,
+      isWritable: false as boolean,
+      value: input.payer ?? null,
+    },
+    creator: {
+      index: 5,
+      isWritable: false as boolean,
+      value: input.creator ?? null,
+    },
     logWrapper: {
       index: 6,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.logWrapper ?? null,
     },
     compressionProgram: {
       index: 7,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.compressionProgram ?? null,
     },
     systemProgram: {
       index: 8,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.systemProgram ?? null,
     },
-  };
+  } satisfies ResolvedAccountsWithIndices;
 
   // Arguments.
   const resolvedArgs: UnverifyCreatorInstructionArgs = { ...input };

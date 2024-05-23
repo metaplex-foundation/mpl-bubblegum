@@ -6,7 +6,6 @@
  * @see https://github.com/metaplex-foundation/kinobi
  */
 
-export * from './bubblegumEventType';
 export * from './collection';
 export * from './compressionAccountType';
 export * from './concurrentMerkleTreeHeader';
@@ -16,6 +15,7 @@ export * from './decompressibleState';
 export * from './leafSchema';
 export * from './nodeArgs';
 export * from './properties';
+export * from './protractorEventType';
 export * from './tokenProgramVersion';
 export * from './tokenStandard';
 export * from './updateEdgeArgs';

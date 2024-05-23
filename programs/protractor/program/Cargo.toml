@@ -1,9 +1,9 @@
 [package]
-name = "bubblegum"
+name = "protractor"
 version = "0.12.0"
 description = "NFT Compression"
 authors = ["Metaplex Developers <dev@metaplex.com>"]
-repository = "https://github.com/metaplex-foundation/mpl-bubblegum"
+repository = "https://github.com/primitives-xyz/primitives-protocol"
 license-file = "../../../LICENSE"
 edition = "2021"
 readme = "../README.md"

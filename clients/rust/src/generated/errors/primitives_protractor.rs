@@ -9,7 +9,7 @@ use num_derive::FromPrimitive;
 use thiserror::Error;
 
 #[derive(Clone, Debug, Eq, Error, FromPrimitive, PartialEq)]
-pub enum MplBubblegumError {
+pub enum PrimitivesProtractorError {
     /// 6000 (0x1770) - Asset Owner Does not match
     #[error("Asset Owner Does not match")]
     AssetOwnerMismatch,
@@ -138,7 +138,7 @@ pub enum MplBubblegumError {
     InvalidTokenStandard,
 }
 
-impl solana_program::program_error::PrintProgramError for MplBubblegumError {
+impl solana_program::program_error::PrintProgramError for PrimitivesProtractorError {
     fn print<E>(&self) {
         solana_program::msg!(&self.to_string());
     }

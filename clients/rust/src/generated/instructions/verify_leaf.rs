@@ -65,7 +65,11 @@ pub struct VerifyLeafInstructionArgs {
     pub index: u32,
 }
 
-/// Instruction builder.
+/// Instruction builder for `VerifyLeaf`.
+///
+/// ### Accounts:
+///
+///   0. `[]` merkle_tree
 #[derive(Default)]
 pub struct VerifyLeafBuilder {
     merkle_tree: Option<solana_program::pubkey::Pubkey>,
@@ -228,7 +232,11 @@ impl<'a, 'b> VerifyLeafCpi<'a, 'b> {
     }
 }
 
-/// `verify_leaf` CPI instruction builder.
+/// Instruction builder for `VerifyLeaf` via CPI.
+///
+/// ### Accounts:
+///
+///   0. `[]` merkle_tree
 pub struct VerifyLeafCpiBuilder<'a, 'b> {
     instruction: Box<VerifyLeafCpiBuilderInstruction<'a, 'b>>,
 }

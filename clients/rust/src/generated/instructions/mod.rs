@@ -5,22 +5,22 @@
 //! [https://github.com/metaplex-foundation/kinobi]
 //!
 
-pub(crate) mod burn;
-pub(crate) mod create_tree_config;
-pub(crate) mod mint_edge_v1;
-pub(crate) mod mint_node_v1;
-pub(crate) mod set_tree_delegate;
-pub(crate) mod unverify_creator;
-pub(crate) mod update_metadata;
-pub(crate) mod verify_creator;
-pub(crate) mod verify_leaf;
+pub(crate) mod r#burn;
+pub(crate) mod r#create_tree_config;
+pub(crate) mod r#mint_edge_v1;
+pub(crate) mod r#mint_node_v1;
+pub(crate) mod r#set_tree_delegate;
+pub(crate) mod r#unverify_creator;
+pub(crate) mod r#update_metadata;
+pub(crate) mod r#verify_creator;
+pub(crate) mod r#verify_leaf;
 
-pub use self::burn::*;
-pub use self::create_tree_config::*;
-pub use self::mint_edge_v1::*;
-pub use self::mint_node_v1::*;
-pub use self::set_tree_delegate::*;
-pub use self::unverify_creator::*;
-pub use self::update_metadata::*;
-pub use self::verify_creator::*;
-pub use self::verify_leaf::*;
+pub use self::r#burn::*;
+pub use self::r#create_tree_config::*;
+pub use self::r#mint_edge_v1::*;
+pub use self::r#mint_node_v1::*;
+pub use self::r#set_tree_delegate::*;
+pub use self::r#unverify_creator::*;
+pub use self::r#update_metadata::*;
+pub use self::r#verify_creator::*;
+pub use self::r#verify_leaf::*;

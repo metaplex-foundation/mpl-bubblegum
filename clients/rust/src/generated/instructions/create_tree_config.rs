@@ -72,7 +72,7 @@ impl CreateTreeConfig {
         data.append(&mut args);
 
         solana_program::instruction::Instruction {
-            program_id: crate::MPL_BUBBLEGUM_ID,
+            program_id: crate::PRIMITIVES_PROTRACTOR_ID,
             accounts,
             data,
         }
@@ -100,7 +100,17 @@ pub struct CreateTreeConfigInstructionArgs {
     pub public: Option<bool>,
 }
 
-/// Instruction builder.
+/// Instruction builder for `CreateTreeConfig`.
+///
+/// ### Accounts:
+///
+///   0. `[writable]` tree_config
+///   1. `[writable]` merkle_tree
+///   2. `[writable, signer]` payer
+///   3. `[signer]` tree_creator
+///   4. `[optional]` log_wrapper (default to `noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV`)
+///   5. `[optional]` compression_program (default to `cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK`)
+///   6. `[optional]` system_program (default to `11111111111111111111111111111111`)
 #[derive(Default)]
 pub struct CreateTreeConfigBuilder {
     tree_config: Option<solana_program::pubkey::Pubkey>,
@@ -356,7 +366,7 @@ impl<'a, 'b> CreateTreeConfigCpi<'a, 'b> {
         data.append(&mut args);
 
         let instruction = solana_program::instruction::Instruction {
-            program_id: crate::MPL_BUBBLEGUM_ID,
+            program_id: crate::PRIMITIVES_PROTRACTOR_ID,
             accounts,
             data,
         };
@@ -381,7 +391,17 @@ impl<'a, 'b> CreateTreeConfigCpi<'a, 'b> {
     }
 }
 
-/// `create_tree_config` CPI instruction builder.
+/// Instruction builder for `CreateTreeConfig` via CPI.
+///
+/// ### Accounts:
+///
+///   0. `[writable]` tree_config
+///   1. `[writable]` merkle_tree
+///   2. `[writable, signer]` payer
+///   3. `[signer]` tree_creator
+///   4. `[]` log_wrapper
+///   5. `[]` compression_program
+///   6. `[]` system_program
 pub struct CreateTreeConfigCpiBuilder<'a, 'b> {
     instruction: Box<CreateTreeConfigCpiBuilderInstruction<'a, 'b>>,
 }

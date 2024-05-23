@@ -5,10 +5,10 @@
 //! [https://github.com/metaplex-foundation/kinobi]
 //!
 
-pub(crate) mod merkle_tree;
-pub(crate) mod tree_config;
-pub(crate) mod voucher;
+pub(crate) mod r#merkle_tree;
+pub(crate) mod r#tree_config;
+pub(crate) mod r#voucher;
 
-pub use self::merkle_tree::*;
-pub use self::tree_config::*;
-pub use self::voucher::*;
+pub use self::r#merkle_tree::*;
+pub use self::r#tree_config::*;
+pub use self::r#voucher::*;

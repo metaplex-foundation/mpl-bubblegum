@@ -7,7 +7,7 @@ import {
 import { publicKey, string, u64 } from '@metaplex-foundation/umi/serializers';
 import {
   LeafSchema,
-  MPL_BUBBLEGUM_PROGRAM_ID,
+  PRIMITIVES_PROTRACTOR_PROGRAM_ID,
   getLeafSchemaSerializer,
 } from './generated';
 
@@ -19,8 +19,8 @@ export function findLeafAssetIdPda(
   }
 ): Pda {
   const programId = context.programs.getPublicKey(
-    'mplBubblegum',
-    MPL_BUBBLEGUM_PROGRAM_ID
+    'primitivesProtractor',
+    PRIMITIVES_PROTRACTOR_PROGRAM_ID
   );
   return context.eddsa.findPda(programId, [
     string({ size: 'variable' }).serialize('asset'),

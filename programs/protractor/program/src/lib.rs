@@ -14,7 +14,7 @@ use state::{
     metaplex_adapter::EdgeArgs, metaplex_adapter::NodeArgs, metaplex_adapter::UpdateNodeArgs,
 };
 
-declare_id!("BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY");
+declare_id!("2NzwmRNVaGAy7hbRdJiJxUCcJRMu1iBFmJmZ87PG87yW");
 
 pub enum InstructionName {
     Unknown,
@@ -48,7 +48,7 @@ pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
 }
 
 #[program]
-pub mod bubblegum {
+pub mod protractor {
 
     use self::state::metaplex_adapter::{EdgeArgs, NodeArgs};
 

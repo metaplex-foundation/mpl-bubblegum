@@ -8,7 +8,7 @@ const idlDir = path.join(__dirname, "..", "idls");
 // Instanciate Kinobi withtout DefaultVisitor.
 const kinobi = k.createFromIdls(
   [
-    path.join(idlDir, "bubblegum.json"),
+    path.join(idlDir, "protractor.json"),
     path.join(idlDir, "spl_account_compression.json"),
     path.join(idlDir, "spl_noop.json"),
   ],
@@ -18,7 +18,7 @@ const kinobi = k.createFromIdls(
 // Update programs.
 kinobi.update(
   new k.UpdateProgramsVisitor({
-    bubblegum: { name: "mplBubblegum" },
+    protractor: { name: "primitivesProtractor" },
   })
 );
 
@@ -27,7 +27,7 @@ kinobi.update(
 kinobi.update(
   new k.TransformNodesVisitor([
     {
-      selector: { kind: "programNode", name: "mplBubblegum" },
+      selector: { kind: "programNode", name: "primitivesProtractor" },
       transformer: (node) => {
         k.assertProgramNode(node);
         return k.programNode({
@@ -196,7 +196,7 @@ kinobi.update(
       ...k.pdaDefault("treeConfig"),
     },
     {
-      account: "bubblegumSigner",
+      account: "protractorSigner",
       ignoreIfOptional: true,
       ...k.publicKeyDefault("4ewWZC5gT6TGpm5LZNDs9wVonfUT2q5PP5sc9kVbwMAK"),
     },
@@ -419,7 +419,7 @@ kinobi.update(
           "verifyCreator",
           "unverifyCreator",
           "verifyLeaf",
-          "updateMetadata"
+          "updateMetadata",
         ].includes(node.name),
       transformer: (node) => {
         k.assertInstructionNode(node);

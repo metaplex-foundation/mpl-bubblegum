@@ -1,12 +1,12 @@
 use borsh::{BorshDeserialize, BorshSerialize};
-use types::{BubblegumEventType, LeafSchema, Version};
+use types::{LeafSchema, ProtractorEventType, Version};
 
 mod generated;
 pub mod hash;
 mod traits;
 pub mod utils;
 
-pub use generated::programs::MPL_BUBBLEGUM_ID as ID;
+pub use generated::programs::PRIMITIVES_PROTRACTOR_ID as ID;
 pub use generated::*;
 
 pub enum InstructionName {
@@ -62,7 +62,7 @@ pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
 
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct LeafSchemaEvent {
-    pub event_type: BubblegumEventType,
+    pub event_type: ProtractorEventType,
     pub version: Version,
     pub schema: LeafSchema,
     pub leaf_hash: [u8; 32],
@@ -71,7 +71,7 @@ pub struct LeafSchemaEvent {
 impl LeafSchemaEvent {
     pub fn new(version: Version, schema: LeafSchema, leaf_hash: [u8; 32]) -> Self {
         Self {
-            event_type: BubblegumEventType::LeafSchemaEvent,
+            event_type: ProtractorEventType::LeafSchemaEvent,
             version,
             schema,
             leaf_hash,

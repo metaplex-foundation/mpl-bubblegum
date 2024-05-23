@@ -74,7 +74,7 @@ impl Voucher {
 
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 #[repr(u8)]
-pub enum BubblegumEventType {
+pub enum ProtractorEventType {
     /// Marker for 0 data.
     Uninitialized,
     /// Leaf schema event.

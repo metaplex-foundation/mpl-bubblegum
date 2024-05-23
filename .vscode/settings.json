@@ -1,6 +1,6 @@
 {
-    "rust-analyzer.linkedProjects": [
-        "./clients/rust/Cargo.toml",
-        "./programs/bubblegum/Cargo.toml",
-    ]
+  "rust-analyzer.linkedProjects": [
+    "./clients/rust/Cargo.toml",
+    "./programs/protractor/Cargo.toml"
+  ]
 }

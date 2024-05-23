@@ -17,7 +17,7 @@ const nameToErrorMap: Map<string, ProgramErrorConstructor> = new Map();
 
 /** AssetOwnerMismatch: Asset Owner Does not match */
 export class AssetOwnerMismatchError extends ProgramError {
-  readonly name: string = 'AssetOwnerMismatch';
+  override readonly name: string = 'AssetOwnerMismatch';
 
   readonly code: number = 0x1770; // 6000
 
@@ -30,7 +30,7 @@ nameToErrorMap.set('AssetOwnerMismatch', AssetOwnerMismatchError);
 
 /** PublicKeyMismatch: PublicKeyMismatch */
 export class PublicKeyMismatchError extends ProgramError {
-  readonly name: string = 'PublicKeyMismatch';
+  override readonly name: string = 'PublicKeyMismatch';
 
   readonly code: number = 0x1771; // 6001
 
@@ -43,7 +43,7 @@ nameToErrorMap.set('PublicKeyMismatch', PublicKeyMismatchError);
 
 /** HashingMismatch: Hashing Mismatch Within Leaf Schema */
 export class HashingMismatchError extends ProgramError {
-  readonly name: string = 'HashingMismatch';
+  override readonly name: string = 'HashingMismatch';
 
   readonly code: number = 0x1772; // 6002
 
@@ -56,7 +56,7 @@ nameToErrorMap.set('HashingMismatch', HashingMismatchError);
 
 /** UnsupportedSchemaVersion: Unsupported Schema Version */
 export class UnsupportedSchemaVersionError extends ProgramError {
-  readonly name: string = 'UnsupportedSchemaVersion';
+  override readonly name: string = 'UnsupportedSchemaVersion';
 
   readonly code: number = 0x1773; // 6003
 
@@ -69,7 +69,7 @@ nameToErrorMap.set('UnsupportedSchemaVersion', UnsupportedSchemaVersionError);
 
 /** CreatorShareTotalMustBe100: Creator shares must sum to 100 */
 export class CreatorShareTotalMustBe100Error extends ProgramError {
-  readonly name: string = 'CreatorShareTotalMustBe100';
+  override readonly name: string = 'CreatorShareTotalMustBe100';
 
   readonly code: number = 0x1774; // 6004
 
@@ -85,7 +85,7 @@ nameToErrorMap.set(
 
 /** DuplicateCreatorAddress: No duplicate creator addresses in metadata */
 export class DuplicateCreatorAddressError extends ProgramError {
-  readonly name: string = 'DuplicateCreatorAddress';
+  override readonly name: string = 'DuplicateCreatorAddress';
 
   readonly code: number = 0x1775; // 6005
 
@@ -98,7 +98,7 @@ nameToErrorMap.set('DuplicateCreatorAddress', DuplicateCreatorAddressError);
 
 /** CreatorDidNotVerify: Creator did not verify the metadata */
 export class CreatorDidNotVerifyError extends ProgramError {
-  readonly name: string = 'CreatorDidNotVerify';
+  override readonly name: string = 'CreatorDidNotVerify';
 
   readonly code: number = 0x1776; // 6006
 
@@ -111,7 +111,7 @@ nameToErrorMap.set('CreatorDidNotVerify', CreatorDidNotVerifyError);
 
 /** CreatorNotFound: Creator not found in creator Vec */
 export class CreatorNotFoundError extends ProgramError {
-  readonly name: string = 'CreatorNotFound';
+  override readonly name: string = 'CreatorNotFound';
 
   readonly code: number = 0x1777; // 6007
 
@@ -124,7 +124,7 @@ nameToErrorMap.set('CreatorNotFound', CreatorNotFoundError);
 
 /** NoCreatorsPresent: No creators in creator Vec */
 export class NoCreatorsPresentError extends ProgramError {
-  readonly name: string = 'NoCreatorsPresent';
+  override readonly name: string = 'NoCreatorsPresent';
 
   readonly code: number = 0x1778; // 6008
 
@@ -137,7 +137,7 @@ nameToErrorMap.set('NoCreatorsPresent', NoCreatorsPresentError);
 
 /** CreatorHashMismatch: User-provided creator Vec must result in same user-provided creator hash */
 export class CreatorHashMismatchError extends ProgramError {
-  readonly name: string = 'CreatorHashMismatch';
+  override readonly name: string = 'CreatorHashMismatch';
 
   readonly code: number = 0x1779; // 6009
 
@@ -154,7 +154,7 @@ nameToErrorMap.set('CreatorHashMismatch', CreatorHashMismatchError);
 
 /** DataHashMismatch: User-provided metadata must result in same user-provided data hash */
 export class DataHashMismatchError extends ProgramError {
-  readonly name: string = 'DataHashMismatch';
+  override readonly name: string = 'DataHashMismatch';
 
   readonly code: number = 0x177a; // 6010
 
@@ -171,7 +171,7 @@ nameToErrorMap.set('DataHashMismatch', DataHashMismatchError);
 
 /** CreatorsTooLong: Creators list too long */
 export class CreatorsTooLongError extends ProgramError {
-  readonly name: string = 'CreatorsTooLong';
+  override readonly name: string = 'CreatorsTooLong';
 
   readonly code: number = 0x177b; // 6011
 
@@ -184,7 +184,7 @@ nameToErrorMap.set('CreatorsTooLong', CreatorsTooLongError);
 
 /** MetadataNameTooLong: Name in metadata is too long */
 export class MetadataNameTooLongError extends ProgramError {
-  readonly name: string = 'MetadataNameTooLong';
+  override readonly name: string = 'MetadataNameTooLong';
 
   readonly code: number = 0x177c; // 6012
 
@@ -197,7 +197,7 @@ nameToErrorMap.set('MetadataNameTooLong', MetadataNameTooLongError);
 
 /** MetadataSymbolTooLong: Symbol in metadata is too long */
 export class MetadataSymbolTooLongError extends ProgramError {
-  readonly name: string = 'MetadataSymbolTooLong';
+  override readonly name: string = 'MetadataSymbolTooLong';
 
   readonly code: number = 0x177d; // 6013
 
@@ -210,7 +210,7 @@ nameToErrorMap.set('MetadataSymbolTooLong', MetadataSymbolTooLongError);
 
 /** MetadataUriTooLong: Uri in metadata is too long */
 export class MetadataUriTooLongError extends ProgramError {
-  readonly name: string = 'MetadataUriTooLong';
+  override readonly name: string = 'MetadataUriTooLong';
 
   readonly code: number = 0x177e; // 6014
 
@@ -223,7 +223,7 @@ nameToErrorMap.set('MetadataUriTooLong', MetadataUriTooLongError);
 
 /** MetadataBasisPointsTooHigh: Basis points in metadata cannot exceed 10000 */
 export class MetadataBasisPointsTooHighError extends ProgramError {
-  readonly name: string = 'MetadataBasisPointsTooHigh';
+  override readonly name: string = 'MetadataBasisPointsTooHigh';
 
   readonly code: number = 0x177f; // 6015
 
@@ -239,7 +239,7 @@ nameToErrorMap.set(
 
 /** MetadataPropertiesTooLong: Tree creator or tree delegate must sign. */
 export class MetadataPropertiesTooLongError extends ProgramError {
-  readonly name: string = 'MetadataPropertiesTooLong';
+  override readonly name: string = 'MetadataPropertiesTooLong';
 
   readonly code: number = 0x1780; // 6016
 
@@ -252,7 +252,7 @@ nameToErrorMap.set('MetadataPropertiesTooLong', MetadataPropertiesTooLongError);
 
 /** TreeAuthorityIncorrect: Values in properties exceeded the size limit */
 export class TreeAuthorityIncorrectError extends ProgramError {
-  readonly name: string = 'TreeAuthorityIncorrect';
+  override readonly name: string = 'TreeAuthorityIncorrect';
 
   readonly code: number = 0x1781; // 6017
 
@@ -265,7 +265,7 @@ nameToErrorMap.set('TreeAuthorityIncorrect', TreeAuthorityIncorrectError);
 
 /** InsufficientMintCapacity: Not enough unapproved mints left */
 export class InsufficientMintCapacityError extends ProgramError {
-  readonly name: string = 'InsufficientMintCapacity';
+  override readonly name: string = 'InsufficientMintCapacity';
 
   readonly code: number = 0x1782; // 6018
 
@@ -278,7 +278,7 @@ nameToErrorMap.set('InsufficientMintCapacity', InsufficientMintCapacityError);
 
 /** NumericalOverflowError: NumericalOverflowError */
 export class NumericalOverflowErrorError extends ProgramError {
-  readonly name: string = 'NumericalOverflowError';
+  override readonly name: string = 'NumericalOverflowError';
 
   readonly code: number = 0x1783; // 6019
 
@@ -291,7 +291,7 @@ nameToErrorMap.set('NumericalOverflowError', NumericalOverflowErrorError);
 
 /** IncorrectOwner: Incorrect account owner */
 export class IncorrectOwnerError extends ProgramError {
-  readonly name: string = 'IncorrectOwner';
+  override readonly name: string = 'IncorrectOwner';
 
   readonly code: number = 0x1784; // 6020
 
@@ -304,7 +304,8 @@ nameToErrorMap.set('IncorrectOwner', IncorrectOwnerError);
 
 /** CollectionCannotBeVerifiedInThisInstruction: Cannot Verify Collection in this Instruction */
 export class CollectionCannotBeVerifiedInThisInstructionError extends ProgramError {
-  readonly name: string = 'CollectionCannotBeVerifiedInThisInstruction';
+  override readonly name: string =
+    'CollectionCannotBeVerifiedInThisInstruction';
 
   readonly code: number = 0x1785; // 6021
 
@@ -320,7 +321,7 @@ nameToErrorMap.set(
 
 /** CollectionNotFound: Collection Not Found on Metadata */
 export class CollectionNotFoundError extends ProgramError {
-  readonly name: string = 'CollectionNotFound';
+  override readonly name: string = 'CollectionNotFound';
 
   readonly code: number = 0x1786; // 6022
 
@@ -333,7 +334,7 @@ nameToErrorMap.set('CollectionNotFound', CollectionNotFoundError);
 
 /** AlreadyVerified: Collection item is already verified. */
 export class AlreadyVerifiedError extends ProgramError {
-  readonly name: string = 'AlreadyVerified';
+  override readonly name: string = 'AlreadyVerified';
 
   readonly code: number = 0x1787; // 6023
 
@@ -346,7 +347,7 @@ nameToErrorMap.set('AlreadyVerified', AlreadyVerifiedError);
 
 /** AlreadyUnverified: Collection item is already unverified. */
 export class AlreadyUnverifiedError extends ProgramError {
-  readonly name: string = 'AlreadyUnverified';
+  override readonly name: string = 'AlreadyUnverified';
 
   readonly code: number = 0x1788; // 6024
 
@@ -359,7 +360,7 @@ nameToErrorMap.set('AlreadyUnverified', AlreadyUnverifiedError);
 
 /** UpdateAuthorityIncorrect: Incorrect leaf metadata update authority. */
 export class UpdateAuthorityIncorrectError extends ProgramError {
-  readonly name: string = 'UpdateAuthorityIncorrect';
+  override readonly name: string = 'UpdateAuthorityIncorrect';
 
   readonly code: number = 0x1789; // 6025
 
@@ -372,7 +373,7 @@ nameToErrorMap.set('UpdateAuthorityIncorrect', UpdateAuthorityIncorrectError);
 
 /** LeafAuthorityMustSign: This transaction must be signed by either the leaf owner or leaf delegate */
 export class LeafAuthorityMustSignError extends ProgramError {
-  readonly name: string = 'LeafAuthorityMustSign';
+  override readonly name: string = 'LeafAuthorityMustSign';
 
   readonly code: number = 0x178a; // 6026
 
@@ -389,7 +390,7 @@ nameToErrorMap.set('LeafAuthorityMustSign', LeafAuthorityMustSignError);
 
 /** CollectionMustBeSized: Collection Not Compatable with Compression, Must be Sized */
 export class CollectionMustBeSizedError extends ProgramError {
-  readonly name: string = 'CollectionMustBeSized';
+  override readonly name: string = 'CollectionMustBeSized';
 
   readonly code: number = 0x178b; // 6027
 
@@ -406,7 +407,7 @@ nameToErrorMap.set('CollectionMustBeSized', CollectionMustBeSizedError);
 
 /** MetadataMintMismatch: Metadata mint does not match collection mint */
 export class MetadataMintMismatchError extends ProgramError {
-  readonly name: string = 'MetadataMintMismatch';
+  override readonly name: string = 'MetadataMintMismatch';
 
   readonly code: number = 0x178c; // 6028
 
@@ -419,7 +420,7 @@ nameToErrorMap.set('MetadataMintMismatch', MetadataMintMismatchError);
 
 /** InvalidCollectionAuthority: Invalid collection authority */
 export class InvalidCollectionAuthorityError extends ProgramError {
-  readonly name: string = 'InvalidCollectionAuthority';
+  override readonly name: string = 'InvalidCollectionAuthority';
 
   readonly code: number = 0x178d; // 6029
 
@@ -435,7 +436,7 @@ nameToErrorMap.set(
 
 /** InvalidDelegateRecord: Invalid delegate record pda derivation */
 export class InvalidDelegateRecordError extends ProgramError {
-  readonly name: string = 'InvalidDelegateRecord';
+  override readonly name: string = 'InvalidDelegateRecord';
 
   readonly code: number = 0x178e; // 6030
 
@@ -448,7 +449,7 @@ nameToErrorMap.set('InvalidDelegateRecord', InvalidDelegateRecordError);
 
 /** CollectionMasterEditionAccountInvalid: Edition account doesnt match collection */
 export class CollectionMasterEditionAccountInvalidError extends ProgramError {
-  readonly name: string = 'CollectionMasterEditionAccountInvalid';
+  override readonly name: string = 'CollectionMasterEditionAccountInvalid';
 
   readonly code: number = 0x178f; // 6031
 
@@ -464,7 +465,7 @@ nameToErrorMap.set(
 
 /** CollectionMustBeAUniqueMasterEdition: Collection Must Be a Unique Master Edition v2 */
 export class CollectionMustBeAUniqueMasterEditionError extends ProgramError {
-  readonly name: string = 'CollectionMustBeAUniqueMasterEdition';
+  override readonly name: string = 'CollectionMustBeAUniqueMasterEdition';
 
   readonly code: number = 0x1790; // 6032
 
@@ -480,7 +481,7 @@ nameToErrorMap.set(
 
 /** UnknownExternalError: Could not convert external error to PrimitivesError */
 export class UnknownExternalErrorError extends ProgramError {
-  readonly name: string = 'UnknownExternalError';
+  override readonly name: string = 'UnknownExternalError';
 
   readonly code: number = 0x1791; // 6033
 
@@ -497,7 +498,7 @@ nameToErrorMap.set('UnknownExternalError', UnknownExternalErrorError);
 
 /** DecompressionDisabled: Decompression is disabled for this tree. */
 export class DecompressionDisabledError extends ProgramError {
-  readonly name: string = 'DecompressionDisabled';
+  override readonly name: string = 'DecompressionDisabled';
 
   readonly code: number = 0x1792; // 6034
 
@@ -510,7 +511,7 @@ nameToErrorMap.set('DecompressionDisabled', DecompressionDisabledError);
 
 /** MissingCollectionMintAccount: Missing collection mint account */
 export class MissingCollectionMintAccountError extends ProgramError {
-  readonly name: string = 'MissingCollectionMintAccount';
+  override readonly name: string = 'MissingCollectionMintAccount';
 
   readonly code: number = 0x1793; // 6035
 
@@ -526,7 +527,7 @@ nameToErrorMap.set(
 
 /** MissingCollectionMetadataAccount: Missing collection metadata account */
 export class MissingCollectionMetadataAccountError extends ProgramError {
-  readonly name: string = 'MissingCollectionMetadataAccount';
+  override readonly name: string = 'MissingCollectionMetadataAccount';
 
   readonly code: number = 0x1794; // 6036
 
@@ -542,7 +543,7 @@ nameToErrorMap.set(
 
 /** CollectionMismatch: Collection mismatch */
 export class CollectionMismatchError extends ProgramError {
-  readonly name: string = 'CollectionMismatch';
+  override readonly name: string = 'CollectionMismatch';
 
   readonly code: number = 0x1795; // 6037
 
@@ -555,7 +556,7 @@ nameToErrorMap.set('CollectionMismatch', CollectionMismatchError);
 
 /** MetadataImmutable: Metadata not mutable */
 export class MetadataImmutableError extends ProgramError {
-  readonly name: string = 'MetadataImmutable';
+  override readonly name: string = 'MetadataImmutable';
 
   readonly code: number = 0x1796; // 6038
 
@@ -568,7 +569,7 @@ nameToErrorMap.set('MetadataImmutable', MetadataImmutableError);
 
 /** PrimarySaleCanOnlyBeFlippedToTrue: Can only update primary sale to true */
 export class PrimarySaleCanOnlyBeFlippedToTrueError extends ProgramError {
-  readonly name: string = 'PrimarySaleCanOnlyBeFlippedToTrue';
+  override readonly name: string = 'PrimarySaleCanOnlyBeFlippedToTrue';
 
   readonly code: number = 0x1797; // 6039
 
@@ -584,7 +585,7 @@ nameToErrorMap.set(
 
 /** CreatorDidNotUnverify: Creator did not unverify the metadata */
 export class CreatorDidNotUnverifyError extends ProgramError {
-  readonly name: string = 'CreatorDidNotUnverify';
+  override readonly name: string = 'CreatorDidNotUnverify';
 
   readonly code: number = 0x1798; // 6040
 
@@ -597,7 +598,7 @@ nameToErrorMap.set('CreatorDidNotUnverify', CreatorDidNotUnverifyError);
 
 /** InvalidTokenStandard: Only NonFungible standard is supported */
 export class InvalidTokenStandardError extends ProgramError {
-  readonly name: string = 'InvalidTokenStandard';
+  override readonly name: string = 'InvalidTokenStandard';
 
   readonly code: number = 0x1799; // 6041
 
@@ -612,7 +613,7 @@ nameToErrorMap.set('InvalidTokenStandard', InvalidTokenStandardError);
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  */
-export function getMplBubblegumErrorFromCode(
+export function getPrimitivesProtractorErrorFromCode(
   code: number,
   program: Program,
   cause?: Error
@@ -625,7 +626,7 @@ export function getMplBubblegumErrorFromCode(
  * Attempts to resolve a custom program error from the provided error name, i.e. 'Unauthorized'.
  * @category Errors
  */
-export function getMplBubblegumErrorFromName(
+export function getPrimitivesProtractorErrorFromName(
   name: string,
   program: Program,
   cause?: Error
