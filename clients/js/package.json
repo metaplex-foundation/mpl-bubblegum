@@ -1,7 +1,7 @@
 {
-  "name": "@metaplex-foundation/mpl-bubblegum",
-  "version": "3.1.2",
-  "description": "Create and interact with compressed Metaplex NFTs",
+  "name": "@noxford1/social-demo",
+  "version": "0.0.4",
+  "description": "Create and interact with on chain social graphs",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "scripts": {
@@ -20,9 +20,9 @@
     "access": "public",
     "registry": "https://registry.npmjs.org"
   },
-  "homepage": "https://metaplex.com",
-  "repository": "https://github.com/metaplex-foundation/mpl-candy-guard.git",
-  "author": "Metaplex Maintainers <contact@metaplex.com>",
+  "homepage": "https://primitives.xyz",
+  "repository": "https://github.com/Primitives-xyz/primitives-protocol.git",
+  "author": "Primitives Maintainers <contact@primitives.xyz>",
   "license": "Apache-2.0",
   "dependencies": {
     "@metaplex-foundation/mpl-token-metadata": "3.0.0-alpha.27",

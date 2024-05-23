@@ -2,7 +2,7 @@ use borsh::BorshSerialize;
 use solana_program::keccak;
 use std::io::Result;
 
-use crate::types::{Creator, MetadataArgs};
+use crate::types::{Creator, NodeArgs};
 
 /// Computes the hash of the creators.
 ///
@@ -28,7 +28,7 @@ pub fn hash_creators(creators: &[Creator]) -> [u8; 32] {
 ///
 /// The hash is computed as the keccak256 hash of the metadata bytes, which is
 /// then hashed with the `seller_fee_basis_points`.
-pub fn hash_metadata(metadata: &MetadataArgs) -> Result<[u8; 32]> {
+pub fn hash_metadata(metadata: &NodeArgs) -> Result<[u8; 32]> {
     let hash = keccak::hashv(&[metadata.try_to_vec()?.as_slice()]);
     // Calculate new data hash.
     Ok(keccak::hashv(&[
