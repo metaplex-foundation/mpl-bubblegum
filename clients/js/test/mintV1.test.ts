@@ -3,16 +3,9 @@ import {
   generateSigner,
   none,
   publicKey,
-  some,
 } from '@metaplex-foundation/umi';
 import test from 'ava';
-import {
-  NodeArgsArgs,
-  TokenStandard,
-  fetchMerkleTree,
-  hashLeaf,
-  mintNodeV1,
-} from '../src';
+import { NodeArgsArgs, fetchMerkleTree, hashLeaf, mintNodeV1 } from '../src';
 import { createTree, createUmi } from './_setup';
 
 test('it can mint an NFT from a Bubblegum tree', async (t) => {

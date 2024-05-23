@@ -6,21 +6,17 @@ import {
   PublicKey,
   SolAmount,
   generateSigner,
-  none,
   publicKey,
 } from '@metaplex-foundation/umi';
 import { createUmi as baseCreateUmi } from '@metaplex-foundation/umi-bundle-tests';
 import {
-  DecompressibleState,
-  MetadataArgsArgs,
+  NodeArgsArgs,
   createTree as baseCreateTree,
-  mintV1 as baseMintV1,
   fetchMerkleTree,
   findLeafAssetIdPda,
-  findTreeConfigPda,
   hashLeaf,
+  mintNodeV1,
   mplBubblegum,
-  setDecompressibleState,
 } from '../src';
 
 export const createUmi = async (endpoint?: string, airdropAmount?: SolAmount) =>
@@ -33,34 +29,26 @@ export const createTree = async (
   input: Partial<Parameters<typeof baseCreateTree>[1]> = {}
 ): Promise<PublicKey> => {
   const merkleTree = generateSigner(context);
-  let builder = await baseCreateTree(context, {
+  const builder = await baseCreateTree(context, {
     merkleTree,
     maxDepth: 14,
     maxBufferSize: 64,
     ...input,
   });
-  builder = builder.append(
-    setDecompressibleState(context, {
-      treeConfig:
-        input.treeConfig ??
-        findTreeConfigPda(context, { merkleTree: merkleTree.publicKey }),
-      treeCreator: input.treeCreator ?? context.identity,
-      decompressableState: DecompressibleState.Enabled,
-    })
-  );
+
   await builder.sendAndConfirm(context);
   return merkleTree.publicKey;
 };
 
 export const mint = async (
   context: Context,
-  input: Omit<Parameters<typeof baseMintV1>[1], 'metadata' | 'leafOwner'> & {
+  input: Omit<Parameters<typeof mintNodeV1>[1], 'metadata' | 'leafOwner'> & {
     leafIndex?: number | bigint;
-    metadata?: Partial<Parameters<typeof baseMintV1>[1]['metadata']>;
+    metadata?: Partial<Parameters<typeof mintNodeV1>[1]['metadata']>;
     leafOwner?: PublicKey;
   }
 ): Promise<{
-  metadata: MetadataArgsArgs;
+  metadata: NodeArgsArgs;
   assetId: Pda;
   leaf: PublicKey;
   leafIndex: number;
@@ -71,16 +59,19 @@ export const mint = async (
     input.leafIndex ??
       (await fetchMerkleTree(context, merkleTree)).tree.activeIndex
   );
-  const metadata: MetadataArgsArgs = {
-    name: 'My NFT',
-    uri: 'https://example.com/my-nft.json',
-    sellerFeeBasisPoints: 500, // 5%
-    collection: none(),
+  const metadata: NodeArgsArgs = {
+    label: 'My NFT',
+    properties: [
+      {
+        key: 'test',
+        value: 'test2',
+      },
+    ],
+    isMutable: true,
     creators: [],
-    ...input.metadata,
   };
 
-  await baseMintV1(context, {
+  await mintNodeV1(context, {
     ...input,
     metadata,
     leafOwner,
