@@ -78,33 +78,29 @@ export function setTreeDelegate(
   );
 
   // Accounts.
-  const resolvedAccounts = {
-    treeConfig: {
-      index: 0,
-      isWritable: true as boolean,
-      value: input.treeConfig ?? null,
-    },
+  const resolvedAccounts: ResolvedAccountsWithIndices = {
+    treeConfig: { index: 0, isWritable: true, value: input.treeConfig ?? null },
     treeCreator: {
       index: 1,
-      isWritable: false as boolean,
+      isWritable: false,
       value: input.treeCreator ?? null,
     },
     newTreeDelegate: {
       index: 2,
-      isWritable: false as boolean,
+      isWritable: false,
       value: input.newTreeDelegate ?? null,
     },
     merkleTree: {
       index: 3,
-      isWritable: false as boolean,
+      isWritable: false,
       value: input.merkleTree ?? null,
     },
     systemProgram: {
       index: 4,
-      isWritable: false as boolean,
+      isWritable: false,
       value: input.systemProgram ?? null,
     },
-  } satisfies ResolvedAccountsWithIndices;
+  };
 
   // Default values.
   if (!resolvedAccounts.treeConfig.value) {

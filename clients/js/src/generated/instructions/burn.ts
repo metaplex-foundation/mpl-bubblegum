@@ -107,43 +107,35 @@ export function burn(
   );
 
   // Accounts.
-  const resolvedAccounts = {
+  const resolvedAccounts: ResolvedAccountsWithIndices = {
     treeConfig: {
       index: 0,
-      isWritable: false as boolean,
+      isWritable: false,
       value: input.treeConfig ?? null,
     },
-    leafOwner: {
-      index: 1,
-      isWritable: false as boolean,
-      value: input.leafOwner ?? null,
-    },
+    leafOwner: { index: 1, isWritable: false, value: input.leafOwner ?? null },
     leafDelegate: {
       index: 2,
-      isWritable: false as boolean,
+      isWritable: false,
       value: input.leafDelegate ?? null,
     },
-    merkleTree: {
-      index: 3,
-      isWritable: true as boolean,
-      value: input.merkleTree ?? null,
-    },
+    merkleTree: { index: 3, isWritable: true, value: input.merkleTree ?? null },
     logWrapper: {
       index: 4,
-      isWritable: false as boolean,
+      isWritable: false,
       value: input.logWrapper ?? null,
     },
     compressionProgram: {
       index: 5,
-      isWritable: false as boolean,
+      isWritable: false,
       value: input.compressionProgram ?? null,
     },
     systemProgram: {
       index: 6,
-      isWritable: false as boolean,
+      isWritable: false,
       value: input.systemProgram ?? null,
     },
-  } satisfies ResolvedAccountsWithIndices;
+  };
 
   // Arguments.
   const resolvedArgs: BurnInstructionArgs = { ...input };

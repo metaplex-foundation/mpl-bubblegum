@@ -75,15 +75,7 @@ impl SetTreeDelegateInstructionData {
     }
 }
 
-/// Instruction builder for `SetTreeDelegate`.
-///
-/// ### Accounts:
-///
-///   0. `[writable]` tree_config
-///   1. `[signer]` tree_creator
-///   2. `[]` new_tree_delegate
-///   3. `[]` merkle_tree
-///   4. `[optional]` system_program (default to `11111111111111111111111111111111`)
+/// Instruction builder.
 #[derive(Default)]
 pub struct SetTreeDelegateBuilder {
     tree_config: Option<solana_program::pubkey::Pubkey>,
@@ -293,15 +285,7 @@ impl<'a, 'b> SetTreeDelegateCpi<'a, 'b> {
     }
 }
 
-/// Instruction builder for `SetTreeDelegate` via CPI.
-///
-/// ### Accounts:
-///
-///   0. `[writable]` tree_config
-///   1. `[signer]` tree_creator
-///   2. `[]` new_tree_delegate
-///   3. `[]` merkle_tree
-///   4. `[]` system_program
+/// `set_tree_delegate` CPI instruction builder.
 pub struct SetTreeDelegateCpiBuilder<'a, 'b> {
     instruction: Box<SetTreeDelegateCpiBuilderInstruction<'a, 'b>>,
 }

@@ -166,23 +166,7 @@ pub struct UpdateMetadataInstructionArgs {
     pub creators: Vec<Creator>,
 }
 
-/// Instruction builder for `UpdateMetadata`.
-///
-/// ### Accounts:
-///
-///   0. `[]` tree_config
-///   1. `[signer]` authority
-///   2. `[optional]` collection_mint
-///   3. `[optional]` collection_metadata
-///   4. `[optional]` collection_authority_record_pda
-///   5. `[]` leaf_owner
-///   6. `[]` leaf_delegate
-///   7. `[signer]` payer
-///   8. `[writable]` merkle_tree
-///   9. `[optional]` log_wrapper (default to `noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV`)
-///   10. `[optional]` compression_program (default to `cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK`)
-///   11. `[optional]` token_metadata_program (default to `metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s`)
-///   12. `[optional]` system_program (default to `11111111111111111111111111111111`)
+/// Instruction builder.
 #[derive(Default)]
 pub struct UpdateMetadataBuilder {
     tree_config: Option<solana_program::pubkey::Pubkey>,
@@ -651,23 +635,7 @@ impl<'a, 'b> UpdateMetadataCpi<'a, 'b> {
     }
 }
 
-/// Instruction builder for `UpdateMetadata` via CPI.
-///
-/// ### Accounts:
-///
-///   0. `[]` tree_config
-///   1. `[signer]` authority
-///   2. `[optional]` collection_mint
-///   3. `[optional]` collection_metadata
-///   4. `[optional]` collection_authority_record_pda
-///   5. `[]` leaf_owner
-///   6. `[]` leaf_delegate
-///   7. `[signer]` payer
-///   8. `[writable]` merkle_tree
-///   9. `[]` log_wrapper
-///   10. `[]` compression_program
-///   11. `[]` token_metadata_program
-///   12. `[]` system_program
+/// `update_metadata` CPI instruction builder.
 pub struct UpdateMetadataCpiBuilder<'a, 'b> {
     instruction: Box<UpdateMetadataCpiBuilderInstruction<'a, 'b>>,
 }

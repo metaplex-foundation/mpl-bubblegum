@@ -116,19 +116,7 @@ pub struct UnverifyCreatorInstructionArgs {
     pub metadata: NodeArgs,
 }
 
-/// Instruction builder for `UnverifyCreator`.
-///
-/// ### Accounts:
-///
-///   0. `[]` tree_config
-///   1. `[]` leaf_owner
-///   2. `[]` leaf_delegate
-///   3. `[writable]` merkle_tree
-///   4. `[signer]` payer
-///   5. `[signer]` creator
-///   6. `[optional]` log_wrapper (default to `noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV`)
-///   7. `[optional]` compression_program (default to `cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK`)
-///   8. `[optional]` system_program (default to `11111111111111111111111111111111`)
+/// Instruction builder.
 #[derive(Default)]
 pub struct UnverifyCreatorBuilder {
     tree_config: Option<solana_program::pubkey::Pubkey>,
@@ -460,19 +448,7 @@ impl<'a, 'b> UnverifyCreatorCpi<'a, 'b> {
     }
 }
 
-/// Instruction builder for `UnverifyCreator` via CPI.
-///
-/// ### Accounts:
-///
-///   0. `[]` tree_config
-///   1. `[]` leaf_owner
-///   2. `[]` leaf_delegate
-///   3. `[writable]` merkle_tree
-///   4. `[signer]` payer
-///   5. `[signer]` creator
-///   6. `[]` log_wrapper
-///   7. `[]` compression_program
-///   8. `[]` system_program
+/// `unverify_creator` CPI instruction builder.
 pub struct UnverifyCreatorCpiBuilder<'a, 'b> {
     instruction: Box<UnverifyCreatorCpiBuilderInstruction<'a, 'b>>,
 }

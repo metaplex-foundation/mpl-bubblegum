@@ -94,13 +94,13 @@ export function verifyLeaf(
   );
 
   // Accounts.
-  const resolvedAccounts = {
+  const resolvedAccounts: ResolvedAccountsWithIndices = {
     merkleTree: {
       index: 0,
-      isWritable: false as boolean,
+      isWritable: false,
       value: input.merkleTree ?? null,
     },
-  } satisfies ResolvedAccountsWithIndices;
+  };
 
   // Arguments.
   const resolvedArgs: VerifyLeafInstructionArgs = { ...input };

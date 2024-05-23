@@ -106,43 +106,31 @@ export function createTreeConfig(
   );
 
   // Accounts.
-  const resolvedAccounts = {
-    treeConfig: {
-      index: 0,
-      isWritable: true as boolean,
-      value: input.treeConfig ?? null,
-    },
-    merkleTree: {
-      index: 1,
-      isWritable: true as boolean,
-      value: input.merkleTree ?? null,
-    },
-    payer: {
-      index: 2,
-      isWritable: true as boolean,
-      value: input.payer ?? null,
-    },
+  const resolvedAccounts: ResolvedAccountsWithIndices = {
+    treeConfig: { index: 0, isWritable: true, value: input.treeConfig ?? null },
+    merkleTree: { index: 1, isWritable: true, value: input.merkleTree ?? null },
+    payer: { index: 2, isWritable: true, value: input.payer ?? null },
     treeCreator: {
       index: 3,
-      isWritable: false as boolean,
+      isWritable: false,
       value: input.treeCreator ?? null,
     },
     logWrapper: {
       index: 4,
-      isWritable: false as boolean,
+      isWritable: false,
       value: input.logWrapper ?? null,
     },
     compressionProgram: {
       index: 5,
-      isWritable: false as boolean,
+      isWritable: false,
       value: input.compressionProgram ?? null,
     },
     systemProgram: {
       index: 6,
-      isWritable: false as boolean,
+      isWritable: false,
       value: input.systemProgram ?? null,
     },
-  } satisfies ResolvedAccountsWithIndices;
+  };
 
   // Arguments.
   const resolvedArgs: CreateTreeConfigInstructionArgs = { ...input };
