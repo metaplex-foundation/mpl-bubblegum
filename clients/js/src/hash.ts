@@ -3,15 +3,14 @@ import {
   array,
   mergeBytes,
   publicKey,
-  u16,
   u64,
   u8,
 } from '@metaplex-foundation/umi/serializers';
 import { keccak_256 } from '@noble/hashes/sha3';
 import {
-  MetadataArgsArgs,
+  NodeArgsArgs,
   getCreatorSerializer,
-  getMetadataArgsSerializer,
+  getNodeArgsSerializer,
 } from './generated';
 import { findLeafAssetIdPda } from './leafAssetId';
 
@@ -26,7 +25,7 @@ export function hashLeaf(
     owner: PublicKey;
     delegate?: PublicKey;
     leafIndex: number | bigint;
-    metadata: MetadataArgsArgs;
+    metadata: NodeArgsArgs;
     nftVersion?: number;
   }
 ): Uint8Array {
@@ -47,22 +46,19 @@ export function hashLeaf(
   ]);
 }
 
-export function hashMetadata(metadata: MetadataArgsArgs): Uint8Array {
+export function hashMetadata(metadata: NodeArgsArgs): Uint8Array {
   return mergeBytes([
     hashMetadataData(metadata),
     hashMetadataCreators(metadata.creators),
   ]);
 }
 
-export function hashMetadataData(metadata: MetadataArgsArgs): Uint8Array {
-  return hash([
-    hash(getMetadataArgsSerializer().serialize(metadata)),
-    u16().serialize(metadata.sellerFeeBasisPoints),
-  ]);
+export function hashMetadataData(metadata: NodeArgsArgs): Uint8Array {
+  return hash([hash(getNodeArgsSerializer().serialize(metadata))]);
 }
 
 export function hashMetadataCreators(
-  creators: MetadataArgsArgs['creators']
+  creators: NodeArgsArgs['creators']
 ): Uint8Array {
   return hash(
     array(getCreatorSerializer(), { size: 'remainder' }).serialize(creators)
