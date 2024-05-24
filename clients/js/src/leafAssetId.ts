@@ -29,7 +29,7 @@ export function findLeafAssetIdPda(
   ]);
 }
 
-export async function parseLeafFromMintV1Transaction(
+export async function parseLeafFromMintNodeV1Transaction(
   context: Pick<Context, 'programs' | 'eddsa' | 'rpc'>,
   signature: TransactionSignature
 ): Promise<LeafSchema> {
@@ -39,23 +39,6 @@ export async function parseLeafFromMintV1Transaction(
   if (innerInstructions) {
     const leaf = getLeafSchemaSerializer().deserialize(
       innerInstructions[0].instructions[0].data.slice(8)
-    );
-    return leaf[0];
-  }
-
-  throw new Error('Could not parse leaf from transaction');
-}
-
-export async function parseLeafFromMintToCollectionV1Transaction(
-  context: Pick<Context, 'programs' | 'eddsa' | 'rpc'>,
-  signature: TransactionSignature
-): Promise<LeafSchema> {
-  const transaction = await context.rpc.getTransaction(signature);
-  const innerInstructions = transaction?.meta.innerInstructions;
-
-  if (innerInstructions) {
-    const leaf = getLeafSchemaSerializer().deserialize(
-      innerInstructions[0].instructions[1].data.slice(8)
     );
     return leaf[0];
   }

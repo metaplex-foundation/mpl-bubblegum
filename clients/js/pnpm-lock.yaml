@@ -9,7 +9,7 @@ dependencies:
     specifier: ^1.0.3
     version: 1.0.3(@metaplex-foundation/umi@0.8.2)
   '@metaplex-foundation/mpl-token-metadata':
-    specifier: 3.2.1
+    specifier: ^3.2.1
     version: 3.2.1(@metaplex-foundation/umi@0.8.2)
   '@metaplex-foundation/mpl-toolbox':
     specifier: ^0.9.4

@@ -16,13 +16,13 @@ import {
   findLeafAssetIdPda,
   hashLeaf,
   mintNodeV1,
-  mplBubblegum,
+  primitivesProtractor,
 } from '../src';
 
 export const createUmi = async (endpoint?: string, airdropAmount?: SolAmount) =>
   (await baseCreateUmi(endpoint, undefined, airdropAmount))
     .use(mplTokenMetadata())
-    .use(mplBubblegum());
+    .use(primitivesProtractor());
 
 export const createTree = async (
   context: Context,
