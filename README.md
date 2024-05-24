@@ -15,7 +15,7 @@ The packages below can be use to interact with the Protractor program.
 ### TypeScript
 
 ```sh
-npm install @metaplex-foundation/mpl-bubblegum
+npm install @primitives-xyz/protractor
 ```
 
 [See typedoc documentation](https://mpl-bubblegum-js-docs.vercel.app/).
@@ -23,14 +23,13 @@ npm install @metaplex-foundation/mpl-bubblegum
 ### Rust
 
 ```sh
-cargo add mpl-bubblegum
+COMING SOON
+## cargo add prim-protractor
 ```
-
-[See crate documentation](https://docs.rs/mpl-bubblegum/latest/mpl_bubblegum/).
 
 ## Documentation
 
-Developer documentation for Bubblegum can be found [here](https://developers.metaplex.com/bubblegum).
+Developer documentation for Protractor can be found [here](https://developers.metaplex.com/bubblegum).
 
 ## Building
 
@@ -52,7 +51,7 @@ This will create the program binary at `<ROOT>/programs/.bin`
 
 ## Testing
 
-Bubblegum includes two set of tests: BPF and TypeScript.
+Protractor includes two set of tests: BPF and TypeScript.
 
 ### BPF
 

@@ -9,9 +9,11 @@ use mpl_token_metadata::{
     types::{Collection, MetadataDelegateRole, TokenStandard},
 };
 
+const MAX_LABEL_LENGTH: usize = 48;
+
 /// Assert that the provided MetadataArgs are compatible with MPL `Data`
 pub fn assert_metadata_is_node_compatible(metadata: &NodeArgs) -> Result<()> {
-    if metadata.label.len() > mpl_token_metadata::MAX_NAME_LENGTH {
+    if metadata.label.len() > MAX_LABEL_LENGTH {
         return Err(PrimitivesError::MetadataNameTooLong.into());
     }
     // if !check_properties_size(&metadata.properties) {
@@ -43,10 +45,10 @@ pub fn assert_metadata_is_node_compatible(metadata: &NodeArgs) -> Result<()> {
 }
 /// Assert that the provided MetadataArgs are compatible with MPL `Data`
 pub fn assert_edge_is_node_compatible(metadata: &EdgeArgs) -> Result<()> {
-    if metadata.start_id.len() > mpl_token_metadata::MAX_NAME_LENGTH {
+    if metadata.start_id.len() > MAX_LABEL_LENGTH {
         return Err(PrimitivesError::MetadataNameTooLong.into());
     }
-    if metadata.end_id.len() > mpl_token_metadata::MAX_NAME_LENGTH {
+    if metadata.end_id.len() > MAX_LABEL_LENGTH {
         return Err(PrimitivesError::MetadataNameTooLong.into());
     }
     // if !check_properties_size(&metadata.properties) {
