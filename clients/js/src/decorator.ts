@@ -1,4 +1,8 @@
 import { PublicKey, RpcInterface } from '@metaplex-foundation/umi';
+import {
+  DasApiInterface,
+  createDasApiDecorator,
+} from '@metaplex-foundation/digital-asset-standard-api';
 import { ReadApiError } from './errors';
 import { NodeArgsArgs } from './generated';
 
@@ -84,8 +88,9 @@ export interface GraphApiInterface {
 
 export const createGraphApiDecorator = (
   rpc: RpcInterface
-): RpcInterface & GraphApiInterface => ({
+): RpcInterface & GraphApiInterface & DasApiInterface => ({
   ...rpc,
+  ...createDasApiDecorator(rpc),
   getNode: async (assetId: PublicKey) => {
     const asset = await rpc.call<GraphApiNodeAsset | null>('getNode', [
       assetId,

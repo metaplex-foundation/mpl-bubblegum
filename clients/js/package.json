@@ -1,6 +1,6 @@
 {
   "name": "@noxford1/social-demo",
-  "version": "0.0.5",
+  "version": "0.0.9",
   "description": "Create and interact with on chain social graphs",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
