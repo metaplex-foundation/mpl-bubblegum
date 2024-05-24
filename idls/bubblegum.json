@@ -1,5 +1,5 @@
 {
-  "version": "0.12.0",
+  "version": "0.0.1",
   "name": "bubblegum",
   "instructions": [
     {
@@ -796,7 +796,11 @@
             "name": "properties",
             "type": {
               "vec": {
+<<<<<<< HEAD
                 "defined": "Properties"
+=======
+                "defined": "(String,String)"
+>>>>>>> 99344e2f2282e14b30b64ecfa50b1b54f60e1a35
               }
             }
           },
@@ -835,7 +839,11 @@
             "name": "properties",
             "type": {
               "vec": {
+<<<<<<< HEAD
                 "defined": "Properties"
+=======
+                "defined": "(String,String)"
+>>>>>>> 99344e2f2282e14b30b64ecfa50b1b54f60e1a35
               }
             }
           },
@@ -870,7 +878,11 @@
             "name": "properties",
             "type": {
               "vec": {
+<<<<<<< HEAD
                 "defined": "Properties"
+=======
+                "defined": "(String,String)"
+>>>>>>> 99344e2f2282e14b30b64ecfa50b1b54f60e1a35
               }
             }
           },
@@ -925,7 +937,7 @@
                 "type": "u64"
               },
               {
-                "name": "data_hash",
+                "name": "dataHash",
                 "type": {
                   "array": [
                     "u8",
@@ -934,7 +946,7 @@
                 }
               },
               {
-                "name": "creator_hash",
+                "name": "creatorHash",
                 "type": {
                   "array": [
                     "u8",
