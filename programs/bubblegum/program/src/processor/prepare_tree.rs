@@ -8,18 +8,22 @@ use crate::{
     error::BubblegumError,
     state::{
         DecompressibleState, TreeConfig, MINIMUM_STAKE, REALM, REALM_GOVERNING_MINT,
+        TREE_AUTHORITY_SIZE,
     },
 };
 
 #[derive(Accounts)]
-pub struct CreateTreeWithRoot<'info> {
+pub struct PrepareTree<'info> {
     #[account(
+        init,
         seeds = [merkle_tree.key().as_ref()],
+        payer = payer,
+        space = TREE_AUTHORITY_SIZE,
         bump,
     )]
     pub tree_authority: Account<'info, TreeConfig>,
-    #[account(mut)]
-    /// CHECK:
+    #[account(zero)]
+    /// CHECK: This account must be all zeros
     pub merkle_tree: UncheckedAccount<'info>,
     #[account(mut)]
     pub payer: Signer<'info>,
@@ -34,19 +38,13 @@ pub struct CreateTreeWithRoot<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub(crate) fn create_tree_with_root<'info>(
-    ctx: Context<'_, '_, '_, 'info, CreateTreeWithRoot<'info>>,
+pub(crate) fn prepare_tree<'info>(
+    ctx: Context<'_, '_, '_, 'info, PrepareTree<'info>>,
     max_depth: u32,
+    max_buffer_size: u32,
     num_minted: u64,
-    root: [u8; 32],
-    leaf: [u8; 32],
-    index: u32,
-    metadata_url: String,
-    _metadata_hash: String,
     public: Option<bool>,
 ) -> Result<()> {
-    // TODO: charge protocol fees
-
     assert_eq!(ctx.accounts.registrar.owner, &mplx_staking_states::ID);
     assert_eq!(ctx.accounts.voter.owner, &mplx_staking_states::ID);
 
@@ -110,25 +108,27 @@ pub(crate) fn create_tree_with_root<'info>(
         return Err(BubblegumError::NotEnoughStakeForOperation.into());
     }
 
+    // TODO: check canopy size
+
     let merkle_tree = ctx.accounts.merkle_tree.to_account_info();
     let seed = merkle_tree.key();
     let seeds = &[seed.as_ref(), &[ctx.bumps.tree_authority]];
-
     let authority = &mut ctx.accounts.tree_authority;
     authority.set_inner(TreeConfig {
         tree_creator: ctx.accounts.tree_creator.key(),
-        tree_delegate: ctx.accounts.tree_creator.key(),
-        total_mint_capacity: 1 << max_depth,
-        num_minted,
+        tree_delegate: ctx.accounts.payer.key(),
+        // total_mint_capacity: 1 << max_depth,
+        // num_minted,
+        total_mint_capacity: 0, // set 0 to not allow minting assets during tree setuping
+        num_minted: 0,
         is_public: public.unwrap_or(false),
         is_decompressible: DecompressibleState::Disabled,
     });
     let authority_pda_signer = &[&seeds[..]];
 
-    init_tree(
-        root,
-        leaf,
-        index,
+    prep_tree(
+        max_depth,
+        max_buffer_size,
         &ctx.accounts.compression_program.to_account_info(),
         &ctx.accounts.tree_authority.to_account_info(),
         &merkle_tree,
@@ -138,10 +138,9 @@ pub(crate) fn create_tree_with_root<'info>(
     )
 }
 
-fn init_tree<'info>(
-    root: [u8; 32],
-    leaf: [u8; 32],
-    index: u32,
+fn prep_tree<'info>(
+    max_depth: u32,
+    max_buffer_size: u32,
     compression_program: &AccountInfo<'info>,
     tree_authority: &AccountInfo<'info>,
     merkle_tree: &AccountInfo<'info>,
@@ -151,7 +150,7 @@ fn init_tree<'info>(
 ) -> Result<()> {
     let cpi_ctx = CpiContext::new_with_signer(
         compression_program.clone(),
-        spl_account_compression::cpi::accounts::Modify {
+        spl_account_compression::cpi::accounts::Initialize {
             merkle_tree: merkle_tree.clone(),
             authority: tree_authority.clone(),
             noop: noop.clone(),
@@ -159,5 +158,5 @@ fn init_tree<'info>(
         authority_pda_signer,
     )
     .with_remaining_accounts(remaining_accounts.to_vec());
-    spl_account_compression::cpi::finalize_merkle_tree_with_root(cpi_ctx, root, leaf, index)
+    spl_account_compression::cpi::prepare_tree(cpi_ctx, max_depth, max_buffer_size)
 }

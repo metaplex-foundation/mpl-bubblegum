@@ -13,6 +13,7 @@ use crate::{
     utils::{get_asset_id, hash_creators, hash_metadata, replace_leaf},
 };
 
+mod add_canopy;
 mod burn;
 mod cancel_redeem;
 mod compress;
@@ -22,6 +23,7 @@ mod decompress;
 mod delegate;
 mod mint;
 mod mint_to_collection;
+mod prepare_tree;
 mod redeem;
 mod set_and_verify_collection;
 mod set_decompressible_state;
@@ -33,6 +35,7 @@ mod update_metadata;
 mod verify_collection;
 mod verify_creator;
 
+pub(crate) use add_canopy::*;
 pub(crate) use burn::*;
 pub(crate) use cancel_redeem::*;
 pub(crate) use compress::*;
@@ -42,6 +45,7 @@ pub(crate) use decompress::*;
 pub(crate) use delegate::*;
 pub(crate) use mint::*;
 pub(crate) use mint_to_collection::*;
+pub(crate) use prepare_tree::*;
 pub(crate) use redeem::*;
 pub(crate) use set_and_verify_collection::*;
 pub(crate) use set_decompressible_state::*;
