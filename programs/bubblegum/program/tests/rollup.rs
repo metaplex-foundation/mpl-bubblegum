@@ -2,7 +2,7 @@
 pub mod test_data;
 pub mod utils;
 
-use bubblegum::state::{REALM, REALM_GOVERNING_MINT};
+use bubblegum::state::{FEE_RECEIVER, REALM, REALM_GOVERNING_MINT};
 use mplx_staking_states::state::{
     DepositEntry, Lockup, LockupKind, LockupPeriod, Registrar, Voter, VotingMintConfig,
     REGISTRAR_DISCRIMINATOR, VOTER_DISCRIMINATOR,
@@ -171,6 +171,24 @@ async fn test_rollup_creation() {
         .fund_account(tree.creator_pubkey(), 10_000_000_000)
         .await
         .unwrap();
+    program_context
+        .fund_account(FEE_RECEIVER, 10_000_000_000)
+        .await
+        .unwrap();
+    let start_fee_receiver_balance = program_context
+        .client()
+        .get_account(FEE_RECEIVER)
+        .await
+        .unwrap()
+        .unwrap()
+        .lamports;
+    let start_tree_creator = program_context
+        .client()
+        .get_account(tree.creator_pubkey())
+        .await
+        .unwrap()
+        .unwrap()
+        .lamports;
 
     let mut tree_tx_builder = tree.create_tree_with_root_tx(
         &program_context.test_context().payer,
@@ -197,6 +215,24 @@ async fn test_rollup_creation() {
 
     tree_tx_builder.execute().await.unwrap();
 
+    let end_fee_receiver_balance = program_context
+        .client()
+        .get_account(FEE_RECEIVER)
+        .await
+        .unwrap()
+        .unwrap()
+        .lamports;
+    let end_tree_creator_balance = program_context
+        .client()
+        .get_account(tree.creator_pubkey())
+        .await
+        .unwrap()
+        .unwrap()
+        .lamports;
+    let fee = 1280000;
+
+    assert_eq!(end_fee_receiver_balance, start_fee_receiver_balance + fee);
+    assert_eq!(end_tree_creator_balance, start_tree_creator - fee);
     // program_context.mut_test_context().warp_to_slot(2).unwrap();
 
     // let metadata_args = MetadataArgs {

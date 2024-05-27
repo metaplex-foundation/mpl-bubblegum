@@ -13,7 +13,7 @@ use crate::{
     },
 };
 
-const PROTOCOL_FEE_PER_1024_LAMPORTS: u64 = 1_280_000; // 0.00128 SOL in lamports
+const PROTOCOL_FEE_PER_1024_ASSETS: u64 = 1_280_000; // 0.00128 SOL in lamports
 
 #[derive(Accounts)]
 pub struct CreateTreeWithRoot<'info> {
@@ -67,14 +67,13 @@ pub(crate) fn create_tree_with_root<'info>(
         &ctx.accounts.fee_receiver.key(),
         fee,
     );
-    anchor_lang::solana_program::program::invoke_signed(
+    anchor_lang::solana_program::program::invoke(
         &transfer_instruction,
         &[
             ctx.accounts.tree_creator.to_account_info(),
             ctx.accounts.fee_receiver.to_account_info(),
             ctx.accounts.system_program.to_account_info(),
         ],
-        &[],
     )?;
 
     let generated_registrar = Pubkey::find_program_address(
@@ -202,5 +201,5 @@ fn init_tree<'info>(
 fn calculate_protocol_fee_lamports(number_of_assets: u64) -> u64 {
     // Round to the nearest higher multiple of 1024
     let num_1024_chunks = (number_of_assets + 1023) / 1024;
-    num_1024_chunks * PROTOCOL_FEE_PER_1024_LAMPORTS
+    num_1024_chunks * PROTOCOL_FEE_PER_1024_ASSETS
 }
