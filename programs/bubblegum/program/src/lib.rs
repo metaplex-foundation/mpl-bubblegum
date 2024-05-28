@@ -100,6 +100,24 @@ pub mod bubblegum {
         processor::compress(ctx)
     }
 
+    pub fn prepare_tree<'info>(
+        ctx: Context<'_, '_, '_, 'info, PrepareTree<'info>>,
+        max_depth: u32,
+        max_buffer_size: u32,
+        num_minted: u64,
+        public: Option<bool>,
+    ) -> Result<()> {
+        processor::prepare_tree(ctx, max_depth, max_buffer_size, num_minted, public)
+    }
+
+    pub fn add_canopy<'info>(
+        ctx: Context<'_, '_, '_, 'info, AddCanopy<'info>>,
+        start_index: u32,
+        canopy_nodes: Vec<[u8; 32]>,
+    ) -> Result<()> {
+        processor::add_canopy(ctx, start_index, canopy_nodes)
+    }
+
     /// Creates a new tree.
     pub fn create_tree(
         ctx: Context<CreateTree>,
@@ -113,7 +131,6 @@ pub mod bubblegum {
     pub(crate) fn create_tree_with_root<'info>(
         ctx: Context<'_, '_, '_, 'info, CreateTreeWithRoot<'info>>,
         max_depth: u32,
-        max_buffer_size: u32,
         num_minted: u64,
         root: [u8; 32],
         leaf: [u8; 32],
@@ -125,7 +142,6 @@ pub mod bubblegum {
         processor::create_tree_with_root(
             ctx,
             max_depth,
-            max_buffer_size,
             num_minted,
             root,
             leaf,

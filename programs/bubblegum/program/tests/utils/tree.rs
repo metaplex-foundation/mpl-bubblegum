@@ -1,11 +1,11 @@
 use super::{
     clone_keypair, compute_metadata_hashes,
     tx_builder::{
-        BurnBuilder, CancelRedeemBuilder, CollectionVerificationInner, CreateBuilder,
-        CreateWithRootBuilder, CreatorVerificationInner, DelegateBuilder, DelegateInner,
-        MintToCollectionV1Builder, MintV1Builder, RedeemBuilder, SetDecompressibleStateBuilder,
-        SetTreeDelegateBuilder, TransferBuilder, TransferInner, TxBuilder, UnverifyCreatorBuilder,
-        VerifyCollectionBuilder, VerifyCreatorBuilder,
+        AddCanopyBuilder, BurnBuilder, CancelRedeemBuilder, CollectionVerificationInner,
+        CreateBuilder, CreateWithRootBuilder, CreatorVerificationInner, DelegateBuilder,
+        DelegateInner, MintToCollectionV1Builder, MintV1Builder, PrepareTreeBuilder, RedeemBuilder,
+        SetDecompressibleStateBuilder, SetTreeDelegateBuilder, TransferBuilder, TransferInner,
+        TxBuilder, UnverifyCreatorBuilder, VerifyCollectionBuilder, VerifyCreatorBuilder,
     },
     Error, LeafArgs, Result,
 };
@@ -95,12 +95,13 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         client: BanksClient,
         proof_tree: MerkleTree,
         num_minted: u64,
+        canopy_depth: u32,
     ) -> Self {
         Tree {
             tree_creator: clone_keypair(tree_creator),
             tree_delegate: clone_keypair(tree_creator),
             merkle_tree: clone_keypair(merkle_tree),
-            canopy_depth: 0,
+            canopy_depth,
             client,
             proof_tree,
             num_minted,
@@ -277,7 +278,6 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         payer: &Keypair,
         public: bool,
         max_depth: u32,
-        max_buffer_size: u32,
         num_minted: u64,
         root: [u8; 32],
         leaf: [u8; 32],
@@ -305,7 +305,6 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
 
         let data = bubblegum::instruction::CreateTreeWithRoot {
             max_depth,
-            max_buffer_size,
             num_minted,
             root,
             leaf,
@@ -324,6 +323,74 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             payer.pubkey(),
             &[payer, &tree_creator_keypair],
         )
+    }
+
+    pub fn add_canopy_tx(
+        &mut self,
+        tree_delegate: &Keypair,
+        start_index: u32,
+        canopy_nodes: Vec<[u8; 32]>,
+    ) -> AddCanopyBuilder<MAX_DEPTH, MAX_BUFFER_SIZE> {
+        let tree_authority =
+            Pubkey::find_program_address(&[self.tree_pubkey().as_ref()], &bubblegum::id()).0;
+
+        let accounts = bubblegum::accounts::AddCanopy {
+            tree_authority,
+            merkle_tree: self.tree_pubkey(),
+            delegate: tree_delegate.pubkey(),
+            log_wrapper: spl_noop::id(),
+            compression_program: spl_account_compression::id(),
+            system_program: system_program::id(),
+        };
+
+        let data = bubblegum::instruction::AddCanopy {
+            start_index,
+            canopy_nodes,
+        };
+
+        self.tx_builder(
+            accounts,
+            data,
+            None,
+            (),
+            tree_delegate.pubkey(),
+            &[tree_delegate],
+        )
+    }
+
+    pub fn prepare_tree_tx(
+        &mut self,
+        payer: &Keypair,
+        public: bool,
+        max_depth: u32,
+        max_buffer_size: u32,
+        num_minted: u64,
+        registrar: Pubkey,
+        voter: Pubkey,
+    ) -> PrepareTreeBuilder<MAX_DEPTH, MAX_BUFFER_SIZE> {
+        let tree_authority =
+            Pubkey::find_program_address(&[self.tree_pubkey().as_ref()], &bubblegum::id()).0;
+
+        let accounts = bubblegum::accounts::PrepareTree {
+            tree_authority,
+            merkle_tree: self.tree_pubkey(),
+            payer: payer.pubkey(),
+            tree_creator: self.creator_pubkey(),
+            registrar,
+            voter,
+            log_wrapper: spl_noop::id(),
+            compression_program: spl_account_compression::id(),
+            system_program: system_program::id(),
+        };
+
+        let data = bubblegum::instruction::PrepareTree {
+            max_depth,
+            max_buffer_size,
+            num_minted,
+            public: Some(public),
+        };
+
+        self.tx_builder(accounts, data, None, (), payer.pubkey(), &[payer])
     }
 
     pub fn mint_v1_non_owner_tx<'a>(
