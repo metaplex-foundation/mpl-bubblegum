@@ -1,20 +1,12 @@
-use std::mem::size_of;
-
 use anchor_lang::{prelude::*, system_program::System};
 use spl_account_compression::{
     program::SplAccountCompression,
-    state::{
-        merkle_tree_get_size, ConcurrentMerkleTreeHeader, CONCURRENT_MERKLE_TREE_HEADER_SIZE_V1,
-    },
-    Node, Noop,
+    Noop,
 };
 
 use crate::{
-    error::BubblegumError,
-    state::{DecompressibleState, TreeConfig, TREE_AUTHORITY_SIZE},
+    state::{DecompressibleState, TreeConfig, TREE_AUTHORITY_SIZE}, utils::check_canopy_size,
 };
-
-pub const MAX_ACC_PROOFS_SIZE: u32 = 17;
 
 #[derive(Accounts)]
 pub struct CreateTree<'info> {
@@ -37,15 +29,15 @@ pub struct CreateTree<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub(crate) fn create_tree(
-    ctx: Context<CreateTree>,
+pub(crate) fn create_tree<'info>(
+    ctx: Context<'_, '_, '_, 'info, CreateTree<'info>>,
     max_depth: u32,
     max_buffer_size: u32,
     public: Option<bool>,
 ) -> Result<()> {
     let merkle_tree = ctx.accounts.merkle_tree.to_account_info();
 
-    check_canopy_size(&ctx, max_depth, max_buffer_size)?;
+    check_canopy_size(ctx.accounts.merkle_tree.to_account_info(), ctx.accounts.tree_authority.to_account_info(), max_depth, max_buffer_size)?;
 
     let seed = merkle_tree.key();
     let seeds = &[seed.as_ref(), &[ctx.bumps.tree_authority]];
@@ -69,37 +61,4 @@ pub(crate) fn create_tree(
         authority_pda_signer,
     );
     spl_account_compression::cpi::init_empty_merkle_tree(cpi_ctx, max_depth, max_buffer_size)
-}
-
-fn check_canopy_size(
-    ctx: &Context<CreateTree>,
-    max_depth: u32,
-    max_buffer_size: u32,
-) -> Result<()> {
-    let merkle_tree_bytes = ctx.accounts.merkle_tree.data.borrow();
-
-    let (header_bytes, rest) = merkle_tree_bytes.split_at(CONCURRENT_MERKLE_TREE_HEADER_SIZE_V1);
-
-    let mut header = ConcurrentMerkleTreeHeader::try_from_slice(header_bytes)?;
-    header.initialize(
-        max_depth,
-        max_buffer_size,
-        &ctx.accounts.tree_authority.key(),
-        Clock::get()?.slot,
-    );
-
-    let merkle_tree_size = merkle_tree_get_size(&header)?;
-
-    let (_tree_bytes, canopy_bytes) = rest.split_at(merkle_tree_size);
-
-    let required_canopy = max_depth.saturating_sub(MAX_ACC_PROOFS_SIZE);
-
-    let actual_canopy_size = canopy_bytes.len() / size_of::<Node>();
-
-    require!(
-        (actual_canopy_size as u32) >= required_canopy,
-        BubblegumError::InvalidCanopySize
-    );
-
-    Ok(())
 }
