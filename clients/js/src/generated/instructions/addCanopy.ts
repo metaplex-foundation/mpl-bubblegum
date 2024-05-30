@@ -8,8 +8,6 @@
 
 import {
   Context,
-  Option,
-  OptionOrNullable,
   Pda,
   PublicKey,
   Signer,
@@ -19,14 +17,10 @@ import {
 import {
   Serializer,
   array,
-  bool,
   bytes,
   mapSerializer,
-  option,
-  string,
   struct,
   u32,
-  u64,
   u8,
 } from '@metaplex-foundation/umi/serializers';
 import { findTreeConfigPda } from '../accounts';
@@ -38,84 +32,58 @@ import {
 } from '../shared';
 
 // Accounts.
-export type CreateTreeWithRootInstructionAccounts = {
+export type AddCanopyInstructionAccounts = {
   treeConfig?: PublicKey | Pda;
   merkleTree: PublicKey | Pda;
-  payer?: Signer;
-  treeCreator?: PublicKey | Pda;
-  registrar: PublicKey | Pda;
-  voter: PublicKey | Pda;
+  delegate: Signer;
   logWrapper?: PublicKey | Pda;
   compressionProgram?: PublicKey | Pda;
   systemProgram?: PublicKey | Pda;
 };
 
 // Data.
-export type CreateTreeWithRootInstructionData = {
+export type AddCanopyInstructionData = {
   discriminator: Array<number>;
-  maxDepth: number;
-  numMinted: bigint;
-  root: Uint8Array;
-  leaf: Uint8Array;
-  index: number;
-  metadataUrl: string;
-  metadataHash: string;
-  public: Option<boolean>;
+  startIndex: number;
+  canopyNodes: Array<Uint8Array>;
 };
 
-export type CreateTreeWithRootInstructionDataArgs = {
-  maxDepth: number;
-  numMinted: number | bigint;
-  root: Uint8Array;
-  leaf: Uint8Array;
-  index: number;
-  metadataUrl: string;
-  metadataHash: string;
-  public: OptionOrNullable<boolean>;
+export type AddCanopyInstructionDataArgs = {
+  startIndex: number;
+  canopyNodes: Array<Uint8Array>;
 };
 
-export function getCreateTreeWithRootInstructionDataSerializer(): Serializer<
-  CreateTreeWithRootInstructionDataArgs,
-  CreateTreeWithRootInstructionData
+export function getAddCanopyInstructionDataSerializer(): Serializer<
+  AddCanopyInstructionDataArgs,
+  AddCanopyInstructionData
 > {
   return mapSerializer<
-    CreateTreeWithRootInstructionDataArgs,
+    AddCanopyInstructionDataArgs,
     any,
-    CreateTreeWithRootInstructionData
+    AddCanopyInstructionData
   >(
-    struct<CreateTreeWithRootInstructionData>(
+    struct<AddCanopyInstructionData>(
       [
         ['discriminator', array(u8(), { size: 8 })],
-        ['maxDepth', u32()],
-        ['numMinted', u64()],
-        ['root', bytes({ size: 32 })],
-        ['leaf', bytes({ size: 32 })],
-        ['index', u32()],
-        ['metadataUrl', string()],
-        ['metadataHash', string()],
-        ['public', option(bool())],
+        ['startIndex', u32()],
+        ['canopyNodes', array(bytes({ size: 32 }))],
       ],
-      { description: 'CreateTreeWithRootInstructionData' }
+      { description: 'AddCanopyInstructionData' }
     ),
     (value) => ({
       ...value,
-      discriminator: [101, 214, 253, 135, 176, 170, 11, 235],
+      discriminator: [247, 118, 145, 92, 84, 66, 207, 25],
     })
-  ) as Serializer<
-    CreateTreeWithRootInstructionDataArgs,
-    CreateTreeWithRootInstructionData
-  >;
+  ) as Serializer<AddCanopyInstructionDataArgs, AddCanopyInstructionData>;
 }
 
 // Args.
-export type CreateTreeWithRootInstructionArgs =
-  CreateTreeWithRootInstructionDataArgs;
+export type AddCanopyInstructionArgs = AddCanopyInstructionDataArgs;
 
 // Instruction.
-export function createTreeWithRoot(
-  context: Pick<Context, 'eddsa' | 'identity' | 'payer' | 'programs'>,
-  input: CreateTreeWithRootInstructionAccounts &
-    CreateTreeWithRootInstructionArgs
+export function addCanopy(
+  context: Pick<Context, 'eddsa' | 'programs'>,
+  input: AddCanopyInstructionAccounts & AddCanopyInstructionArgs
 ): TransactionBuilder {
   // Program ID.
   const programId = context.programs.getPublicKey(
@@ -131,45 +99,32 @@ export function createTreeWithRoot(
       value: input.treeConfig ?? null,
     },
     merkleTree: { index: 1, isWritable: true, value: input.merkleTree ?? null },
-    payer: { index: 2, isWritable: true, value: input.payer ?? null },
-    treeCreator: {
-      index: 3,
-      isWritable: false,
-      value: input.treeCreator ?? null,
-    },
-    registrar: { index: 4, isWritable: false, value: input.registrar ?? null },
-    voter: { index: 5, isWritable: false, value: input.voter ?? null },
+    delegate: { index: 2, isWritable: false, value: input.delegate ?? null },
     logWrapper: {
-      index: 6,
+      index: 3,
       isWritable: false,
       value: input.logWrapper ?? null,
     },
     compressionProgram: {
-      index: 7,
+      index: 4,
       isWritable: false,
       value: input.compressionProgram ?? null,
     },
     systemProgram: {
-      index: 8,
+      index: 5,
       isWritable: false,
       value: input.systemProgram ?? null,
     },
   };
 
   // Arguments.
-  const resolvedArgs: CreateTreeWithRootInstructionArgs = { ...input };
+  const resolvedArgs: AddCanopyInstructionArgs = { ...input };
 
   // Default values.
   if (!resolvedAccounts.treeConfig.value) {
     resolvedAccounts.treeConfig.value = findTreeConfigPda(context, {
       merkleTree: expectPublicKey(resolvedAccounts.merkleTree.value),
     });
-  }
-  if (!resolvedAccounts.payer.value) {
-    resolvedAccounts.payer.value = context.payer;
-  }
-  if (!resolvedAccounts.treeCreator.value) {
-    resolvedAccounts.treeCreator.value = context.identity.publicKey;
   }
   if (!resolvedAccounts.logWrapper.value) {
     resolvedAccounts.logWrapper.value = context.programs.getPublicKey(
@@ -206,8 +161,8 @@ export function createTreeWithRoot(
   );
 
   // Data.
-  const data = getCreateTreeWithRootInstructionDataSerializer().serialize(
-    resolvedArgs as CreateTreeWithRootInstructionDataArgs
+  const data = getAddCanopyInstructionDataSerializer().serialize(
+    resolvedArgs as AddCanopyInstructionDataArgs
   );
 
   // Bytes Created On Chain.

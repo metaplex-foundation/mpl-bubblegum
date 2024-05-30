@@ -9,7 +9,7 @@ use borsh::BorshDeserialize;
 use borsh::BorshSerialize;
 
 /// Accounts.
-pub struct CreateTreeWithRoot {
+pub struct PrepareTree {
     pub tree_config: solana_program::pubkey::Pubkey,
 
     pub merkle_tree: solana_program::pubkey::Pubkey,
@@ -29,21 +29,21 @@ pub struct CreateTreeWithRoot {
     pub system_program: solana_program::pubkey::Pubkey,
 }
 
-impl CreateTreeWithRoot {
+impl PrepareTree {
     pub fn instruction(
         &self,
-        args: CreateTreeWithRootInstructionArgs,
+        args: PrepareTreeInstructionArgs,
     ) -> solana_program::instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
         &self,
-        args: CreateTreeWithRootInstructionArgs,
+        args: PrepareTreeInstructionArgs,
         remaining_accounts: &[solana_program::instruction::AccountMeta],
     ) -> solana_program::instruction::Instruction {
         let mut accounts = Vec::with_capacity(9 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_program::instruction::AccountMeta::new(
             self.tree_config,
             false,
         ));
@@ -78,9 +78,7 @@ impl CreateTreeWithRoot {
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let mut data = CreateTreeWithRootInstructionData::new()
-            .try_to_vec()
-            .unwrap();
+        let mut data = PrepareTreeInstructionData::new().try_to_vec().unwrap();
         let mut args = args.try_to_vec().unwrap();
         data.append(&mut args);
 
@@ -93,34 +91,30 @@ impl CreateTreeWithRoot {
 }
 
 #[derive(BorshDeserialize, BorshSerialize)]
-struct CreateTreeWithRootInstructionData {
+struct PrepareTreeInstructionData {
     discriminator: [u8; 8],
 }
 
-impl CreateTreeWithRootInstructionData {
+impl PrepareTreeInstructionData {
     fn new() -> Self {
         Self {
-            discriminator: [101, 214, 253, 135, 176, 170, 11, 235],
+            discriminator: [41, 56, 189, 77, 58, 12, 142, 71],
         }
     }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct CreateTreeWithRootInstructionArgs {
+pub struct PrepareTreeInstructionArgs {
     pub max_depth: u32,
+    pub max_buffer_size: u32,
     pub num_minted: u64,
-    pub root: [u8; 32],
-    pub leaf: [u8; 32],
-    pub index: u32,
-    pub metadata_url: String,
-    pub metadata_hash: String,
     pub public: Option<bool>,
 }
 
 /// Instruction builder.
 #[derive(Default)]
-pub struct CreateTreeWithRootBuilder {
+pub struct PrepareTreeBuilder {
     tree_config: Option<solana_program::pubkey::Pubkey>,
     merkle_tree: Option<solana_program::pubkey::Pubkey>,
     payer: Option<solana_program::pubkey::Pubkey>,
@@ -131,17 +125,13 @@ pub struct CreateTreeWithRootBuilder {
     compression_program: Option<solana_program::pubkey::Pubkey>,
     system_program: Option<solana_program::pubkey::Pubkey>,
     max_depth: Option<u32>,
+    max_buffer_size: Option<u32>,
     num_minted: Option<u64>,
-    root: Option<[u8; 32]>,
-    leaf: Option<[u8; 32]>,
-    index: Option<u32>,
-    metadata_url: Option<String>,
-    metadata_hash: Option<String>,
     public: Option<bool>,
     __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
 
-impl CreateTreeWithRootBuilder {
+impl PrepareTreeBuilder {
     pub fn new() -> Self {
         Self::default()
     }
@@ -202,33 +192,13 @@ impl CreateTreeWithRootBuilder {
         self
     }
     #[inline(always)]
+    pub fn max_buffer_size(&mut self, max_buffer_size: u32) -> &mut Self {
+        self.max_buffer_size = Some(max_buffer_size);
+        self
+    }
+    #[inline(always)]
     pub fn num_minted(&mut self, num_minted: u64) -> &mut Self {
         self.num_minted = Some(num_minted);
-        self
-    }
-    #[inline(always)]
-    pub fn root(&mut self, root: [u8; 32]) -> &mut Self {
-        self.root = Some(root);
-        self
-    }
-    #[inline(always)]
-    pub fn leaf(&mut self, leaf: [u8; 32]) -> &mut Self {
-        self.leaf = Some(leaf);
-        self
-    }
-    #[inline(always)]
-    pub fn index(&mut self, index: u32) -> &mut Self {
-        self.index = Some(index);
-        self
-    }
-    #[inline(always)]
-    pub fn metadata_url(&mut self, metadata_url: String) -> &mut Self {
-        self.metadata_url = Some(metadata_url);
-        self
-    }
-    #[inline(always)]
-    pub fn metadata_hash(&mut self, metadata_hash: String) -> &mut Self {
-        self.metadata_hash = Some(metadata_hash);
         self
     }
     /// `[optional argument]`
@@ -257,7 +227,7 @@ impl CreateTreeWithRootBuilder {
     }
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
-        let accounts = CreateTreeWithRoot {
+        let accounts = PrepareTree {
             tree_config: self.tree_config.expect("tree_config is not set"),
             merkle_tree: self.merkle_tree.expect("merkle_tree is not set"),
             payer: self.payer.expect("payer is not set"),
@@ -274,17 +244,13 @@ impl CreateTreeWithRootBuilder {
                 .system_program
                 .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
         };
-        let args = CreateTreeWithRootInstructionArgs {
+        let args = PrepareTreeInstructionArgs {
             max_depth: self.max_depth.clone().expect("max_depth is not set"),
-            num_minted: self.num_minted.clone().expect("num_minted is not set"),
-            root: self.root.clone().expect("root is not set"),
-            leaf: self.leaf.clone().expect("leaf is not set"),
-            index: self.index.clone().expect("index is not set"),
-            metadata_url: self.metadata_url.clone().expect("metadata_url is not set"),
-            metadata_hash: self
-                .metadata_hash
+            max_buffer_size: self
+                .max_buffer_size
                 .clone()
-                .expect("metadata_hash is not set"),
+                .expect("max_buffer_size is not set"),
+            num_minted: self.num_minted.clone().expect("num_minted is not set"),
             public: self.public.clone(),
         };
 
@@ -292,8 +258,8 @@ impl CreateTreeWithRootBuilder {
     }
 }
 
-/// `create_tree_with_root` CPI accounts.
-pub struct CreateTreeWithRootCpiAccounts<'a, 'b> {
+/// `prepare_tree` CPI accounts.
+pub struct PrepareTreeCpiAccounts<'a, 'b> {
     pub tree_config: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub merkle_tree: &'b solana_program::account_info::AccountInfo<'a>,
@@ -313,8 +279,8 @@ pub struct CreateTreeWithRootCpiAccounts<'a, 'b> {
     pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
 }
 
-/// `create_tree_with_root` CPI instruction.
-pub struct CreateTreeWithRootCpi<'a, 'b> {
+/// `prepare_tree` CPI instruction.
+pub struct PrepareTreeCpi<'a, 'b> {
     /// The program to invoke.
     pub __program: &'b solana_program::account_info::AccountInfo<'a>,
 
@@ -336,14 +302,14 @@ pub struct CreateTreeWithRootCpi<'a, 'b> {
 
     pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
-    pub __args: CreateTreeWithRootInstructionArgs,
+    pub __args: PrepareTreeInstructionArgs,
 }
 
-impl<'a, 'b> CreateTreeWithRootCpi<'a, 'b> {
+impl<'a, 'b> PrepareTreeCpi<'a, 'b> {
     pub fn new(
         program: &'b solana_program::account_info::AccountInfo<'a>,
-        accounts: CreateTreeWithRootCpiAccounts<'a, 'b>,
-        args: CreateTreeWithRootInstructionArgs,
+        accounts: PrepareTreeCpiAccounts<'a, 'b>,
+        args: PrepareTreeInstructionArgs,
     ) -> Self {
         Self {
             __program: program,
@@ -393,7 +359,7 @@ impl<'a, 'b> CreateTreeWithRootCpi<'a, 'b> {
         )],
     ) -> solana_program::entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(9 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_program::instruction::AccountMeta::new(
             *self.tree_config.key,
             false,
         ));
@@ -436,9 +402,7 @@ impl<'a, 'b> CreateTreeWithRootCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let mut data = CreateTreeWithRootInstructionData::new()
-            .try_to_vec()
-            .unwrap();
+        let mut data = PrepareTreeInstructionData::new().try_to_vec().unwrap();
         let mut args = self.__args.try_to_vec().unwrap();
         data.append(&mut args);
 
@@ -470,14 +434,14 @@ impl<'a, 'b> CreateTreeWithRootCpi<'a, 'b> {
     }
 }
 
-/// `create_tree_with_root` CPI instruction builder.
-pub struct CreateTreeWithRootCpiBuilder<'a, 'b> {
-    instruction: Box<CreateTreeWithRootCpiBuilderInstruction<'a, 'b>>,
+/// `prepare_tree` CPI instruction builder.
+pub struct PrepareTreeCpiBuilder<'a, 'b> {
+    instruction: Box<PrepareTreeCpiBuilderInstruction<'a, 'b>>,
 }
 
-impl<'a, 'b> CreateTreeWithRootCpiBuilder<'a, 'b> {
+impl<'a, 'b> PrepareTreeCpiBuilder<'a, 'b> {
     pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
-        let instruction = Box::new(CreateTreeWithRootCpiBuilderInstruction {
+        let instruction = Box::new(PrepareTreeCpiBuilderInstruction {
             __program: program,
             tree_config: None,
             merkle_tree: None,
@@ -489,12 +453,8 @@ impl<'a, 'b> CreateTreeWithRootCpiBuilder<'a, 'b> {
             compression_program: None,
             system_program: None,
             max_depth: None,
+            max_buffer_size: None,
             num_minted: None,
-            root: None,
-            leaf: None,
-            index: None,
-            metadata_url: None,
-            metadata_hash: None,
             public: None,
             __remaining_accounts: Vec::new(),
         });
@@ -572,33 +532,13 @@ impl<'a, 'b> CreateTreeWithRootCpiBuilder<'a, 'b> {
         self
     }
     #[inline(always)]
+    pub fn max_buffer_size(&mut self, max_buffer_size: u32) -> &mut Self {
+        self.instruction.max_buffer_size = Some(max_buffer_size);
+        self
+    }
+    #[inline(always)]
     pub fn num_minted(&mut self, num_minted: u64) -> &mut Self {
         self.instruction.num_minted = Some(num_minted);
-        self
-    }
-    #[inline(always)]
-    pub fn root(&mut self, root: [u8; 32]) -> &mut Self {
-        self.instruction.root = Some(root);
-        self
-    }
-    #[inline(always)]
-    pub fn leaf(&mut self, leaf: [u8; 32]) -> &mut Self {
-        self.instruction.leaf = Some(leaf);
-        self
-    }
-    #[inline(always)]
-    pub fn index(&mut self, index: u32) -> &mut Self {
-        self.instruction.index = Some(index);
-        self
-    }
-    #[inline(always)]
-    pub fn metadata_url(&mut self, metadata_url: String) -> &mut Self {
-        self.instruction.metadata_url = Some(metadata_url);
-        self
-    }
-    #[inline(always)]
-    pub fn metadata_hash(&mut self, metadata_hash: String) -> &mut Self {
-        self.instruction.metadata_hash = Some(metadata_hash);
         self
     }
     /// `[optional argument]`
@@ -648,33 +588,25 @@ impl<'a, 'b> CreateTreeWithRootCpiBuilder<'a, 'b> {
         &self,
         signers_seeds: &[&[&[u8]]],
     ) -> solana_program::entrypoint::ProgramResult {
-        let args = CreateTreeWithRootInstructionArgs {
+        let args = PrepareTreeInstructionArgs {
             max_depth: self
                 .instruction
                 .max_depth
                 .clone()
                 .expect("max_depth is not set"),
+            max_buffer_size: self
+                .instruction
+                .max_buffer_size
+                .clone()
+                .expect("max_buffer_size is not set"),
             num_minted: self
                 .instruction
                 .num_minted
                 .clone()
                 .expect("num_minted is not set"),
-            root: self.instruction.root.clone().expect("root is not set"),
-            leaf: self.instruction.leaf.clone().expect("leaf is not set"),
-            index: self.instruction.index.clone().expect("index is not set"),
-            metadata_url: self
-                .instruction
-                .metadata_url
-                .clone()
-                .expect("metadata_url is not set"),
-            metadata_hash: self
-                .instruction
-                .metadata_hash
-                .clone()
-                .expect("metadata_hash is not set"),
             public: self.instruction.public.clone(),
         };
-        let instruction = CreateTreeWithRootCpi {
+        let instruction = PrepareTreeCpi {
             __program: self.instruction.__program,
 
             tree_config: self
@@ -721,7 +653,7 @@ impl<'a, 'b> CreateTreeWithRootCpiBuilder<'a, 'b> {
     }
 }
 
-struct CreateTreeWithRootCpiBuilderInstruction<'a, 'b> {
+struct PrepareTreeCpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_program::account_info::AccountInfo<'a>,
     tree_config: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     merkle_tree: Option<&'b solana_program::account_info::AccountInfo<'a>>,
@@ -733,12 +665,8 @@ struct CreateTreeWithRootCpiBuilderInstruction<'a, 'b> {
     compression_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     max_depth: Option<u32>,
+    max_buffer_size: Option<u32>,
     num_minted: Option<u64>,
-    root: Option<[u8; 32]>,
-    leaf: Option<[u8; 32]>,
-    index: Option<u32>,
-    metadata_url: Option<String>,
-    metadata_hash: Option<String>,
     public: Option<bool>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(
