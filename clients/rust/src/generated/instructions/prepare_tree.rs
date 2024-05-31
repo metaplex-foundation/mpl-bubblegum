@@ -18,10 +18,6 @@ pub struct PrepareTree {
 
     pub tree_creator: solana_program::pubkey::Pubkey,
 
-    pub registrar: solana_program::pubkey::Pubkey,
-
-    pub voter: solana_program::pubkey::Pubkey,
-
     pub log_wrapper: solana_program::pubkey::Pubkey,
 
     pub compression_program: solana_program::pubkey::Pubkey,
@@ -42,7 +38,7 @@ impl PrepareTree {
         args: PrepareTreeInstructionArgs,
         remaining_accounts: &[solana_program::instruction::AccountMeta],
     ) -> solana_program::instruction::Instruction {
-        let mut accounts = Vec::with_capacity(9 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(7 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new(
             self.tree_config,
             false,
@@ -57,13 +53,6 @@ impl PrepareTree {
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.tree_creator,
             false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            self.registrar,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            self.voter, false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.log_wrapper,
@@ -108,7 +97,6 @@ impl PrepareTreeInstructionData {
 pub struct PrepareTreeInstructionArgs {
     pub max_depth: u32,
     pub max_buffer_size: u32,
-    pub num_minted: u64,
     pub public: Option<bool>,
 }
 
@@ -119,14 +107,11 @@ pub struct PrepareTreeBuilder {
     merkle_tree: Option<solana_program::pubkey::Pubkey>,
     payer: Option<solana_program::pubkey::Pubkey>,
     tree_creator: Option<solana_program::pubkey::Pubkey>,
-    registrar: Option<solana_program::pubkey::Pubkey>,
-    voter: Option<solana_program::pubkey::Pubkey>,
     log_wrapper: Option<solana_program::pubkey::Pubkey>,
     compression_program: Option<solana_program::pubkey::Pubkey>,
     system_program: Option<solana_program::pubkey::Pubkey>,
     max_depth: Option<u32>,
     max_buffer_size: Option<u32>,
-    num_minted: Option<u64>,
     public: Option<bool>,
     __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
@@ -153,16 +138,6 @@ impl PrepareTreeBuilder {
     #[inline(always)]
     pub fn tree_creator(&mut self, tree_creator: solana_program::pubkey::Pubkey) -> &mut Self {
         self.tree_creator = Some(tree_creator);
-        self
-    }
-    #[inline(always)]
-    pub fn registrar(&mut self, registrar: solana_program::pubkey::Pubkey) -> &mut Self {
-        self.registrar = Some(registrar);
-        self
-    }
-    #[inline(always)]
-    pub fn voter(&mut self, voter: solana_program::pubkey::Pubkey) -> &mut Self {
-        self.voter = Some(voter);
         self
     }
     /// `[optional account, default to 'noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV']`
@@ -196,11 +171,6 @@ impl PrepareTreeBuilder {
         self.max_buffer_size = Some(max_buffer_size);
         self
     }
-    #[inline(always)]
-    pub fn num_minted(&mut self, num_minted: u64) -> &mut Self {
-        self.num_minted = Some(num_minted);
-        self
-    }
     /// `[optional argument]`
     #[inline(always)]
     pub fn public(&mut self, public: bool) -> &mut Self {
@@ -232,8 +202,6 @@ impl PrepareTreeBuilder {
             merkle_tree: self.merkle_tree.expect("merkle_tree is not set"),
             payer: self.payer.expect("payer is not set"),
             tree_creator: self.tree_creator.expect("tree_creator is not set"),
-            registrar: self.registrar.expect("registrar is not set"),
-            voter: self.voter.expect("voter is not set"),
             log_wrapper: self.log_wrapper.unwrap_or(solana_program::pubkey!(
                 "noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV"
             )),
@@ -250,7 +218,6 @@ impl PrepareTreeBuilder {
                 .max_buffer_size
                 .clone()
                 .expect("max_buffer_size is not set"),
-            num_minted: self.num_minted.clone().expect("num_minted is not set"),
             public: self.public.clone(),
         };
 
@@ -267,10 +234,6 @@ pub struct PrepareTreeCpiAccounts<'a, 'b> {
     pub payer: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub tree_creator: &'b solana_program::account_info::AccountInfo<'a>,
-
-    pub registrar: &'b solana_program::account_info::AccountInfo<'a>,
-
-    pub voter: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub log_wrapper: &'b solana_program::account_info::AccountInfo<'a>,
 
@@ -291,10 +254,6 @@ pub struct PrepareTreeCpi<'a, 'b> {
     pub payer: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub tree_creator: &'b solana_program::account_info::AccountInfo<'a>,
-
-    pub registrar: &'b solana_program::account_info::AccountInfo<'a>,
-
-    pub voter: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub log_wrapper: &'b solana_program::account_info::AccountInfo<'a>,
 
@@ -317,8 +276,6 @@ impl<'a, 'b> PrepareTreeCpi<'a, 'b> {
             merkle_tree: accounts.merkle_tree,
             payer: accounts.payer,
             tree_creator: accounts.tree_creator,
-            registrar: accounts.registrar,
-            voter: accounts.voter,
             log_wrapper: accounts.log_wrapper,
             compression_program: accounts.compression_program,
             system_program: accounts.system_program,
@@ -358,7 +315,7 @@ impl<'a, 'b> PrepareTreeCpi<'a, 'b> {
             bool,
         )],
     ) -> solana_program::entrypoint::ProgramResult {
-        let mut accounts = Vec::with_capacity(9 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(7 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new(
             *self.tree_config.key,
             false,
@@ -373,14 +330,6 @@ impl<'a, 'b> PrepareTreeCpi<'a, 'b> {
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             *self.tree_creator.key,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            *self.registrar.key,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            *self.voter.key,
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
@@ -411,14 +360,12 @@ impl<'a, 'b> PrepareTreeCpi<'a, 'b> {
             accounts,
             data,
         };
-        let mut account_infos = Vec::with_capacity(9 + 1 + remaining_accounts.len());
+        let mut account_infos = Vec::with_capacity(7 + 1 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
         account_infos.push(self.tree_config.clone());
         account_infos.push(self.merkle_tree.clone());
         account_infos.push(self.payer.clone());
         account_infos.push(self.tree_creator.clone());
-        account_infos.push(self.registrar.clone());
-        account_infos.push(self.voter.clone());
         account_infos.push(self.log_wrapper.clone());
         account_infos.push(self.compression_program.clone());
         account_infos.push(self.system_program.clone());
@@ -447,14 +394,11 @@ impl<'a, 'b> PrepareTreeCpiBuilder<'a, 'b> {
             merkle_tree: None,
             payer: None,
             tree_creator: None,
-            registrar: None,
-            voter: None,
             log_wrapper: None,
             compression_program: None,
             system_program: None,
             max_depth: None,
             max_buffer_size: None,
-            num_minted: None,
             public: None,
             __remaining_accounts: Vec::new(),
         });
@@ -490,19 +434,6 @@ impl<'a, 'b> PrepareTreeCpiBuilder<'a, 'b> {
         self
     }
     #[inline(always)]
-    pub fn registrar(
-        &mut self,
-        registrar: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
-        self.instruction.registrar = Some(registrar);
-        self
-    }
-    #[inline(always)]
-    pub fn voter(&mut self, voter: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
-        self.instruction.voter = Some(voter);
-        self
-    }
-    #[inline(always)]
     pub fn log_wrapper(
         &mut self,
         log_wrapper: &'b solana_program::account_info::AccountInfo<'a>,
@@ -534,11 +465,6 @@ impl<'a, 'b> PrepareTreeCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn max_buffer_size(&mut self, max_buffer_size: u32) -> &mut Self {
         self.instruction.max_buffer_size = Some(max_buffer_size);
-        self
-    }
-    #[inline(always)]
-    pub fn num_minted(&mut self, num_minted: u64) -> &mut Self {
-        self.instruction.num_minted = Some(num_minted);
         self
     }
     /// `[optional argument]`
@@ -599,11 +525,6 @@ impl<'a, 'b> PrepareTreeCpiBuilder<'a, 'b> {
                 .max_buffer_size
                 .clone()
                 .expect("max_buffer_size is not set"),
-            num_minted: self
-                .instruction
-                .num_minted
-                .clone()
-                .expect("num_minted is not set"),
             public: self.instruction.public.clone(),
         };
         let instruction = PrepareTreeCpi {
@@ -625,10 +546,6 @@ impl<'a, 'b> PrepareTreeCpiBuilder<'a, 'b> {
                 .instruction
                 .tree_creator
                 .expect("tree_creator is not set"),
-
-            registrar: self.instruction.registrar.expect("registrar is not set"),
-
-            voter: self.instruction.voter.expect("voter is not set"),
 
             log_wrapper: self
                 .instruction
@@ -659,14 +576,11 @@ struct PrepareTreeCpiBuilderInstruction<'a, 'b> {
     merkle_tree: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     payer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     tree_creator: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    registrar: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    voter: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     log_wrapper: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     compression_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     max_depth: Option<u32>,
     max_buffer_size: Option<u32>,
-    num_minted: Option<u64>,
     public: Option<bool>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(

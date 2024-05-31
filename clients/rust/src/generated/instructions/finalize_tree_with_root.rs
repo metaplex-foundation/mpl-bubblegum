@@ -9,14 +9,12 @@ use borsh::BorshDeserialize;
 use borsh::BorshSerialize;
 
 /// Accounts.
-pub struct CreateTreeWithRoot {
+pub struct FinalizeTreeWithRoot {
     pub tree_config: solana_program::pubkey::Pubkey,
 
     pub merkle_tree: solana_program::pubkey::Pubkey,
 
-    pub payer: solana_program::pubkey::Pubkey,
-
-    pub tree_creator: solana_program::pubkey::Pubkey,
+    pub staker: solana_program::pubkey::Pubkey,
 
     pub registrar: solana_program::pubkey::Pubkey,
 
@@ -29,20 +27,20 @@ pub struct CreateTreeWithRoot {
     pub system_program: solana_program::pubkey::Pubkey,
 }
 
-impl CreateTreeWithRoot {
+impl FinalizeTreeWithRoot {
     pub fn instruction(
         &self,
-        args: CreateTreeWithRootInstructionArgs,
+        args: FinalizeTreeWithRootInstructionArgs,
     ) -> solana_program::instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
         &self,
-        args: CreateTreeWithRootInstructionArgs,
+        args: FinalizeTreeWithRootInstructionArgs,
         remaining_accounts: &[solana_program::instruction::AccountMeta],
     ) -> solana_program::instruction::Instruction {
-        let mut accounts = Vec::with_capacity(9 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(8 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.tree_config,
             false,
@@ -52,11 +50,8 @@ impl CreateTreeWithRoot {
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new(
-            self.payer, true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            self.tree_creator,
-            false,
+            self.staker,
+            true,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.registrar,
@@ -78,7 +73,7 @@ impl CreateTreeWithRoot {
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let mut data = CreateTreeWithRootInstructionData::new()
+        let mut data = FinalizeTreeWithRootInstructionData::new()
             .try_to_vec()
             .unwrap();
         let mut args = args.try_to_vec().unwrap();
@@ -93,55 +88,48 @@ impl CreateTreeWithRoot {
 }
 
 #[derive(BorshDeserialize, BorshSerialize)]
-struct CreateTreeWithRootInstructionData {
+struct FinalizeTreeWithRootInstructionData {
     discriminator: [u8; 8],
 }
 
-impl CreateTreeWithRootInstructionData {
+impl FinalizeTreeWithRootInstructionData {
     fn new() -> Self {
         Self {
-            discriminator: [101, 214, 253, 135, 176, 170, 11, 235],
+            discriminator: [77, 73, 220, 153, 126, 225, 64, 204],
         }
     }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct CreateTreeWithRootInstructionArgs {
-    pub max_depth: u32,
-    pub num_minted: u64,
-    pub root: [u8; 32],
-    pub leaf: [u8; 32],
-    pub index: u32,
+pub struct FinalizeTreeWithRootInstructionArgs {
+    pub rightmost_root: [u8; 32],
+    pub rightmost_leaf: [u8; 32],
+    pub rightmost_index: u32,
     pub metadata_url: String,
     pub metadata_hash: String,
-    pub public: Option<bool>,
 }
 
 /// Instruction builder.
 #[derive(Default)]
-pub struct CreateTreeWithRootBuilder {
+pub struct FinalizeTreeWithRootBuilder {
     tree_config: Option<solana_program::pubkey::Pubkey>,
     merkle_tree: Option<solana_program::pubkey::Pubkey>,
-    payer: Option<solana_program::pubkey::Pubkey>,
-    tree_creator: Option<solana_program::pubkey::Pubkey>,
+    staker: Option<solana_program::pubkey::Pubkey>,
     registrar: Option<solana_program::pubkey::Pubkey>,
     voter: Option<solana_program::pubkey::Pubkey>,
     log_wrapper: Option<solana_program::pubkey::Pubkey>,
     compression_program: Option<solana_program::pubkey::Pubkey>,
     system_program: Option<solana_program::pubkey::Pubkey>,
-    max_depth: Option<u32>,
-    num_minted: Option<u64>,
-    root: Option<[u8; 32]>,
-    leaf: Option<[u8; 32]>,
-    index: Option<u32>,
+    rightmost_root: Option<[u8; 32]>,
+    rightmost_leaf: Option<[u8; 32]>,
+    rightmost_index: Option<u32>,
     metadata_url: Option<String>,
     metadata_hash: Option<String>,
-    public: Option<bool>,
     __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
 
-impl CreateTreeWithRootBuilder {
+impl FinalizeTreeWithRootBuilder {
     pub fn new() -> Self {
         Self::default()
     }
@@ -156,13 +144,8 @@ impl CreateTreeWithRootBuilder {
         self
     }
     #[inline(always)]
-    pub fn payer(&mut self, payer: solana_program::pubkey::Pubkey) -> &mut Self {
-        self.payer = Some(payer);
-        self
-    }
-    #[inline(always)]
-    pub fn tree_creator(&mut self, tree_creator: solana_program::pubkey::Pubkey) -> &mut Self {
-        self.tree_creator = Some(tree_creator);
+    pub fn staker(&mut self, staker: solana_program::pubkey::Pubkey) -> &mut Self {
+        self.staker = Some(staker);
         self
     }
     #[inline(always)]
@@ -197,28 +180,18 @@ impl CreateTreeWithRootBuilder {
         self
     }
     #[inline(always)]
-    pub fn max_depth(&mut self, max_depth: u32) -> &mut Self {
-        self.max_depth = Some(max_depth);
+    pub fn rightmost_root(&mut self, rightmost_root: [u8; 32]) -> &mut Self {
+        self.rightmost_root = Some(rightmost_root);
         self
     }
     #[inline(always)]
-    pub fn num_minted(&mut self, num_minted: u64) -> &mut Self {
-        self.num_minted = Some(num_minted);
+    pub fn rightmost_leaf(&mut self, rightmost_leaf: [u8; 32]) -> &mut Self {
+        self.rightmost_leaf = Some(rightmost_leaf);
         self
     }
     #[inline(always)]
-    pub fn root(&mut self, root: [u8; 32]) -> &mut Self {
-        self.root = Some(root);
-        self
-    }
-    #[inline(always)]
-    pub fn leaf(&mut self, leaf: [u8; 32]) -> &mut Self {
-        self.leaf = Some(leaf);
-        self
-    }
-    #[inline(always)]
-    pub fn index(&mut self, index: u32) -> &mut Self {
-        self.index = Some(index);
+    pub fn rightmost_index(&mut self, rightmost_index: u32) -> &mut Self {
+        self.rightmost_index = Some(rightmost_index);
         self
     }
     #[inline(always)]
@@ -229,12 +202,6 @@ impl CreateTreeWithRootBuilder {
     #[inline(always)]
     pub fn metadata_hash(&mut self, metadata_hash: String) -> &mut Self {
         self.metadata_hash = Some(metadata_hash);
-        self
-    }
-    /// `[optional argument]`
-    #[inline(always)]
-    pub fn public(&mut self, public: bool) -> &mut Self {
-        self.public = Some(public);
         self
     }
     /// Add an aditional account to the instruction.
@@ -257,11 +224,10 @@ impl CreateTreeWithRootBuilder {
     }
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
-        let accounts = CreateTreeWithRoot {
+        let accounts = FinalizeTreeWithRoot {
             tree_config: self.tree_config.expect("tree_config is not set"),
             merkle_tree: self.merkle_tree.expect("merkle_tree is not set"),
-            payer: self.payer.expect("payer is not set"),
-            tree_creator: self.tree_creator.expect("tree_creator is not set"),
+            staker: self.staker.expect("staker is not set"),
             registrar: self.registrar.expect("registrar is not set"),
             voter: self.voter.expect("voter is not set"),
             log_wrapper: self.log_wrapper.unwrap_or(solana_program::pubkey!(
@@ -274,33 +240,37 @@ impl CreateTreeWithRootBuilder {
                 .system_program
                 .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
         };
-        let args = CreateTreeWithRootInstructionArgs {
-            max_depth: self.max_depth.clone().expect("max_depth is not set"),
-            num_minted: self.num_minted.clone().expect("num_minted is not set"),
-            root: self.root.clone().expect("root is not set"),
-            leaf: self.leaf.clone().expect("leaf is not set"),
-            index: self.index.clone().expect("index is not set"),
+        let args = FinalizeTreeWithRootInstructionArgs {
+            rightmost_root: self
+                .rightmost_root
+                .clone()
+                .expect("rightmost_root is not set"),
+            rightmost_leaf: self
+                .rightmost_leaf
+                .clone()
+                .expect("rightmost_leaf is not set"),
+            rightmost_index: self
+                .rightmost_index
+                .clone()
+                .expect("rightmost_index is not set"),
             metadata_url: self.metadata_url.clone().expect("metadata_url is not set"),
             metadata_hash: self
                 .metadata_hash
                 .clone()
                 .expect("metadata_hash is not set"),
-            public: self.public.clone(),
         };
 
         accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
     }
 }
 
-/// `create_tree_with_root` CPI accounts.
-pub struct CreateTreeWithRootCpiAccounts<'a, 'b> {
+/// `finalize_tree_with_root` CPI accounts.
+pub struct FinalizeTreeWithRootCpiAccounts<'a, 'b> {
     pub tree_config: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub merkle_tree: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub payer: &'b solana_program::account_info::AccountInfo<'a>,
-
-    pub tree_creator: &'b solana_program::account_info::AccountInfo<'a>,
+    pub staker: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub registrar: &'b solana_program::account_info::AccountInfo<'a>,
 
@@ -313,8 +283,8 @@ pub struct CreateTreeWithRootCpiAccounts<'a, 'b> {
     pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
 }
 
-/// `create_tree_with_root` CPI instruction.
-pub struct CreateTreeWithRootCpi<'a, 'b> {
+/// `finalize_tree_with_root` CPI instruction.
+pub struct FinalizeTreeWithRootCpi<'a, 'b> {
     /// The program to invoke.
     pub __program: &'b solana_program::account_info::AccountInfo<'a>,
 
@@ -322,9 +292,7 @@ pub struct CreateTreeWithRootCpi<'a, 'b> {
 
     pub merkle_tree: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub payer: &'b solana_program::account_info::AccountInfo<'a>,
-
-    pub tree_creator: &'b solana_program::account_info::AccountInfo<'a>,
+    pub staker: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub registrar: &'b solana_program::account_info::AccountInfo<'a>,
 
@@ -336,21 +304,20 @@ pub struct CreateTreeWithRootCpi<'a, 'b> {
 
     pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
-    pub __args: CreateTreeWithRootInstructionArgs,
+    pub __args: FinalizeTreeWithRootInstructionArgs,
 }
 
-impl<'a, 'b> CreateTreeWithRootCpi<'a, 'b> {
+impl<'a, 'b> FinalizeTreeWithRootCpi<'a, 'b> {
     pub fn new(
         program: &'b solana_program::account_info::AccountInfo<'a>,
-        accounts: CreateTreeWithRootCpiAccounts<'a, 'b>,
-        args: CreateTreeWithRootInstructionArgs,
+        accounts: FinalizeTreeWithRootCpiAccounts<'a, 'b>,
+        args: FinalizeTreeWithRootInstructionArgs,
     ) -> Self {
         Self {
             __program: program,
             tree_config: accounts.tree_config,
             merkle_tree: accounts.merkle_tree,
-            payer: accounts.payer,
-            tree_creator: accounts.tree_creator,
+            staker: accounts.staker,
             registrar: accounts.registrar,
             voter: accounts.voter,
             log_wrapper: accounts.log_wrapper,
@@ -392,7 +359,7 @@ impl<'a, 'b> CreateTreeWithRootCpi<'a, 'b> {
             bool,
         )],
     ) -> solana_program::entrypoint::ProgramResult {
-        let mut accounts = Vec::with_capacity(9 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(8 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             *self.tree_config.key,
             false,
@@ -402,12 +369,8 @@ impl<'a, 'b> CreateTreeWithRootCpi<'a, 'b> {
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.payer.key,
+            *self.staker.key,
             true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            *self.tree_creator.key,
-            false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             *self.registrar.key,
@@ -436,7 +399,7 @@ impl<'a, 'b> CreateTreeWithRootCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let mut data = CreateTreeWithRootInstructionData::new()
+        let mut data = FinalizeTreeWithRootInstructionData::new()
             .try_to_vec()
             .unwrap();
         let mut args = self.__args.try_to_vec().unwrap();
@@ -447,12 +410,11 @@ impl<'a, 'b> CreateTreeWithRootCpi<'a, 'b> {
             accounts,
             data,
         };
-        let mut account_infos = Vec::with_capacity(9 + 1 + remaining_accounts.len());
+        let mut account_infos = Vec::with_capacity(8 + 1 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
         account_infos.push(self.tree_config.clone());
         account_infos.push(self.merkle_tree.clone());
-        account_infos.push(self.payer.clone());
-        account_infos.push(self.tree_creator.clone());
+        account_infos.push(self.staker.clone());
         account_infos.push(self.registrar.clone());
         account_infos.push(self.voter.clone());
         account_infos.push(self.log_wrapper.clone());
@@ -470,32 +432,28 @@ impl<'a, 'b> CreateTreeWithRootCpi<'a, 'b> {
     }
 }
 
-/// `create_tree_with_root` CPI instruction builder.
-pub struct CreateTreeWithRootCpiBuilder<'a, 'b> {
-    instruction: Box<CreateTreeWithRootCpiBuilderInstruction<'a, 'b>>,
+/// `finalize_tree_with_root` CPI instruction builder.
+pub struct FinalizeTreeWithRootCpiBuilder<'a, 'b> {
+    instruction: Box<FinalizeTreeWithRootCpiBuilderInstruction<'a, 'b>>,
 }
 
-impl<'a, 'b> CreateTreeWithRootCpiBuilder<'a, 'b> {
+impl<'a, 'b> FinalizeTreeWithRootCpiBuilder<'a, 'b> {
     pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
-        let instruction = Box::new(CreateTreeWithRootCpiBuilderInstruction {
+        let instruction = Box::new(FinalizeTreeWithRootCpiBuilderInstruction {
             __program: program,
             tree_config: None,
             merkle_tree: None,
-            payer: None,
-            tree_creator: None,
+            staker: None,
             registrar: None,
             voter: None,
             log_wrapper: None,
             compression_program: None,
             system_program: None,
-            max_depth: None,
-            num_minted: None,
-            root: None,
-            leaf: None,
-            index: None,
+            rightmost_root: None,
+            rightmost_leaf: None,
+            rightmost_index: None,
             metadata_url: None,
             metadata_hash: None,
-            public: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
@@ -517,16 +475,11 @@ impl<'a, 'b> CreateTreeWithRootCpiBuilder<'a, 'b> {
         self
     }
     #[inline(always)]
-    pub fn payer(&mut self, payer: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
-        self.instruction.payer = Some(payer);
-        self
-    }
-    #[inline(always)]
-    pub fn tree_creator(
+    pub fn staker(
         &mut self,
-        tree_creator: &'b solana_program::account_info::AccountInfo<'a>,
+        staker: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
-        self.instruction.tree_creator = Some(tree_creator);
+        self.instruction.staker = Some(staker);
         self
     }
     #[inline(always)]
@@ -567,28 +520,18 @@ impl<'a, 'b> CreateTreeWithRootCpiBuilder<'a, 'b> {
         self
     }
     #[inline(always)]
-    pub fn max_depth(&mut self, max_depth: u32) -> &mut Self {
-        self.instruction.max_depth = Some(max_depth);
+    pub fn rightmost_root(&mut self, rightmost_root: [u8; 32]) -> &mut Self {
+        self.instruction.rightmost_root = Some(rightmost_root);
         self
     }
     #[inline(always)]
-    pub fn num_minted(&mut self, num_minted: u64) -> &mut Self {
-        self.instruction.num_minted = Some(num_minted);
+    pub fn rightmost_leaf(&mut self, rightmost_leaf: [u8; 32]) -> &mut Self {
+        self.instruction.rightmost_leaf = Some(rightmost_leaf);
         self
     }
     #[inline(always)]
-    pub fn root(&mut self, root: [u8; 32]) -> &mut Self {
-        self.instruction.root = Some(root);
-        self
-    }
-    #[inline(always)]
-    pub fn leaf(&mut self, leaf: [u8; 32]) -> &mut Self {
-        self.instruction.leaf = Some(leaf);
-        self
-    }
-    #[inline(always)]
-    pub fn index(&mut self, index: u32) -> &mut Self {
-        self.instruction.index = Some(index);
+    pub fn rightmost_index(&mut self, rightmost_index: u32) -> &mut Self {
+        self.instruction.rightmost_index = Some(rightmost_index);
         self
     }
     #[inline(always)]
@@ -599,12 +542,6 @@ impl<'a, 'b> CreateTreeWithRootCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn metadata_hash(&mut self, metadata_hash: String) -> &mut Self {
         self.instruction.metadata_hash = Some(metadata_hash);
-        self
-    }
-    /// `[optional argument]`
-    #[inline(always)]
-    pub fn public(&mut self, public: bool) -> &mut Self {
-        self.instruction.public = Some(public);
         self
     }
     /// Add an additional account to the instruction.
@@ -648,20 +585,22 @@ impl<'a, 'b> CreateTreeWithRootCpiBuilder<'a, 'b> {
         &self,
         signers_seeds: &[&[&[u8]]],
     ) -> solana_program::entrypoint::ProgramResult {
-        let args = CreateTreeWithRootInstructionArgs {
-            max_depth: self
+        let args = FinalizeTreeWithRootInstructionArgs {
+            rightmost_root: self
                 .instruction
-                .max_depth
+                .rightmost_root
                 .clone()
-                .expect("max_depth is not set"),
-            num_minted: self
+                .expect("rightmost_root is not set"),
+            rightmost_leaf: self
                 .instruction
-                .num_minted
+                .rightmost_leaf
                 .clone()
-                .expect("num_minted is not set"),
-            root: self.instruction.root.clone().expect("root is not set"),
-            leaf: self.instruction.leaf.clone().expect("leaf is not set"),
-            index: self.instruction.index.clone().expect("index is not set"),
+                .expect("rightmost_leaf is not set"),
+            rightmost_index: self
+                .instruction
+                .rightmost_index
+                .clone()
+                .expect("rightmost_index is not set"),
             metadata_url: self
                 .instruction
                 .metadata_url
@@ -672,9 +611,8 @@ impl<'a, 'b> CreateTreeWithRootCpiBuilder<'a, 'b> {
                 .metadata_hash
                 .clone()
                 .expect("metadata_hash is not set"),
-            public: self.instruction.public.clone(),
         };
-        let instruction = CreateTreeWithRootCpi {
+        let instruction = FinalizeTreeWithRootCpi {
             __program: self.instruction.__program,
 
             tree_config: self
@@ -687,12 +625,7 @@ impl<'a, 'b> CreateTreeWithRootCpiBuilder<'a, 'b> {
                 .merkle_tree
                 .expect("merkle_tree is not set"),
 
-            payer: self.instruction.payer.expect("payer is not set"),
-
-            tree_creator: self
-                .instruction
-                .tree_creator
-                .expect("tree_creator is not set"),
+            staker: self.instruction.staker.expect("staker is not set"),
 
             registrar: self.instruction.registrar.expect("registrar is not set"),
 
@@ -721,25 +654,21 @@ impl<'a, 'b> CreateTreeWithRootCpiBuilder<'a, 'b> {
     }
 }
 
-struct CreateTreeWithRootCpiBuilderInstruction<'a, 'b> {
+struct FinalizeTreeWithRootCpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_program::account_info::AccountInfo<'a>,
     tree_config: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     merkle_tree: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    payer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    tree_creator: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    staker: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     registrar: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     voter: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     log_wrapper: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     compression_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    max_depth: Option<u32>,
-    num_minted: Option<u64>,
-    root: Option<[u8; 32]>,
-    leaf: Option<[u8; 32]>,
-    index: Option<u32>,
+    rightmost_root: Option<[u8; 32]>,
+    rightmost_leaf: Option<[u8; 32]>,
+    rightmost_index: Option<u32>,
     metadata_url: Option<String>,
     metadata_hash: Option<String>,
-    public: Option<bool>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(
         &'b solana_program::account_info::AccountInfo<'a>,

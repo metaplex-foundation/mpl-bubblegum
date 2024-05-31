@@ -35,7 +35,7 @@ import {
 export type AddCanopyInstructionAccounts = {
   treeConfig?: PublicKey | Pda;
   merkleTree: PublicKey | Pda;
-  delegate: Signer;
+  incomingTreeDelegate: Signer;
   logWrapper?: PublicKey | Pda;
   compressionProgram?: PublicKey | Pda;
   systemProgram?: PublicKey | Pda;
@@ -99,7 +99,11 @@ export function addCanopy(
       value: input.treeConfig ?? null,
     },
     merkleTree: { index: 1, isWritable: true, value: input.merkleTree ?? null },
-    delegate: { index: 2, isWritable: false, value: input.delegate ?? null },
+    incomingTreeDelegate: {
+      index: 2,
+      isWritable: false,
+      value: input.incomingTreeDelegate ?? null,
+    },
     logWrapper: {
       index: 3,
       isWritable: false,

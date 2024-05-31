@@ -2,26 +2,26 @@
 pub mod test_data;
 pub mod utils;
 
+use crate::utils::Error::BanksClient;
+use anchor_lang::solana_program::instruction::InstructionError;
 use bubblegum::state::{REALM, REALM_GOVERNING_MINT};
 use mplx_staking_states::state::{
     DepositEntry, Lockup, LockupKind, LockupPeriod, Registrar, Voter, VotingMintConfig,
     REGISTRAR_DISCRIMINATOR, VOTER_DISCRIMINATOR,
 };
-use anchor_lang::solana_program::instruction::InstructionError;
-use solana_sdk::transaction::TransactionError;
-use solana_program_test::BanksClientError;
 use solana_program_test::tokio;
+use solana_program_test::BanksClientError;
 use solana_sdk::account::AccountSharedData;
 use solana_sdk::instruction::AccountMeta;
 use solana_sdk::pubkey::Pubkey;
 use solana_sdk::signature::{Keypair, Signer};
+use solana_sdk::transaction::TransactionError;
 use spl_merkle_tree_reference::{MerkleTree, Node};
 use std::str::FromStr;
 use std::time::{SystemTime, UNIX_EPOCH};
 use test_data::rollup_tree::*;
 use utils::context::BubblegumTestContext;
 use utils::tree::Tree;
-use crate::utils::Error::BanksClient;
 
 const MAX_DEPTH: usize = 10;
 const MAX_BUF_SIZE: usize = 32;
@@ -178,18 +178,12 @@ async fn test_prepare_tree_without_canopy() {
         false,
         MAX_DEPTH as u32,
         MAX_BUF_SIZE as u32,
-        1000,
-        registrar_key,
-        voter_key,
     );
 
     tree_tx_builder.execute_without_root_check().await.unwrap();
 
-    let mut tree_tx_builder = tree.create_tree_with_root_tx(
+    let mut tree_tx_builder = tree.finalize_tree_with_root_tx(
         &program_context.test_context().payer,
-        false,
-        MAX_DEPTH as u32,
-        1000,
         TREE_ROOT,
         RIGHTMOST_LEAF,
         999,
@@ -362,9 +356,6 @@ async fn test_prepare_tree_with_canopy() {
         false,
         MAX_DEPTH as u32,
         MAX_BUF_SIZE as u32,
-        1000,
-        registrar_key,
-        voter_key,
     );
 
     tree_tx_builder.execute_without_root_check().await.unwrap();
@@ -384,11 +375,8 @@ async fn test_prepare_tree_with_canopy() {
             .unwrap();
     }
 
-    let mut tree_tx_builder = tree.create_tree_with_root_tx(
+    let mut tree_tx_builder = tree.finalize_tree_with_root_tx(
         &program_context.test_context().payer,
-        false,
-        MAX_DEPTH as u32,
-        1000,
         TREE_ROOT,
         RIGHTMOST_LEAF,
         999,
@@ -563,9 +551,6 @@ async fn test_put_wrong_canopy() {
         false,
         MAX_DEPTH as u32,
         MAX_BUF_SIZE as u32,
-        1000,
-        registrar_key,
-        voter_key,
     );
 
     tree_tx_builder.execute_without_root_check().await.unwrap();
@@ -585,11 +570,8 @@ async fn test_put_wrong_canopy() {
             .unwrap();
     }
 
-    let mut tree_tx_builder = tree.create_tree_with_root_tx(
+    let mut tree_tx_builder = tree.finalize_tree_with_root_tx(
         &program_context.test_context().payer,
-        false,
-        MAX_DEPTH as u32,
-        1000,
         TREE_ROOT,
         RIGHTMOST_LEAF,
         999,

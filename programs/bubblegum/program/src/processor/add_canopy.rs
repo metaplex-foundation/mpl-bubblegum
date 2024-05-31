@@ -1,10 +1,7 @@
 use anchor_lang::{prelude::*, system_program::System};
 use spl_account_compression::{program::SplAccountCompression, Noop};
 
-use crate::{
-    error::BubblegumError,
-    state::TreeConfig,
-};
+use crate::{error::BubblegumError, state::TreeConfig};
 
 #[derive(Accounts)]
 pub struct AddCanopy<'info> {
@@ -16,7 +13,7 @@ pub struct AddCanopy<'info> {
     #[account(mut)]
     /// CHECK:
     pub merkle_tree: UncheckedAccount<'info>,
-    pub delegate: Signer<'info>,
+    pub incoming_tree_delegate: Signer<'info>,
     pub log_wrapper: Program<'info, Noop>,
     pub compression_program: Program<'info, SplAccountCompression>,
     pub system_program: Program<'info, System>,
@@ -27,12 +24,12 @@ pub(crate) fn add_canopy<'info>(
     start_index: u32,
     canopy_nodes: Vec<[u8; 32]>,
 ) -> Result<()> {
-    let delegate = ctx.accounts.delegate.key();
+    let incoming_tree_delegate = ctx.accounts.incoming_tree_delegate.key();
     let authority = &mut ctx.accounts.tree_authority;
 
-    // delegate is Metagrid node in this case
+    // incoming_tree_delegate is Metagrid node in this case
     require!(
-        delegate == authority.tree_delegate,
+        incoming_tree_delegate == authority.tree_delegate,
         BubblegumError::TreeAuthorityIncorrect,
     );
 

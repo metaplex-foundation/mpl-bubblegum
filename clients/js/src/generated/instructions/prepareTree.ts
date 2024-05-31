@@ -24,7 +24,6 @@ import {
   option,
   struct,
   u32,
-  u64,
   u8,
 } from '@metaplex-foundation/umi/serializers';
 import { findTreeConfigPda } from '../accounts';
@@ -41,8 +40,6 @@ export type PrepareTreeInstructionAccounts = {
   merkleTree: PublicKey | Pda;
   payer?: Signer;
   treeCreator?: PublicKey | Pda;
-  registrar: PublicKey | Pda;
-  voter: PublicKey | Pda;
   logWrapper?: PublicKey | Pda;
   compressionProgram?: PublicKey | Pda;
   systemProgram?: PublicKey | Pda;
@@ -53,14 +50,12 @@ export type PrepareTreeInstructionData = {
   discriminator: Array<number>;
   maxDepth: number;
   maxBufferSize: number;
-  numMinted: bigint;
   public: Option<boolean>;
 };
 
 export type PrepareTreeInstructionDataArgs = {
   maxDepth: number;
   maxBufferSize: number;
-  numMinted: number | bigint;
   public: OptionOrNullable<boolean>;
 };
 
@@ -78,7 +73,6 @@ export function getPrepareTreeInstructionDataSerializer(): Serializer<
         ['discriminator', array(u8(), { size: 8 })],
         ['maxDepth', u32()],
         ['maxBufferSize', u32()],
-        ['numMinted', u64()],
         ['public', option(bool())],
       ],
       { description: 'PrepareTreeInstructionData' }
@@ -111,20 +105,18 @@ export function prepareTree(
       isWritable: false,
       value: input.treeCreator ?? null,
     },
-    registrar: { index: 4, isWritable: false, value: input.registrar ?? null },
-    voter: { index: 5, isWritable: false, value: input.voter ?? null },
     logWrapper: {
-      index: 6,
+      index: 4,
       isWritable: false,
       value: input.logWrapper ?? null,
     },
     compressionProgram: {
-      index: 7,
+      index: 5,
       isWritable: false,
       value: input.compressionProgram ?? null,
     },
     systemProgram: {
-      index: 8,
+      index: 6,
       isWritable: false,
       value: input.systemProgram ?? null,
     },

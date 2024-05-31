@@ -1,16 +1,7 @@
-use anchor_lang::{prelude::*, solana_program::clock::Clock, system_program::System};
-use mplx_staking_states::state::{
-    registrar::Registrar, Voter, REGISTRAR_DISCRIMINATOR, VOTER_DISCRIMINATOR,
-};
+use anchor_lang::{prelude::*, system_program::System};
 use spl_account_compression::{program::SplAccountCompression, Noop};
 
-use crate::{
-    error::BubblegumError,
-    state::{
-        DecompressibleState, TreeConfig, MINIMUM_STAKE, REALM, REALM_GOVERNING_MINT,
-        TREE_AUTHORITY_SIZE,
-    },
-};
+use crate::state::{DecompressibleState, TreeConfig, TREE_AUTHORITY_SIZE};
 
 #[derive(Accounts)]
 pub struct PrepareTree<'info> {
@@ -29,10 +20,6 @@ pub struct PrepareTree<'info> {
     pub payer: Signer<'info>,
     /// CHECK:
     pub tree_creator: UncheckedAccount<'info>,
-    /// CHECK:
-    pub registrar: UncheckedAccount<'info>,
-    /// CHECK:
-    pub voter: UncheckedAccount<'info>,
     pub log_wrapper: Program<'info, Noop>,
     pub compression_program: Program<'info, SplAccountCompression>,
     pub system_program: Program<'info, System>,
@@ -42,72 +29,8 @@ pub(crate) fn prepare_tree<'info>(
     ctx: Context<'_, '_, '_, 'info, PrepareTree<'info>>,
     max_depth: u32,
     max_buffer_size: u32,
-    num_minted: u64,
     public: Option<bool>,
 ) -> Result<()> {
-    assert_eq!(ctx.accounts.registrar.owner, &mplx_staking_states::ID);
-    assert_eq!(ctx.accounts.voter.owner, &mplx_staking_states::ID);
-
-    let generated_registrar = Pubkey::find_program_address(
-        &[
-            REALM.to_bytes().as_ref(),
-            b"registrar".as_ref(),
-            REALM_GOVERNING_MINT.to_bytes().as_ref(),
-        ],
-        &mplx_staking_states::ID,
-    )
-    .0;
-    assert_eq!(&generated_registrar, ctx.accounts.registrar.key);
-
-    let generated_voter_key = Pubkey::find_program_address(
-        &[
-            ctx.accounts.registrar.key.to_bytes().as_ref(),
-            b"voter".as_ref(),
-            ctx.accounts.payer.key.to_bytes().as_ref(),
-        ],
-        &mplx_staking_states::ID,
-    )
-    .0;
-    assert_eq!(&generated_voter_key, ctx.accounts.voter.key);
-
-    let registrar_bytes = ctx.accounts.registrar.to_account_info().data;
-
-    assert_eq!((*registrar_bytes.borrow())[..8], REGISTRAR_DISCRIMINATOR);
-
-    let registrar: Registrar = *bytemuck::from_bytes(&(*registrar_bytes.borrow())[8..]);
-
-    assert_eq!(registrar.realm, REALM);
-    assert_eq!(registrar.realm_governing_token_mint, REALM_GOVERNING_MINT);
-
-    let voter_bytes = ctx.accounts.voter.to_account_info().data;
-
-    assert_eq!((*voter_bytes.borrow())[..8], VOTER_DISCRIMINATOR);
-
-    let voter: Voter = *bytemuck::from_bytes(&(*voter_bytes.borrow())[8..]);
-
-    assert_eq!(&voter.registrar, ctx.accounts.registrar.key);
-    assert_eq!(&voter.voter_authority, ctx.accounts.payer.key);
-
-    let clock = Clock::get()?;
-
-    let amount_locked: u64 = voter
-        .deposits
-        .iter()
-        .filter_map(|d| {
-            if d.is_used
-                && (d.lockup.end_ts > (clock.unix_timestamp as u64) && !d.lockup.cooldown_requested)
-            {
-                Some(d.amount_deposited_native)
-            } else {
-                None
-            }
-        })
-        .sum();
-
-    if amount_locked < MINIMUM_STAKE {
-        return Err(BubblegumError::NotEnoughStakeForOperation.into());
-    }
-
     // TODO: check canopy size
 
     let merkle_tree = ctx.accounts.merkle_tree.to_account_info();
@@ -117,9 +40,7 @@ pub(crate) fn prepare_tree<'info>(
     authority.set_inner(TreeConfig {
         tree_creator: ctx.accounts.tree_creator.key(),
         tree_delegate: ctx.accounts.payer.key(),
-        // total_mint_capacity: 1 << max_depth,
-        // num_minted,
-        total_mint_capacity: 0, // set 0 to not allow minting assets during tree setuping
+        total_mint_capacity: 1 << max_depth,
         num_minted: 0,
         is_public: public.unwrap_or(false),
         is_decompressible: DecompressibleState::Disabled,

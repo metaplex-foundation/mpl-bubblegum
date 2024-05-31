@@ -8,8 +8,6 @@
 
 import {
   Context,
-  Option,
-  OptionOrNullable,
   Pda,
   PublicKey,
   Signer,
@@ -19,14 +17,11 @@ import {
 import {
   Serializer,
   array,
-  bool,
   bytes,
   mapSerializer,
-  option,
   string,
   struct,
   u32,
-  u64,
   u8,
 } from '@metaplex-foundation/umi/serializers';
 import { findTreeConfigPda } from '../accounts';
@@ -38,11 +33,10 @@ import {
 } from '../shared';
 
 // Accounts.
-export type CreateTreeWithRootInstructionAccounts = {
+export type FinalizeTreeWithRootInstructionAccounts = {
   treeConfig?: PublicKey | Pda;
   merkleTree: PublicKey | Pda;
-  payer?: Signer;
-  treeCreator?: PublicKey | Pda;
+  staker: Signer;
   registrar: PublicKey | Pda;
   voter: PublicKey | Pda;
   logWrapper?: PublicKey | Pda;
@@ -51,71 +45,62 @@ export type CreateTreeWithRootInstructionAccounts = {
 };
 
 // Data.
-export type CreateTreeWithRootInstructionData = {
+export type FinalizeTreeWithRootInstructionData = {
   discriminator: Array<number>;
-  maxDepth: number;
-  numMinted: bigint;
-  root: Uint8Array;
-  leaf: Uint8Array;
-  index: number;
+  rightmostRoot: Uint8Array;
+  rightmostLeaf: Uint8Array;
+  rightmostIndex: number;
   metadataUrl: string;
   metadataHash: string;
-  public: Option<boolean>;
 };
 
-export type CreateTreeWithRootInstructionDataArgs = {
-  maxDepth: number;
-  numMinted: number | bigint;
-  root: Uint8Array;
-  leaf: Uint8Array;
-  index: number;
+export type FinalizeTreeWithRootInstructionDataArgs = {
+  rightmostRoot: Uint8Array;
+  rightmostLeaf: Uint8Array;
+  rightmostIndex: number;
   metadataUrl: string;
   metadataHash: string;
-  public: OptionOrNullable<boolean>;
 };
 
-export function getCreateTreeWithRootInstructionDataSerializer(): Serializer<
-  CreateTreeWithRootInstructionDataArgs,
-  CreateTreeWithRootInstructionData
+export function getFinalizeTreeWithRootInstructionDataSerializer(): Serializer<
+  FinalizeTreeWithRootInstructionDataArgs,
+  FinalizeTreeWithRootInstructionData
 > {
   return mapSerializer<
-    CreateTreeWithRootInstructionDataArgs,
+    FinalizeTreeWithRootInstructionDataArgs,
     any,
-    CreateTreeWithRootInstructionData
+    FinalizeTreeWithRootInstructionData
   >(
-    struct<CreateTreeWithRootInstructionData>(
+    struct<FinalizeTreeWithRootInstructionData>(
       [
         ['discriminator', array(u8(), { size: 8 })],
-        ['maxDepth', u32()],
-        ['numMinted', u64()],
-        ['root', bytes({ size: 32 })],
-        ['leaf', bytes({ size: 32 })],
-        ['index', u32()],
+        ['rightmostRoot', bytes({ size: 32 })],
+        ['rightmostLeaf', bytes({ size: 32 })],
+        ['rightmostIndex', u32()],
         ['metadataUrl', string()],
         ['metadataHash', string()],
-        ['public', option(bool())],
       ],
-      { description: 'CreateTreeWithRootInstructionData' }
+      { description: 'FinalizeTreeWithRootInstructionData' }
     ),
     (value) => ({
       ...value,
-      discriminator: [101, 214, 253, 135, 176, 170, 11, 235],
+      discriminator: [77, 73, 220, 153, 126, 225, 64, 204],
     })
   ) as Serializer<
-    CreateTreeWithRootInstructionDataArgs,
-    CreateTreeWithRootInstructionData
+    FinalizeTreeWithRootInstructionDataArgs,
+    FinalizeTreeWithRootInstructionData
   >;
 }
 
 // Args.
-export type CreateTreeWithRootInstructionArgs =
-  CreateTreeWithRootInstructionDataArgs;
+export type FinalizeTreeWithRootInstructionArgs =
+  FinalizeTreeWithRootInstructionDataArgs;
 
 // Instruction.
-export function createTreeWithRoot(
-  context: Pick<Context, 'eddsa' | 'identity' | 'payer' | 'programs'>,
-  input: CreateTreeWithRootInstructionAccounts &
-    CreateTreeWithRootInstructionArgs
+export function finalizeTreeWithRoot(
+  context: Pick<Context, 'eddsa' | 'programs'>,
+  input: FinalizeTreeWithRootInstructionAccounts &
+    FinalizeTreeWithRootInstructionArgs
 ): TransactionBuilder {
   // Program ID.
   const programId = context.programs.getPublicKey(
@@ -131,45 +116,34 @@ export function createTreeWithRoot(
       value: input.treeConfig ?? null,
     },
     merkleTree: { index: 1, isWritable: true, value: input.merkleTree ?? null },
-    payer: { index: 2, isWritable: true, value: input.payer ?? null },
-    treeCreator: {
-      index: 3,
-      isWritable: false,
-      value: input.treeCreator ?? null,
-    },
-    registrar: { index: 4, isWritable: false, value: input.registrar ?? null },
-    voter: { index: 5, isWritable: false, value: input.voter ?? null },
+    staker: { index: 2, isWritable: true, value: input.staker ?? null },
+    registrar: { index: 3, isWritable: false, value: input.registrar ?? null },
+    voter: { index: 4, isWritable: false, value: input.voter ?? null },
     logWrapper: {
-      index: 6,
+      index: 5,
       isWritable: false,
       value: input.logWrapper ?? null,
     },
     compressionProgram: {
-      index: 7,
+      index: 6,
       isWritable: false,
       value: input.compressionProgram ?? null,
     },
     systemProgram: {
-      index: 8,
+      index: 7,
       isWritable: false,
       value: input.systemProgram ?? null,
     },
   };
 
   // Arguments.
-  const resolvedArgs: CreateTreeWithRootInstructionArgs = { ...input };
+  const resolvedArgs: FinalizeTreeWithRootInstructionArgs = { ...input };
 
   // Default values.
   if (!resolvedAccounts.treeConfig.value) {
     resolvedAccounts.treeConfig.value = findTreeConfigPda(context, {
       merkleTree: expectPublicKey(resolvedAccounts.merkleTree.value),
     });
-  }
-  if (!resolvedAccounts.payer.value) {
-    resolvedAccounts.payer.value = context.payer;
-  }
-  if (!resolvedAccounts.treeCreator.value) {
-    resolvedAccounts.treeCreator.value = context.identity.publicKey;
   }
   if (!resolvedAccounts.logWrapper.value) {
     resolvedAccounts.logWrapper.value = context.programs.getPublicKey(
@@ -206,8 +180,8 @@ export function createTreeWithRoot(
   );
 
   // Data.
-  const data = getCreateTreeWithRootInstructionDataSerializer().serialize(
-    resolvedArgs as CreateTreeWithRootInstructionDataArgs
+  const data = getFinalizeTreeWithRootInstructionDataSerializer().serialize(
+    resolvedArgs as FinalizeTreeWithRootInstructionDataArgs
   );
 
   // Bytes Created On Chain.

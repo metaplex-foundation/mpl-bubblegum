@@ -14,7 +14,7 @@ pub struct AddCanopy {
 
     pub merkle_tree: solana_program::pubkey::Pubkey,
 
-    pub delegate: solana_program::pubkey::Pubkey,
+    pub incoming_tree_delegate: solana_program::pubkey::Pubkey,
 
     pub log_wrapper: solana_program::pubkey::Pubkey,
 
@@ -46,7 +46,7 @@ impl AddCanopy {
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            self.delegate,
+            self.incoming_tree_delegate,
             true,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
@@ -99,7 +99,7 @@ pub struct AddCanopyInstructionArgs {
 pub struct AddCanopyBuilder {
     tree_config: Option<solana_program::pubkey::Pubkey>,
     merkle_tree: Option<solana_program::pubkey::Pubkey>,
-    delegate: Option<solana_program::pubkey::Pubkey>,
+    incoming_tree_delegate: Option<solana_program::pubkey::Pubkey>,
     log_wrapper: Option<solana_program::pubkey::Pubkey>,
     compression_program: Option<solana_program::pubkey::Pubkey>,
     system_program: Option<solana_program::pubkey::Pubkey>,
@@ -123,8 +123,11 @@ impl AddCanopyBuilder {
         self
     }
     #[inline(always)]
-    pub fn delegate(&mut self, delegate: solana_program::pubkey::Pubkey) -> &mut Self {
-        self.delegate = Some(delegate);
+    pub fn incoming_tree_delegate(
+        &mut self,
+        incoming_tree_delegate: solana_program::pubkey::Pubkey,
+    ) -> &mut Self {
+        self.incoming_tree_delegate = Some(incoming_tree_delegate);
         self
     }
     /// `[optional account, default to 'noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV']`
@@ -181,7 +184,9 @@ impl AddCanopyBuilder {
         let accounts = AddCanopy {
             tree_config: self.tree_config.expect("tree_config is not set"),
             merkle_tree: self.merkle_tree.expect("merkle_tree is not set"),
-            delegate: self.delegate.expect("delegate is not set"),
+            incoming_tree_delegate: self
+                .incoming_tree_delegate
+                .expect("incoming_tree_delegate is not set"),
             log_wrapper: self.log_wrapper.unwrap_or(solana_program::pubkey!(
                 "noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV"
             )),
@@ -207,7 +212,7 @@ pub struct AddCanopyCpiAccounts<'a, 'b> {
 
     pub merkle_tree: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub delegate: &'b solana_program::account_info::AccountInfo<'a>,
+    pub incoming_tree_delegate: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub log_wrapper: &'b solana_program::account_info::AccountInfo<'a>,
 
@@ -225,7 +230,7 @@ pub struct AddCanopyCpi<'a, 'b> {
 
     pub merkle_tree: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub delegate: &'b solana_program::account_info::AccountInfo<'a>,
+    pub incoming_tree_delegate: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub log_wrapper: &'b solana_program::account_info::AccountInfo<'a>,
 
@@ -246,7 +251,7 @@ impl<'a, 'b> AddCanopyCpi<'a, 'b> {
             __program: program,
             tree_config: accounts.tree_config,
             merkle_tree: accounts.merkle_tree,
-            delegate: accounts.delegate,
+            incoming_tree_delegate: accounts.incoming_tree_delegate,
             log_wrapper: accounts.log_wrapper,
             compression_program: accounts.compression_program,
             system_program: accounts.system_program,
@@ -296,7 +301,7 @@ impl<'a, 'b> AddCanopyCpi<'a, 'b> {
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            *self.delegate.key,
+            *self.incoming_tree_delegate.key,
             true,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
@@ -331,7 +336,7 @@ impl<'a, 'b> AddCanopyCpi<'a, 'b> {
         account_infos.push(self.__program.clone());
         account_infos.push(self.tree_config.clone());
         account_infos.push(self.merkle_tree.clone());
-        account_infos.push(self.delegate.clone());
+        account_infos.push(self.incoming_tree_delegate.clone());
         account_infos.push(self.log_wrapper.clone());
         account_infos.push(self.compression_program.clone());
         account_infos.push(self.system_program.clone());
@@ -358,7 +363,7 @@ impl<'a, 'b> AddCanopyCpiBuilder<'a, 'b> {
             __program: program,
             tree_config: None,
             merkle_tree: None,
-            delegate: None,
+            incoming_tree_delegate: None,
             log_wrapper: None,
             compression_program: None,
             system_program: None,
@@ -385,11 +390,11 @@ impl<'a, 'b> AddCanopyCpiBuilder<'a, 'b> {
         self
     }
     #[inline(always)]
-    pub fn delegate(
+    pub fn incoming_tree_delegate(
         &mut self,
-        delegate: &'b solana_program::account_info::AccountInfo<'a>,
+        incoming_tree_delegate: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
-        self.instruction.delegate = Some(delegate);
+        self.instruction.incoming_tree_delegate = Some(incoming_tree_delegate);
         self
     }
     #[inline(always)]
@@ -492,7 +497,10 @@ impl<'a, 'b> AddCanopyCpiBuilder<'a, 'b> {
                 .merkle_tree
                 .expect("merkle_tree is not set"),
 
-            delegate: self.instruction.delegate.expect("delegate is not set"),
+            incoming_tree_delegate: self
+                .instruction
+                .incoming_tree_delegate
+                .expect("incoming_tree_delegate is not set"),
 
             log_wrapper: self
                 .instruction
@@ -521,7 +529,7 @@ struct AddCanopyCpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_program::account_info::AccountInfo<'a>,
     tree_config: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     merkle_tree: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    delegate: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    incoming_tree_delegate: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     log_wrapper: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     compression_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
