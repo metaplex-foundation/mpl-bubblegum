@@ -1,10 +1,7 @@
 use anchor_lang::{prelude::*, system_program::System};
 use spl_account_compression::{program::SplAccountCompression, Noop};
 
-use crate::{
-    error::BubblegumError,
-    state::TreeConfig,
-};
+use crate::{error::BubblegumError, state::TreeConfig};
 
 #[derive(Accounts)]
 pub struct AddCanopy<'info> {

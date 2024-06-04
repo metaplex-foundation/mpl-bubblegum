@@ -11,7 +11,6 @@ use super::{
 };
 use crate::utils::tx_builder::DecompressV1Builder;
 use anchor_lang::{self, AccountDeserialize};
-use bubblegum::state::FEE_RECEIVER;
 use bubblegum::{
     state::{leaf_schema::LeafSchema, DecompressibleState, TreeConfig, Voucher, VOUCHER_PREFIX},
     utils::get_asset_id,
@@ -286,6 +285,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         metadata_hash: String,
         registrar: Pubkey,
         voter: Pubkey,
+        fee_receiver: Pubkey,
     ) -> CreateWithRootBuilder<MAX_DEPTH, MAX_BUFFER_SIZE> {
         let tree_authority =
             Pubkey::find_program_address(&[self.tree_pubkey().as_ref()], &bubblegum::id()).0;
@@ -297,7 +297,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             tree_creator: self.creator_pubkey(),
             registrar,
             voter,
-            fee_receiver: FEE_RECEIVER,
+            fee_receiver,
             log_wrapper: spl_noop::id(),
             compression_program: spl_account_compression::id(),
             system_program: system_program::id(),

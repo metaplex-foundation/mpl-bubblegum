@@ -17,7 +17,7 @@ pub const REALM: Pubkey = solana_program::pubkey!("EzsKaQq68FLZwRaiUx7t17LWVVzsE
 pub const REALM_GOVERNING_MINT: Pubkey =
     solana_program::pubkey!("Dqa4iCUDXvSh5FwhopFJM76xdxQb5vSw39LvggbUWH9o");
 pub const FEE_RECEIVER: Pubkey =
-    solana_program::pubkey!("EzsKaQq68FLZwRaiUx7t17LWVVzsE8wRkhBghFrZGGwG");
+    solana_program::pubkey!("EzsKaQq61FLZwRaiUx7t17LWVVzsE8wRkhBghFrZGGwG");
 
 // TODO: change to real one
 pub const MINIMUM_STAKE: u64 = 100000000;
