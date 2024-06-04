@@ -216,6 +216,114 @@
       "args": []
     },
     {
+      "name": "prepareTree",
+      "accounts": [
+        {
+          "name": "treeAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "merkleTree",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "treeCreator",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "logWrapper",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "compressionProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "maxDepth",
+          "type": "u32"
+        },
+        {
+          "name": "maxBufferSize",
+          "type": "u32"
+        },
+        {
+          "name": "public",
+          "type": {
+            "option": "bool"
+          }
+        }
+      ]
+    },
+    {
+      "name": "addCanopy",
+      "accounts": [
+        {
+          "name": "treeAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "merkleTree",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "incomingTreeDelegate",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "logWrapper",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "compressionProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "startIndex",
+          "type": "u32"
+        },
+        {
+          "name": "canopyNodes",
+          "type": {
+            "vec": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "createTree",
       "docs": [
         "Creates a new tree."
@@ -275,11 +383,11 @@
       ]
     },
     {
-      "name": "createTreeWithRoot",
+      "name": "finalizeTreeWithRoot",
       "accounts": [
         {
           "name": "treeAuthority",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -288,12 +396,7 @@
           "isSigner": false
         },
         {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "treeCreator",
+          "name": "staker",
           "isMut": true,
           "isSigner": true
         },
@@ -305,11 +408,6 @@
         {
           "name": "voter",
           "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "feeReceiver",
-          "isMut": true,
           "isSigner": false
         },
         {
@@ -330,19 +428,7 @@
       ],
       "args": [
         {
-          "name": "maxDepth",
-          "type": "u32"
-        },
-        {
-          "name": "maxBufferSize",
-          "type": "u32"
-        },
-        {
-          "name": "numMinted",
-          "type": "u64"
-        },
-        {
-          "name": "root",
+          "name": "rightmostRoot",
           "type": {
             "array": [
               "u8",
@@ -351,7 +437,7 @@
           }
         },
         {
-          "name": "leaf",
+          "name": "rightmostLeaf",
           "type": {
             "array": [
               "u8",
@@ -360,7 +446,7 @@
           }
         },
         {
-          "name": "index",
+          "name": "rightmostIndex",
           "type": "u32"
         },
         {
@@ -370,12 +456,6 @@
         {
           "name": "metadataHash",
           "type": "string"
-        },
-        {
-          "name": "public",
-          "type": {
-            "option": "bool"
-          }
         }
       ]
     },
@@ -2177,7 +2257,13 @@
             "name": "UpdateMetadata"
           },
           {
-            "name": "CreateTreeWithRoot"
+            "name": "FinalizeTreeWithRoot"
+          },
+          {
+            "name": "PrepareTree"
+          },
+          {
+            "name": "AddCanopy"
           }
         ]
       }

@@ -20,13 +20,10 @@ import {
   Serializer,
   array,
   bool,
-  bytes,
   mapSerializer,
   option,
-  string,
   struct,
   u32,
-  u64,
   u8,
 } from '@metaplex-foundation/umi/serializers';
 import { findTreeConfigPda } from '../accounts';
@@ -38,88 +35,59 @@ import {
 } from '../shared';
 
 // Accounts.
-export type CreateTreeWithRootInstructionAccounts = {
+export type PrepareTreeInstructionAccounts = {
   treeConfig?: PublicKey | Pda;
   merkleTree: PublicKey | Pda;
   payer?: Signer;
-  treeCreator?: Signer;
-  registrar: PublicKey | Pda;
-  voter: PublicKey | Pda;
-  feeReceiver: PublicKey | Pda;
+  treeCreator?: PublicKey | Pda;
   logWrapper?: PublicKey | Pda;
   compressionProgram?: PublicKey | Pda;
   systemProgram?: PublicKey | Pda;
 };
 
 // Data.
-export type CreateTreeWithRootInstructionData = {
+export type PrepareTreeInstructionData = {
   discriminator: Array<number>;
   maxDepth: number;
   maxBufferSize: number;
-  numMinted: bigint;
-  root: Uint8Array;
-  leaf: Uint8Array;
-  index: number;
-  metadataUrl: string;
-  metadataHash: string;
   public: Option<boolean>;
 };
 
-export type CreateTreeWithRootInstructionDataArgs = {
+export type PrepareTreeInstructionDataArgs = {
   maxDepth: number;
   maxBufferSize: number;
-  numMinted: number | bigint;
-  root: Uint8Array;
-  leaf: Uint8Array;
-  index: number;
-  metadataUrl: string;
-  metadataHash: string;
   public: OptionOrNullable<boolean>;
 };
 
-export function getCreateTreeWithRootInstructionDataSerializer(): Serializer<
-  CreateTreeWithRootInstructionDataArgs,
-  CreateTreeWithRootInstructionData
+export function getPrepareTreeInstructionDataSerializer(): Serializer<
+  PrepareTreeInstructionDataArgs,
+  PrepareTreeInstructionData
 > {
   return mapSerializer<
-    CreateTreeWithRootInstructionDataArgs,
+    PrepareTreeInstructionDataArgs,
     any,
-    CreateTreeWithRootInstructionData
+    PrepareTreeInstructionData
   >(
-    struct<CreateTreeWithRootInstructionData>(
+    struct<PrepareTreeInstructionData>(
       [
         ['discriminator', array(u8(), { size: 8 })],
         ['maxDepth', u32()],
         ['maxBufferSize', u32()],
-        ['numMinted', u64()],
-        ['root', bytes({ size: 32 })],
-        ['leaf', bytes({ size: 32 })],
-        ['index', u32()],
-        ['metadataUrl', string()],
-        ['metadataHash', string()],
         ['public', option(bool())],
       ],
-      { description: 'CreateTreeWithRootInstructionData' }
+      { description: 'PrepareTreeInstructionData' }
     ),
-    (value) => ({
-      ...value,
-      discriminator: [101, 214, 253, 135, 176, 170, 11, 235],
-    })
-  ) as Serializer<
-    CreateTreeWithRootInstructionDataArgs,
-    CreateTreeWithRootInstructionData
-  >;
+    (value) => ({ ...value, discriminator: [41, 56, 189, 77, 58, 12, 142, 71] })
+  ) as Serializer<PrepareTreeInstructionDataArgs, PrepareTreeInstructionData>;
 }
 
 // Args.
-export type CreateTreeWithRootInstructionArgs =
-  CreateTreeWithRootInstructionDataArgs;
+export type PrepareTreeInstructionArgs = PrepareTreeInstructionDataArgs;
 
 // Instruction.
-export function createTreeWithRoot(
+export function prepareTree(
   context: Pick<Context, 'eddsa' | 'identity' | 'payer' | 'programs'>,
-  input: CreateTreeWithRootInstructionAccounts &
-    CreateTreeWithRootInstructionArgs
+  input: PrepareTreeInstructionAccounts & PrepareTreeInstructionArgs
 ): TransactionBuilder {
   // Program ID.
   const programId = context.programs.getPublicKey(
@@ -134,35 +102,28 @@ export function createTreeWithRoot(
     payer: { index: 2, isWritable: true, value: input.payer ?? null },
     treeCreator: {
       index: 3,
-      isWritable: true,
+      isWritable: false,
       value: input.treeCreator ?? null,
     },
-    registrar: { index: 4, isWritable: false, value: input.registrar ?? null },
-    voter: { index: 5, isWritable: false, value: input.voter ?? null },
-    feeReceiver: {
-      index: 6,
-      isWritable: true,
-      value: input.feeReceiver ?? null,
-    },
     logWrapper: {
-      index: 7,
+      index: 4,
       isWritable: false,
       value: input.logWrapper ?? null,
     },
     compressionProgram: {
-      index: 8,
+      index: 5,
       isWritable: false,
       value: input.compressionProgram ?? null,
     },
     systemProgram: {
-      index: 9,
+      index: 6,
       isWritable: false,
       value: input.systemProgram ?? null,
     },
   };
 
   // Arguments.
-  const resolvedArgs: CreateTreeWithRootInstructionArgs = { ...input };
+  const resolvedArgs: PrepareTreeInstructionArgs = { ...input };
 
   // Default values.
   if (!resolvedAccounts.treeConfig.value) {
@@ -174,7 +135,7 @@ export function createTreeWithRoot(
     resolvedAccounts.payer.value = context.payer;
   }
   if (!resolvedAccounts.treeCreator.value) {
-    resolvedAccounts.treeCreator.value = context.identity;
+    resolvedAccounts.treeCreator.value = context.identity.publicKey;
   }
   if (!resolvedAccounts.logWrapper.value) {
     resolvedAccounts.logWrapper.value = context.programs.getPublicKey(
@@ -211,8 +172,8 @@ export function createTreeWithRoot(
   );
 
   // Data.
-  const data = getCreateTreeWithRootInstructionDataSerializer().serialize(
-    resolvedArgs as CreateTreeWithRootInstructionDataArgs
+  const data = getPrepareTreeInstructionDataSerializer().serialize(
+    resolvedArgs as PrepareTreeInstructionDataArgs
   );
 
   // Bytes Created On Chain.

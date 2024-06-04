@@ -2,10 +2,11 @@ use super::{
     clone_keypair, compute_metadata_hashes,
     tx_builder::{
         AddCanopyBuilder, BurnBuilder, CancelRedeemBuilder, CollectionVerificationInner,
-        CreateBuilder, CreateWithRootBuilder, CreatorVerificationInner, DelegateBuilder,
-        DelegateInner, MintToCollectionV1Builder, MintV1Builder, PrepareTreeBuilder, RedeemBuilder,
-        SetDecompressibleStateBuilder, SetTreeDelegateBuilder, TransferBuilder, TransferInner,
-        TxBuilder, UnverifyCreatorBuilder, VerifyCollectionBuilder, VerifyCreatorBuilder,
+        CreateBuilder, CreatorVerificationInner, DelegateBuilder, DelegateInner,
+        FinalizeWithRootBuilder, MintToCollectionV1Builder, MintV1Builder, PrepareTreeBuilder,
+        RedeemBuilder, SetDecompressibleStateBuilder, SetTreeDelegateBuilder, TransferBuilder,
+        TransferInner, TxBuilder, UnverifyCreatorBuilder, VerifyCollectionBuilder,
+        VerifyCreatorBuilder,
     },
     Error, LeafArgs, Result,
 };
@@ -272,29 +273,25 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         self.create_tree_tx(payer, true).execute().await
     }
 
-    pub fn create_tree_with_root_tx(
+    pub fn finalize_tree_with_root_tx(
         &mut self,
         payer: &Keypair,
-        public: bool,
-        max_depth: u32,
-        num_minted: u64,
-        root: [u8; 32],
-        leaf: [u8; 32],
-        index: u32,
+        rightmost_root: [u8; 32],
+        rightmost_leaf: [u8; 32],
+        rightmost_index: u32,
         metadata_url: String,
         metadata_hash: String,
         registrar: Pubkey,
         voter: Pubkey,
         fee_receiver: Pubkey,
-    ) -> CreateWithRootBuilder<MAX_DEPTH, MAX_BUFFER_SIZE> {
+    ) ->  -> FinalizeWithRootBuilder<MAX_DEPTH, MAX_BUFFER_SIZE>{
         let tree_authority =
             Pubkey::find_program_address(&[self.tree_pubkey().as_ref()], &bubblegum::id()).0;
 
-        let accounts = bubblegum::accounts::CreateTreeWithRoot {
+        let accounts = bubblegum::accounts::FinalizeTreeWithRoot {
             tree_authority,
             merkle_tree: self.tree_pubkey(),
-            payer: payer.pubkey(),
-            tree_creator: self.creator_pubkey(),
+            staker: payer.pubkey(),
             registrar,
             voter,
             fee_receiver,
@@ -303,15 +300,12 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             system_program: system_program::id(),
         };
 
-        let data = bubblegum::instruction::CreateTreeWithRoot {
-            max_depth,
-            num_minted,
-            root,
-            leaf,
-            index,
+        let data = bubblegum::instruction::FinalizeTreeWithRoot {
+            rightmost_root,
+            rightmost_leaf,
+            rightmost_index,
             metadata_url,
             metadata_hash,
-            public: Some(public),
         };
 
         let tree_creator_keypair = clone_keypair(&self.tree_creator);
@@ -337,7 +331,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         let accounts = bubblegum::accounts::AddCanopy {
             tree_authority,
             merkle_tree: self.tree_pubkey(),
-            delegate: tree_delegate.pubkey(),
+            incoming_tree_delegate: tree_delegate.pubkey(),
             log_wrapper: spl_noop::id(),
             compression_program: spl_account_compression::id(),
             system_program: system_program::id(),
@@ -364,9 +358,6 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         public: bool,
         max_depth: u32,
         max_buffer_size: u32,
-        num_minted: u64,
-        registrar: Pubkey,
-        voter: Pubkey,
     ) -> PrepareTreeBuilder<MAX_DEPTH, MAX_BUFFER_SIZE> {
         let tree_authority =
             Pubkey::find_program_address(&[self.tree_pubkey().as_ref()], &bubblegum::id()).0;
@@ -376,8 +367,6 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             merkle_tree: self.tree_pubkey(),
             payer: payer.pubkey(),
             tree_creator: self.creator_pubkey(),
-            registrar,
-            voter,
             log_wrapper: spl_noop::id(),
             compression_program: spl_account_compression::id(),
             system_program: system_program::id(),
@@ -386,7 +375,6 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         let data = bubblegum::instruction::PrepareTree {
             max_depth,
             max_buffer_size,
-            num_minted,
             public: Some(public),
         };
 

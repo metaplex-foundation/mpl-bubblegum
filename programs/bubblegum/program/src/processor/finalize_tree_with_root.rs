@@ -16,7 +16,7 @@ use crate::{
 const PROTOCOL_FEE_PER_1024_ASSETS: u64 = 1_280_000; // 0.00128 SOL in lamports
 
 #[derive(Accounts)]
-pub struct CreateTreeWithRoot<'info> {
+pub struct FinalizeTreeWithRoot<'info> {
     #[account(
         seeds = [merkle_tree.key().as_ref()],
         bump,
@@ -26,10 +26,7 @@ pub struct CreateTreeWithRoot<'info> {
     /// CHECK:
     pub merkle_tree: UncheckedAccount<'info>,
     #[account(mut)]
-    pub payer: Signer<'info>,
-    /// CHECK:
-    #[account(mut)]
-    pub tree_creator: Signer<'info>,
+    pub staker: Signer<'info>,
     /// CHECK:
     pub registrar: UncheckedAccount<'info>,
     /// CHECK:
@@ -42,18 +39,21 @@ pub struct CreateTreeWithRoot<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub(crate) fn create_tree_with_root<'info>(
-    ctx: Context<'_, '_, '_, 'info, CreateTreeWithRoot<'info>>,
-    max_depth: u32,
-    num_minted: u64,
+pub(crate) fn finalize_tree_with_root<'info>(
+    ctx: Context<'_, '_, '_, 'info, FinalizeTreeWithRoot<'info>>,
     root: [u8; 32],
-    leaf: [u8; 32],
-    index: u32,
+    rightmost_leaf: [u8; 32],
+    rightmost_index: u32,
     _metadata_url: String,
     _metadata_hash: String,
-    public: Option<bool>,
 ) -> Result<()> {
     // TODO: charge protocol fees
+
+    check_stake(
+        &ctx.accounts.staker.to_account_info(),
+        &ctx.accounts.registrar.to_account_info(),
+        &ctx.accounts.voter.to_account_info(),
+    )?;
 
     assert_eq!(ctx.accounts.registrar.owner, &mplx_staking_states::ID);
     assert_eq!(ctx.accounts.voter.owner, &mplx_staking_states::ID);
@@ -74,6 +74,39 @@ pub(crate) fn create_tree_with_root<'info>(
         ],
     )?;
 
+    let merkle_tree = ctx.accounts.merkle_tree.to_account_info();
+    let seed = merkle_tree.key();
+    let seeds = &[seed.as_ref(), &[ctx.bumps.tree_authority]];
+
+    let authority = &mut ctx.accounts.tree_authority;
+    authority.set_inner(TreeConfig {
+        tree_delegate: authority.tree_creator,
+        num_minted: (rightmost_index + 1) as u64,
+        ..**authority
+    });
+    let authority_pda_signer = &[&seeds[..]];
+
+    finalize_tree(
+        root,
+        rightmost_leaf,
+        rightmost_index,
+        &ctx.accounts.compression_program.to_account_info(),
+        &ctx.accounts.tree_authority.to_account_info(),
+        &merkle_tree,
+        &ctx.accounts.log_wrapper.to_account_info(),
+        authority_pda_signer,
+        ctx.remaining_accounts,
+    )
+}
+
+fn check_stake<'info>(
+    staker_acc: &AccountInfo<'info>,
+    registrar_acc: &AccountInfo<'info>,
+    voter_acc: &AccountInfo<'info>,
+) -> Result<()> {
+    assert_eq!(registrar_acc.owner, &mplx_staking_states::ID);
+    assert_eq!(voter_acc.owner, &mplx_staking_states::ID);
+
     let generated_registrar = Pubkey::find_program_address(
         &[
             REALM.to_bytes().as_ref(),
@@ -83,20 +116,20 @@ pub(crate) fn create_tree_with_root<'info>(
         &mplx_staking_states::ID,
     )
     .0;
-    assert_eq!(&generated_registrar, ctx.accounts.registrar.key);
+    assert_eq!(&generated_registrar, registrar_acc.key);
 
     let generated_voter_key = Pubkey::find_program_address(
         &[
-            ctx.accounts.registrar.key.to_bytes().as_ref(),
+            registrar_acc.key.to_bytes().as_ref(),
             b"voter".as_ref(),
-            ctx.accounts.payer.key.to_bytes().as_ref(),
+            staker_acc.key.to_bytes().as_ref(),
         ],
         &mplx_staking_states::ID,
     )
     .0;
-    assert_eq!(&generated_voter_key, ctx.accounts.voter.key);
+    assert_eq!(&generated_voter_key, voter_acc.key);
 
-    let registrar_bytes = ctx.accounts.registrar.to_account_info().data;
+    let registrar_bytes = registrar_acc.to_account_info().data;
 
     assert_eq!((*registrar_bytes.borrow())[..8], REGISTRAR_DISCRIMINATOR);
 
@@ -105,14 +138,14 @@ pub(crate) fn create_tree_with_root<'info>(
     assert_eq!(registrar.realm, REALM);
     assert_eq!(registrar.realm_governing_token_mint, REALM_GOVERNING_MINT);
 
-    let voter_bytes = ctx.accounts.voter.to_account_info().data;
+    let voter_bytes = voter_acc.to_account_info().data;
 
     assert_eq!((*voter_bytes.borrow())[..8], VOTER_DISCRIMINATOR);
 
     let voter: Voter = *bytemuck::from_bytes(&(*voter_bytes.borrow())[8..]);
 
-    assert_eq!(&voter.registrar, ctx.accounts.registrar.key);
-    assert_eq!(&voter.voter_authority, ctx.accounts.payer.key);
+    assert_eq!(&voter.registrar, registrar_acc.key);
+    assert_eq!(&voter.voter_authority, staker_acc.key);
 
     let clock = Clock::get()?;
 
@@ -134,38 +167,13 @@ pub(crate) fn create_tree_with_root<'info>(
         return Err(BubblegumError::NotEnoughStakeForOperation.into());
     }
 
-    let merkle_tree = ctx.accounts.merkle_tree.to_account_info();
-    let seed = merkle_tree.key();
-    let seeds = &[seed.as_ref(), &[ctx.bumps.tree_authority]];
-
-    let authority = &mut ctx.accounts.tree_authority;
-    authority.set_inner(TreeConfig {
-        tree_creator: ctx.accounts.tree_creator.key(),
-        tree_delegate: ctx.accounts.tree_creator.key(),
-        total_mint_capacity: 1 << max_depth,
-        num_minted,
-        is_public: public.unwrap_or(false),
-        is_decompressible: DecompressibleState::Disabled,
-    });
-    let authority_pda_signer = &[&seeds[..]];
-
-    init_tree(
-        root,
-        leaf,
-        index,
-        &ctx.accounts.compression_program.to_account_info(),
-        &ctx.accounts.tree_authority.to_account_info(),
-        &merkle_tree,
-        &ctx.accounts.log_wrapper.to_account_info(),
-        authority_pda_signer,
-        ctx.remaining_accounts,
-    )
+    Ok(())
 }
 
-fn init_tree<'info>(
+fn finalize_tree<'info>(
     root: [u8; 32],
-    leaf: [u8; 32],
-    index: u32,
+    rightmost_leaf: [u8; 32],
+    rightmost_index: u32,
     compression_program: &AccountInfo<'info>,
     tree_authority: &AccountInfo<'info>,
     merkle_tree: &AccountInfo<'info>,
@@ -183,7 +191,12 @@ fn init_tree<'info>(
         authority_pda_signer,
     )
     .with_remaining_accounts(remaining_accounts.to_vec());
-    spl_account_compression::cpi::finalize_merkle_tree_with_root(cpi_ctx, root, leaf, index)
+    spl_account_compression::cpi::finalize_merkle_tree_with_root(
+        cpi_ctx,
+        root,
+        rightmost_leaf,
+        rightmost_index,
+    )
 }
 
 fn calculate_protocol_fee_lamports(number_of_assets: u64) -> u64 {

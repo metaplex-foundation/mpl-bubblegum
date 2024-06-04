@@ -200,18 +200,12 @@ async fn test_prepare_tree_without_canopy() {
         false,
         MAX_DEPTH as u32,
         MAX_BUF_SIZE as u32,
-        1000,
-        registrar_key,
-        voter_key,
     );
 
     tree_tx_builder.execute_without_root_check().await.unwrap();
 
-    let mut tree_tx_builder = tree.create_tree_with_root_tx(
+    let mut tree_tx_builder = tree.finalize_tree_with_root_tx(
         &program_context.test_context().payer,
-        false,
-        MAX_DEPTH as u32,
-        1000,
         TREE_ROOT,
         RIGHTMOST_LEAF,
         999,
@@ -404,9 +398,6 @@ async fn test_prepare_tree_with_canopy() {
         false,
         MAX_DEPTH as u32,
         MAX_BUF_SIZE as u32,
-        1000,
-        registrar_key,
-        voter_key,
     );
 
     tree_tx_builder.execute_without_root_check().await.unwrap();
@@ -426,11 +417,8 @@ async fn test_prepare_tree_with_canopy() {
             .unwrap();
     }
 
-    let mut tree_tx_builder = tree.create_tree_with_root_tx(
+    let mut tree_tx_builder = tree.finalize_tree_with_root_tx(
         &program_context.test_context().payer,
-        false,
-        MAX_DEPTH as u32,
-        1000,
         TREE_ROOT,
         RIGHTMOST_LEAF,
         999,
@@ -606,9 +594,6 @@ async fn test_put_wrong_canopy() {
         false,
         MAX_DEPTH as u32,
         MAX_BUF_SIZE as u32,
-        1000,
-        registrar_key,
-        voter_key,
     );
 
     tree_tx_builder.execute_without_root_check().await.unwrap();
@@ -628,11 +613,8 @@ async fn test_put_wrong_canopy() {
             .unwrap();
     }
 
-    let mut tree_tx_builder = tree.create_tree_with_root_tx(
+    let mut tree_tx_builder = tree.finalize_tree_with_root_tx(
         &program_context.test_context().payer,
-        false,
-        MAX_DEPTH as u32,
-        1000,
         TREE_ROOT,
         RIGHTMOST_LEAF,
         999,

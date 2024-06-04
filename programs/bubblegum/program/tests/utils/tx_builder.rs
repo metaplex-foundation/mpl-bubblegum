@@ -163,18 +163,18 @@ impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExe
     }
 }
 
-pub type CreateWithRootBuilder<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> =
+pub type FinalizeWithRootBuilder<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> =
     TxBuilder<
         'a,
-        bubblegum::accounts::CreateTreeWithRoot,
-        bubblegum::instruction::CreateTreeWithRoot,
+        bubblegum::accounts::FinalizeTreeWithRoot,
+        bubblegum::instruction::FinalizeTreeWithRoot,
         (),
         MAX_DEPTH,
         MAX_BUFFER_SIZE,
     >;
 
 impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExec
-    for CreateWithRootBuilder<'a, MAX_DEPTH, MAX_BUFFER_SIZE>
+    for FinalizeWithRootBuilder<'a, MAX_DEPTH, MAX_BUFFER_SIZE>
 {
     fn on_successful_execute(&mut self) -> Result<()> {
         // Do nothing here.
