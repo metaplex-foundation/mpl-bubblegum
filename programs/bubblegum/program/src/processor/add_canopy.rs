@@ -27,7 +27,8 @@ pub(crate) fn add_canopy<'info>(
     let incoming_tree_delegate = ctx.accounts.incoming_tree_delegate.key();
     let authority = &mut ctx.accounts.tree_authority;
 
-    // incoming_tree_delegate is Metagrid node in this case
+    // incoming_tree_delegate is the tree owner as set in prepare tree, it's required to do any modificaitons to the tree,
+    // including the canopy setup
     require!(
         incoming_tree_delegate == authority.tree_delegate,
         BubblegumError::TreeAuthorityIncorrect,
@@ -42,7 +43,7 @@ pub(crate) fn add_canopy<'info>(
     let cpi_ctx = CpiContext::new_with_signer(
         ctx.accounts.compression_program.to_account_info(),
         spl_account_compression::cpi::accounts::Modify {
-            merkle_tree: ctx.accounts.merkle_tree.to_account_info(),
+            merkle_tree,
             authority: ctx.accounts.tree_authority.to_account_info(),
             noop: ctx.accounts.log_wrapper.to_account_info(),
         },
