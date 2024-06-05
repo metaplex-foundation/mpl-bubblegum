@@ -7,7 +7,7 @@ use spl_account_compression::{program::SplAccountCompression, Noop};
 use crate::state::FEE_RECEIVER;
 use crate::{
     error::BubblegumError,
-    state::{TreeConfig, MINIMUM_STAKE, REALM, REALM_GOVERNING_MINT},
+    state::{TreeConfig, MINIMUM_WEIGHTED_STAKE, REALM, REALM_GOVERNING_MINT},
 };
 
 const PROTOCOL_FEE_PER_1024_ASSETS: u64 = 1_280_000; // 0.00128 SOL in lamports
@@ -146,22 +146,14 @@ fn check_stake<'info>(
     assert_eq!(&voter.voter_authority, staker_acc.key);
 
     let clock = Clock::get()?;
-
-    let amount_locked: u64 = voter
+    let curr_ts = clock.unix_timestamp as u64;
+    let weighted_sum: u64 = voter
         .deposits
         .iter()
-        .filter_map(|d| {
-            if d.is_used
-                && (d.lockup.end_ts > (clock.unix_timestamp as u64) && !d.lockup.cooldown_requested)
-            {
-                Some(d.amount_deposited_native)
-            } else {
-                None
-            }
-        })
+        .map(|d| d.weighted_stake(curr_ts))
         .sum();
 
-    if amount_locked < MINIMUM_STAKE {
+    if weighted_sum < MINIMUM_WEIGHTED_STAKE {
         return Err(BubblegumError::NotEnoughStakeForOperation.into());
     }
 
