@@ -207,19 +207,31 @@ fn calculate_protocol_fee_lamports(number_of_assets: u64) -> u64 {
 fn test_calculate_protocol_fee_lamports() {
     let mut number_of_assets = 1;
     let lamports_fee_for_single_asset_tree = calculate_protocol_fee_lamports(number_of_assets);
-    assert_eq!(lamports_fee_for_single_asset_tree, 1280000);
+    assert_eq!(
+        lamports_fee_for_single_asset_tree,
+        PROTOCOL_FEE_PER_1024_ASSETS
+    );
 
     number_of_assets = 1023;
     let lamports_fee_for_1023_assets_tree = calculate_protocol_fee_lamports(number_of_assets);
-    assert_eq!(lamports_fee_for_1023_assets_tree, 1280000);
+    assert_eq!(
+        lamports_fee_for_1023_assets_tree,
+        PROTOCOL_FEE_PER_1024_ASSETS
+    );
 
     number_of_assets = 1024;
     let lamports_fee_for_1024_assets_tree = calculate_protocol_fee_lamports(number_of_assets);
-    assert_eq!(lamports_fee_for_1024_assets_tree, 1280000);
+    assert_eq!(
+        lamports_fee_for_1024_assets_tree,
+        PROTOCOL_FEE_PER_1024_ASSETS
+    );
 
     number_of_assets = 1025;
     let lamports_fee_for_1025_assets_tree = calculate_protocol_fee_lamports(number_of_assets);
-    assert_eq!(lamports_fee_for_1025_assets_tree, 2560000);
+    assert_eq!(
+        lamports_fee_for_1025_assets_tree,
+        PROTOCOL_FEE_PER_1024_ASSETS * 2
+    );
 
     number_of_assets = 1_000_000;
     let lamports_fee_for_million_assets_tree = calculate_protocol_fee_lamports(number_of_assets);
