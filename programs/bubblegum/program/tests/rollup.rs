@@ -792,14 +792,8 @@ async fn test_prepare_with_small_canopy() {
         .await
         .unwrap();
 
-    let mut tree_tx_builder = tree.prepare_tree_tx(
-        &program_context.test_context().payer,
-        false,
-        20,
-        64,
-        registrar_key,
-        voter_key,
-    );
+    let mut tree_tx_builder =
+        tree.prepare_tree_tx(&program_context.test_context().payer, false, 20, 64);
 
     let res = tree_tx_builder.execute_without_root_check().await;
 

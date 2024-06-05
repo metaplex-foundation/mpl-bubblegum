@@ -2,9 +2,8 @@ use anchor_lang::{prelude::*, system_program::System};
 use spl_account_compression::{program::SplAccountCompression, Noop};
 
 use crate::{
-    state::{
-        DecompressibleState, TreeConfig, TREE_AUTHORITY_SIZE,
-    }, utils::check_canopy_size,
+    state::{DecompressibleState, TreeConfig, TREE_AUTHORITY_SIZE},
+    utils::check_canopy_size,
 };
 
 #[derive(Accounts)]
@@ -35,7 +34,12 @@ pub(crate) fn prepare_tree<'info>(
     max_buffer_size: u32,
     public: Option<bool>,
 ) -> Result<()> {
-    check_canopy_size(ctx.accounts.merkle_tree.to_account_info(), ctx.accounts.tree_authority.to_account_info(), max_depth, max_buffer_size)?;
+    check_canopy_size(
+        ctx.accounts.merkle_tree.to_account_info(),
+        ctx.accounts.tree_authority.to_account_info(),
+        max_depth,
+        max_buffer_size,
+    )?;
 
     let merkle_tree = ctx.accounts.merkle_tree.to_account_info();
     let seed = merkle_tree.key();

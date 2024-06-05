@@ -1,15 +1,23 @@
 use std::mem::size_of;
 
-use crate::{error::BubblegumError, state::{
-    metaplex_adapter::{Creator, MetadataArgs},
-    ASSET_PREFIX, MAX_ACC_PROOFS_SIZE,
-}};
+use crate::{
+    error::BubblegumError,
+    state::{
+        metaplex_adapter::{Creator, MetadataArgs},
+        ASSET_PREFIX, MAX_ACC_PROOFS_SIZE,
+    },
+};
 use anchor_lang::{
     prelude::*,
     solana_program::{program_memory::sol_memcmp, pubkey::PUBKEY_BYTES},
 };
 use solana_program::keccak;
-use spl_account_compression::{state::{merkle_tree_get_size, ConcurrentMerkleTreeHeader, CONCURRENT_MERKLE_TREE_HEADER_SIZE_V1}, Node};
+use spl_account_compression::{
+    state::{
+        merkle_tree_get_size, ConcurrentMerkleTreeHeader, CONCURRENT_MERKLE_TREE_HEADER_SIZE_V1,
+    },
+    Node,
+};
 
 pub fn hash_creators(creators: &[Creator]) -> Result<[u8; 32]> {
     // Convert creator Vec to bytes Vec.
