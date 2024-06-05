@@ -41,51 +41,38 @@ pub(crate) fn prepare_tree<'info>(
         max_buffer_size,
     )?;
 
-    let merkle_tree = ctx.accounts.merkle_tree.to_account_info();
-    let seed = merkle_tree.key();
-    let seeds = &[seed.as_ref(), &[ctx.bumps.tree_authority]];
     let authority = &mut ctx.accounts.tree_authority;
     authority.set_inner(TreeConfig {
         tree_creator: ctx.accounts.tree_creator.key(),
-        tree_delegate: ctx.accounts.payer.key(),
+        tree_delegate: ctx.accounts.tree_creator.key(),
         total_mint_capacity: 1 << max_depth,
         num_minted: 0,
         is_public: public.unwrap_or(false),
         is_decompressible: DecompressibleState::Disabled,
     });
-    let authority_pda_signer = &[&seeds[..]];
 
-    prep_tree(
-        max_depth,
-        max_buffer_size,
-        &ctx.accounts.compression_program.to_account_info(),
-        &ctx.accounts.tree_authority.to_account_info(),
-        &merkle_tree,
-        &ctx.accounts.log_wrapper.to_account_info(),
-        authority_pda_signer,
-        ctx.remaining_accounts,
-    )
+    prep_tree_cpi_call(ctx, max_depth, max_buffer_size)
 }
 
-fn prep_tree<'info>(
+#[inline(always)]
+fn prep_tree_cpi_call<'info>(
+    ctx: Context<'_, '_, '_, 'info, PrepareTree<'info>>,
     max_depth: u32,
     max_buffer_size: u32,
-    compression_program: &AccountInfo<'info>,
-    tree_authority: &AccountInfo<'info>,
-    merkle_tree: &AccountInfo<'info>,
-    noop: &AccountInfo<'info>,
-    authority_pda_signer: &[&[&[u8]]; 1],
-    remaining_accounts: &[AccountInfo<'info>],
 ) -> Result<()> {
+    let merkle_tree = ctx.accounts.merkle_tree.to_account_info();
+    let seed = merkle_tree.key();
+    let seeds: &[&[u8]; 2] = &[seed.as_ref(), &[ctx.bumps.tree_authority]];
+    let authority_pda_signer = &[&seeds[..]];
+
     let cpi_ctx = CpiContext::new_with_signer(
-        compression_program.clone(),
+        ctx.accounts.compression_program.to_account_info(),
         spl_account_compression::cpi::accounts::Initialize {
-            merkle_tree: merkle_tree.clone(),
-            authority: tree_authority.clone(),
-            noop: noop.clone(),
+            merkle_tree,
+            authority: ctx.accounts.tree_authority.to_account_info(),
+            noop: ctx.accounts.log_wrapper.to_account_info(),
         },
         authority_pda_signer,
-    )
-    .with_remaining_accounts(remaining_accounts.to_vec());
+    );
     spl_account_compression::cpi::prepare_tree(cpi_ctx, max_depth, max_buffer_size)
 }
