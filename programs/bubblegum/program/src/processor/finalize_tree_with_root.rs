@@ -7,10 +7,7 @@ use spl_account_compression::{program::SplAccountCompression, Noop};
 use crate::state::FEE_RECEIVER;
 use crate::{
     error::BubblegumError,
-    state::{
-        DecompressibleState, TreeConfig, MINIMUM_STAKE, REALM, REALM_GOVERNING_MINT,
-        TREE_AUTHORITY_SIZE,
-    },
+    state::{TreeConfig, MINIMUM_STAKE, REALM, REALM_GOVERNING_MINT},
 };
 
 const PROTOCOL_FEE_PER_1024_ASSETS: u64 = 1_280_000; // 0.00128 SOL in lamports
@@ -59,16 +56,17 @@ pub(crate) fn finalize_tree_with_root<'info>(
     assert_eq!(ctx.accounts.voter.owner, &mplx_staking_states::ID);
     assert_eq!(ctx.accounts.fee_receiver.key, &FEE_RECEIVER);
 
+    let num_minted = (rightmost_index + 1) as u64;
     let fee = calculate_protocol_fee_lamports(num_minted);
     let transfer_instruction = anchor_lang::solana_program::system_instruction::transfer(
-        &ctx.accounts.tree_creator.key(),
+        &ctx.accounts.staker.key(),
         &ctx.accounts.fee_receiver.key(),
         fee,
     );
     anchor_lang::solana_program::program::invoke(
         &transfer_instruction,
         &[
-            ctx.accounts.tree_creator.to_account_info(),
+            ctx.accounts.staker.to_account_info(),
             ctx.accounts.fee_receiver.to_account_info(),
             ctx.accounts.system_program.to_account_info(),
         ],
@@ -81,7 +79,7 @@ pub(crate) fn finalize_tree_with_root<'info>(
     let authority = &mut ctx.accounts.tree_authority;
     authority.set_inner(TreeConfig {
         tree_delegate: authority.tree_creator,
-        num_minted: (rightmost_index + 1) as u64,
+        num_minted,
         ..**authority
     });
     let authority_pda_signer = &[&seeds[..]];

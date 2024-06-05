@@ -284,7 +284,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         registrar: Pubkey,
         voter: Pubkey,
         fee_receiver: Pubkey,
-    ) ->  -> FinalizeWithRootBuilder<MAX_DEPTH, MAX_BUFFER_SIZE>{
+    ) -> FinalizeWithRootBuilder<MAX_DEPTH, MAX_BUFFER_SIZE> {
         let tree_authority =
             Pubkey::find_program_address(&[self.tree_pubkey().as_ref()], &bubblegum::id()).0;
 
@@ -308,15 +308,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             metadata_hash,
         };
 
-        let tree_creator_keypair = clone_keypair(&self.tree_creator);
-        self.tx_builder(
-            accounts,
-            data,
-            None,
-            (),
-            payer.pubkey(),
-            &[payer, &tree_creator_keypair],
-        )
+        self.tx_builder(accounts, data, None, (), payer.pubkey(), &[payer, payer])
     }
 
     pub fn add_canopy_tx(

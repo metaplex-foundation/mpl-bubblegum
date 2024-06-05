@@ -187,9 +187,9 @@ async fn test_prepare_tree_without_canopy() {
         .unwrap()
         .unwrap()
         .lamports;
-    let start_tree_creator = program_context
+    let start_staker_balance = program_context
         .client()
-        .get_account(tree.creator_pubkey())
+        .get_account(program_context.test_context().payer.pubkey())
         .await
         .unwrap()
         .unwrap()
@@ -233,17 +233,21 @@ async fn test_prepare_tree_without_canopy() {
         .unwrap()
         .unwrap()
         .lamports;
-    let end_tree_creator_balance = program_context
+    let end_staker_balance = program_context
         .client()
-        .get_account(tree.creator_pubkey())
+        .get_account(program_context.test_context().payer.pubkey())
         .await
         .unwrap()
         .unwrap()
         .lamports;
     let fee = 1280000;
+    let solana_commision = 1569040;
 
     assert_eq!(end_fee_receiver_balance, start_fee_receiver_balance + fee);
-    assert_eq!(end_tree_creator_balance, start_tree_creator - fee);
+    assert_eq!(
+        end_staker_balance,
+        start_staker_balance - fee - solana_commision
+    );
 }
 
 #[tokio::test]
@@ -823,19 +827,13 @@ async fn test_put_wrong_fee_receiver() {
         false,
         MAX_DEPTH as u32,
         MAX_BUF_SIZE as u32,
-        1000,
-        registrar_key,
-        voter_key,
     );
 
     tree_tx_builder.execute_without_root_check().await.unwrap();
 
     let wrong_fee_receiver = Pubkey::new_unique();
-    let mut tree_tx_builder = tree.create_tree_with_root_tx(
+    let mut tree_tx_builder = tree.finalize_tree_with_root_tx(
         &program_context.test_context().payer,
-        false,
-        MAX_DEPTH as u32,
-        1000,
         TREE_ROOT,
         RIGHTMOST_LEAF,
         999,

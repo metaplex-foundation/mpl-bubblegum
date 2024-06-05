@@ -411,6 +411,11 @@
           "isSigner": false
         },
         {
+          "name": "feeReceiver",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "logWrapper",
           "isMut": false,
           "isSigner": false
