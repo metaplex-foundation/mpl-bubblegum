@@ -12,6 +12,8 @@ pub const VOUCHER_PREFIX: &str = "voucher";
 pub const ASSET_PREFIX: &str = "asset";
 pub const COLLECTION_CPI_PREFIX: &str = "collection_cpi";
 
+pub const MAX_ACC_PROOFS_SIZE: u32 = 17;
+
 // TODO: set real keys before mainnet deploy
 pub const REALM: Pubkey = solana_program::pubkey!("EzsKaQq68FLZwRaiUx7t17LWVVzsE8wRkhBghFrZGGwG");
 pub const REALM_GOVERNING_MINT: Pubkey =

@@ -1,13 +1,15 @@
-use crate::state::{
+use std::mem::size_of;
+
+use crate::{error::BubblegumError, state::{
     metaplex_adapter::{Creator, MetadataArgs},
-    ASSET_PREFIX,
-};
+    ASSET_PREFIX, MAX_ACC_PROOFS_SIZE,
+}};
 use anchor_lang::{
     prelude::*,
     solana_program::{program_memory::sol_memcmp, pubkey::PUBKEY_BYTES},
 };
 use solana_program::keccak;
-use spl_account_compression::Node;
+use spl_account_compression::{state::{merkle_tree_get_size, ConcurrentMerkleTreeHeader, CONCURRENT_MERKLE_TREE_HEADER_SIZE_V1}, Node};
 
 pub fn hash_creators(creators: &[Creator]) -> Result<[u8; 32]> {
     // Convert creator Vec to bytes Vec.
@@ -105,4 +107,38 @@ pub fn get_asset_id(tree_id: &Pubkey, nonce: u64) -> Pubkey {
         &crate::id(),
     )
     .0
+}
+
+pub(crate) fn check_canopy_size<'info>(
+    merkle_tree: AccountInfo<'info>,
+    tree_authority: AccountInfo<'info>,
+    max_depth: u32,
+    max_buffer_size: u32,
+) -> Result<()> {
+    let merkle_tree_bytes = merkle_tree.data.borrow();
+
+    let (header_bytes, rest) = merkle_tree_bytes.split_at(CONCURRENT_MERKLE_TREE_HEADER_SIZE_V1);
+
+    let mut header = ConcurrentMerkleTreeHeader::try_from_slice(header_bytes)?;
+    header.initialize(
+        max_depth,
+        max_buffer_size,
+        &tree_authority.key(),
+        Clock::get()?.slot,
+    );
+
+    let merkle_tree_size = merkle_tree_get_size(&header)?;
+
+    let (_tree_bytes, canopy_bytes) = rest.split_at(merkle_tree_size);
+
+    let required_canopy = max_depth.saturating_sub(MAX_ACC_PROOFS_SIZE);
+
+    let actual_canopy_size = canopy_bytes.len() / size_of::<Node>();
+
+    require!(
+        (actual_canopy_size as u32) >= required_canopy,
+        BubblegumError::InvalidCanopySize
+    );
+
+    Ok(())
 }
