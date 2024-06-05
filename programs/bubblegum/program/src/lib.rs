@@ -122,8 +122,8 @@ pub mod bubblegum {
     }
 
     /// Creates a new tree.
-    pub fn create_tree(
-        ctx: Context<CreateTree>,
+    pub fn create_tree<'info>(
+        ctx: Context<'_, '_, '_, 'info, CreateTree<'info>>,
         max_depth: u32,
         max_buffer_size: u32,
         public: Option<bool>,
