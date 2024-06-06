@@ -19,7 +19,6 @@ pub enum InstructionName {
     DecompressV1,
     Compress,
     Burn,
-    CreateTreeWithRoot,
     CreateTree,
     VerifyCreator,
     UnverifyCreator,
@@ -29,6 +28,9 @@ pub enum InstructionName {
     MintToCollectionV1,
     SetDecompressibleState,
     UpdateMetadata,
+    FinalizeTreeWithRoot,
+    PrepareTree,
+    AddCanopy,
 }
 
 pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
@@ -47,7 +49,6 @@ pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
         [54, 85, 76, 70, 228, 250, 164, 81] => InstructionName::DecompressV1,
         [116, 110, 29, 56, 107, 219, 42, 93] => InstructionName::Burn,
         [82, 193, 176, 117, 176, 21, 115, 253] => InstructionName::Compress,
-        [101, 214, 253, 135, 176, 170, 11, 235] => InstructionName::CreateTreeWithRoot,
         [165, 83, 136, 142, 89, 202, 47, 220] => InstructionName::CreateTree,
         [52, 17, 96, 132, 71, 4, 85, 194] => InstructionName::VerifyCreator,
         [107, 178, 57, 39, 105, 115, 112, 152] => InstructionName::UnverifyCreator,
@@ -58,6 +59,9 @@ pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
         // `SetDecompressableState` instruction mapped to `SetDecompressibleState` instruction
         [18, 135, 238, 168, 246, 195, 61, 115] => InstructionName::SetDecompressibleState,
         [170, 182, 43, 239, 97, 78, 225, 186] => InstructionName::UpdateMetadata,
+        [77, 73, 220, 153, 126, 225, 64, 204] => InstructionName::FinalizeTreeWithRoot,
+        [41, 56, 189, 77, 58, 12, 142, 71] => InstructionName::PrepareTree,
+        [247, 118, 145, 92, 84, 66, 207, 25] => InstructionName::AddCanopy,
         _ => InstructionName::Unknown,
     }
 }
