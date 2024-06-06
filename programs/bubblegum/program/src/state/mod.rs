@@ -40,6 +40,10 @@ impl TreeConfig {
         self.num_minted = self.num_minted.saturating_add(1);
     }
 
+    pub fn increment_mint_count_by(&mut self, count: u64) {
+        self.num_minted = self.num_minted.saturating_add(count);
+    }
+
     pub fn contains_mint_capacity(&self, requested_capacity: u64) -> bool {
         let remaining_mints = self.total_mint_capacity.saturating_sub(self.num_minted);
         requested_capacity <= remaining_mints

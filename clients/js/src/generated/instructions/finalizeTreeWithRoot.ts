@@ -36,6 +36,8 @@ import {
 export type FinalizeTreeWithRootInstructionAccounts = {
   treeConfig?: PublicKey | Pda;
   merkleTree: PublicKey | Pda;
+  payer?: Signer;
+  incomingTreeDelegate: Signer;
   staker: Signer;
   registrar: PublicKey | Pda;
   voter: PublicKey | Pda;
@@ -99,7 +101,7 @@ export type FinalizeTreeWithRootInstructionArgs =
 
 // Instruction.
 export function finalizeTreeWithRoot(
-  context: Pick<Context, 'eddsa' | 'programs'>,
+  context: Pick<Context, 'eddsa' | 'payer' | 'programs'>,
   input: FinalizeTreeWithRootInstructionAccounts &
     FinalizeTreeWithRootInstructionArgs
 ): TransactionBuilder {
@@ -111,32 +113,34 @@ export function finalizeTreeWithRoot(
 
   // Accounts.
   const resolvedAccounts: ResolvedAccountsWithIndices = {
-    treeConfig: {
-      index: 0,
-      isWritable: false,
-      value: input.treeConfig ?? null,
-    },
+    treeConfig: { index: 0, isWritable: true, value: input.treeConfig ?? null },
     merkleTree: { index: 1, isWritable: true, value: input.merkleTree ?? null },
-    staker: { index: 2, isWritable: true, value: input.staker ?? null },
-    registrar: { index: 3, isWritable: false, value: input.registrar ?? null },
-    voter: { index: 4, isWritable: false, value: input.voter ?? null },
+    payer: { index: 2, isWritable: true, value: input.payer ?? null },
+    incomingTreeDelegate: {
+      index: 3,
+      isWritable: false,
+      value: input.incomingTreeDelegate ?? null,
+    },
+    staker: { index: 4, isWritable: false, value: input.staker ?? null },
+    registrar: { index: 5, isWritable: false, value: input.registrar ?? null },
+    voter: { index: 6, isWritable: false, value: input.voter ?? null },
     feeReceiver: {
-      index: 5,
+      index: 7,
       isWritable: true,
       value: input.feeReceiver ?? null,
     },
     logWrapper: {
-      index: 6,
+      index: 8,
       isWritable: false,
       value: input.logWrapper ?? null,
     },
     compressionProgram: {
-      index: 7,
+      index: 9,
       isWritable: false,
       value: input.compressionProgram ?? null,
     },
     systemProgram: {
-      index: 8,
+      index: 10,
       isWritable: false,
       value: input.systemProgram ?? null,
     },
@@ -150,6 +154,9 @@ export function finalizeTreeWithRoot(
     resolvedAccounts.treeConfig.value = findTreeConfigPda(context, {
       merkleTree: expectPublicKey(resolvedAccounts.merkleTree.value),
     });
+  }
+  if (!resolvedAccounts.payer.value) {
+    resolvedAccounts.payer.value = context.payer;
   }
   if (!resolvedAccounts.logWrapper.value) {
     resolvedAccounts.logWrapper.value = context.programs.getPublicKey(

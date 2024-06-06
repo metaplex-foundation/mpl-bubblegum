@@ -39,7 +39,7 @@ export type PrepareTreeInstructionAccounts = {
   treeConfig?: PublicKey | Pda;
   merkleTree: PublicKey | Pda;
   payer?: Signer;
-  treeCreator?: PublicKey | Pda;
+  treeCreator?: Signer;
   logWrapper?: PublicKey | Pda;
   compressionProgram?: PublicKey | Pda;
   systemProgram?: PublicKey | Pda;
@@ -135,7 +135,7 @@ export function prepareTree(
     resolvedAccounts.payer.value = context.payer;
   }
   if (!resolvedAccounts.treeCreator.value) {
-    resolvedAccounts.treeCreator.value = context.identity.publicKey;
+    resolvedAccounts.treeCreator.value = context.identity;
   }
   if (!resolvedAccounts.logWrapper.value) {
     resolvedAccounts.logWrapper.value = context.programs.getPublicKey(

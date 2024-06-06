@@ -236,7 +236,7 @@
         {
           "name": "treeCreator",
           "isMut": false,
-          "isSigner": false
+          "isSigner": true
         },
         {
           "name": "logWrapper",
@@ -387,7 +387,7 @@
       "accounts": [
         {
           "name": "treeAuthority",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -396,8 +396,18 @@
           "isSigner": false
         },
         {
-          "name": "staker",
+          "name": "payer",
           "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "incomingTreeDelegate",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "staker",
+          "isMut": false,
           "isSigner": true
         },
         {
@@ -2489,6 +2499,46 @@
       "code": 6042,
       "name": "NotEnoughStakeForOperation",
       "msg": "Not enough tokens staked to call this instruction"
+    },
+    {
+      "code": 6043,
+      "name": "StakingRegistrarMismatch",
+      "msg": "Staking registrar mismatch"
+    },
+    {
+      "code": 6044,
+      "name": "StakingVoterMismatch",
+      "msg": "Staking voter mismatch"
+    },
+    {
+      "code": 6045,
+      "name": "FeeReceiverMismatch",
+      "msg": "Fee receiver mismatch"
+    },
+    {
+      "code": 6046,
+      "name": "StakingRegistrarRealmMismatch",
+      "msg": "Staking registrar realm mismatch"
+    },
+    {
+      "code": 6047,
+      "name": "StakingRegistrarDiscriminatorMismatch",
+      "msg": "Staking registrar discriminator mismatch"
+    },
+    {
+      "code": 6048,
+      "name": "StakingVoterDiscriminatorMismatch",
+      "msg": "Staking voter discriminator mismatch"
+    },
+    {
+      "code": 6049,
+      "name": "StakingVoterRegistrarMismatch",
+      "msg": "Staking voter registrar mismatch"
+    },
+    {
+      "code": 6050,
+      "name": "StakingVoterAuthorityMismatch",
+      "msg": "Staking voter authority mismatch"
     }
   ],
   "metadata": {

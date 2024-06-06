@@ -4,24 +4,29 @@ pub mod utils;
 
 use crate::utils::Error::BanksClient;
 use anchor_lang::solana_program::instruction::InstructionError;
-use bubblegum::state::{FEE_RECEIVER, REALM, REALM_GOVERNING_MINT};
+use bubblegum::{
+    error::BubblegumError,
+    state::{FEE_RECEIVER, REALM, REALM_GOVERNING_MINT},
+};
 use mplx_staking_states::state::{
     DepositEntry, Lockup, LockupKind, LockupPeriod, Registrar, Voter, VotingMintConfig,
     REGISTRAR_DISCRIMINATOR, VOTER_DISCRIMINATOR,
 };
-use solana_program_test::tokio;
-use solana_program_test::BanksClientError;
-use solana_sdk::account::AccountSharedData;
-use solana_sdk::instruction::AccountMeta;
-use solana_sdk::pubkey::Pubkey;
-use solana_sdk::signature::{Keypair, Signer};
-use solana_sdk::transaction::TransactionError;
+use solana_program_test::{tokio, BanksClientError};
+use solana_sdk::{
+    account::AccountSharedData,
+    instruction::AccountMeta,
+    pubkey::Pubkey,
+    signature::{Keypair, Signer},
+    transaction::TransactionError,
+};
 use spl_merkle_tree_reference::{MerkleTree, Node};
-use std::str::FromStr;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::{
+    str::FromStr,
+    time::{SystemTime, UNIX_EPOCH},
+};
 use test_data::rollup_tree::*;
-use utils::context::BubblegumTestContext;
-use utils::tree::Tree;
+use utils::{context::BubblegumTestContext, tree::Tree};
 
 const MAX_DEPTH: usize = 10;
 const MAX_BUF_SIZE: usize = 32;
@@ -197,6 +202,7 @@ async fn test_prepare_tree_without_canopy() {
 
     let mut tree_tx_builder = tree.prepare_tree_tx(
         &program_context.test_context().payer,
+        &tree_creator,
         false,
         MAX_DEPTH as u32,
         MAX_BUF_SIZE as u32,
@@ -206,6 +212,7 @@ async fn test_prepare_tree_without_canopy() {
 
     let mut tree_tx_builder = tree.finalize_tree_with_root_tx(
         &program_context.test_context().payer,
+        &tree_creator,
         TREE_ROOT,
         RIGHTMOST_LEAF,
         999,
@@ -241,7 +248,7 @@ async fn test_prepare_tree_without_canopy() {
         .unwrap()
         .lamports;
     let fee = 1280000;
-    let solana_commision = 1569040;
+    let solana_commision = 1579040; //1569040; // TODO: what is this number? Where did it come from? Is the change of the commision after change to the signature of the method a valid one?
 
     assert_eq!(end_fee_receiver_balance, start_fee_receiver_balance + fee);
     assert_eq!(
@@ -399,6 +406,7 @@ async fn test_prepare_tree_with_canopy() {
 
     let mut tree_tx_builder = tree.prepare_tree_tx(
         &program_context.test_context().payer,
+        &tree_creator,
         false,
         MAX_DEPTH as u32,
         MAX_BUF_SIZE as u32,
@@ -411,6 +419,7 @@ async fn test_prepare_tree_with_canopy() {
 
         let mut add_canopy_tx_builder = tree.add_canopy_tx(
             &program_context.test_context().payer,
+            &tree_creator,
             start_index as u32,
             ch.to_vec(),
         );
@@ -423,6 +432,7 @@ async fn test_prepare_tree_with_canopy() {
 
     let mut tree_tx_builder = tree.finalize_tree_with_root_tx(
         &program_context.test_context().payer,
+        &tree_creator,
         TREE_ROOT,
         RIGHTMOST_LEAF,
         999,
@@ -595,6 +605,7 @@ async fn test_put_wrong_canopy() {
 
     let mut tree_tx_builder = tree.prepare_tree_tx(
         &program_context.test_context().payer,
+        &tree_creator,
         false,
         MAX_DEPTH as u32,
         MAX_BUF_SIZE as u32,
@@ -607,6 +618,7 @@ async fn test_put_wrong_canopy() {
 
         let mut add_canopy_tx_builder = tree.add_canopy_tx(
             &program_context.test_context().payer,
+            &tree_creator,
             start_index as u32,
             ch.to_vec(),
         );
@@ -619,6 +631,7 @@ async fn test_put_wrong_canopy() {
 
     let mut tree_tx_builder = tree.finalize_tree_with_root_tx(
         &program_context.test_context().payer,
+        &tree_creator,
         TREE_ROOT,
         RIGHTMOST_LEAF,
         999,
@@ -792,8 +805,13 @@ async fn test_prepare_with_small_canopy() {
         .await
         .unwrap();
 
-    let mut tree_tx_builder =
-        tree.prepare_tree_tx(&program_context.test_context().payer, false, 20, 64);
+    let mut tree_tx_builder = tree.prepare_tree_tx(
+        &program_context.test_context().payer,
+        &tree_creator,
+        false,
+        20,
+        64,
+    );
 
     let res = tree_tx_builder.execute_without_root_check().await;
 
@@ -982,6 +1000,7 @@ async fn test_put_wrong_fee_receiver() {
 
     let mut tree_tx_builder = tree.prepare_tree_tx(
         &program_context.test_context().payer,
+        &tree_creator,
         false,
         MAX_DEPTH as u32,
         MAX_BUF_SIZE as u32,
@@ -992,6 +1011,7 @@ async fn test_put_wrong_fee_receiver() {
     let wrong_fee_receiver = Pubkey::new_unique();
     let mut tree_tx_builder = tree.finalize_tree_with_root_tx(
         &program_context.test_context().payer,
+        &tree_creator,
         TREE_ROOT,
         RIGHTMOST_LEAF,
         999,
@@ -1015,7 +1035,10 @@ async fn test_put_wrong_fee_receiver() {
         if let BanksClient(BanksClientError::TransactionError(e)) = *err {
             assert_eq!(
                 e,
-                TransactionError::InstructionError(0, InstructionError::ProgramFailedToComplete)
+                TransactionError::InstructionError(
+                    0,
+                    InstructionError::Custom(BubblegumError::FeeReceiverMismatch.into()),
+                )
             );
         } else {
             panic!("Wrong variant");

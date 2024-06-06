@@ -21,8 +21,7 @@ pub struct PrepareTree<'info> {
     pub merkle_tree: UncheckedAccount<'info>,
     #[account(mut)]
     pub payer: Signer<'info>,
-    /// CHECK:
-    pub tree_creator: UncheckedAccount<'info>,
+    pub tree_creator: Signer<'info>,
     pub log_wrapper: Program<'info, Noop>,
     pub compression_program: Program<'info, SplAccountCompression>,
     pub system_program: Program<'info, System>,

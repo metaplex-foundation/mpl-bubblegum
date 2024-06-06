@@ -90,6 +90,22 @@ pub enum BubblegumError {
     InvalidCanopySize,
     #[msg("Not enough tokens staked to call this instruction")]
     NotEnoughStakeForOperation,
+    #[msg("Staking registrar mismatch")]
+    StakingRegistrarMismatch,
+    #[msg("Staking voter mismatch")]
+    StakingVoterMismatch,
+    #[msg("Fee receiver mismatch")]
+    FeeReceiverMismatch,
+    #[msg("Staking registrar realm mismatch")]
+    StakingRegistrarRealmMismatch,
+    #[msg("Staking registrar discriminator mismatch")]
+    StakingRegistrarDiscriminatorMismatch,
+    #[msg("Staking voter discriminator mismatch")]
+    StakingVoterDiscriminatorMismatch,
+    #[msg("Staking voter registrar mismatch")]
+    StakingVoterRegistrarMismatch,
+    #[msg("Staking voter authority mismatch")]
+    StakingVoterAuthorityMismatch,
 }
 
 // Converts certain Token Metadata errors into Bubblegum equivalents

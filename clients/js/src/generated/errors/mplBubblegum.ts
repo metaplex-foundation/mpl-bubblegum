@@ -620,6 +620,125 @@ nameToErrorMap.set(
   NotEnoughStakeForOperationError
 );
 
+/** StakingRegistrarMismatch: Staking registrar mismatch */
+export class StakingRegistrarMismatchError extends ProgramError {
+  readonly name: string = 'StakingRegistrarMismatch';
+
+  readonly code: number = 0x179b; // 6043
+
+  constructor(program: Program, cause?: Error) {
+    super('Staking registrar mismatch', program, cause);
+  }
+}
+codeToErrorMap.set(0x179b, StakingRegistrarMismatchError);
+nameToErrorMap.set('StakingRegistrarMismatch', StakingRegistrarMismatchError);
+
+/** StakingVoterMismatch: Staking voter mismatch */
+export class StakingVoterMismatchError extends ProgramError {
+  readonly name: string = 'StakingVoterMismatch';
+
+  readonly code: number = 0x179c; // 6044
+
+  constructor(program: Program, cause?: Error) {
+    super('Staking voter mismatch', program, cause);
+  }
+}
+codeToErrorMap.set(0x179c, StakingVoterMismatchError);
+nameToErrorMap.set('StakingVoterMismatch', StakingVoterMismatchError);
+
+/** FeeReceiverMismatch: Fee receiver mismatch */
+export class FeeReceiverMismatchError extends ProgramError {
+  readonly name: string = 'FeeReceiverMismatch';
+
+  readonly code: number = 0x179d; // 6045
+
+  constructor(program: Program, cause?: Error) {
+    super('Fee receiver mismatch', program, cause);
+  }
+}
+codeToErrorMap.set(0x179d, FeeReceiverMismatchError);
+nameToErrorMap.set('FeeReceiverMismatch', FeeReceiverMismatchError);
+
+/** StakingRegistrarRealmMismatch: Staking registrar realm mismatch */
+export class StakingRegistrarRealmMismatchError extends ProgramError {
+  readonly name: string = 'StakingRegistrarRealmMismatch';
+
+  readonly code: number = 0x179e; // 6046
+
+  constructor(program: Program, cause?: Error) {
+    super('Staking registrar realm mismatch', program, cause);
+  }
+}
+codeToErrorMap.set(0x179e, StakingRegistrarRealmMismatchError);
+nameToErrorMap.set(
+  'StakingRegistrarRealmMismatch',
+  StakingRegistrarRealmMismatchError
+);
+
+/** StakingRegistrarDiscriminatorMismatch: Staking registrar discriminator mismatch */
+export class StakingRegistrarDiscriminatorMismatchError extends ProgramError {
+  readonly name: string = 'StakingRegistrarDiscriminatorMismatch';
+
+  readonly code: number = 0x179f; // 6047
+
+  constructor(program: Program, cause?: Error) {
+    super('Staking registrar discriminator mismatch', program, cause);
+  }
+}
+codeToErrorMap.set(0x179f, StakingRegistrarDiscriminatorMismatchError);
+nameToErrorMap.set(
+  'StakingRegistrarDiscriminatorMismatch',
+  StakingRegistrarDiscriminatorMismatchError
+);
+
+/** StakingVoterDiscriminatorMismatch: Staking voter discriminator mismatch */
+export class StakingVoterDiscriminatorMismatchError extends ProgramError {
+  readonly name: string = 'StakingVoterDiscriminatorMismatch';
+
+  readonly code: number = 0x17a0; // 6048
+
+  constructor(program: Program, cause?: Error) {
+    super('Staking voter discriminator mismatch', program, cause);
+  }
+}
+codeToErrorMap.set(0x17a0, StakingVoterDiscriminatorMismatchError);
+nameToErrorMap.set(
+  'StakingVoterDiscriminatorMismatch',
+  StakingVoterDiscriminatorMismatchError
+);
+
+/** StakingVoterRegistrarMismatch: Staking voter registrar mismatch */
+export class StakingVoterRegistrarMismatchError extends ProgramError {
+  readonly name: string = 'StakingVoterRegistrarMismatch';
+
+  readonly code: number = 0x17a1; // 6049
+
+  constructor(program: Program, cause?: Error) {
+    super('Staking voter registrar mismatch', program, cause);
+  }
+}
+codeToErrorMap.set(0x17a1, StakingVoterRegistrarMismatchError);
+nameToErrorMap.set(
+  'StakingVoterRegistrarMismatch',
+  StakingVoterRegistrarMismatchError
+);
+
+/** StakingVoterAuthorityMismatch: Staking voter authority mismatch */
+export class StakingVoterAuthorityMismatchError extends ProgramError {
+  readonly name: string = 'StakingVoterAuthorityMismatch';
+
+  readonly code: number = 0x17a2; // 6050
+
+  constructor(program: Program, cause?: Error) {
+    super('Staking voter authority mismatch', program, cause);
+  }
+}
+codeToErrorMap.set(0x17a2, StakingVoterAuthorityMismatchError);
+nameToErrorMap.set(
+  'StakingVoterAuthorityMismatch',
+  StakingVoterAuthorityMismatchError
+);
+
 /**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors

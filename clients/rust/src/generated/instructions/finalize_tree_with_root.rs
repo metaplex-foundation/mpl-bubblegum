@@ -14,6 +14,10 @@ pub struct FinalizeTreeWithRoot {
 
     pub merkle_tree: solana_program::pubkey::Pubkey,
 
+    pub payer: solana_program::pubkey::Pubkey,
+
+    pub incoming_tree_delegate: solana_program::pubkey::Pubkey,
+
     pub staker: solana_program::pubkey::Pubkey,
 
     pub registrar: solana_program::pubkey::Pubkey,
@@ -42,8 +46,8 @@ impl FinalizeTreeWithRoot {
         args: FinalizeTreeWithRootInstructionArgs,
         remaining_accounts: &[solana_program::instruction::AccountMeta],
     ) -> solana_program::instruction::Instruction {
-        let mut accounts = Vec::with_capacity(9 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        let mut accounts = Vec::with_capacity(11 + remaining_accounts.len());
+        accounts.push(solana_program::instruction::AccountMeta::new(
             self.tree_config,
             false,
         ));
@@ -52,6 +56,13 @@ impl FinalizeTreeWithRoot {
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new(
+            self.payer, true,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            self.incoming_tree_delegate,
+            true,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.staker,
             true,
         ));
@@ -121,6 +132,8 @@ pub struct FinalizeTreeWithRootInstructionArgs {
 pub struct FinalizeTreeWithRootBuilder {
     tree_config: Option<solana_program::pubkey::Pubkey>,
     merkle_tree: Option<solana_program::pubkey::Pubkey>,
+    payer: Option<solana_program::pubkey::Pubkey>,
+    incoming_tree_delegate: Option<solana_program::pubkey::Pubkey>,
     staker: Option<solana_program::pubkey::Pubkey>,
     registrar: Option<solana_program::pubkey::Pubkey>,
     voter: Option<solana_program::pubkey::Pubkey>,
@@ -148,6 +161,19 @@ impl FinalizeTreeWithRootBuilder {
     #[inline(always)]
     pub fn merkle_tree(&mut self, merkle_tree: solana_program::pubkey::Pubkey) -> &mut Self {
         self.merkle_tree = Some(merkle_tree);
+        self
+    }
+    #[inline(always)]
+    pub fn payer(&mut self, payer: solana_program::pubkey::Pubkey) -> &mut Self {
+        self.payer = Some(payer);
+        self
+    }
+    #[inline(always)]
+    pub fn incoming_tree_delegate(
+        &mut self,
+        incoming_tree_delegate: solana_program::pubkey::Pubkey,
+    ) -> &mut Self {
+        self.incoming_tree_delegate = Some(incoming_tree_delegate);
         self
     }
     #[inline(always)]
@@ -239,6 +265,10 @@ impl FinalizeTreeWithRootBuilder {
         let accounts = FinalizeTreeWithRoot {
             tree_config: self.tree_config.expect("tree_config is not set"),
             merkle_tree: self.merkle_tree.expect("merkle_tree is not set"),
+            payer: self.payer.expect("payer is not set"),
+            incoming_tree_delegate: self
+                .incoming_tree_delegate
+                .expect("incoming_tree_delegate is not set"),
             staker: self.staker.expect("staker is not set"),
             registrar: self.registrar.expect("registrar is not set"),
             voter: self.voter.expect("voter is not set"),
@@ -283,6 +313,10 @@ pub struct FinalizeTreeWithRootCpiAccounts<'a, 'b> {
 
     pub merkle_tree: &'b solana_program::account_info::AccountInfo<'a>,
 
+    pub payer: &'b solana_program::account_info::AccountInfo<'a>,
+
+    pub incoming_tree_delegate: &'b solana_program::account_info::AccountInfo<'a>,
+
     pub staker: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub registrar: &'b solana_program::account_info::AccountInfo<'a>,
@@ -306,6 +340,10 @@ pub struct FinalizeTreeWithRootCpi<'a, 'b> {
     pub tree_config: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub merkle_tree: &'b solana_program::account_info::AccountInfo<'a>,
+
+    pub payer: &'b solana_program::account_info::AccountInfo<'a>,
+
+    pub incoming_tree_delegate: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub staker: &'b solana_program::account_info::AccountInfo<'a>,
 
@@ -334,6 +372,8 @@ impl<'a, 'b> FinalizeTreeWithRootCpi<'a, 'b> {
             __program: program,
             tree_config: accounts.tree_config,
             merkle_tree: accounts.merkle_tree,
+            payer: accounts.payer,
+            incoming_tree_delegate: accounts.incoming_tree_delegate,
             staker: accounts.staker,
             registrar: accounts.registrar,
             voter: accounts.voter,
@@ -377,8 +417,8 @@ impl<'a, 'b> FinalizeTreeWithRootCpi<'a, 'b> {
             bool,
         )],
     ) -> solana_program::entrypoint::ProgramResult {
-        let mut accounts = Vec::with_capacity(9 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        let mut accounts = Vec::with_capacity(11 + remaining_accounts.len());
+        accounts.push(solana_program::instruction::AccountMeta::new(
             *self.tree_config.key,
             false,
         ));
@@ -387,6 +427,14 @@ impl<'a, 'b> FinalizeTreeWithRootCpi<'a, 'b> {
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new(
+            *self.payer.key,
+            true,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            *self.incoming_tree_delegate.key,
+            true,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             *self.staker.key,
             true,
         ));
@@ -432,10 +480,12 @@ impl<'a, 'b> FinalizeTreeWithRootCpi<'a, 'b> {
             accounts,
             data,
         };
-        let mut account_infos = Vec::with_capacity(9 + 1 + remaining_accounts.len());
+        let mut account_infos = Vec::with_capacity(11 + 1 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
         account_infos.push(self.tree_config.clone());
         account_infos.push(self.merkle_tree.clone());
+        account_infos.push(self.payer.clone());
+        account_infos.push(self.incoming_tree_delegate.clone());
         account_infos.push(self.staker.clone());
         account_infos.push(self.registrar.clone());
         account_infos.push(self.voter.clone());
@@ -466,6 +516,8 @@ impl<'a, 'b> FinalizeTreeWithRootCpiBuilder<'a, 'b> {
             __program: program,
             tree_config: None,
             merkle_tree: None,
+            payer: None,
+            incoming_tree_delegate: None,
             staker: None,
             registrar: None,
             voter: None,
@@ -496,6 +548,19 @@ impl<'a, 'b> FinalizeTreeWithRootCpiBuilder<'a, 'b> {
         merkle_tree: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.merkle_tree = Some(merkle_tree);
+        self
+    }
+    #[inline(always)]
+    pub fn payer(&mut self, payer: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+        self.instruction.payer = Some(payer);
+        self
+    }
+    #[inline(always)]
+    pub fn incoming_tree_delegate(
+        &mut self,
+        incoming_tree_delegate: &'b solana_program::account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.incoming_tree_delegate = Some(incoming_tree_delegate);
         self
     }
     #[inline(always)]
@@ -657,6 +722,13 @@ impl<'a, 'b> FinalizeTreeWithRootCpiBuilder<'a, 'b> {
                 .merkle_tree
                 .expect("merkle_tree is not set"),
 
+            payer: self.instruction.payer.expect("payer is not set"),
+
+            incoming_tree_delegate: self
+                .instruction
+                .incoming_tree_delegate
+                .expect("incoming_tree_delegate is not set"),
+
             staker: self.instruction.staker.expect("staker is not set"),
 
             registrar: self.instruction.registrar.expect("registrar is not set"),
@@ -695,6 +767,8 @@ struct FinalizeTreeWithRootCpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_program::account_info::AccountInfo<'a>,
     tree_config: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     merkle_tree: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    payer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    incoming_tree_delegate: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     staker: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     registrar: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     voter: Option<&'b solana_program::account_info::AccountInfo<'a>>,

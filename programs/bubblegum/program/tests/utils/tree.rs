@@ -276,6 +276,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
     pub fn finalize_tree_with_root_tx(
         &mut self,
         payer: &Keypair,
+        tree_delegate: &Keypair,
         rightmost_root: [u8; 32],
         rightmost_leaf: [u8; 32],
         rightmost_index: u32,
@@ -291,7 +292,9 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         let accounts = bubblegum::accounts::FinalizeTreeWithRoot {
             tree_authority,
             merkle_tree: self.tree_pubkey(),
-            staker: payer.pubkey(),
+            staker: payer.pubkey(), // TODO: this should be a separate account in a general case
+            incoming_tree_delegate: tree_delegate.pubkey(),
+            payer: payer.pubkey(),
             registrar,
             voter,
             fee_receiver,
@@ -308,11 +311,19 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             metadata_hash,
         };
 
-        self.tx_builder(accounts, data, None, (), payer.pubkey(), &[payer, payer])
+        self.tx_builder(
+            accounts,
+            data,
+            None,
+            (),
+            payer.pubkey(),
+            &[payer, tree_delegate],
+        )
     }
 
     pub fn add_canopy_tx(
         &mut self,
+        payer: &Keypair,
         tree_delegate: &Keypair,
         start_index: u32,
         canopy_nodes: Vec<[u8; 32]>,
@@ -339,14 +350,15 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             data,
             None,
             (),
-            tree_delegate.pubkey(),
-            &[tree_delegate],
+            payer.pubkey(),
+            &[tree_delegate, payer],
         )
     }
 
     pub fn prepare_tree_tx(
         &mut self,
         payer: &Keypair,
+        creator: &Keypair,
         public: bool,
         max_depth: u32,
         max_buffer_size: u32,
@@ -354,6 +366,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         let tree_authority =
             Pubkey::find_program_address(&[self.tree_pubkey().as_ref()], &bubblegum::id()).0;
 
+        assert_eq!(creator.pubkey(), self.creator_pubkey());
         let accounts = bubblegum::accounts::PrepareTree {
             tree_authority,
             merkle_tree: self.tree_pubkey(),
@@ -370,7 +383,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             public: Some(public),
         };
 
-        self.tx_builder(accounts, data, None, (), payer.pubkey(), &[payer])
+        self.tx_builder(accounts, data, None, (), payer.pubkey(), &[payer, creator])
     }
 
     pub fn mint_v1_non_owner_tx<'a>(

@@ -52,7 +52,7 @@ impl PrepareTree {
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.tree_creator,
-            false,
+            true,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.log_wrapper,
@@ -330,7 +330,7 @@ impl<'a, 'b> PrepareTreeCpi<'a, 'b> {
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             *self.tree_creator.key,
-            false,
+            true,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             *self.log_wrapper.key,

@@ -4,10 +4,9 @@ use mplx_staking_states::state::{
 };
 use spl_account_compression::{program::SplAccountCompression, Noop};
 
-use crate::state::FEE_RECEIVER;
 use crate::{
     error::BubblegumError,
-    state::{TreeConfig, MINIMUM_WEIGHTED_STAKE, REALM, REALM_GOVERNING_MINT},
+    state::{TreeConfig, FEE_RECEIVER, MINIMUM_WEIGHTED_STAKE, REALM, REALM_GOVERNING_MINT},
 };
 
 const PROTOCOL_FEE_PER_1024_ASSETS: u64 = 1_280_000; // 0.00128 SOL in lamports
@@ -15,6 +14,7 @@ const PROTOCOL_FEE_PER_1024_ASSETS: u64 = 1_280_000; // 0.00128 SOL in lamports
 #[derive(Accounts)]
 pub struct FinalizeTreeWithRoot<'info> {
     #[account(
+        mut,
         seeds = [merkle_tree.key().as_ref()],
         bump,
     )]
@@ -23,6 +23,8 @@ pub struct FinalizeTreeWithRoot<'info> {
     /// CHECK:
     pub merkle_tree: UncheckedAccount<'info>,
     #[account(mut)]
+    pub payer: Signer<'info>,
+    pub incoming_tree_delegate: Signer<'info>,
     pub staker: Signer<'info>,
     /// CHECK:
     pub registrar: UncheckedAccount<'info>,
@@ -44,29 +46,36 @@ pub(crate) fn finalize_tree_with_root<'info>(
     _metadata_url: String,
     _metadata_hash: String,
 ) -> Result<()> {
-    // TODO: charge protocol fees
+    let incoming_tree_delegate = ctx.accounts.incoming_tree_delegate.key();
+    let authority = &mut ctx.accounts.tree_authority;
 
+    require!(
+        incoming_tree_delegate == authority.tree_delegate,
+        BubblegumError::TreeAuthorityIncorrect,
+    );
+
+    require!(
+        ctx.accounts.fee_receiver.key == &FEE_RECEIVER,
+        BubblegumError::FeeReceiverMismatch
+    );
     check_stake(
         &ctx.accounts.staker.to_account_info(),
         &ctx.accounts.registrar.to_account_info(),
         &ctx.accounts.voter.to_account_info(),
     )?;
 
-    assert_eq!(ctx.accounts.registrar.owner, &mplx_staking_states::ID);
-    assert_eq!(ctx.accounts.voter.owner, &mplx_staking_states::ID);
-    assert_eq!(ctx.accounts.fee_receiver.key, &FEE_RECEIVER);
-
     let num_minted = (rightmost_index + 1) as u64;
+    // charge protocol fees
     let fee = calculate_protocol_fee_lamports(num_minted);
     let transfer_instruction = anchor_lang::solana_program::system_instruction::transfer(
-        &ctx.accounts.staker.key(),
+        &ctx.accounts.payer.key(),
         &ctx.accounts.fee_receiver.key(),
         fee,
     );
     anchor_lang::solana_program::program::invoke(
         &transfer_instruction,
         &[
-            ctx.accounts.staker.to_account_info(),
+            ctx.accounts.payer.to_account_info(),
             ctx.accounts.fee_receiver.to_account_info(),
             ctx.accounts.system_program.to_account_info(),
         ],
@@ -76,12 +85,10 @@ pub(crate) fn finalize_tree_with_root<'info>(
     let seed = merkle_tree.key();
     let seeds = &[seed.as_ref(), &[ctx.bumps.tree_authority]];
 
-    let authority = &mut ctx.accounts.tree_authority;
-    authority.set_inner(TreeConfig {
-        tree_delegate: authority.tree_creator,
-        num_minted,
-        ..**authority
-    });
+    if !authority.contains_mint_capacity(num_minted) {
+        return Err(BubblegumError::InsufficientMintCapacity.into());
+    }
+    authority.increment_mint_count_by(num_minted);
     let authority_pda_signer = &[&seeds[..]];
 
     finalize_tree(
@@ -102,8 +109,14 @@ fn check_stake<'info>(
     registrar_acc: &AccountInfo<'info>,
     voter_acc: &AccountInfo<'info>,
 ) -> Result<()> {
-    assert_eq!(registrar_acc.owner, &mplx_staking_states::ID);
-    assert_eq!(voter_acc.owner, &mplx_staking_states::ID);
+    require!(
+        registrar_acc.owner == &mplx_staking_states::ID,
+        BubblegumError::StakingRegistrarMismatch
+    );
+    require!(
+        voter_acc.owner == &mplx_staking_states::ID,
+        BubblegumError::StakingVoterMismatch
+    );
 
     let generated_registrar = Pubkey::find_program_address(
         &[
@@ -114,7 +127,10 @@ fn check_stake<'info>(
         &mplx_staking_states::ID,
     )
     .0;
-    assert_eq!(&generated_registrar, registrar_acc.key);
+    require!(
+        &generated_registrar == registrar_acc.key,
+        BubblegumError::StakingRegistrarMismatch
+    );
 
     let generated_voter_key = Pubkey::find_program_address(
         &[
@@ -125,25 +141,45 @@ fn check_stake<'info>(
         &mplx_staking_states::ID,
     )
     .0;
-    assert_eq!(&generated_voter_key, voter_acc.key);
+    require!(
+        &generated_voter_key == voter_acc.key,
+        BubblegumError::StakingVoterMismatch
+    );
 
     let registrar_bytes = registrar_acc.to_account_info().data;
 
-    assert_eq!((*registrar_bytes.borrow())[..8], REGISTRAR_DISCRIMINATOR);
+    require!(
+        (*registrar_bytes.borrow())[..8] == REGISTRAR_DISCRIMINATOR,
+        BubblegumError::StakingRegistrarDiscriminatorMismatch
+    );
 
     let registrar: Registrar = *bytemuck::from_bytes(&(*registrar_bytes.borrow())[8..]);
 
-    assert_eq!(registrar.realm, REALM);
-    assert_eq!(registrar.realm_governing_token_mint, REALM_GOVERNING_MINT);
-
+    require!(
+        registrar.realm == REALM,
+        BubblegumError::StakingRegistrarRealmMismatch
+    );
+    require!(
+        registrar.realm_governing_token_mint == REALM_GOVERNING_MINT,
+        BubblegumError::StakingRegistrarRealmMismatch
+    );
     let voter_bytes = voter_acc.to_account_info().data;
 
-    assert_eq!((*voter_bytes.borrow())[..8], VOTER_DISCRIMINATOR);
+    require!(
+        (*voter_bytes.borrow())[..8] == VOTER_DISCRIMINATOR,
+        BubblegumError::StakingVoterDiscriminatorMismatch
+    );
 
     let voter: Voter = *bytemuck::from_bytes(&(*voter_bytes.borrow())[8..]);
 
-    assert_eq!(&voter.registrar, registrar_acc.key);
-    assert_eq!(&voter.voter_authority, staker_acc.key);
+    require!(
+        &voter.registrar == registrar_acc.key,
+        BubblegumError::StakingVoterRegistrarMismatch
+    );
+    require!(
+        &voter.voter_authority == staker_acc.key,
+        BubblegumError::StakingVoterAuthorityMismatch
+    );
 
     let clock = Clock::get()?;
     let curr_ts = clock.unix_timestamp as u64;
