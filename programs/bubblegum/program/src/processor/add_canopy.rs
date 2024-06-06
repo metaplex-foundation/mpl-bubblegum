@@ -1,5 +1,3 @@
-use std::borrow::Borrow;
-
 use anchor_lang::{prelude::*, system_program::System};
 use spl_account_compression::{program::SplAccountCompression, Noop};
 
@@ -27,7 +25,7 @@ pub(crate) fn add_canopy<'info>(
     canopy_nodes: Vec<[u8; 32]>,
 ) -> Result<()> {
     let incoming_tree_delegate = ctx.accounts.incoming_tree_delegate.key();
-    let authority = ctx.accounts.tree_authority.borrow();
+    let authority = &ctx.accounts.tree_authority;
 
     // incoming_tree_delegate is the tree owner as set in prepare tree, it's required to do any modificaitons to the tree,
     // including the canopy setup
