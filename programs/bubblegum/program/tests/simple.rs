@@ -250,6 +250,11 @@ async fn test_create_public_tree_with_canopy() {
     assert_eq!(cfg.tree_creator, payer.pubkey());
     assert_eq!(cfg.tree_delegate, payer.pubkey());
     assert!(cfg.is_public);
+}
+
+#[tokio::test]
+async fn test_cannot_create_tree_needing_too_many_proofs_with_too_small_canopy() {
+    let context = BubblegumTestContext::new().await.unwrap();
 
     let tree_create_result = context.create_tree_with_canopy::<19, 64>(1, true).await;
 
@@ -268,7 +273,7 @@ async fn test_create_public_tree_with_canopy() {
 }
 
 #[tokio::test]
-async fn test_create_public_tree_with_zero_canopy() {
+async fn test_cannot_create_tree_needing_too_many_proofs_with_no_canopy() {
     let context = BubblegumTestContext::new().await.unwrap();
 
     let tree_create_result = context.create_tree_with_canopy::<18, 64>(0, true).await;
