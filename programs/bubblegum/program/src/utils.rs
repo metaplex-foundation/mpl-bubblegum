@@ -152,7 +152,7 @@ pub(crate) fn check_canopy_size<'info>(
     Ok(())
 }
 
-// Method taken from account-compression Solana program
+// Method taken from [account-compression Solana program](spl_account_compression::canopy::check_canopy_bytes)
 #[inline(always)]
 fn get_cached_path_length(canopy: &[Node], max_depth: u32) -> Result<u32> {
     // The offset of 2 is applied because the canopy is a full binary tree without the root node
