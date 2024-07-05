@@ -104,7 +104,7 @@ pub(crate) fn finalize_tree_with_root<'info>(
     )
 }
 
-fn check_stake<'info>(
+pub(crate) fn check_stake<'info>(
     staker_acc: &AccountInfo<'info>,
     registrar_acc: &AccountInfo<'info>,
     voter_acc: &AccountInfo<'info>,
@@ -196,7 +196,7 @@ fn check_stake<'info>(
     Ok(())
 }
 
-fn finalize_tree<'info>(
+pub(crate) fn finalize_tree<'info>(
     root: [u8; 32],
     rightmost_leaf: [u8; 32],
     rightmost_index: u32,

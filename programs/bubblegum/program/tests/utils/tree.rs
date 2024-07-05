@@ -10,7 +10,8 @@ use super::{
     },
     Error, LeafArgs, Result,
 };
-use crate::utils::tx_builder::DecompressV1Builder;
+use crate::utils::digital_asset::DigitalAsset;
+use crate::utils::tx_builder::{DecompressV1Builder, FinalizeWithRootAndCollectionBuilder};
 use anchor_lang::{self, AccountDeserialize};
 use bubblegum::{
     state::{leaf_schema::LeafSchema, DecompressibleState, TreeConfig, Voucher, VOUCHER_PREFIX},
@@ -318,6 +319,61 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             (),
             payer.pubkey(),
             &[payer, tree_delegate],
+        )
+    }
+
+    pub fn finalize_tree_with_root_and_collection_tx(
+        &mut self,
+        collection_authority: &Keypair,
+        collection: &DigitalAsset,
+        payer: &Keypair,
+        tree_delegate: &Keypair,
+        rightmost_root: [u8; 32],
+        rightmost_leaf: [u8; 32],
+        rightmost_index: u32,
+        metadata_url: String,
+        metadata_hash: String,
+        registrar: Pubkey,
+        voter: Pubkey,
+        fee_receiver: Pubkey,
+    ) -> FinalizeWithRootAndCollectionBuilder<MAX_DEPTH, MAX_BUFFER_SIZE> {
+        let tree_authority =
+            Pubkey::find_program_address(&[self.tree_pubkey().as_ref()], &bubblegum::id()).0;
+
+        let accounts = bubblegum::accounts::FinalizeTreeWithRootAndCollection {
+            tree_authority,
+            merkle_tree: self.tree_pubkey(),
+            staker: payer.pubkey(), // TODO: this should be a separate account in a general case
+            incoming_tree_delegate: tree_delegate.pubkey(),
+            payer: payer.pubkey(),
+            registrar,
+            voter,
+            collection_authority: collection_authority.pubkey(),
+            collection_authority_record_pda: bubblegum::id(),
+            collection_mint: collection.mint.pubkey(),
+            fee_receiver,
+            log_wrapper: spl_noop::id(),
+            compression_program: spl_account_compression::id(),
+            system_program: system_program::id(),
+            collection_metadata: collection.metadata,
+            edition_account: collection.edition.unwrap(),
+        };
+
+        let data = bubblegum::instruction::FinalizeTreeWithRootAndCollection {
+            rightmost_root,
+            rightmost_leaf,
+            rightmost_index,
+            metadata_url,
+            metadata_hash,
+        };
+
+        self.tx_builder(
+            accounts,
+            data,
+            None,
+            (),
+            payer.pubkey(),
+            &[payer, tree_delegate, collection_authority],
         )
     }
 
