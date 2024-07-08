@@ -8,7 +8,7 @@ use bubblegum::{
     error::BubblegumError,
     state::{
         metaplex_adapter::{MetadataArgs, TokenProgramVersion, TokenStandard},
-        FEE_RECEIVER, REALM, REALM_GOVERNING_MINT,
+        FEE_RECEIVER, PROTOCOL_FEE_PER_1024_ASSETS, REALM, REALM_GOVERNING_MINT,
     },
 };
 use mplx_staking_states::state::{
@@ -353,13 +353,19 @@ async fn test_prepare_tree_without_canopy() {
         .unwrap()
         .unwrap()
         .lamports;
-    let fee = 1280000;
-    let solana_commision = 1579040; //1569040; // TODO: what is this number? Where did it come from? Is the change of the commision after change to the signature of the method a valid one?
 
-    assert_eq!(end_fee_receiver_balance, start_fee_receiver_balance + fee);
+    // such as payer paid for TreeConfig account creation(rent space) in PrepareTree instruction
+    // and it paid Solana txs fee
+    // we deduct sum of that expenses to check if protocol fee was really charged
+    let solana_fee = 1579040;
+
+    assert_eq!(
+        end_fee_receiver_balance,
+        start_fee_receiver_balance + PROTOCOL_FEE_PER_1024_ASSETS
+    );
     assert_eq!(
         end_staker_balance,
-        start_staker_balance - fee - solana_commision
+        start_staker_balance - PROTOCOL_FEE_PER_1024_ASSETS - solana_fee
     );
 }
 
