@@ -21,6 +21,7 @@ pub struct FinalizeTreeWithRootAndCollection<'info> {
     pub payer: Signer<'info>,
     pub incoming_tree_delegate: Signer<'info>,
     pub staker: Signer<'info>,
+    pub collection_authority: Signer<'info>,
     /// CHECK:
     pub registrar: UncheckedAccount<'info>,
     /// CHECK:
@@ -28,7 +29,6 @@ pub struct FinalizeTreeWithRootAndCollection<'info> {
     /// CHECK:
     #[account(mut)]
     pub fee_receiver: UncheckedAccount<'info>,
-    pub collection_authority: Signer<'info>,
     /// CHECK: Optional collection authority record PDA.
     /// If there is no collecton authority record PDA then
     /// this must be the Bubblegum program address.
