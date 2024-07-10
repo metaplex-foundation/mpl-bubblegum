@@ -48,7 +48,7 @@ async fn preinitialize_merkle_tree(
     );
 
     for i in 0..num_of_assets {
-        let (_asset, leaf_args) = test_metadata_args(assets_owner, assets_owner, i as u64);
+        let (_asset, leaf_args) = create_test_metadata_args(assets_owner, assets_owner, i as u64);
         tree.update_leaf(&leaf_args).unwrap();
     }
 
@@ -59,7 +59,7 @@ async fn preinitialize_merkle_tree(
     tree
 }
 
-fn test_metadata_args(
+fn create_test_metadata_args(
     assets_owner: &Keypair,
     assets_delegate: &Keypair,
     index: u64,
@@ -119,6 +119,11 @@ async fn get_canopy_from_tree(
     });
 
     // have to do it because MerkleTree returns hashes where each pair is reversed
+    // and this is happening because the proof doesn't contain the parent of the leaf.
+    // It contains the neighbor of every relevant node up to one level below the root.
+    // Having those neighbors and the leaf you may recreate the root. So the actual canopy leaf is
+    // either calculable from the leaf and it's proof by hashing those hashes up to the canopy level,
+    // or taken from the neighbor, which is done here.
     reverse_each_couple(&mut canopy);
 
     canopy
