@@ -24,7 +24,7 @@ pub struct FinalizeTreeWithRoot<'info> {
     pub merkle_tree: UncheckedAccount<'info>,
     #[account(mut)]
     pub payer: Signer<'info>,
-    pub incoming_tree_delegate: Signer<'info>,
+    pub tree_delegate: Signer<'info>,
     pub staker: Signer<'info>,
     /// CHECK:
     pub registrar: UncheckedAccount<'info>,
@@ -46,7 +46,7 @@ pub(crate) fn finalize_tree_with_root<'info>(
     _metadata_url: String,
     _metadata_hash: String,
 ) -> Result<()> {
-    let incoming_tree_delegate = ctx.accounts.incoming_tree_delegate.key();
+    let incoming_tree_delegate = ctx.accounts.tree_delegate.key();
     let authority = &mut ctx.accounts.tree_authority;
 
     require!(

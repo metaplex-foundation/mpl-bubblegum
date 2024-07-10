@@ -278,7 +278,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         &mut self,
         payer: &Keypair,
         tree_delegate: &Keypair,
-        rightmost_root: [u8; 32],
+        root: [u8; 32],
         rightmost_leaf: [u8; 32],
         rightmost_index: u32,
         metadata_url: String,
@@ -294,7 +294,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             tree_authority,
             merkle_tree: self.tree_pubkey(),
             staker: payer.pubkey(), // TODO: this should be a separate account in a general case
-            incoming_tree_delegate: tree_delegate.pubkey(),
+            tree_delegate: tree_delegate.pubkey(),
             payer: payer.pubkey(),
             registrar,
             voter,
@@ -305,7 +305,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         };
 
         let data = bubblegum::instruction::FinalizeTreeWithRoot {
-            rightmost_root,
+            root,
             rightmost_leaf,
             rightmost_index,
             metadata_url,
@@ -328,7 +328,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         collection: &DigitalAsset,
         payer: &Keypair,
         tree_delegate: &Keypair,
-        rightmost_root: [u8; 32],
+        root: [u8; 32],
         rightmost_leaf: [u8; 32],
         rightmost_index: u32,
         metadata_url: String,
@@ -344,7 +344,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             tree_authority,
             merkle_tree: self.tree_pubkey(),
             staker: payer.pubkey(), // TODO: this should be a separate account in a general case
-            incoming_tree_delegate: tree_delegate.pubkey(),
+            tree_delegate: tree_delegate.pubkey(),
             payer: payer.pubkey(),
             registrar,
             voter,
@@ -360,7 +360,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         };
 
         let data = bubblegum::instruction::FinalizeTreeWithRootAndCollection {
-            rightmost_root,
+            root,
             rightmost_leaf,
             rightmost_index,
             metadata_url,

@@ -401,7 +401,7 @@
           "isSigner": true
         },
         {
-          "name": "incomingTreeDelegate",
+          "name": "treeDelegate",
           "isMut": false,
           "isSigner": true
         },
@@ -443,7 +443,7 @@
       ],
       "args": [
         {
-          "name": "rightmostRoot",
+          "name": "root",
           "type": {
             "array": [
               "u8",
@@ -493,12 +493,17 @@
           "isSigner": true
         },
         {
-          "name": "incomingTreeDelegate",
+          "name": "treeDelegate",
           "isMut": false,
           "isSigner": true
         },
         {
           "name": "staker",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "collectionAuthority",
           "isMut": false,
           "isSigner": true
         },
@@ -516,11 +521,6 @@
           "name": "feeReceiver",
           "isMut": true,
           "isSigner": false
-        },
-        {
-          "name": "collectionAuthority",
-          "isMut": false,
-          "isSigner": true
         },
         {
           "name": "collectionAuthorityRecordPda",
@@ -564,7 +564,7 @@
       ],
       "args": [
         {
-          "name": "rightmostRoot",
+          "name": "root",
           "type": {
             "array": [
               "u8",

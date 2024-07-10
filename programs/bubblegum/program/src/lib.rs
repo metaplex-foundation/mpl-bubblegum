@@ -60,8 +60,7 @@ pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
         [116, 110, 29, 56, 107, 219, 42, 93] => InstructionName::Burn,
         [82, 193, 176, 117, 176, 21, 115, 253] => InstructionName::Compress,
         [77, 73, 220, 153, 126, 225, 64, 204] => InstructionName::FinalizeTreeWithRoot,
-        // TODO: add correct value
-        [77, 73, 220, 153, 126, 225, 64, 204] => InstructionName::FinalizeTreeWithRootAndCollection,
+        [194, 98, 45, 168, 183, 72, 67, 155] => InstructionName::FinalizeTreeWithRootAndCollection,
         [165, 83, 136, 142, 89, 202, 47, 220] => InstructionName::CreateTree,
         [52, 17, 96, 132, 71, 4, 85, 194] => InstructionName::VerifyCreator,
         [107, 178, 57, 39, 105, 115, 112, 152] => InstructionName::UnverifyCreator,
@@ -136,7 +135,7 @@ pub mod bubblegum {
 
     pub(crate) fn finalize_tree_with_root<'info>(
         ctx: Context<'_, '_, '_, 'info, FinalizeTreeWithRoot<'info>>,
-        rightmost_root: [u8; 32],
+        root: [u8; 32],
         rightmost_leaf: [u8; 32],
         rightmost_index: u32,
         metadata_url: String,
@@ -144,7 +143,7 @@ pub mod bubblegum {
     ) -> Result<()> {
         processor::finalize_tree_with_root(
             ctx,
-            rightmost_root,
+            root,
             rightmost_leaf,
             rightmost_index,
             metadata_url,
@@ -154,7 +153,7 @@ pub mod bubblegum {
 
     pub(crate) fn finalize_tree_with_root_and_collection<'info>(
         ctx: Context<'_, '_, '_, 'info, FinalizeTreeWithRootAndCollection<'info>>,
-        rightmost_root: [u8; 32],
+        root: [u8; 32],
         rightmost_leaf: [u8; 32],
         rightmost_index: u32,
         metadata_url: String,
@@ -162,7 +161,7 @@ pub mod bubblegum {
     ) -> Result<()> {
         processor::finalize_tree_with_root_and_collection(
             ctx,
-            rightmost_root,
+            root,
             rightmost_leaf,
             rightmost_index,
             metadata_url,

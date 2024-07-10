@@ -37,7 +37,7 @@ export type FinalizeTreeWithRootInstructionAccounts = {
   treeConfig?: PublicKey | Pda;
   merkleTree: PublicKey | Pda;
   payer?: Signer;
-  incomingTreeDelegate: Signer;
+  treeCreatorOrDelegate?: Signer;
   staker: Signer;
   registrar: PublicKey | Pda;
   voter: PublicKey | Pda;
@@ -50,7 +50,7 @@ export type FinalizeTreeWithRootInstructionAccounts = {
 // Data.
 export type FinalizeTreeWithRootInstructionData = {
   discriminator: Array<number>;
-  rightmostRoot: Uint8Array;
+  root: Uint8Array;
   rightmostLeaf: Uint8Array;
   rightmostIndex: number;
   metadataUrl: string;
@@ -58,7 +58,7 @@ export type FinalizeTreeWithRootInstructionData = {
 };
 
 export type FinalizeTreeWithRootInstructionDataArgs = {
-  rightmostRoot: Uint8Array;
+  root: Uint8Array;
   rightmostLeaf: Uint8Array;
   rightmostIndex: number;
   metadataUrl: string;
@@ -77,7 +77,7 @@ export function getFinalizeTreeWithRootInstructionDataSerializer(): Serializer<
     struct<FinalizeTreeWithRootInstructionData>(
       [
         ['discriminator', array(u8(), { size: 8 })],
-        ['rightmostRoot', bytes({ size: 32 })],
+        ['root', bytes({ size: 32 })],
         ['rightmostLeaf', bytes({ size: 32 })],
         ['rightmostIndex', u32()],
         ['metadataUrl', string()],
@@ -101,7 +101,7 @@ export type FinalizeTreeWithRootInstructionArgs =
 
 // Instruction.
 export function finalizeTreeWithRoot(
-  context: Pick<Context, 'eddsa' | 'payer' | 'programs'>,
+  context: Pick<Context, 'eddsa' | 'identity' | 'payer' | 'programs'>,
   input: FinalizeTreeWithRootInstructionAccounts &
     FinalizeTreeWithRootInstructionArgs
 ): TransactionBuilder {
@@ -116,10 +116,10 @@ export function finalizeTreeWithRoot(
     treeConfig: { index: 0, isWritable: true, value: input.treeConfig ?? null },
     merkleTree: { index: 1, isWritable: true, value: input.merkleTree ?? null },
     payer: { index: 2, isWritable: true, value: input.payer ?? null },
-    incomingTreeDelegate: {
+    treeCreatorOrDelegate: {
       index: 3,
       isWritable: false,
-      value: input.incomingTreeDelegate ?? null,
+      value: input.treeCreatorOrDelegate ?? null,
     },
     staker: { index: 4, isWritable: false, value: input.staker ?? null },
     registrar: { index: 5, isWritable: false, value: input.registrar ?? null },
@@ -157,6 +157,9 @@ export function finalizeTreeWithRoot(
   }
   if (!resolvedAccounts.payer.value) {
     resolvedAccounts.payer.value = context.payer;
+  }
+  if (!resolvedAccounts.treeCreatorOrDelegate.value) {
+    resolvedAccounts.treeCreatorOrDelegate.value = context.identity;
   }
   if (!resolvedAccounts.logWrapper.value) {
     resolvedAccounts.logWrapper.value = context.programs.getPublicKey(

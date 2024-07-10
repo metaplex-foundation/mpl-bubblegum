@@ -16,7 +16,7 @@ pub struct FinalizeTreeWithRoot {
 
     pub payer: solana_program::pubkey::Pubkey,
 
-    pub incoming_tree_delegate: solana_program::pubkey::Pubkey,
+    pub tree_creator_or_delegate: solana_program::pubkey::Pubkey,
 
     pub staker: solana_program::pubkey::Pubkey,
 
@@ -59,7 +59,7 @@ impl FinalizeTreeWithRoot {
             self.payer, true,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            self.incoming_tree_delegate,
+            self.tree_creator_or_delegate,
             true,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
@@ -120,7 +120,7 @@ impl FinalizeTreeWithRootInstructionData {
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct FinalizeTreeWithRootInstructionArgs {
-    pub rightmost_root: [u8; 32],
+    pub root: [u8; 32],
     pub rightmost_leaf: [u8; 32],
     pub rightmost_index: u32,
     pub metadata_url: String,
@@ -133,7 +133,7 @@ pub struct FinalizeTreeWithRootBuilder {
     tree_config: Option<solana_program::pubkey::Pubkey>,
     merkle_tree: Option<solana_program::pubkey::Pubkey>,
     payer: Option<solana_program::pubkey::Pubkey>,
-    incoming_tree_delegate: Option<solana_program::pubkey::Pubkey>,
+    tree_creator_or_delegate: Option<solana_program::pubkey::Pubkey>,
     staker: Option<solana_program::pubkey::Pubkey>,
     registrar: Option<solana_program::pubkey::Pubkey>,
     voter: Option<solana_program::pubkey::Pubkey>,
@@ -141,7 +141,7 @@ pub struct FinalizeTreeWithRootBuilder {
     log_wrapper: Option<solana_program::pubkey::Pubkey>,
     compression_program: Option<solana_program::pubkey::Pubkey>,
     system_program: Option<solana_program::pubkey::Pubkey>,
-    rightmost_root: Option<[u8; 32]>,
+    root: Option<[u8; 32]>,
     rightmost_leaf: Option<[u8; 32]>,
     rightmost_index: Option<u32>,
     metadata_url: Option<String>,
@@ -169,11 +169,11 @@ impl FinalizeTreeWithRootBuilder {
         self
     }
     #[inline(always)]
-    pub fn incoming_tree_delegate(
+    pub fn tree_creator_or_delegate(
         &mut self,
-        incoming_tree_delegate: solana_program::pubkey::Pubkey,
+        tree_creator_or_delegate: solana_program::pubkey::Pubkey,
     ) -> &mut Self {
-        self.incoming_tree_delegate = Some(incoming_tree_delegate);
+        self.tree_creator_or_delegate = Some(tree_creator_or_delegate);
         self
     }
     #[inline(always)]
@@ -218,8 +218,8 @@ impl FinalizeTreeWithRootBuilder {
         self
     }
     #[inline(always)]
-    pub fn rightmost_root(&mut self, rightmost_root: [u8; 32]) -> &mut Self {
-        self.rightmost_root = Some(rightmost_root);
+    pub fn root(&mut self, root: [u8; 32]) -> &mut Self {
+        self.root = Some(root);
         self
     }
     #[inline(always)]
@@ -266,9 +266,9 @@ impl FinalizeTreeWithRootBuilder {
             tree_config: self.tree_config.expect("tree_config is not set"),
             merkle_tree: self.merkle_tree.expect("merkle_tree is not set"),
             payer: self.payer.expect("payer is not set"),
-            incoming_tree_delegate: self
-                .incoming_tree_delegate
-                .expect("incoming_tree_delegate is not set"),
+            tree_creator_or_delegate: self
+                .tree_creator_or_delegate
+                .expect("tree_creator_or_delegate is not set"),
             staker: self.staker.expect("staker is not set"),
             registrar: self.registrar.expect("registrar is not set"),
             voter: self.voter.expect("voter is not set"),
@@ -284,10 +284,7 @@ impl FinalizeTreeWithRootBuilder {
                 .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
         };
         let args = FinalizeTreeWithRootInstructionArgs {
-            rightmost_root: self
-                .rightmost_root
-                .clone()
-                .expect("rightmost_root is not set"),
+            root: self.root.clone().expect("root is not set"),
             rightmost_leaf: self
                 .rightmost_leaf
                 .clone()
@@ -315,7 +312,7 @@ pub struct FinalizeTreeWithRootCpiAccounts<'a, 'b> {
 
     pub payer: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub incoming_tree_delegate: &'b solana_program::account_info::AccountInfo<'a>,
+    pub tree_creator_or_delegate: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub staker: &'b solana_program::account_info::AccountInfo<'a>,
 
@@ -343,7 +340,7 @@ pub struct FinalizeTreeWithRootCpi<'a, 'b> {
 
     pub payer: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub incoming_tree_delegate: &'b solana_program::account_info::AccountInfo<'a>,
+    pub tree_creator_or_delegate: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub staker: &'b solana_program::account_info::AccountInfo<'a>,
 
@@ -373,7 +370,7 @@ impl<'a, 'b> FinalizeTreeWithRootCpi<'a, 'b> {
             tree_config: accounts.tree_config,
             merkle_tree: accounts.merkle_tree,
             payer: accounts.payer,
-            incoming_tree_delegate: accounts.incoming_tree_delegate,
+            tree_creator_or_delegate: accounts.tree_creator_or_delegate,
             staker: accounts.staker,
             registrar: accounts.registrar,
             voter: accounts.voter,
@@ -431,7 +428,7 @@ impl<'a, 'b> FinalizeTreeWithRootCpi<'a, 'b> {
             true,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            *self.incoming_tree_delegate.key,
+            *self.tree_creator_or_delegate.key,
             true,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
@@ -485,7 +482,7 @@ impl<'a, 'b> FinalizeTreeWithRootCpi<'a, 'b> {
         account_infos.push(self.tree_config.clone());
         account_infos.push(self.merkle_tree.clone());
         account_infos.push(self.payer.clone());
-        account_infos.push(self.incoming_tree_delegate.clone());
+        account_infos.push(self.tree_creator_or_delegate.clone());
         account_infos.push(self.staker.clone());
         account_infos.push(self.registrar.clone());
         account_infos.push(self.voter.clone());
@@ -517,7 +514,7 @@ impl<'a, 'b> FinalizeTreeWithRootCpiBuilder<'a, 'b> {
             tree_config: None,
             merkle_tree: None,
             payer: None,
-            incoming_tree_delegate: None,
+            tree_creator_or_delegate: None,
             staker: None,
             registrar: None,
             voter: None,
@@ -525,7 +522,7 @@ impl<'a, 'b> FinalizeTreeWithRootCpiBuilder<'a, 'b> {
             log_wrapper: None,
             compression_program: None,
             system_program: None,
-            rightmost_root: None,
+            root: None,
             rightmost_leaf: None,
             rightmost_index: None,
             metadata_url: None,
@@ -556,11 +553,11 @@ impl<'a, 'b> FinalizeTreeWithRootCpiBuilder<'a, 'b> {
         self
     }
     #[inline(always)]
-    pub fn incoming_tree_delegate(
+    pub fn tree_creator_or_delegate(
         &mut self,
-        incoming_tree_delegate: &'b solana_program::account_info::AccountInfo<'a>,
+        tree_creator_or_delegate: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
-        self.instruction.incoming_tree_delegate = Some(incoming_tree_delegate);
+        self.instruction.tree_creator_or_delegate = Some(tree_creator_or_delegate);
         self
     }
     #[inline(always)]
@@ -617,8 +614,8 @@ impl<'a, 'b> FinalizeTreeWithRootCpiBuilder<'a, 'b> {
         self
     }
     #[inline(always)]
-    pub fn rightmost_root(&mut self, rightmost_root: [u8; 32]) -> &mut Self {
-        self.instruction.rightmost_root = Some(rightmost_root);
+    pub fn root(&mut self, root: [u8; 32]) -> &mut Self {
+        self.instruction.root = Some(root);
         self
     }
     #[inline(always)]
@@ -683,11 +680,7 @@ impl<'a, 'b> FinalizeTreeWithRootCpiBuilder<'a, 'b> {
         signers_seeds: &[&[&[u8]]],
     ) -> solana_program::entrypoint::ProgramResult {
         let args = FinalizeTreeWithRootInstructionArgs {
-            rightmost_root: self
-                .instruction
-                .rightmost_root
-                .clone()
-                .expect("rightmost_root is not set"),
+            root: self.instruction.root.clone().expect("root is not set"),
             rightmost_leaf: self
                 .instruction
                 .rightmost_leaf
@@ -724,10 +717,10 @@ impl<'a, 'b> FinalizeTreeWithRootCpiBuilder<'a, 'b> {
 
             payer: self.instruction.payer.expect("payer is not set"),
 
-            incoming_tree_delegate: self
+            tree_creator_or_delegate: self
                 .instruction
-                .incoming_tree_delegate
-                .expect("incoming_tree_delegate is not set"),
+                .tree_creator_or_delegate
+                .expect("tree_creator_or_delegate is not set"),
 
             staker: self.instruction.staker.expect("staker is not set"),
 
@@ -768,7 +761,7 @@ struct FinalizeTreeWithRootCpiBuilderInstruction<'a, 'b> {
     tree_config: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     merkle_tree: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     payer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    incoming_tree_delegate: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    tree_creator_or_delegate: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     staker: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     registrar: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     voter: Option<&'b solana_program::account_info::AccountInfo<'a>>,
@@ -776,7 +769,7 @@ struct FinalizeTreeWithRootCpiBuilderInstruction<'a, 'b> {
     log_wrapper: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     compression_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    rightmost_root: Option<[u8; 32]>,
+    root: Option<[u8; 32]>,
     rightmost_leaf: Option<[u8; 32]>,
     rightmost_index: Option<u32>,
     metadata_url: Option<String>,

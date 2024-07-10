@@ -19,7 +19,7 @@ pub struct FinalizeTreeWithRootAndCollection<'info> {
     pub merkle_tree: UncheckedAccount<'info>,
     #[account(mut)]
     pub payer: Signer<'info>,
-    pub incoming_tree_delegate: Signer<'info>,
+    pub tree_delegate: Signer<'info>,
     pub staker: Signer<'info>,
     pub collection_authority: Signer<'info>,
     /// CHECK:

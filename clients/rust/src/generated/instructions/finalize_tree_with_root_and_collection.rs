@@ -16,17 +16,17 @@ pub struct FinalizeTreeWithRootAndCollection {
 
     pub payer: solana_program::pubkey::Pubkey,
 
-    pub incoming_tree_delegate: solana_program::pubkey::Pubkey,
+    pub tree_creator_or_delegate: solana_program::pubkey::Pubkey,
 
     pub staker: solana_program::pubkey::Pubkey,
+
+    pub collection_authority: solana_program::pubkey::Pubkey,
 
     pub registrar: solana_program::pubkey::Pubkey,
 
     pub voter: solana_program::pubkey::Pubkey,
 
     pub fee_receiver: solana_program::pubkey::Pubkey,
-
-    pub collection_authority: solana_program::pubkey::Pubkey,
     /// If there is no collecton authority record PDA then
     /// this must be the Bubblegum program address.
     pub collection_authority_record_pda: Option<solana_program::pubkey::Pubkey>,
@@ -70,11 +70,15 @@ impl FinalizeTreeWithRootAndCollection {
             self.payer, true,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            self.incoming_tree_delegate,
+            self.tree_creator_or_delegate,
             true,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.staker,
+            true,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            self.collection_authority,
             true,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
@@ -87,10 +91,6 @@ impl FinalizeTreeWithRootAndCollection {
         accounts.push(solana_program::instruction::AccountMeta::new(
             self.fee_receiver,
             false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            self.collection_authority,
-            true,
         ));
         if let Some(collection_authority_record_pda) = self.collection_authority_record_pda {
             accounts.push(solana_program::instruction::AccountMeta::new_readonly(
@@ -158,7 +158,7 @@ impl FinalizeTreeWithRootAndCollectionInstructionData {
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct FinalizeTreeWithRootAndCollectionInstructionArgs {
-    pub rightmost_root: [u8; 32],
+    pub root: [u8; 32],
     pub rightmost_leaf: [u8; 32],
     pub rightmost_index: u32,
     pub metadata_url: String,
@@ -171,12 +171,12 @@ pub struct FinalizeTreeWithRootAndCollectionBuilder {
     tree_config: Option<solana_program::pubkey::Pubkey>,
     merkle_tree: Option<solana_program::pubkey::Pubkey>,
     payer: Option<solana_program::pubkey::Pubkey>,
-    incoming_tree_delegate: Option<solana_program::pubkey::Pubkey>,
+    tree_creator_or_delegate: Option<solana_program::pubkey::Pubkey>,
     staker: Option<solana_program::pubkey::Pubkey>,
+    collection_authority: Option<solana_program::pubkey::Pubkey>,
     registrar: Option<solana_program::pubkey::Pubkey>,
     voter: Option<solana_program::pubkey::Pubkey>,
     fee_receiver: Option<solana_program::pubkey::Pubkey>,
-    collection_authority: Option<solana_program::pubkey::Pubkey>,
     collection_authority_record_pda: Option<solana_program::pubkey::Pubkey>,
     collection_mint: Option<solana_program::pubkey::Pubkey>,
     collection_metadata: Option<solana_program::pubkey::Pubkey>,
@@ -184,7 +184,7 @@ pub struct FinalizeTreeWithRootAndCollectionBuilder {
     log_wrapper: Option<solana_program::pubkey::Pubkey>,
     compression_program: Option<solana_program::pubkey::Pubkey>,
     system_program: Option<solana_program::pubkey::Pubkey>,
-    rightmost_root: Option<[u8; 32]>,
+    root: Option<[u8; 32]>,
     rightmost_leaf: Option<[u8; 32]>,
     rightmost_index: Option<u32>,
     metadata_url: Option<String>,
@@ -212,16 +212,24 @@ impl FinalizeTreeWithRootAndCollectionBuilder {
         self
     }
     #[inline(always)]
-    pub fn incoming_tree_delegate(
+    pub fn tree_creator_or_delegate(
         &mut self,
-        incoming_tree_delegate: solana_program::pubkey::Pubkey,
+        tree_creator_or_delegate: solana_program::pubkey::Pubkey,
     ) -> &mut Self {
-        self.incoming_tree_delegate = Some(incoming_tree_delegate);
+        self.tree_creator_or_delegate = Some(tree_creator_or_delegate);
         self
     }
     #[inline(always)]
     pub fn staker(&mut self, staker: solana_program::pubkey::Pubkey) -> &mut Self {
         self.staker = Some(staker);
+        self
+    }
+    #[inline(always)]
+    pub fn collection_authority(
+        &mut self,
+        collection_authority: solana_program::pubkey::Pubkey,
+    ) -> &mut Self {
+        self.collection_authority = Some(collection_authority);
         self
     }
     #[inline(always)]
@@ -237,14 +245,6 @@ impl FinalizeTreeWithRootAndCollectionBuilder {
     #[inline(always)]
     pub fn fee_receiver(&mut self, fee_receiver: solana_program::pubkey::Pubkey) -> &mut Self {
         self.fee_receiver = Some(fee_receiver);
-        self
-    }
-    #[inline(always)]
-    pub fn collection_authority(
-        &mut self,
-        collection_authority: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
-        self.collection_authority = Some(collection_authority);
         self
     }
     /// `[optional account]`
@@ -304,8 +304,8 @@ impl FinalizeTreeWithRootAndCollectionBuilder {
         self
     }
     #[inline(always)]
-    pub fn rightmost_root(&mut self, rightmost_root: [u8; 32]) -> &mut Self {
-        self.rightmost_root = Some(rightmost_root);
+    pub fn root(&mut self, root: [u8; 32]) -> &mut Self {
+        self.root = Some(root);
         self
     }
     #[inline(always)]
@@ -352,16 +352,16 @@ impl FinalizeTreeWithRootAndCollectionBuilder {
             tree_config: self.tree_config.expect("tree_config is not set"),
             merkle_tree: self.merkle_tree.expect("merkle_tree is not set"),
             payer: self.payer.expect("payer is not set"),
-            incoming_tree_delegate: self
-                .incoming_tree_delegate
-                .expect("incoming_tree_delegate is not set"),
+            tree_creator_or_delegate: self
+                .tree_creator_or_delegate
+                .expect("tree_creator_or_delegate is not set"),
             staker: self.staker.expect("staker is not set"),
-            registrar: self.registrar.expect("registrar is not set"),
-            voter: self.voter.expect("voter is not set"),
-            fee_receiver: self.fee_receiver.expect("fee_receiver is not set"),
             collection_authority: self
                 .collection_authority
                 .expect("collection_authority is not set"),
+            registrar: self.registrar.expect("registrar is not set"),
+            voter: self.voter.expect("voter is not set"),
+            fee_receiver: self.fee_receiver.expect("fee_receiver is not set"),
             collection_authority_record_pda: self.collection_authority_record_pda,
             collection_mint: self.collection_mint.expect("collection_mint is not set"),
             collection_metadata: self
@@ -381,10 +381,7 @@ impl FinalizeTreeWithRootAndCollectionBuilder {
                 .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
         };
         let args = FinalizeTreeWithRootAndCollectionInstructionArgs {
-            rightmost_root: self
-                .rightmost_root
-                .clone()
-                .expect("rightmost_root is not set"),
+            root: self.root.clone().expect("root is not set"),
             rightmost_leaf: self
                 .rightmost_leaf
                 .clone()
@@ -412,17 +409,17 @@ pub struct FinalizeTreeWithRootAndCollectionCpiAccounts<'a, 'b> {
 
     pub payer: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub incoming_tree_delegate: &'b solana_program::account_info::AccountInfo<'a>,
+    pub tree_creator_or_delegate: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub staker: &'b solana_program::account_info::AccountInfo<'a>,
+
+    pub collection_authority: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub registrar: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub voter: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub fee_receiver: &'b solana_program::account_info::AccountInfo<'a>,
-
-    pub collection_authority: &'b solana_program::account_info::AccountInfo<'a>,
     /// If there is no collecton authority record PDA then
     /// this must be the Bubblegum program address.
     pub collection_authority_record_pda: Option<&'b solana_program::account_info::AccountInfo<'a>>,
@@ -451,17 +448,17 @@ pub struct FinalizeTreeWithRootAndCollectionCpi<'a, 'b> {
 
     pub payer: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub incoming_tree_delegate: &'b solana_program::account_info::AccountInfo<'a>,
+    pub tree_creator_or_delegate: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub staker: &'b solana_program::account_info::AccountInfo<'a>,
+
+    pub collection_authority: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub registrar: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub voter: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub fee_receiver: &'b solana_program::account_info::AccountInfo<'a>,
-
-    pub collection_authority: &'b solana_program::account_info::AccountInfo<'a>,
     /// If there is no collecton authority record PDA then
     /// this must be the Bubblegum program address.
     pub collection_authority_record_pda: Option<&'b solana_program::account_info::AccountInfo<'a>>,
@@ -492,12 +489,12 @@ impl<'a, 'b> FinalizeTreeWithRootAndCollectionCpi<'a, 'b> {
             tree_config: accounts.tree_config,
             merkle_tree: accounts.merkle_tree,
             payer: accounts.payer,
-            incoming_tree_delegate: accounts.incoming_tree_delegate,
+            tree_creator_or_delegate: accounts.tree_creator_or_delegate,
             staker: accounts.staker,
+            collection_authority: accounts.collection_authority,
             registrar: accounts.registrar,
             voter: accounts.voter,
             fee_receiver: accounts.fee_receiver,
-            collection_authority: accounts.collection_authority,
             collection_authority_record_pda: accounts.collection_authority_record_pda,
             collection_mint: accounts.collection_mint,
             collection_metadata: accounts.collection_metadata,
@@ -555,11 +552,15 @@ impl<'a, 'b> FinalizeTreeWithRootAndCollectionCpi<'a, 'b> {
             true,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            *self.incoming_tree_delegate.key,
+            *self.tree_creator_or_delegate.key,
             true,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             *self.staker.key,
+            true,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            *self.collection_authority.key,
             true,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
@@ -573,10 +574,6 @@ impl<'a, 'b> FinalizeTreeWithRootAndCollectionCpi<'a, 'b> {
         accounts.push(solana_program::instruction::AccountMeta::new(
             *self.fee_receiver.key,
             false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            *self.collection_authority.key,
-            true,
         ));
         if let Some(collection_authority_record_pda) = self.collection_authority_record_pda {
             accounts.push(solana_program::instruction::AccountMeta::new_readonly(
@@ -636,12 +633,12 @@ impl<'a, 'b> FinalizeTreeWithRootAndCollectionCpi<'a, 'b> {
         account_infos.push(self.tree_config.clone());
         account_infos.push(self.merkle_tree.clone());
         account_infos.push(self.payer.clone());
-        account_infos.push(self.incoming_tree_delegate.clone());
+        account_infos.push(self.tree_creator_or_delegate.clone());
         account_infos.push(self.staker.clone());
+        account_infos.push(self.collection_authority.clone());
         account_infos.push(self.registrar.clone());
         account_infos.push(self.voter.clone());
         account_infos.push(self.fee_receiver.clone());
-        account_infos.push(self.collection_authority.clone());
         if let Some(collection_authority_record_pda) = self.collection_authority_record_pda {
             account_infos.push(collection_authority_record_pda.clone());
         }
@@ -675,12 +672,12 @@ impl<'a, 'b> FinalizeTreeWithRootAndCollectionCpiBuilder<'a, 'b> {
             tree_config: None,
             merkle_tree: None,
             payer: None,
-            incoming_tree_delegate: None,
+            tree_creator_or_delegate: None,
             staker: None,
+            collection_authority: None,
             registrar: None,
             voter: None,
             fee_receiver: None,
-            collection_authority: None,
             collection_authority_record_pda: None,
             collection_mint: None,
             collection_metadata: None,
@@ -688,7 +685,7 @@ impl<'a, 'b> FinalizeTreeWithRootAndCollectionCpiBuilder<'a, 'b> {
             log_wrapper: None,
             compression_program: None,
             system_program: None,
-            rightmost_root: None,
+            root: None,
             rightmost_leaf: None,
             rightmost_index: None,
             metadata_url: None,
@@ -719,11 +716,11 @@ impl<'a, 'b> FinalizeTreeWithRootAndCollectionCpiBuilder<'a, 'b> {
         self
     }
     #[inline(always)]
-    pub fn incoming_tree_delegate(
+    pub fn tree_creator_or_delegate(
         &mut self,
-        incoming_tree_delegate: &'b solana_program::account_info::AccountInfo<'a>,
+        tree_creator_or_delegate: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
-        self.instruction.incoming_tree_delegate = Some(incoming_tree_delegate);
+        self.instruction.tree_creator_or_delegate = Some(tree_creator_or_delegate);
         self
     }
     #[inline(always)]
@@ -732,6 +729,14 @@ impl<'a, 'b> FinalizeTreeWithRootAndCollectionCpiBuilder<'a, 'b> {
         staker: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.staker = Some(staker);
+        self
+    }
+    #[inline(always)]
+    pub fn collection_authority(
+        &mut self,
+        collection_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.collection_authority = Some(collection_authority);
         self
     }
     #[inline(always)]
@@ -753,14 +758,6 @@ impl<'a, 'b> FinalizeTreeWithRootAndCollectionCpiBuilder<'a, 'b> {
         fee_receiver: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.fee_receiver = Some(fee_receiver);
-        self
-    }
-    #[inline(always)]
-    pub fn collection_authority(
-        &mut self,
-        collection_authority: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
-        self.instruction.collection_authority = Some(collection_authority);
         self
     }
     /// `[optional account]`
@@ -823,8 +820,8 @@ impl<'a, 'b> FinalizeTreeWithRootAndCollectionCpiBuilder<'a, 'b> {
         self
     }
     #[inline(always)]
-    pub fn rightmost_root(&mut self, rightmost_root: [u8; 32]) -> &mut Self {
-        self.instruction.rightmost_root = Some(rightmost_root);
+    pub fn root(&mut self, root: [u8; 32]) -> &mut Self {
+        self.instruction.root = Some(root);
         self
     }
     #[inline(always)]
@@ -889,11 +886,7 @@ impl<'a, 'b> FinalizeTreeWithRootAndCollectionCpiBuilder<'a, 'b> {
         signers_seeds: &[&[&[u8]]],
     ) -> solana_program::entrypoint::ProgramResult {
         let args = FinalizeTreeWithRootAndCollectionInstructionArgs {
-            rightmost_root: self
-                .instruction
-                .rightmost_root
-                .clone()
-                .expect("rightmost_root is not set"),
+            root: self.instruction.root.clone().expect("root is not set"),
             rightmost_leaf: self
                 .instruction
                 .rightmost_leaf
@@ -930,12 +923,17 @@ impl<'a, 'b> FinalizeTreeWithRootAndCollectionCpiBuilder<'a, 'b> {
 
             payer: self.instruction.payer.expect("payer is not set"),
 
-            incoming_tree_delegate: self
+            tree_creator_or_delegate: self
                 .instruction
-                .incoming_tree_delegate
-                .expect("incoming_tree_delegate is not set"),
+                .tree_creator_or_delegate
+                .expect("tree_creator_or_delegate is not set"),
 
             staker: self.instruction.staker.expect("staker is not set"),
+
+            collection_authority: self
+                .instruction
+                .collection_authority
+                .expect("collection_authority is not set"),
 
             registrar: self.instruction.registrar.expect("registrar is not set"),
 
@@ -945,11 +943,6 @@ impl<'a, 'b> FinalizeTreeWithRootAndCollectionCpiBuilder<'a, 'b> {
                 .instruction
                 .fee_receiver
                 .expect("fee_receiver is not set"),
-
-            collection_authority: self
-                .instruction
-                .collection_authority
-                .expect("collection_authority is not set"),
 
             collection_authority_record_pda: self.instruction.collection_authority_record_pda,
 
@@ -996,12 +989,12 @@ struct FinalizeTreeWithRootAndCollectionCpiBuilderInstruction<'a, 'b> {
     tree_config: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     merkle_tree: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     payer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    incoming_tree_delegate: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    tree_creator_or_delegate: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     staker: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    collection_authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     registrar: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     voter: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     fee_receiver: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    collection_authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     collection_authority_record_pda: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     collection_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     collection_metadata: Option<&'b solana_program::account_info::AccountInfo<'a>>,
@@ -1009,7 +1002,7 @@ struct FinalizeTreeWithRootAndCollectionCpiBuilderInstruction<'a, 'b> {
     log_wrapper: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     compression_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    rightmost_root: Option<[u8; 32]>,
+    root: Option<[u8; 32]>,
     rightmost_leaf: Option<[u8; 32]>,
     rightmost_index: Option<u32>,
     metadata_url: Option<String>,

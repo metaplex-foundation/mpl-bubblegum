@@ -41,12 +41,12 @@ export type FinalizeTreeWithRootAndCollectionInstructionAccounts = {
   treeConfig?: PublicKey | Pda;
   merkleTree: PublicKey | Pda;
   payer?: Signer;
-  incomingTreeDelegate: Signer;
+  treeCreatorOrDelegate?: Signer;
   staker: Signer;
+  collectionAuthority?: Signer;
   registrar: PublicKey | Pda;
   voter: PublicKey | Pda;
   feeReceiver: PublicKey | Pda;
-  collectionAuthority?: Signer;
   /**
    * If there is no collecton authority record PDA then
    * this must be the Bubblegum program address.
@@ -64,7 +64,7 @@ export type FinalizeTreeWithRootAndCollectionInstructionAccounts = {
 // Data.
 export type FinalizeTreeWithRootAndCollectionInstructionData = {
   discriminator: Array<number>;
-  rightmostRoot: Uint8Array;
+  root: Uint8Array;
   rightmostLeaf: Uint8Array;
   rightmostIndex: number;
   metadataUrl: string;
@@ -72,7 +72,7 @@ export type FinalizeTreeWithRootAndCollectionInstructionData = {
 };
 
 export type FinalizeTreeWithRootAndCollectionInstructionDataArgs = {
-  rightmostRoot: Uint8Array;
+  root: Uint8Array;
   rightmostLeaf: Uint8Array;
   rightmostIndex: number;
   metadataUrl: string;
@@ -91,7 +91,7 @@ export function getFinalizeTreeWithRootAndCollectionInstructionDataSerializer():
     struct<FinalizeTreeWithRootAndCollectionInstructionData>(
       [
         ['discriminator', array(u8(), { size: 8 })],
-        ['rightmostRoot', bytes({ size: 32 })],
+        ['root', bytes({ size: 32 })],
         ['rightmostLeaf', bytes({ size: 32 })],
         ['rightmostIndex', u32()],
         ['metadataUrl', string()],
@@ -130,23 +130,23 @@ export function finalizeTreeWithRootAndCollection(
     treeConfig: { index: 0, isWritable: true, value: input.treeConfig ?? null },
     merkleTree: { index: 1, isWritable: true, value: input.merkleTree ?? null },
     payer: { index: 2, isWritable: true, value: input.payer ?? null },
-    incomingTreeDelegate: {
+    treeCreatorOrDelegate: {
       index: 3,
       isWritable: false,
-      value: input.incomingTreeDelegate ?? null,
+      value: input.treeCreatorOrDelegate ?? null,
     },
     staker: { index: 4, isWritable: false, value: input.staker ?? null },
-    registrar: { index: 5, isWritable: false, value: input.registrar ?? null },
-    voter: { index: 6, isWritable: false, value: input.voter ?? null },
-    feeReceiver: {
-      index: 7,
-      isWritable: true,
-      value: input.feeReceiver ?? null,
-    },
     collectionAuthority: {
-      index: 8,
+      index: 5,
       isWritable: false,
       value: input.collectionAuthority ?? null,
+    },
+    registrar: { index: 6, isWritable: false, value: input.registrar ?? null },
+    voter: { index: 7, isWritable: false, value: input.voter ?? null },
+    feeReceiver: {
+      index: 8,
+      isWritable: true,
+      value: input.feeReceiver ?? null,
     },
     collectionAuthorityRecordPda: {
       index: 9,
@@ -198,6 +198,9 @@ export function finalizeTreeWithRootAndCollection(
   }
   if (!resolvedAccounts.payer.value) {
     resolvedAccounts.payer.value = context.payer;
+  }
+  if (!resolvedAccounts.treeCreatorOrDelegate.value) {
+    resolvedAccounts.treeCreatorOrDelegate.value = context.identity;
   }
   if (!resolvedAccounts.collectionAuthority.value) {
     resolvedAccounts.collectionAuthority.value = context.identity;
