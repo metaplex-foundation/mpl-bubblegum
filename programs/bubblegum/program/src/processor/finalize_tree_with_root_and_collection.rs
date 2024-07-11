@@ -49,8 +49,8 @@ pub(crate) fn finalize_tree_with_root_and_collection<'info>(
     root: [u8; 32],
     rightmost_leaf: [u8; 32],
     rightmost_index: u32,
-    _metadata_url: String,
-    _metadata_hash: String,
+    metadata_url: String,
+    metadata_hash: String,
 ) -> Result<()> {
     let mut collection = Some(Collection {
         verified: false,
@@ -67,22 +67,8 @@ pub(crate) fn finalize_tree_with_root_and_collection<'info>(
         &mut collection,
         true,
     )?;
-    let mut accs: FinalizeTreeWithRoot<'info> = FinalizeTreeWithRoot {
-        tree_authority: ctx.accounts.tree_authority.to_owned(),
-        merkle_tree: ctx.accounts.merkle_tree.to_owned(),
-        payer: ctx.accounts.payer.to_owned(),
-        tree_delegate: ctx.accounts.tree_delegate.to_owned(),
-        staker: ctx.accounts.staker.to_owned(),
-        registrar: ctx.accounts.registrar.to_owned(),
-        voter: ctx.accounts.voter.to_owned(),
-        fee_receiver: ctx.accounts.fee_receiver.to_owned(),
-        log_wrapper: ctx.accounts.log_wrapper.to_owned(),
-        compression_program: ctx.accounts.compression_program.to_owned(),
-        system_program: ctx.accounts.system_program.to_owned(),
-    };
-    let bumps = FinalizeTreeWithRootBumps {
-        tree_authority: ctx.bumps.tree_authority,
-    };
+    let mut accs: FinalizeTreeWithRoot<'info> = ctx.accounts.into();
+    let bumps: FinalizeTreeWithRootBumps = ctx.bumps.into();
     let ctx = Context::<'_, '_, '_, 'info, FinalizeTreeWithRoot<'info>>::new(
         ctx.program_id,
         &mut accs,
@@ -94,7 +80,33 @@ pub(crate) fn finalize_tree_with_root_and_collection<'info>(
         root,
         rightmost_leaf,
         rightmost_index,
-        _metadata_url,
-        _metadata_hash,
+        metadata_url,
+        metadata_hash,
     )
+}
+
+impl<'info> From<&mut FinalizeTreeWithRootAndCollection<'info>> for FinalizeTreeWithRoot<'info> {
+    fn from(value: &mut FinalizeTreeWithRootAndCollection<'info>) -> Self {
+        Self {
+            tree_authority: value.tree_authority.to_owned(),
+            merkle_tree: value.merkle_tree.to_owned(),
+            payer: value.payer.to_owned(),
+            tree_delegate: value.tree_delegate.to_owned(),
+            staker: value.staker.to_owned(),
+            registrar: value.registrar.to_owned(),
+            voter: value.voter.to_owned(),
+            fee_receiver: value.fee_receiver.to_owned(),
+            log_wrapper: value.log_wrapper.to_owned(),
+            compression_program: value.compression_program.to_owned(),
+            system_program: value.system_program.to_owned(),
+        }
+    }
+}
+
+impl From<FinalizeTreeWithRootAndCollectionBumps> for FinalizeTreeWithRootBumps {
+    fn from(value: FinalizeTreeWithRootAndCollectionBumps) -> Self {
+        Self {
+            tree_authority: value.tree_authority,
+        }
+    }
 }
