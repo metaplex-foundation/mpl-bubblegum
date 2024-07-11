@@ -24,6 +24,8 @@ pub const FEE_RECEIVER: Pubkey =
 // TODO: change to real one
 pub const MINIMUM_WEIGHTED_STAKE: u64 = 30000000;
 
+pub const PROTOCOL_FEE_PER_1024_ASSETS: u64 = 1_280_000; // 0.00128 SOL in lamports
+
 #[account]
 #[derive(Copy, Debug, PartialEq, Eq)]
 pub struct TreeConfig {

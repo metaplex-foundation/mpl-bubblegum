@@ -6,10 +6,11 @@ use spl_account_compression::{program::SplAccountCompression, Noop};
 
 use crate::{
     error::BubblegumError,
-    state::{TreeConfig, FEE_RECEIVER, MINIMUM_WEIGHTED_STAKE, REALM, REALM_GOVERNING_MINT},
+    state::{
+        TreeConfig, FEE_RECEIVER, MINIMUM_WEIGHTED_STAKE, PROTOCOL_FEE_PER_1024_ASSETS, REALM,
+        REALM_GOVERNING_MINT,
+    },
 };
-
-const PROTOCOL_FEE_PER_1024_ASSETS: u64 = 1_280_000; // 0.00128 SOL in lamports
 
 #[derive(Accounts)]
 pub struct FinalizeTreeWithRoot<'info> {

@@ -1,4 +1,3 @@
-use bytemuck::cast_slice;
 use crate::{
     error::BubblegumError,
     state::{
@@ -10,6 +9,7 @@ use anchor_lang::{
     prelude::*,
     solana_program::{program_memory::sol_memcmp, pubkey::PUBKEY_BYTES},
 };
+use bytemuck::cast_slice;
 use solana_program::keccak;
 use spl_account_compression::{
     state::{
