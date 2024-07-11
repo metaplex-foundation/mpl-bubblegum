@@ -1,9 +1,9 @@
-use crate::asserts::assert_has_collection_authority;
-use crate::processor::{check_stake, finalize_tree};
+use crate::processor::process_collection_verification_mpl_only;
+use crate::state::metaplex_adapter::Collection;
 use crate::state::metaplex_anchor::TokenMetadata;
-use crate::{error::BubblegumError, state::TreeConfig};
+use crate::state::TreeConfig;
+use crate::{FinalizeTreeWithRoot, FinalizeTreeWithRootBumps};
 use anchor_lang::{prelude::*, system_program::System};
-use mpl_token_metadata::types::TokenStandard;
 use spl_account_compression::{program::SplAccountCompression, Noop};
 
 #[derive(Accounts)]
@@ -52,96 +52,49 @@ pub(crate) fn finalize_tree_with_root_and_collection<'info>(
     _metadata_url: String,
     _metadata_hash: String,
 ) -> Result<()> {
-    // TODO: charge protocol fees
-
-    check_stake(
-        &ctx.accounts.staker.to_account_info(),
-        &ctx.accounts.registrar.to_account_info(),
-        &ctx.accounts.voter.to_account_info(),
-    )?;
-
-    let merkle_tree = ctx.accounts.merkle_tree.to_account_info();
-    let seed = merkle_tree.key();
-    let seeds = &[seed.as_ref(), &[ctx.bumps.tree_authority]];
-
-    let authority = &mut ctx.accounts.tree_authority;
-    authority.set_inner(TreeConfig {
-        tree_delegate: authority.tree_creator,
-        num_minted: (rightmost_index + 1) as u64,
-        ..**authority
+    let mut collection = Some(Collection {
+        verified: false,
+        key: ctx.accounts.collection_mint.key(),
     });
-    let authority_pda_signer = &[&seeds[..]];
-
-    validate_collection(
+    process_collection_verification_mpl_only(
         &ctx.accounts.collection_metadata,
-        &ctx.accounts.collection_authority.to_account_info(),
         &ctx.accounts.collection_mint.to_account_info(),
+        &ctx.accounts.collection_authority.to_account_info(),
         &ctx.accounts
             .collection_authority_record_pda
             .to_account_info(),
         &ctx.accounts.edition_account.to_account_info(),
+        &mut collection,
+        true,
     )?;
-
-    finalize_tree(
+    let mut accs: FinalizeTreeWithRoot<'info> = FinalizeTreeWithRoot {
+        tree_authority: ctx.accounts.tree_authority.to_owned(),
+        merkle_tree: ctx.accounts.merkle_tree.to_owned(),
+        payer: ctx.accounts.payer.to_owned(),
+        tree_delegate: ctx.accounts.tree_delegate.to_owned(),
+        staker: ctx.accounts.staker.to_owned(),
+        registrar: ctx.accounts.registrar.to_owned(),
+        voter: ctx.accounts.voter.to_owned(),
+        fee_receiver: ctx.accounts.fee_receiver.to_owned(),
+        log_wrapper: ctx.accounts.log_wrapper.to_owned(),
+        compression_program: ctx.accounts.compression_program.to_owned(),
+        system_program: ctx.accounts.system_program.to_owned(),
+    };
+    let bumps = FinalizeTreeWithRootBumps {
+        tree_authority: ctx.bumps.tree_authority,
+    };
+    let ctx = Context::<'_, '_, '_, 'info, FinalizeTreeWithRoot<'info>>::new(
+        ctx.program_id,
+        &mut accs,
+        ctx.remaining_accounts,
+        bumps,
+    );
+    crate::processor::finalize_tree_with_root(
+        ctx,
         root,
         rightmost_leaf,
         rightmost_index,
-        &ctx.accounts.compression_program.to_account_info(),
-        &ctx.accounts.tree_authority.to_account_info(),
-        &merkle_tree,
-        &ctx.accounts.log_wrapper.to_account_info(),
-        authority_pda_signer,
-        ctx.remaining_accounts,
+        _metadata_url,
+        _metadata_hash,
     )
-}
-
-fn validate_collection(
-    collection_metadata: &Account<TokenMetadata>,
-    collection_authority: &AccountInfo,
-    collection_mint: &AccountInfo,
-    collection_authority_record_pda: &AccountInfo,
-    edition_account: &AccountInfo,
-) -> Result<()> {
-    let collection_authority_record = if collection_authority_record_pda.key() == crate::id() {
-        None
-    } else {
-        Some(collection_authority_record_pda)
-    };
-
-    // Verify correct account ownerships.
-    require!(
-        *collection_metadata.to_account_info().owner == mpl_token_metadata::ID,
-        BubblegumError::IncorrectOwner
-    );
-    require!(
-        *collection_mint.owner == spl_token::id(),
-        BubblegumError::IncorrectOwner
-    );
-
-    assert_has_collection_authority(
-        collection_metadata,
-        collection_mint.key,
-        collection_authority.key,
-        collection_authority_record,
-    )?;
-
-    let (expected, _) = mpl_token_metadata::accounts::MasterEdition::find_pda(collection_mint.key);
-
-    if edition_account.key != &expected {
-        return Err(BubblegumError::CollectionMasterEditionAccountInvalid.into());
-    }
-
-    let edition = mpl_token_metadata::accounts::MasterEdition::try_from(edition_account)
-        .map_err(|_err| BubblegumError::CollectionMustBeAUniqueMasterEdition)?;
-
-    match collection_metadata.token_standard {
-        Some(TokenStandard::NonFungible) | Some(TokenStandard::ProgrammableNonFungible) => (),
-        _ => return Err(BubblegumError::CollectionMustBeAUniqueMasterEdition.into()),
-    }
-
-    if edition.max_supply != Some(0) {
-        return Err(BubblegumError::CollectionMustBeAUniqueMasterEdition.into());
-    }
-
-    Ok(())
 }
