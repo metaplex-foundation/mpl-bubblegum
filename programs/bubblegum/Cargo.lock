@@ -865,7 +865,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4114279215a005bc675e386011e594e1d9b800918cea18fcadadcce864a2046b"
 dependencies = [
  "borsh-derive 0.10.3",
- "hashbrown 0.13.2",
+ "hashbrown 0.12.3",
 ]
 
 [[package]]
@@ -2618,6 +2618,7 @@ dependencies = [
 [[package]]
 name = "mplx-staking-states"
 version = "0.0.1"
+source = "git+https://github.com/adm-metaex/mplx-staking.git#094f7277c4c7d1a0549415df1b152cc0c525a1c7"
 dependencies = [
  "anchor-lang 0.26.0",
  "anchor-spl 0.26.0",
@@ -2831,7 +2832,7 @@ version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "681030a937600a36906c185595136d26abfebb4aa9c65701cefcaf8578bb982b"
 dependencies = [
- "proc-macro-crate 3.1.0",
+ "proc-macro-crate 1.3.1",
  "proc-macro2",
  "quote",
  "syn 2.0.63",
@@ -5143,6 +5144,7 @@ dependencies = [
 [[package]]
 name = "spl-account-compression"
 version = "0.3.0"
+source = "git+https://github.com/StanChe/solana-program-library.git?branch=feature/init_with_root#f32a0baede168685b02bab0fd2275d516d8b345b"
 dependencies = [
  "anchor-lang 0.29.0",
  "bytemuck",
@@ -5186,6 +5188,7 @@ dependencies = [
 [[package]]
 name = "spl-concurrent-merkle-tree"
 version = "0.3.0"
+source = "git+https://github.com/StanChe/solana-program-library.git?branch=feature/init_with_root#f32a0baede168685b02bab0fd2275d516d8b345b"
 dependencies = [
  "bytemuck",
  "solana-program",
@@ -5248,6 +5251,7 @@ dependencies = [
 [[package]]
 name = "spl-merkle-tree-reference"
 version = "0.1.0"
+source = "git+https://github.com/StanChe/solana-program-library.git?branch=feature/init_with_root#f32a0baede168685b02bab0fd2275d516d8b345b"
 dependencies = [
  "solana-program",
  "thiserror",
@@ -5256,6 +5260,7 @@ dependencies = [
 [[package]]
 name = "spl-noop"
 version = "0.2.0"
+source = "git+https://github.com/StanChe/solana-program-library.git?branch=feature/init_with_root#f32a0baede168685b02bab0fd2275d516d8b345b"
 dependencies = [
  "solana-program",
 ]
