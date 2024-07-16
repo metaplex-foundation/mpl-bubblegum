@@ -12,7 +12,7 @@ import {
   DasApiInterface,
   GetAssetProofRpcResponse,
 } from '@metaplex-foundation/digital-asset-standard-api';
-import { MetadataArgs, TokenProgramVersion, TokenStandard } from './generated';
+import { fetchMerkleTree, MetadataArgs, TokenProgramVersion, TokenStandard } from './generated';
 
 export type AssetWithProof = {
   leafOwner: PublicKey;
@@ -29,14 +29,27 @@ export type AssetWithProof = {
   rpcAssetProof: GetAssetProofRpcResponse;
 };
 
+type GetAssetWithProofOptions = {
+  /* Define the options properties here */
+  truncateCanopy?: boolean;
+};
+
 export const getAssetWithProof = async (
   context: Pick<Context, 'rpc'> & { rpc: DasApiInterface },
-  assetId: PublicKey
+  assetId: PublicKey,
+  options?: GetAssetWithProofOptions,
 ): Promise<AssetWithProof> => {
   const [rpcAsset, rpcAssetProof] = await Promise.all([
     context.rpc.getAsset(assetId),
     context.rpc.getAssetProof(assetId),
   ]);
+
+  let { proof } = rpcAssetProof;
+  if (options?.truncateCanopy) {
+    const merkleTreeAccount = await fetchMerkleTree(context, rpcAssetProof.tree_id);
+    const canopyDepth = Math.log2(merkleTreeAccount.canopy.length + 2) - 1;
+    proof = rpcAssetProof.proof.slice(0, (canopyDepth === 0) ? undefined : -canopyDepth);
+  }
 
   const collectionString = (rpcAsset.grouping ?? []).find(
     (group) => group.group_key === 'collection'
@@ -70,7 +83,7 @@ export const getAssetWithProof = async (
     creatorHash: publicKeyBytes(rpcAsset.compression.creator_hash),
     nonce: rpcAsset.compression.leaf_id,
     index: rpcAssetProof.node_index - 2 ** rpcAssetProof.proof.length,
-    proof: rpcAssetProof.proof,
+    proof,
     metadata,
     rpcAsset,
     rpcAssetProof,
