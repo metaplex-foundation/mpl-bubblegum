@@ -1210,6 +1210,11 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             .collect()
     }
 
+    // Returns node's hash by its index
+    pub fn get_node(&self, index: usize) -> Node {
+        self.proof_tree.get_node(index)
+    }
+
     // Set Decompression Permission TX
     pub fn set_decompression_tx(
         &mut self,
