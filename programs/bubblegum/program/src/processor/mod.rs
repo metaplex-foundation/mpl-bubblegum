@@ -171,11 +171,12 @@ fn process_collection_verification_mpl_only<'info>(
     verify: bool,
 ) -> Result<()> {
     // See if a collection authority record PDA was provided.
-    let collection_authority_record: Option<&AccountInfo<'info>> = if collection_authority_record_pda.key() == crate::id() {
-        None
-    } else {
-        Some(collection_authority_record_pda)
-    };
+    let collection_authority_record: Option<&AccountInfo<'info>> =
+        if collection_authority_record_pda.key() == crate::id() {
+            None
+        } else {
+            Some(collection_authority_record_pda)
+        };
 
     // Verify correct account ownerships.
     require!(
