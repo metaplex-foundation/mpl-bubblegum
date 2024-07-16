@@ -12,7 +12,12 @@ import {
   DasApiInterface,
   GetAssetProofRpcResponse,
 } from '@metaplex-foundation/digital-asset-standard-api';
-import { fetchMerkleTree, MetadataArgs, TokenProgramVersion, TokenStandard } from './generated';
+import {
+  fetchMerkleTree,
+  MetadataArgs,
+  TokenProgramVersion,
+  TokenStandard,
+} from './generated';
 
 export type AssetWithProof = {
   leafOwner: PublicKey;
@@ -37,7 +42,7 @@ type GetAssetWithProofOptions = {
 export const getAssetWithProof = async (
   context: Pick<Context, 'rpc'> & { rpc: DasApiInterface },
   assetId: PublicKey,
-  options?: GetAssetWithProofOptions,
+  options?: GetAssetWithProofOptions
 ): Promise<AssetWithProof> => {
   const [rpcAsset, rpcAssetProof] = await Promise.all([
     context.rpc.getAsset(assetId),
@@ -46,9 +51,15 @@ export const getAssetWithProof = async (
 
   let { proof } = rpcAssetProof;
   if (options?.truncateCanopy) {
-    const merkleTreeAccount = await fetchMerkleTree(context, rpcAssetProof.tree_id);
+    const merkleTreeAccount = await fetchMerkleTree(
+      context,
+      rpcAssetProof.tree_id
+    );
     const canopyDepth = Math.log2(merkleTreeAccount.canopy.length + 2) - 1;
-    proof = rpcAssetProof.proof.slice(0, (canopyDepth === 0) ? undefined : -canopyDepth);
+    proof = rpcAssetProof.proof.slice(
+      0,
+      canopyDepth === 0 ? undefined : -canopyDepth
+    );
   }
 
   const collectionString = (rpcAsset.grouping ?? []).find(

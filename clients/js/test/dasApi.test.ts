@@ -1,4 +1,11 @@
-import { Umi, createUmi, none, publicKey, publicKeyBytes, some } from '@metaplex-foundation/umi';
+import {
+  Umi,
+  createUmi,
+  none,
+  publicKey,
+  publicKeyBytes,
+  some,
+} from '@metaplex-foundation/umi';
 import { testPlugins } from '@metaplex-foundation/umi-bundle-tests';
 import anyTest, { TestFn } from 'ava';
 import {
@@ -8,7 +15,13 @@ import {
   GetAssetProofRpcResponse,
   dasApi,
 } from '@metaplex-foundation/digital-asset-standard-api';
-import { AssetWithProof, getAssetWithProof, mplBubblegum, TokenProgramVersion, TokenStandard } from '../src';
+import {
+  AssetWithProof,
+  getAssetWithProof,
+  mplBubblegum,
+  TokenProgramVersion,
+  TokenStandard,
+} from '../src';
 
 const test = anyTest as TestFn<{ umi: Umi }>;
 const endpoint = process.env.READ_API_RPC_DEVNET;
@@ -395,7 +408,10 @@ test('it can fetch the proof of a compressed asset with nonzero canopy depth', a
       isMutable: false,
       editionNonce: some(0),
       tokenStandard: some(TokenStandard.NonFungible),
-      collection: some({ verified: true, key: publicKey('5141VSFjgYFEKTy45aT1tUEeApwQ1eXPEfzRdRVt7xTL') }),
+      collection: some({
+        verified: true,
+        key: publicKey('5141VSFjgYFEKTy45aT1tUEeApwQ1eXPEfzRdRVt7xTL'),
+      }),
       uses: none(),
       tokenProgramVersion: TokenProgramVersion.Original,
       creators: [
@@ -415,7 +431,8 @@ test('it can fetch the proof of a compressed asset with nonzero canopy depth', a
       interface: 'V1_NFT',
       id: assetId,
       content: {
-        json_uri: 'https://arweave.net/0h9bJ_dST9JN7jdYgfW5SoTQ5b_6zYkpX7x5nLkeeD0',
+        json_uri:
+          'https://arweave.net/0h9bJ_dST9JN7jdYgfW5SoTQ5b_6zYkpX7x5nLkeeD0',
         metadata: { name: 'Welcome to Creator Studio', symbol: 'CS' },
       },
       authorities: [
@@ -438,7 +455,7 @@ test('it can fetch the proof of a compressed asset with nonzero canopy depth', a
         {
           group_key: 'collection',
           group_value: '5141VSFjgYFEKTy45aT1tUEeApwQ1eXPEfzRdRVt7xTL',
-        }
+        },
       ] as DasApiAssetGrouping[],
       royalty: {
         royalty_model: 'creators',
@@ -534,7 +551,10 @@ test('it can fetch the truncated proof of a compressed asset with nonzero canopy
       isMutable: false,
       editionNonce: some(0),
       tokenStandard: some(TokenStandard.NonFungible),
-      collection: some({ verified: true, key: publicKey('5141VSFjgYFEKTy45aT1tUEeApwQ1eXPEfzRdRVt7xTL') }),
+      collection: some({
+        verified: true,
+        key: publicKey('5141VSFjgYFEKTy45aT1tUEeApwQ1eXPEfzRdRVt7xTL'),
+      }),
       uses: none(),
       tokenProgramVersion: TokenProgramVersion.Original,
       creators: [
@@ -554,7 +574,8 @@ test('it can fetch the truncated proof of a compressed asset with nonzero canopy
       interface: 'V1_NFT',
       id: assetId,
       content: {
-        json_uri: 'https://arweave.net/0h9bJ_dST9JN7jdYgfW5SoTQ5b_6zYkpX7x5nLkeeD0',
+        json_uri:
+          'https://arweave.net/0h9bJ_dST9JN7jdYgfW5SoTQ5b_6zYkpX7x5nLkeeD0',
         metadata: { name: 'Welcome to Creator Studio', symbol: 'CS' },
       },
       authorities: [
@@ -577,7 +598,7 @@ test('it can fetch the truncated proof of a compressed asset with nonzero canopy
         {
           group_key: 'collection',
           group_value: '5141VSFjgYFEKTy45aT1tUEeApwQ1eXPEfzRdRVt7xTL',
-        }
+        },
       ] as DasApiAssetGrouping[],
       royalty: {
         royalty_model: 'creators',
