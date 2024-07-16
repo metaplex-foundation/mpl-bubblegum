@@ -13,6 +13,7 @@ export * from './createTreeConfig';
 export * from './decompressV1';
 export * from './delegate';
 export * from './finalizeTreeWithRoot';
+export * from './finalizeTreeWithRootAndCollection';
 export * from './mintToCollectionV1';
 export * from './mintV1';
 export * from './prepareTree';

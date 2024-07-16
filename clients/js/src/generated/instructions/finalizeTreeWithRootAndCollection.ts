@@ -7,6 +7,10 @@
  */
 
 import {
+  findMasterEditionPda,
+  findMetadataPda,
+} from '@metaplex-foundation/mpl-token-metadata';
+import {
   Context,
   Pda,
   PublicKey,
@@ -33,22 +37,32 @@ import {
 } from '../shared';
 
 // Accounts.
-export type FinalizeTreeWithRootInstructionAccounts = {
+export type FinalizeTreeWithRootAndCollectionInstructionAccounts = {
   treeConfig?: PublicKey | Pda;
   merkleTree: PublicKey | Pda;
   payer?: Signer;
   treeCreatorOrDelegate?: Signer;
   staker: Signer;
+  collectionAuthority?: Signer;
   registrar: PublicKey | Pda;
   voter: PublicKey | Pda;
   feeReceiver: PublicKey | Pda;
+  /**
+   * If there is no collecton authority record PDA then
+   * this must be the Bubblegum program address.
+   */
+
+  collectionAuthorityRecordPda?: PublicKey | Pda;
+  collectionMint: PublicKey | Pda;
+  collectionMetadata?: PublicKey | Pda;
+  collectionEdition?: PublicKey | Pda;
   logWrapper?: PublicKey | Pda;
   compressionProgram?: PublicKey | Pda;
   systemProgram?: PublicKey | Pda;
 };
 
 // Data.
-export type FinalizeTreeWithRootInstructionData = {
+export type FinalizeTreeWithRootAndCollectionInstructionData = {
   discriminator: Array<number>;
   root: Uint8Array;
   rightmostLeaf: Uint8Array;
@@ -57,7 +71,7 @@ export type FinalizeTreeWithRootInstructionData = {
   metadataHash: string;
 };
 
-export type FinalizeTreeWithRootInstructionDataArgs = {
+export type FinalizeTreeWithRootAndCollectionInstructionDataArgs = {
   root: Uint8Array;
   rightmostLeaf: Uint8Array;
   rightmostIndex: number;
@@ -65,16 +79,16 @@ export type FinalizeTreeWithRootInstructionDataArgs = {
   metadataHash: string;
 };
 
-export function getFinalizeTreeWithRootInstructionDataSerializer(): Serializer<
-  FinalizeTreeWithRootInstructionDataArgs,
-  FinalizeTreeWithRootInstructionData
+export function getFinalizeTreeWithRootAndCollectionInstructionDataSerializer(): Serializer<
+  FinalizeTreeWithRootAndCollectionInstructionDataArgs,
+  FinalizeTreeWithRootAndCollectionInstructionData
 > {
   return mapSerializer<
-    FinalizeTreeWithRootInstructionDataArgs,
+    FinalizeTreeWithRootAndCollectionInstructionDataArgs,
     any,
-    FinalizeTreeWithRootInstructionData
+    FinalizeTreeWithRootAndCollectionInstructionData
   >(
-    struct<FinalizeTreeWithRootInstructionData>(
+    struct<FinalizeTreeWithRootAndCollectionInstructionData>(
       [
         ['discriminator', array(u8(), { size: 8 })],
         ['root', bytes({ size: 32 })],
@@ -83,27 +97,27 @@ export function getFinalizeTreeWithRootInstructionDataSerializer(): Serializer<
         ['metadataUrl', string()],
         ['metadataHash', string()],
       ],
-      { description: 'FinalizeTreeWithRootInstructionData' }
+      { description: 'FinalizeTreeWithRootAndCollectionInstructionData' }
     ),
     (value) => ({
       ...value,
-      discriminator: [77, 73, 220, 153, 126, 225, 64, 204],
+      discriminator: [194, 98, 45, 168, 183, 72, 67, 155],
     })
   ) as Serializer<
-    FinalizeTreeWithRootInstructionDataArgs,
-    FinalizeTreeWithRootInstructionData
+    FinalizeTreeWithRootAndCollectionInstructionDataArgs,
+    FinalizeTreeWithRootAndCollectionInstructionData
   >;
 }
 
 // Args.
-export type FinalizeTreeWithRootInstructionArgs =
-  FinalizeTreeWithRootInstructionDataArgs;
+export type FinalizeTreeWithRootAndCollectionInstructionArgs =
+  FinalizeTreeWithRootAndCollectionInstructionDataArgs;
 
 // Instruction.
-export function finalizeTreeWithRoot(
+export function finalizeTreeWithRootAndCollection(
   context: Pick<Context, 'eddsa' | 'identity' | 'payer' | 'programs'>,
-  input: FinalizeTreeWithRootInstructionAccounts &
-    FinalizeTreeWithRootInstructionArgs
+  input: FinalizeTreeWithRootAndCollectionInstructionAccounts &
+    FinalizeTreeWithRootAndCollectionInstructionArgs
 ): TransactionBuilder {
   // Program ID.
   const programId = context.programs.getPublicKey(
@@ -122,32 +136,59 @@ export function finalizeTreeWithRoot(
       value: input.treeCreatorOrDelegate ?? null,
     },
     staker: { index: 4, isWritable: false, value: input.staker ?? null },
-    registrar: { index: 5, isWritable: false, value: input.registrar ?? null },
-    voter: { index: 6, isWritable: false, value: input.voter ?? null },
+    collectionAuthority: {
+      index: 5,
+      isWritable: false,
+      value: input.collectionAuthority ?? null,
+    },
+    registrar: { index: 6, isWritable: false, value: input.registrar ?? null },
+    voter: { index: 7, isWritable: false, value: input.voter ?? null },
     feeReceiver: {
-      index: 7,
+      index: 8,
       isWritable: true,
       value: input.feeReceiver ?? null,
     },
+    collectionAuthorityRecordPda: {
+      index: 9,
+      isWritable: false,
+      value: input.collectionAuthorityRecordPda ?? null,
+    },
+    collectionMint: {
+      index: 10,
+      isWritable: false,
+      value: input.collectionMint ?? null,
+    },
+    collectionMetadata: {
+      index: 11,
+      isWritable: true,
+      value: input.collectionMetadata ?? null,
+    },
+    collectionEdition: {
+      index: 12,
+      isWritable: false,
+      value: input.collectionEdition ?? null,
+    },
     logWrapper: {
-      index: 8,
+      index: 13,
       isWritable: false,
       value: input.logWrapper ?? null,
     },
     compressionProgram: {
-      index: 9,
+      index: 14,
       isWritable: false,
       value: input.compressionProgram ?? null,
     },
     systemProgram: {
-      index: 10,
+      index: 15,
       isWritable: false,
       value: input.systemProgram ?? null,
     },
   };
 
   // Arguments.
-  const resolvedArgs: FinalizeTreeWithRootInstructionArgs = { ...input };
+  const resolvedArgs: FinalizeTreeWithRootAndCollectionInstructionArgs = {
+    ...input,
+  };
 
   // Default values.
   if (!resolvedAccounts.treeConfig.value) {
@@ -160,6 +201,19 @@ export function finalizeTreeWithRoot(
   }
   if (!resolvedAccounts.treeCreatorOrDelegate.value) {
     resolvedAccounts.treeCreatorOrDelegate.value = context.identity;
+  }
+  if (!resolvedAccounts.collectionAuthority.value) {
+    resolvedAccounts.collectionAuthority.value = context.identity;
+  }
+  if (!resolvedAccounts.collectionMetadata.value) {
+    resolvedAccounts.collectionMetadata.value = findMetadataPda(context, {
+      mint: expectPublicKey(resolvedAccounts.collectionMint.value),
+    });
+  }
+  if (!resolvedAccounts.collectionEdition.value) {
+    resolvedAccounts.collectionEdition.value = findMasterEditionPda(context, {
+      mint: expectPublicKey(resolvedAccounts.collectionMint.value),
+    });
   }
   if (!resolvedAccounts.logWrapper.value) {
     resolvedAccounts.logWrapper.value = context.programs.getPublicKey(
@@ -196,9 +250,10 @@ export function finalizeTreeWithRoot(
   );
 
   // Data.
-  const data = getFinalizeTreeWithRootInstructionDataSerializer().serialize(
-    resolvedArgs as FinalizeTreeWithRootInstructionDataArgs
-  );
+  const data =
+    getFinalizeTreeWithRootAndCollectionInstructionDataSerializer().serialize(
+      resolvedArgs as FinalizeTreeWithRootAndCollectionInstructionDataArgs
+    );
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 0;

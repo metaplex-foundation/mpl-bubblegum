@@ -173,8 +173,30 @@ pub type FinalizeWithRootBuilder<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SI
         MAX_BUFFER_SIZE,
     >;
 
+pub type FinalizeWithRootAndCollectionBuilder<
+    'a,
+    const MAX_DEPTH: usize,
+    const MAX_BUFFER_SIZE: usize,
+> = TxBuilder<
+    'a,
+    bubblegum::accounts::FinalizeTreeWithRootAndCollection,
+    bubblegum::instruction::FinalizeTreeWithRootAndCollection,
+    (),
+    MAX_DEPTH,
+    MAX_BUFFER_SIZE,
+>;
+
 impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExec
     for FinalizeWithRootBuilder<'a, MAX_DEPTH, MAX_BUFFER_SIZE>
+{
+    fn on_successful_execute(&mut self) -> Result<()> {
+        // Do nothing here.
+        Ok(())
+    }
+}
+
+impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExec
+    for FinalizeWithRootAndCollectionBuilder<'a, MAX_DEPTH, MAX_BUFFER_SIZE>
 {
     fn on_successful_execute(&mut self) -> Result<()> {
         // Do nothing here.

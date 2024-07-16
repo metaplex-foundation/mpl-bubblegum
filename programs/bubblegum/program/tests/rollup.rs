@@ -667,3 +667,148 @@ async fn test_put_wrong_fee_receiver() {
         panic!("Should have failed");
     }
 }
+
+#[tokio::test]
+async fn test_prepare_tree_with_collection() {
+    let tree_creator = Keypair::new();
+
+    let asset_owner = Keypair::new();
+
+    let num_of_assets_to_mint = 1000;
+
+    let mut program_context = BubblegumTestContext::new().await.unwrap();
+
+    let mut tree = preinitialize_merkle_tree(
+        &program_context,
+        &tree_creator,
+        &asset_owner,
+        None,
+        num_of_assets_to_mint,
+    )
+    .await;
+
+    let rightmost_proof = tree.proof_of_leaf((num_of_assets_to_mint - 1) as u32);
+    let rightmost_leaf = tree.get_node(num_of_assets_to_mint - 1);
+
+    let (registrar_key, voter_key) = initialize_staking_accounts(&mut program_context).await;
+
+    program_context
+        .fund_account(tree.creator_pubkey(), 10_000_000_000)
+        .await
+        .unwrap();
+    program_context
+        .fund_account(FEE_RECEIVER, 10_000_000_000)
+        .await
+        .unwrap();
+
+    let mut tree_tx_builder = tree.prepare_tree_tx(
+        &program_context.test_context().payer,
+        &tree_creator,
+        false,
+        MAX_DEPTH as u32,
+        MAX_BUF_SIZE as u32,
+    );
+
+    tree_tx_builder.execute_without_root_check().await.unwrap();
+
+    let mut tree_tx_builder = tree.finalize_tree_with_root_and_collection_tx(
+        &program_context.payer(),
+        &program_context.default_collection,
+        &program_context.test_context().payer,
+        &tree_creator,
+        tree.expected_root(),
+        rightmost_leaf,
+        999,
+        "http://some-url.com".to_string(),
+        "fileHash".to_string(),
+        registrar_key,
+        voter_key,
+        FEE_RECEIVER,
+    );
+
+    for proof in rightmost_proof {
+        tree_tx_builder.additional_accounts.push(AccountMeta {
+            pubkey: Pubkey::new_from_array(proof),
+            is_signer: false,
+            is_writable: false,
+        });
+    }
+
+    tree_tx_builder.execute().await.unwrap();
+}
+
+#[tokio::test]
+async fn test_prepare_tree_with_collection_wrong_authority() {
+    let tree_creator = Keypair::new();
+
+    let asset_owner = Keypair::new();
+
+    let num_of_assets_to_mint = 1000;
+
+    let mut program_context = BubblegumTestContext::new().await.unwrap();
+
+    let mut tree = preinitialize_merkle_tree(
+        &program_context,
+        &tree_creator,
+        &asset_owner,
+        None,
+        num_of_assets_to_mint,
+    )
+    .await;
+
+    let rightmost_proof = tree.proof_of_leaf((num_of_assets_to_mint - 1) as u32);
+    let rightmost_leaf = tree.get_node(num_of_assets_to_mint - 1);
+
+    let (registrar_key, voter_key) = initialize_staking_accounts(&mut program_context).await;
+
+    program_context
+        .fund_account(tree.creator_pubkey(), 10_000_000_000)
+        .await
+        .unwrap();
+    program_context
+        .fund_account(FEE_RECEIVER, 10_000_000_000)
+        .await
+        .unwrap();
+
+    let mut tree_tx_builder = tree.prepare_tree_tx(
+        &program_context.test_context().payer,
+        &tree_creator,
+        false,
+        MAX_DEPTH as u32,
+        MAX_BUF_SIZE as u32,
+    );
+
+    tree_tx_builder.execute_without_root_check().await.unwrap();
+
+    let mut tree_tx_builder = tree.finalize_tree_with_root_and_collection_tx(
+        &tree_creator,
+        &program_context.default_collection,
+        &program_context.test_context().payer,
+        &tree_creator,
+        tree.expected_root(),
+        rightmost_leaf,
+        999,
+        "http://some-url.com".to_string(),
+        "fileHash".to_string(),
+        registrar_key,
+        voter_key,
+        FEE_RECEIVER,
+    );
+
+    let res = tree_tx_builder.execute().await;
+    if let Err(err) = res {
+        if let BanksClient(BanksClientError::TransactionError(e)) = *err {
+            assert_eq!(
+                e,
+                TransactionError::InstructionError(
+                    0,
+                    InstructionError::Custom(BubblegumError::InvalidCollectionAuthority.into()),
+                )
+            );
+        } else {
+            panic!("Wrong variant");
+        }
+    } else {
+        panic!("Should have failed");
+    }
+}
