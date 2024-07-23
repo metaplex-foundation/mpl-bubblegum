@@ -1,10 +1,3 @@
-[submodule "mplx-staking"]
-	path = mplx-staking
-	url = git@github.com:extrnode/mplx-staking.git
 [submodule "mpl-token-auth-rules"]
 	path = mpl-token-auth-rules
 	url = git@github.com:n00m4d/mpl-token-auth-rules.git
-[submodule "solana-program-library"]
-	path = solana-program-library
-	url = git@github.com:StanChe/solana-program-library.git
-	branch = feature/init_with_root
