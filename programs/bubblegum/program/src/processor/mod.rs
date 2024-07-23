@@ -21,6 +21,7 @@ mod create_tree;
 mod decompress;
 mod delegate;
 mod finalize_tree_with_root;
+mod finalize_tree_with_root_and_collection;
 mod mint;
 mod mint_to_collection;
 mod prepare_tree;
@@ -43,6 +44,7 @@ pub(crate) use create_tree::*;
 pub(crate) use decompress::*;
 pub(crate) use delegate::*;
 pub(crate) use finalize_tree_with_root::*;
+pub(crate) use finalize_tree_with_root_and_collection::*;
 pub(crate) use mint::*;
 pub(crate) use mint_to_collection::*;
 pub(crate) use prepare_tree::*;
@@ -165,15 +167,16 @@ fn process_collection_verification_mpl_only<'info>(
     collection_authority: &AccountInfo<'info>,
     collection_authority_record_pda: &AccountInfo<'info>,
     edition_account: &AccountInfo<'info>,
-    message: &mut MetadataArgs,
+    mut message_collection: &mut Option<metaplex_adapter::Collection>,
     verify: bool,
 ) -> Result<()> {
     // See if a collection authority record PDA was provided.
-    let collection_authority_record = if collection_authority_record_pda.key() == crate::id() {
-        None
-    } else {
-        Some(collection_authority_record_pda)
-    };
+    let collection_authority_record: Option<&AccountInfo<'info>> =
+        if collection_authority_record_pda.key() == crate::id() {
+            None
+        } else {
+            Some(collection_authority_record_pda)
+        };
 
     // Verify correct account ownerships.
     require!(
@@ -190,7 +193,7 @@ fn process_collection_verification_mpl_only<'info>(
     );
 
     // If the NFT has collection data, we set it to the correct value after doing some validation.
-    if let Some(collection) = &mut message.collection {
+    if let Some(collection) = &mut message_collection {
         assert_collection_membership(
             &Some(collection.adapt()),
             collection_metadata,
@@ -271,7 +274,7 @@ fn process_collection_verification<'info>(
         &collection_authority,
         &collection_authority_record_pda,
         &edition_account,
-        &mut message,
+        &mut message.collection,
         verify,
     )?;
 
