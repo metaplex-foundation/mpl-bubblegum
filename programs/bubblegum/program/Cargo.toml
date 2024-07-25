@@ -33,7 +33,7 @@ mplx-staking-states = {git = "https://github.com/adm-metaex/mplx-staking.git" }
 
 [dev-dependencies]
 async-trait = "0.1.71"
-mpl-token-auth-rules = { path = "../../../mpl-token-auth-rules/programs/token-auth-rules/", features = ["no-entrypoint"] }
+mpl-token-auth-rules = { git = "https://github.com/metaplex-foundation/mpl-token-auth-rules.git", branch = "main", features = ["no-entrypoint"] }
 solana-program-test = "~1.18.11"
 solana-sdk = "~1.18.11"
 spl-concurrent-merkle-tree = { git = "https://github.com/StanChe/solana-program-library.git", branch = "feature/init_with_root" }

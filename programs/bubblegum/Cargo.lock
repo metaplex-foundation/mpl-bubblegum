@@ -2578,8 +2578,9 @@ dependencies = [
 [[package]]
 name = "mpl-token-auth-rules"
 version = "1.5.0"
+source = "git+https://github.com/metaplex-foundation/mpl-token-auth-rules.git?branch=main#fd9026d68ebc7e1bc2aeb7af73d04e8161eeeaf8"
 dependencies = [
- "borsh 0.10.3",
+ "borsh 0.9.3",
  "bytemuck",
  "mpl-token-metadata-context-derive",
  "num-derive 0.3.3",
