@@ -1,8 +1,8 @@
-use crate::processor::process_collection_verification_mpl_only;
-use crate::state::metaplex_adapter::Collection;
-use crate::state::metaplex_anchor::TokenMetadata;
-use crate::state::TreeConfig;
-use crate::{FinalizeTreeWithRoot, FinalizeTreeWithRootBumps};
+use crate::{
+    processor::process_collection_verification_mpl_only,
+    state::{metaplex_adapter::Collection, metaplex_anchor::TokenMetadata, TreeConfig},
+    FinalizeTreeWithRoot, FinalizeTreeWithRootBumps,
+};
 use anchor_lang::{prelude::*, system_program::System};
 use spl_account_compression::{program::SplAccountCompression, Noop};
 

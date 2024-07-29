@@ -21,6 +21,8 @@ pub const REALM_GOVERNING_MINT: Pubkey =
 pub const FEE_RECEIVER: Pubkey =
     solana_program::pubkey!("EzsKaQq61FLZwRaiUx7t17LWVVzsE8wRkhBghFrZGGwG");
 
+pub const VOTER_DISCRIMINATOR: [u8; 8] = [241, 93, 35, 191, 254, 147, 17, 202];
+
 // TODO: change to real one
 pub const MINIMUM_WEIGHTED_STAKE: u64 = 30000000;
 

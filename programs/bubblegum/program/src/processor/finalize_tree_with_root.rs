@@ -1,14 +1,12 @@
 use anchor_lang::{prelude::*, solana_program::clock::Clock, system_program::System};
-use mplx_staking_states::state::{
-    registrar::Registrar, Voter, REGISTRAR_DISCRIMINATOR, VOTER_DISCRIMINATOR,
-};
+use mplx_staking_states::state::{registrar::Registrar, Voter, REGISTRAR_DISCRIMINATOR};
 use spl_account_compression::{program::SplAccountCompression, Noop};
 
 use crate::{
     error::BubblegumError,
     state::{
         TreeConfig, FEE_RECEIVER, MINIMUM_WEIGHTED_STAKE, PROTOCOL_FEE_PER_1024_ASSETS, REALM,
-        REALM_GOVERNING_MINT,
+        REALM_GOVERNING_MINT, VOTER_DISCRIMINATOR,
     },
 };
 

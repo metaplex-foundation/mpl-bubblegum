@@ -10,8 +10,10 @@ use super::{
     },
     Error, LeafArgs, Result,
 };
-use crate::utils::digital_asset::DigitalAsset;
-use crate::utils::tx_builder::{DecompressV1Builder, FinalizeWithRootAndCollectionBuilder};
+use crate::utils::{
+    digital_asset::DigitalAsset,
+    tx_builder::{DecompressV1Builder, FinalizeWithRootAndCollectionBuilder},
+};
 use anchor_lang::{self, AccountDeserialize};
 use bubblegum::{
     state::{leaf_schema::LeafSchema, DecompressibleState, TreeConfig, Voucher, VOUCHER_PREFIX},
