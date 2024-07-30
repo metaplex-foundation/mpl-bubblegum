@@ -125,13 +125,15 @@ test('it can fetch the proof of a compressed asset by ID', async (t) => {
 
 test('it can fetch the proof of a compressed asset', async (t) => {
   // Given a minted NFT on devnet.
+  // and a tree with depth 14 and canopy depth 0.
   const { umi } = t.context;
   const assetId = publicKey('BZHZ4GX7JZ1JxngRVtHJgUAnUZQ76ffBTsNXuqTVXvg5');
 
-  // When we fetch the proof of the asset using its ID.
+  // When we fetch the proof of the asset using its ID with no truncation.
   const asset = await getAssetWithProof(umi, assetId);
 
-  // Then we expect the following data.
+  // Then we expect the following data
+  // with a proof length of 14.
   t.like(asset, <AssetWithProof>{
     leafOwner: publicKey('EczRmPqSEWBXtcMKVK1avV87EXH5JZrRbTVdUJdnYaKo'),
     leafDelegate: publicKey('EczRmPqSEWBXtcMKVK1avV87EXH5JZrRbTVdUJdnYaKo'),
@@ -245,14 +247,16 @@ test('it can fetch the proof of a compressed asset', async (t) => {
 });
 
 test('it can fetch the truncated proof of a compressed asset with canopy depth 0', async (t) => {
-  // Given a minted NFT on devnet.
+  // Given a minted NFT on devnet
+  // and a tree with depth 14 and canopy depth 0.
   const { umi } = t.context;
   const assetId = publicKey('BZHZ4GX7JZ1JxngRVtHJgUAnUZQ76ffBTsNXuqTVXvg5');
 
-  // When we fetch the proof of the asset using its ID.
+  // When we fetch the proof of the asset using its ID with truncation.
   const asset = await getAssetWithProof(umi, assetId, { truncateCanopy: true });
 
-  // Then we expect the following data.
+  // Then we expect the following data
+  // with a proof length of 14.
   t.like(asset, <AssetWithProof>{
     leafOwner: publicKey('EczRmPqSEWBXtcMKVK1avV87EXH5JZrRbTVdUJdnYaKo'),
     leafDelegate: publicKey('EczRmPqSEWBXtcMKVK1avV87EXH5JZrRbTVdUJdnYaKo'),
@@ -366,14 +370,16 @@ test('it can fetch the truncated proof of a compressed asset with canopy depth 0
 });
 
 test('it can fetch the proof of a compressed asset with nonzero canopy depth', async (t) => {
-  // Given a minted NFT on devnet.
+  // Given a minted NFT on devnet
+  // and a tree with depth 14 and canopy depth 9.
   const { umi } = t.context;
   const assetId = publicKey('3UowCweYWKsZKXmnYvq5jwsyD2eNtshjhjGEwk6yteEP');
 
-  // When we fetch the proof of the asset using its ID.
+  // When we fetch the proof of the asset using its ID with no truncation.
   const asset = await getAssetWithProof(umi, assetId);
 
-  // Then we expect the following data.
+  // Then we expect the following data
+  // with a proof length of 14.
   t.like(asset, <AssetWithProof>{
     leafOwner: publicKey('BJjUoux3xacYcRZV31Ytsi4haJb3HgyzmweVDHutiLWU'),
     leafDelegate: publicKey('BJjUoux3xacYcRZV31Ytsi4haJb3HgyzmweVDHutiLWU'),
@@ -518,14 +524,16 @@ test('it can fetch the proof of a compressed asset with nonzero canopy depth', a
 });
 
 test('it can fetch the truncated proof of a compressed asset with nonzero canopy depth', async (t) => {
-  // Given a minted NFT on devnet.
+  // Given a minted NFT on devnet
+  // and a tree with depth 14 and canopy depth 9.
   const { umi } = t.context;
   const assetId = publicKey('3UowCweYWKsZKXmnYvq5jwsyD2eNtshjhjGEwk6yteEP');
 
-  // When we fetch the proof of the asset using its ID.
+  // When we fetch the proof of the asset using its ID with truncation.
   const asset = await getAssetWithProof(umi, assetId, { truncateCanopy: true });
 
-  // Then we expect the following data.
+  // Then we expect the following data
+  // with a proof length of 5.
   t.like(asset, <AssetWithProof>{
     leafOwner: publicKey('BJjUoux3xacYcRZV31Ytsi4haJb3HgyzmweVDHutiLWU'),
     leafDelegate: publicKey('BJjUoux3xacYcRZV31Ytsi4haJb3HgyzmweVDHutiLWU'),
