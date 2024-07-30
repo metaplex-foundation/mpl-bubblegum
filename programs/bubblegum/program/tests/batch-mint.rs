@@ -139,7 +139,7 @@ fn reverse_each_couple<T>(vec: &mut Vec<T>) {
 
 // This function initializes registrar and voter keys.
 // That keys are related to SPL Governance program.
-// Initialization of these account is required because rollup creation requires MPLX stake,
+// Initialization of these account is required because batch creation requires MPLX stake,
 // and all the user's information about stake is saving on these accounts.
 async fn initialize_staking_accounts(
     program_context: &mut BubblegumTestContext,
