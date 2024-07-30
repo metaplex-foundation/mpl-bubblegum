@@ -23,8 +23,7 @@ pub const FEE_RECEIVER: Pubkey =
 
 pub const VOTER_DISCRIMINATOR: [u8; 8] = [241, 93, 35, 191, 254, 147, 17, 202];
 
-// TODO: change to real one
-pub const MINIMUM_WEIGHTED_STAKE: u64 = 30000000;
+pub const MINIMUM_WEIGHTED_STAKE: u64 = 30_000_000_000_000; // 30 weighted MPLX
 
 pub const PROTOCOL_FEE_PER_1024_ASSETS: u64 = 1_280_000; // 0.00128 SOL in lamports
 

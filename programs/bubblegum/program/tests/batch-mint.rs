@@ -214,7 +214,7 @@ async fn initialize_staking_accounts(
 
     let deposit_entry = DepositEntry {
         lockup: lockup.clone(),
-        amount_deposited_native: 100000000,
+        amount_deposited_native: 100_000_000_000_000,
         voting_mint_config_idx: 0,
         is_used: true,
         _reserved1: [0; 6],
@@ -755,7 +755,6 @@ async fn test_prepare_tree_with_collection_wrong_authority() {
     )
     .await;
 
-    let rightmost_proof = tree.proof_of_leaf((num_of_assets_to_mint - 1) as u32);
     let rightmost_leaf = tree.get_node(num_of_assets_to_mint - 1);
 
     let (registrar_key, voter_key) = initialize_staking_accounts(&mut program_context).await;
