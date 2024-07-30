@@ -529,7 +529,7 @@ async fn test_put_wrong_canopy() {
         if let BanksClient(BanksClientError::TransactionError(e)) = *err {
             assert_eq!(
                 e,
-                TransactionError::InstructionError(0, InstructionError::Custom(6011),)
+                TransactionError::InstructionError(0, InstructionError::Custom(6012),)
             );
         } else {
             panic!("Wrong variant");

@@ -73,5 +73,5 @@ fn prep_tree_cpi_call<'info>(
         },
         authority_pda_signer,
     );
-    spl_account_compression::cpi::prepare_tree(cpi_ctx, max_depth, max_buffer_size)
+    spl_account_compression::cpi::prepare_batch_merkle_tree(cpi_ctx, max_depth, max_buffer_size)
 }

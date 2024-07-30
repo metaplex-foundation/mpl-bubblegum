@@ -216,7 +216,7 @@ pub(crate) fn finalize_tree<'info>(
         authority_pda_signer,
     )
     .with_remaining_accounts(remaining_accounts.to_vec());
-    spl_account_compression::cpi::finalize_merkle_tree_with_root(
+    spl_account_compression::cpi::init_prepared_tree_with_root(
         cpi_ctx,
         root,
         rightmost_leaf,
