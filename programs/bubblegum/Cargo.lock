@@ -1006,7 +1006,7 @@ dependencies = [
 
 [[package]]
 name = "bubblegum"
-version = "0.12.0"
+version = "0.13.0"
 dependencies = [
  "anchor-lang 0.29.0",
  "anchor-spl 0.29.0",
