@@ -254,7 +254,7 @@ async fn initialize_staking_accounts(
     );
     voter_account.set_data_from_slice(voter_acc_data.as_ref());
     let mut mining_acc_data = [0; mplx_rewards::state::WrappedMining::LEN];
-    // TODO: good luck trying to make it work with those allignments requirements of the WrappedMining struct,
+    // TODO: good luck trying to make it work with those allignment requirements of the WrappedMining struct,
     // let account_type:u8 = mplx_rewards::state::AccountType::Mining.into();
     // mining_acc_data[0] = account_type;
     // let mining_acc = mplx_rewards::state::WrappedMining::from_bytes_mut(&mut mining_acc_data)
