@@ -1014,13 +1014,14 @@ dependencies = [
  "bytemuck",
  "mpl-token-auth-rules",
  "mpl-token-metadata",
+ "mplx-rewards",
  "mplx-staking-states",
  "num-traits",
  "solana-program",
  "solana-program-test",
  "solana-sdk",
  "spl-account-compression",
- "spl-associated-token-account 1.1.3",
+ "spl-associated-token-account 2.3.0",
  "spl-concurrent-merkle-tree",
  "spl-merkle-tree-reference",
  "spl-noop",
@@ -2334,6 +2335,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
 
 [[package]]
+name = "lib-sokoban"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0640eb476052d9f48e920969f8117b054d1be1a0b2e4055e61293cd2b1afcce1"
+dependencies = [
+ "bytemuck",
+ "num-derive 0.3.3",
+ "num-traits",
+ "thiserror",
+]
+
+[[package]]
 name = "libc"
 version = "0.2.154"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2587,7 +2600,7 @@ dependencies = [
  "num-traits",
  "rmp-serde",
  "serde",
- "shank",
+ "shank 0.3.0",
  "solana-program",
  "solana-zk-token-sdk",
  "thiserror",
@@ -2614,6 +2627,21 @@ checksum = "12989bc45715b0ee91944855130131479f9c772e198a910c3eb0ea327d5bffc3"
 dependencies = [
  "quote",
  "syn 1.0.109",
+]
+
+[[package]]
+name = "mplx-rewards"
+version = "0.1.0"
+dependencies = [
+ "borsh 1.5.0",
+ "bytemuck",
+ "lib-sokoban",
+ "num-derive 0.4.2",
+ "num-traits",
+ "shank 0.4.2",
+ "solana-program",
+ "spl-token 4.0.0",
+ "thiserror",
 ]
 
 [[package]]
@@ -2833,7 +2861,7 @@ version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "681030a937600a36906c185595136d26abfebb4aa9c65701cefcaf8578bb982b"
 dependencies = [
- "proc-macro-crate 1.3.1",
+ "proc-macro-crate 3.1.0",
  "proc-macro2",
  "quote",
  "syn 2.0.63",
@@ -3862,7 +3890,16 @@ version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "57c9395612d493b69a522725eef78a095f199d43eeb847f4a4b77ec0cacab535"
 dependencies = [
- "shank_macro",
+ "shank_macro 0.3.0",
+]
+
+[[package]]
+name = "shank"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "23d894855493d4ce613b25550fe1ed1c62d0af5486b984579ba55e3f8c9631d5"
+dependencies = [
+ "shank_macro 0.4.2",
 ]
 
 [[package]]
@@ -3873,8 +3910,21 @@ checksum = "8abef069c02e15f62233679b1e71f3152fac10f90b3ff89ebbad6a25b7497754"
 dependencies = [
  "proc-macro2",
  "quote",
- "shank_macro_impl",
- "shank_render",
+ "shank_macro_impl 0.3.0",
+ "shank_render 0.3.0",
+ "syn 1.0.109",
+]
+
+[[package]]
+name = "shank_macro"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a9bf2645f8eebde043da69200195058e7b59806705104f908a31d05ca82844ce"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "shank_macro_impl 0.4.2",
+ "shank_render 0.4.2",
  "syn 1.0.109",
 ]
 
@@ -3892,6 +3942,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "shank_macro_impl"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "93d0593f48acb0a722906416b1f6b8926f6571eb9af16d566a7c65427f269f50"
+dependencies = [
+ "anyhow",
+ "proc-macro2",
+ "quote",
+ "serde",
+ "syn 1.0.109",
+]
+
+[[package]]
 name = "shank_render"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3899,7 +3962,18 @@ checksum = "5a2ea9c6dd95ea311b3b81e63cf4e9c808ed04b098819e6d2c4b1a467d587203"
 dependencies = [
  "proc-macro2",
  "quote",
- "shank_macro_impl",
+ "shank_macro_impl 0.3.0",
+]
+
+[[package]]
+name = "shank_render"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "121175ba61809189f888dc5822ebfd30fa0d91e1e1f61d25a4d40b0847b3075e"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "shank_macro_impl 0.4.2",
 ]
 
 [[package]]

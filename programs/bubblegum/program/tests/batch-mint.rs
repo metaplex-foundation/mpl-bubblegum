@@ -137,13 +137,13 @@ fn reverse_each_couple<T>(vec: &mut Vec<T>) {
     }
 }
 
-// This function initializes registrar and voter keys.
-// That keys are related to SPL Governance program.
+// This function initializes registrar, voter and mining keys.
+// Those registrar and voter are related to SPL Governance program. And the mining key is related to the reward program.
 // Initialization of these account is required because batch creation requires MPLX stake,
 // and all the user's information about stake is saving on these accounts.
 async fn initialize_staking_accounts(
     program_context: &mut BubblegumTestContext,
-) -> (Pubkey, Pubkey) {
+) -> (Pubkey, Pubkey, Pubkey) {
     let governance_program_id =
         Pubkey::from_str("CuyWCRdHT8pZLG793UR5R9z31AC49d47ZW9ggN6P7qZ4").unwrap();
     let realm_authority = Pubkey::from_str("Euec5oQGN3Y9kqVrz6PQRfTpYSn6jK3k1JonDiMTzAtA").unwrap();
@@ -151,6 +151,7 @@ async fn initialize_staking_accounts(
 
     let mplx_mint_key = Pubkey::new_unique();
     let grant_authority = Pubkey::new_unique();
+    let mining_key = Pubkey::new_unique();
 
     let registrar_key = Pubkey::find_program_address(
         &[
@@ -252,15 +253,30 @@ async fn initialize_staking_accounts(
         &mplx_staking_states::ID,
     );
     voter_account.set_data_from_slice(voter_acc_data.as_ref());
-
+    let mut mining_acc_data = [0; mplx_rewards::state::WrappedMining::LEN];
+    // TODO: good luck trying to make it work with those allignments requirements of the WrappedMining struct,
+    // let account_type:u8 = mplx_rewards::state::AccountType::Mining.into();
+    // mining_acc_data[0] = account_type;
+    // let mining_acc = mplx_rewards::state::WrappedMining::from_bytes_mut(&mut mining_acc_data)
+    //     .expect("Failed to create mining account");
+    // mining_acc.mining.owner = voter_authority;
+    // mining_acc.mining.stake_from_others = 0;
+    // so here is a hacky way to set the owner of the mining account directly
+    mining_acc_data[32..64].copy_from_slice(&voter_authority.to_bytes());
+    let mut mining_account =
+        AccountSharedData::new(10000000000000000, mining_acc_data.len(), &mplx_rewards::ID);
+    mining_account.set_data_from_slice(mining_acc_data.as_ref());
     program_context
         .mut_test_context()
         .set_account(&registrar_key, &registrar_account);
     program_context
         .mut_test_context()
         .set_account(&voter_key, &voter_account);
+    program_context
+        .mut_test_context()
+        .set_account(&mining_key, &mining_account);
 
-    (registrar_key, voter_key)
+    (registrar_key, voter_key, mining_key)
 }
 
 #[tokio::test]
@@ -285,7 +301,8 @@ async fn test_prepare_tree_without_canopy() {
     let rightmost_proof = tree.proof_of_leaf((num_of_assets_to_mint - 1) as u32);
     let rightmost_leaf = tree.get_node(num_of_assets_to_mint - 1);
 
-    let (registrar_key, voter_key) = initialize_staking_accounts(&mut program_context).await;
+    let (registrar_key, voter_key, mining_key) =
+        initialize_staking_accounts(&mut program_context).await;
 
     program_context
         .fund_account(tree.creator_pubkey(), 10_000_000_000)
@@ -330,6 +347,7 @@ async fn test_prepare_tree_without_canopy() {
         "fileHash".to_string(),
         registrar_key,
         voter_key,
+        mining_key,
         FEE_RECEIVER,
     );
 
@@ -397,7 +415,8 @@ async fn test_prepare_tree_with_canopy() {
     let rightmost_leaf = tree.get_node(num_of_assets_to_mint - 1);
     let rightmost_proof = tree.proof_of_leaf((num_of_assets_to_mint - 1) as u32);
 
-    let (registrar_key, voter_key) = initialize_staking_accounts(&mut program_context).await;
+    let (registrar_key, voter_key, mining_key) =
+        initialize_staking_accounts(&mut program_context).await;
 
     let mut tree_tx_builder = tree.prepare_tree_tx(
         &program_context.test_context().payer,
@@ -435,6 +454,7 @@ async fn test_prepare_tree_with_canopy() {
         "fileHash".to_string(),
         registrar_key,
         voter_key,
+        mining_key,
         FEE_RECEIVER,
     );
 
@@ -474,7 +494,8 @@ async fn test_put_wrong_canopy() {
 
     let canopy_hashes = vec![[1; 32]; 32];
 
-    let (registrar_key, voter_key) = initialize_staking_accounts(&mut program_context).await;
+    let (registrar_key, voter_key, mining_key) =
+        initialize_staking_accounts(&mut program_context).await;
 
     let mut tree_tx_builder = tree.prepare_tree_tx(
         &program_context.test_context().payer,
@@ -512,6 +533,7 @@ async fn test_put_wrong_canopy() {
         "fileHash".to_string(),
         registrar_key,
         voter_key,
+        mining_key,
         FEE_RECEIVER,
     );
 
@@ -606,7 +628,8 @@ async fn test_put_wrong_fee_receiver() {
     let rightmost_leaf = tree.get_node(num_of_assets_to_mint - 1);
     let rightmost_proof = tree.proof_of_leaf((num_of_assets_to_mint - 1) as u32);
 
-    let (registrar_key, voter_key) = initialize_staking_accounts(&mut program_context).await;
+    let (registrar_key, voter_key, mining_key) =
+        initialize_staking_accounts(&mut program_context).await;
 
     program_context
         .fund_account(tree.creator_pubkey(), 10_000_000_000)
@@ -638,6 +661,7 @@ async fn test_put_wrong_fee_receiver() {
         "fileHash".to_string(),
         registrar_key,
         voter_key,
+        mining_key,
         wrong_fee_receiver,
     );
 
@@ -689,7 +713,8 @@ async fn test_prepare_tree_with_collection() {
     let rightmost_proof = tree.proof_of_leaf((num_of_assets_to_mint - 1) as u32);
     let rightmost_leaf = tree.get_node(num_of_assets_to_mint - 1);
 
-    let (registrar_key, voter_key) = initialize_staking_accounts(&mut program_context).await;
+    let (registrar_key, voter_key, mining_key) =
+        initialize_staking_accounts(&mut program_context).await;
 
     program_context
         .fund_account(tree.creator_pubkey(), 10_000_000_000)
@@ -722,6 +747,7 @@ async fn test_prepare_tree_with_collection() {
         "fileHash".to_string(),
         registrar_key,
         voter_key,
+        mining_key,
         FEE_RECEIVER,
     );
 
@@ -757,7 +783,8 @@ async fn test_prepare_tree_with_collection_wrong_authority() {
 
     let rightmost_leaf = tree.get_node(num_of_assets_to_mint - 1);
 
-    let (registrar_key, voter_key) = initialize_staking_accounts(&mut program_context).await;
+    let (registrar_key, voter_key, mining_key) =
+        initialize_staking_accounts(&mut program_context).await;
 
     program_context
         .fund_account(tree.creator_pubkey(), 10_000_000_000)
@@ -790,6 +817,7 @@ async fn test_prepare_tree_with_collection_wrong_authority() {
         "fileHash".to_string(),
         registrar_key,
         voter_key,
+        mining_key,
         FEE_RECEIVER,
     );
 

@@ -30,6 +30,8 @@ pub struct FinalizeTreeWithRoot<'info> {
     /// CHECK:
     pub voter: UncheckedAccount<'info>,
     /// CHECK:
+    pub mining: UncheckedAccount<'info>,
+    /// CHECK:
     #[account(mut)]
     pub fee_receiver: UncheckedAccount<'info>,
     pub log_wrapper: Program<'info, Noop>,
@@ -61,6 +63,7 @@ pub(crate) fn finalize_tree_with_root<'info>(
         &ctx.accounts.staker.to_account_info(),
         &ctx.accounts.registrar.to_account_info(),
         &ctx.accounts.voter.to_account_info(),
+        &ctx.accounts.mining.to_account_info(),
     )?;
 
     let num_minted = (rightmost_index + 1) as u64;
@@ -107,6 +110,7 @@ pub(crate) fn check_stake<'info>(
     staker_acc: &AccountInfo<'info>,
     registrar_acc: &AccountInfo<'info>,
     voter_acc: &AccountInfo<'info>,
+    mining_acc: &AccountInfo<'info>,
 ) -> Result<()> {
     require!(
         registrar_acc.owner == &mplx_staking_states::ID,
@@ -115,6 +119,10 @@ pub(crate) fn check_stake<'info>(
     require!(
         voter_acc.owner == &mplx_staking_states::ID,
         BubblegumError::StakingVoterMismatch
+    );
+    require!(
+        mining_acc.owner == &mplx_rewards::ID,
+        BubblegumError::MiningOwnerMismatch
     );
 
     let generated_registrar = Pubkey::find_program_address(
@@ -179,7 +187,13 @@ pub(crate) fn check_stake<'info>(
         &voter.voter_authority == staker_acc.key,
         BubblegumError::StakingVoterAuthorityMismatch
     );
-
+    // todo: use a non mutable version of the mining
+    let mut mining_data = mining_acc.data.borrow_mut();
+    let mining = mplx_rewards::state::WrappedMining::from_bytes_mut(&mut mining_data)?;
+    require!(
+        &mining.mining.owner == staker_acc.key,
+        BubblegumError::MiningOwnerMismatch
+    );
     let clock = Clock::get()?;
     let curr_ts = clock.unix_timestamp as u64;
     let weighted_sum: u64 = voter
@@ -188,7 +202,11 @@ pub(crate) fn check_stake<'info>(
         .map(|d| d.weighted_stake(curr_ts))
         .sum();
 
-    if weighted_sum < MINIMUM_WEIGHTED_STAKE {
+    if weighted_sum
+        .checked_add(mining.mining.stake_from_others)
+        .ok_or(BubblegumError::NumericalOverflowError)?
+        < MINIMUM_WEIGHTED_STAKE
+    {
         return Err(BubblegumError::NotEnoughStakeForOperation.into());
     }
 
