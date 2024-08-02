@@ -13,7 +13,7 @@ pub struct AddCanopy<'info> {
     #[account(mut)]
     /// CHECK:
     pub merkle_tree: UncheckedAccount<'info>,
-    pub incoming_tree_delegate: Signer<'info>,
+    pub tree_delegate: Signer<'info>,
     pub log_wrapper: Program<'info, Noop>,
     pub compression_program: Program<'info, SplAccountCompression>,
     pub system_program: Program<'info, System>,
@@ -24,7 +24,7 @@ pub(crate) fn add_canopy<'info>(
     start_index: u32,
     canopy_nodes: Vec<[u8; 32]>,
 ) -> Result<()> {
-    let incoming_tree_delegate = ctx.accounts.incoming_tree_delegate.key();
+    let incoming_tree_delegate = ctx.accounts.tree_delegate.key();
     let authority = &ctx.accounts.tree_authority;
 
     // incoming_tree_delegate is the tree owner as set in prepare tree, it's required to do any modificaitons to the tree,
