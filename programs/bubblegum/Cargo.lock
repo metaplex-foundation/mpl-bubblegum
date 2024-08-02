@@ -2632,6 +2632,7 @@ dependencies = [
 [[package]]
 name = "mplx-rewards"
 version = "0.1.0"
+source = "git+https://github.com/adm-metaex/mplx-rewards.git?branch=mtg-464-prealloc#7eb7cc3ecbb03ae5ebdc1349c97ad9ad02e97f97"
 dependencies = [
  "borsh 1.5.0",
  "bytemuck",
