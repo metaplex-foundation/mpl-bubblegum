@@ -8,11 +8,12 @@ use bubblegum::{
     state::{
         metaplex_adapter::{MetadataArgs, TokenProgramVersion, TokenStandard},
         FEE_RECEIVER, PROTOCOL_FEE_PER_1024_ASSETS, REALM, REALM_GOVERNING_MINT,
+        VOTER_DISCRIMINATOR,
     },
 };
 use mplx_staking_states::state::{
     DepositEntry, Lockup, LockupKind, LockupPeriod, Registrar, Voter, VotingMintConfig,
-    REGISTRAR_DISCRIMINATOR, VOTER_DISCRIMINATOR,
+    REGISTRAR_DISCRIMINATOR,
 };
 use solana_program_test::{tokio, BanksClientError};
 use solana_sdk::{
@@ -152,6 +153,7 @@ async fn initialize_staking_accounts(
     let mplx_mint_key = Pubkey::new_unique();
     let grant_authority = Pubkey::new_unique();
     let mining_key = Pubkey::new_unique();
+    let reward_pool_key = Pubkey::new_unique();
 
     let registrar_key = Pubkey::find_program_address(
         &[
@@ -176,11 +178,6 @@ async fn initialize_staking_accounts(
     let voting_mint_config = VotingMintConfig {
         mint: mplx_mint_key,
         grant_authority,
-        baseline_vote_weight_scaled_factor: 0,
-        max_extra_lockup_vote_weight_scaled_factor: 0,
-        lockup_saturation_secs: 0,
-        digit_shift: 0,
-        padding: [0, 0, 0, 0, 0, 0, 0],
     };
 
     let registrar = Registrar {
@@ -188,14 +185,10 @@ async fn initialize_staking_accounts(
         realm: REALM,
         realm_governing_token_mint: REALM_GOVERNING_MINT,
         realm_authority: realm_authority.clone(),
-        voting_mints: [
-            voting_mint_config,
-            voting_mint_config,
-            voting_mint_config,
-            voting_mint_config,
-        ],
-        time_offset: 0,
+        voting_mints: [voting_mint_config, voting_mint_config],
+        reward_pool: reward_pool_key,
         bump: 0,
+        padding: [0; 7],
     };
 
     let current_time = SystemTime::now()
@@ -210,6 +203,7 @@ async fn initialize_staking_accounts(
         cooldown_requested: false,
         kind: LockupKind::Constant,
         period: LockupPeriod::ThreeMonths,
+        _reserved0: [0; 16],
         _reserved1: [0; 5],
     };
 
@@ -218,6 +212,9 @@ async fn initialize_staking_accounts(
         amount_deposited_native: 100_000_000_000_000,
         voting_mint_config_idx: 0,
         is_used: true,
+        delegate: Pubkey::new_unique(),
+        delegate_last_update_ts: 0,
+        _reserved0: [0; 32],
         _reserved1: [0; 6],
     };
 

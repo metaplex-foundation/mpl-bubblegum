@@ -1025,7 +1025,7 @@ dependencies = [
  "spl-concurrent-merkle-tree",
  "spl-merkle-tree-reference",
  "spl-noop",
- "spl-token 3.5.0",
+ "spl-token 4.0.0",
 ]
 
 [[package]]
@@ -2632,7 +2632,7 @@ dependencies = [
 [[package]]
 name = "mplx-rewards"
 version = "0.1.0"
-source = "git+https://github.com/adm-metaex/mplx-rewards.git?branch=mtg-464-prealloc#7eb7cc3ecbb03ae5ebdc1349c97ad9ad02e97f97"
+source = "git+https://github.com/adm-metaex/mplx-rewards.git#406078fcc3656dfeb57ae776ee81097480a27a62"
 dependencies = [
  "borsh 1.5.0",
  "bytemuck",
@@ -2648,14 +2648,11 @@ dependencies = [
 [[package]]
 name = "mplx-staking-states"
 version = "0.0.1"
-source = "git+https://github.com/adm-metaex/mplx-staking.git#094f7277c4c7d1a0549415df1b152cc0c525a1c7"
+source = "git+https://github.com/adm-metaex/mplx-staking.git#03459b9290d3fe58b5788728b434a6441adc1779"
 dependencies = [
  "anchor-lang 0.26.0",
  "anchor-spl 0.26.0",
- "borsh 0.9.3",
- "bytemuck",
  "static_assertions",
- "thiserror",
 ]
 
 [[package]]

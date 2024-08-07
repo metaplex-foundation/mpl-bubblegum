@@ -177,7 +177,8 @@ pub(crate) fn check_stake<'info>(
         BubblegumError::StakingVoterDiscriminatorMismatch
     );
 
-    let voter: Voter = *bytemuck::from_bytes(&(*voter_bytes.borrow())[8..]);
+    let voter_bytes = Box::new(voter_bytes.borrow());
+    let voter: Box<&Voter> = Box::new(bytemuck::from_bytes(&voter_bytes[8..]));
 
     require!(
         &voter.registrar == registrar_acc.key,
@@ -188,8 +189,8 @@ pub(crate) fn check_stake<'info>(
         BubblegumError::StakingVoterAuthorityMismatch
     );
     // todo: use a non mutable version of the mining
-    let mut mining_data = mining_acc.data.borrow_mut();
-    let mining = mplx_rewards::state::WrappedMining::from_bytes_mut(&mut mining_data)?;
+    let mining_data = mining_acc.data.borrow();
+    let mining = mplx_rewards::state::WrappedImmutableMining::from_bytes(&mining_data)?;
     require!(
         &mining.mining.owner == staker_acc.key,
         BubblegumError::MiningOwnerMismatch
