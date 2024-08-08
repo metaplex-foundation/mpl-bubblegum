@@ -177,8 +177,9 @@ pub(crate) fn check_stake<'info>(
         BubblegumError::StakingVoterDiscriminatorMismatch
     );
 
+    // The Voter has a rather big structure. If we try to deserialize it as other accounts it'll overflow the stack.
     let voter_bytes = Box::new(voter_bytes.borrow());
-    let voter: Box<&Voter> = Box::new(bytemuck::from_bytes(&voter_bytes[8..]));
+    let voter: &Voter = bytemuck::from_bytes(&voter_bytes[8..]);
 
     require!(
         &voter.registrar == registrar_acc.key,
