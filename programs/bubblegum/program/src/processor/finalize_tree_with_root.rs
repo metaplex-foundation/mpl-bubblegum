@@ -10,6 +10,7 @@ use crate::{
     },
 };
 
+const DISCRIMINATOR_LEN: usize = REGISTRAR_DISCRIMINATOR.len();
 #[derive(Accounts)]
 pub struct FinalizeTreeWithRoot<'info> {
     #[account(
@@ -156,11 +157,12 @@ pub(crate) fn check_stake<'info>(
     let registrar_bytes = registrar_acc.to_account_info().data;
 
     require!(
-        (*registrar_bytes.borrow())[..8] == REGISTRAR_DISCRIMINATOR,
+        (*registrar_bytes.borrow())[..DISCRIMINATOR_LEN] == REGISTRAR_DISCRIMINATOR,
         BubblegumError::StakingRegistrarDiscriminatorMismatch
     );
 
-    let registrar: Registrar = *bytemuck::from_bytes(&(*registrar_bytes.borrow())[8..]);
+    let registrar: Registrar =
+        *bytemuck::from_bytes(&(*registrar_bytes.borrow())[DISCRIMINATOR_LEN..]);
 
     require!(
         registrar.realm == REALM,
@@ -173,13 +175,13 @@ pub(crate) fn check_stake<'info>(
     let voter_bytes = voter_acc.to_account_info().data;
 
     require!(
-        (*voter_bytes.borrow())[..8] == VOTER_DISCRIMINATOR,
+        (*voter_bytes.borrow())[..DISCRIMINATOR_LEN] == VOTER_DISCRIMINATOR,
         BubblegumError::StakingVoterDiscriminatorMismatch
     );
 
     // The Voter has a rather big structure. If we try to deserialize it on the stack it will be overflowed. Therefore, Box is used to move bytes that have been borrowed to the Heap.
     let voter_bytes = Box::new(voter_bytes.borrow());
-    let voter: &Voter = bytemuck::from_bytes(&voter_bytes[8..]);
+    let voter: &Voter = bytemuck::from_bytes(&voter_bytes[DISCRIMINATOR_LEN..]);
 
     require!(
         &voter.registrar == registrar_acc.key,
