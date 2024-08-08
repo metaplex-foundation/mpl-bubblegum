@@ -188,7 +188,6 @@ pub(crate) fn check_stake<'info>(
         &voter.voter_authority == staker_acc.key,
         BubblegumError::StakingVoterAuthorityMismatch
     );
-    // todo: use a non mutable version of the mining
     let mining_data = mining_acc.data.borrow();
     let mining = mplx_rewards::state::WrappedImmutableMining::from_bytes(&mining_data)?;
     require!(
