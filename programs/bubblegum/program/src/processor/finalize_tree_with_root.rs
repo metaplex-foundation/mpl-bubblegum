@@ -155,14 +155,13 @@ pub(crate) fn check_stake<'info>(
     );
 
     let registrar_bytes = registrar_acc.to_account_info().data;
-
+    let registrar_bytes = registrar_bytes.borrow();
     require!(
-        (*registrar_bytes.borrow())[..DISCRIMINATOR_LEN] == REGISTRAR_DISCRIMINATOR,
+        registrar_bytes[..DISCRIMINATOR_LEN] == REGISTRAR_DISCRIMINATOR,
         BubblegumError::StakingRegistrarDiscriminatorMismatch
     );
 
-    let registrar: Registrar =
-        *bytemuck::from_bytes(&(*registrar_bytes.borrow())[DISCRIMINATOR_LEN..]);
+    let registrar: &Registrar = bytemuck::from_bytes(&registrar_bytes[DISCRIMINATOR_LEN..]);
 
     require!(
         registrar.realm == REALM,
