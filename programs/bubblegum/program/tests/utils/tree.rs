@@ -287,6 +287,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         metadata_hash: String,
         registrar: Pubkey,
         voter: Pubkey,
+        mining: Pubkey,
         fee_receiver: Pubkey,
     ) -> FinalizeWithRootBuilder<MAX_DEPTH, MAX_BUFFER_SIZE> {
         let tree_authority =
@@ -300,6 +301,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             payer: payer.pubkey(),
             registrar,
             voter,
+            mining,
             fee_receiver,
             log_wrapper: spl_noop::id(),
             compression_program: spl_account_compression::id(),
@@ -337,6 +339,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         metadata_hash: String,
         registrar: Pubkey,
         voter: Pubkey,
+        mining: Pubkey,
         fee_receiver: Pubkey,
     ) -> FinalizeWithRootAndCollectionBuilder<MAX_DEPTH, MAX_BUFFER_SIZE> {
         let tree_authority =
@@ -350,6 +353,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             payer: payer.pubkey(),
             registrar,
             voter,
+            mining,
             collection_authority: collection_authority.pubkey(),
             collection_authority_record_pda: bubblegum::id(),
             collection_mint: collection.mint.pubkey(),

@@ -27,6 +27,8 @@ pub struct FinalizeTreeWithRootAndCollection<'info> {
     /// CHECK:
     pub voter: UncheckedAccount<'info>,
     /// CHECK:
+    pub mining: UncheckedAccount<'info>,
+    /// CHECK:
     #[account(mut)]
     pub fee_receiver: UncheckedAccount<'info>,
     /// CHECK: Optional collection authority record PDA.
@@ -95,6 +97,7 @@ impl<'info> From<&mut FinalizeTreeWithRootAndCollection<'info>> for FinalizeTree
             staker: value.staker.to_owned(),
             registrar: value.registrar.to_owned(),
             voter: value.voter.to_owned(),
+            mining: value.mining.to_owned(),
             fee_receiver: value.fee_receiver.to_owned(),
             log_wrapper: value.log_wrapper.to_owned(),
             compression_program: value.compression_program.to_owned(),

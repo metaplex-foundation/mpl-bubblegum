@@ -10,6 +10,7 @@ use crate::{
     },
 };
 
+const DISCRIMINATOR_LEN: usize = REGISTRAR_DISCRIMINATOR.len();
 #[derive(Accounts)]
 pub struct FinalizeTreeWithRoot<'info> {
     #[account(
@@ -29,6 +30,8 @@ pub struct FinalizeTreeWithRoot<'info> {
     pub registrar: UncheckedAccount<'info>,
     /// CHECK:
     pub voter: UncheckedAccount<'info>,
+    /// CHECK:
+    pub mining: UncheckedAccount<'info>,
     /// CHECK:
     #[account(mut)]
     pub fee_receiver: UncheckedAccount<'info>,
@@ -61,6 +64,7 @@ pub(crate) fn finalize_tree_with_root<'info>(
         &ctx.accounts.staker.to_account_info(),
         &ctx.accounts.registrar.to_account_info(),
         &ctx.accounts.voter.to_account_info(),
+        &ctx.accounts.mining.to_account_info(),
     )?;
 
     let num_minted = (rightmost_index + 1) as u64;
@@ -107,6 +111,7 @@ pub(crate) fn check_stake<'info>(
     staker_acc: &AccountInfo<'info>,
     registrar_acc: &AccountInfo<'info>,
     voter_acc: &AccountInfo<'info>,
+    mining_acc: &AccountInfo<'info>,
 ) -> Result<()> {
     require!(
         registrar_acc.owner == &mplx_staking_states::ID,
@@ -115,6 +120,10 @@ pub(crate) fn check_stake<'info>(
     require!(
         voter_acc.owner == &mplx_staking_states::ID,
         BubblegumError::StakingVoterMismatch
+    );
+    require!(
+        mining_acc.owner == &mplx_rewards::ID,
+        BubblegumError::MiningOwnerMismatch
     );
 
     let generated_registrar = Pubkey::find_program_address(
@@ -146,13 +155,13 @@ pub(crate) fn check_stake<'info>(
     );
 
     let registrar_bytes = registrar_acc.to_account_info().data;
-
+    let registrar_bytes = registrar_bytes.borrow();
     require!(
-        (*registrar_bytes.borrow())[..8] == REGISTRAR_DISCRIMINATOR,
+        registrar_bytes[..DISCRIMINATOR_LEN] == REGISTRAR_DISCRIMINATOR,
         BubblegumError::StakingRegistrarDiscriminatorMismatch
     );
 
-    let registrar: Registrar = *bytemuck::from_bytes(&(*registrar_bytes.borrow())[8..]);
+    let registrar: &Registrar = bytemuck::from_bytes(&registrar_bytes[DISCRIMINATOR_LEN..]);
 
     require!(
         registrar.realm == REALM,
@@ -164,12 +173,12 @@ pub(crate) fn check_stake<'info>(
     );
     let voter_bytes = voter_acc.to_account_info().data;
 
+    let voter_bytes = voter_bytes.borrow();
     require!(
-        (*voter_bytes.borrow())[..8] == VOTER_DISCRIMINATOR,
+        voter_bytes[..DISCRIMINATOR_LEN] == VOTER_DISCRIMINATOR,
         BubblegumError::StakingVoterDiscriminatorMismatch
     );
-
-    let voter: Voter = *bytemuck::from_bytes(&(*voter_bytes.borrow())[8..]);
+    let voter: &Voter = bytemuck::from_bytes(&voter_bytes[DISCRIMINATOR_LEN..]);
 
     require!(
         &voter.registrar == registrar_acc.key,
@@ -179,7 +188,12 @@ pub(crate) fn check_stake<'info>(
         &voter.voter_authority == staker_acc.key,
         BubblegumError::StakingVoterAuthorityMismatch
     );
-
+    let mining_data = mining_acc.data.borrow();
+    let mining = mplx_rewards::state::WrappedImmutableMining::from_bytes(&mining_data)?;
+    require!(
+        &mining.mining.owner == staker_acc.key,
+        BubblegumError::MiningOwnerMismatch
+    );
     let clock = Clock::get()?;
     let curr_ts = clock.unix_timestamp as u64;
     let weighted_sum: u64 = voter
@@ -188,7 +202,11 @@ pub(crate) fn check_stake<'info>(
         .map(|d| d.weighted_stake(curr_ts))
         .sum();
 
-    if weighted_sum < MINIMUM_WEIGHTED_STAKE {
+    if weighted_sum
+        .checked_add(mining.mining.stake_from_others)
+        .ok_or(BubblegumError::NumericalOverflowError)?
+        < MINIMUM_WEIGHTED_STAKE
+    {
         return Err(BubblegumError::NotEnoughStakeForOperation.into());
     }
 
