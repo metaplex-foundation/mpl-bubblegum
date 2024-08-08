@@ -2590,8 +2590,9 @@ dependencies = [
 
 [[package]]
 name = "mpl-token-auth-rules"
-version = "1.5.0"
-source = "git+https://github.com/metaplex-foundation/mpl-token-auth-rules.git?branch=main#fd9026d68ebc7e1bc2aeb7af73d04e8161eeeaf8"
+version = "1.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8637dd3d13d045a43a2410dbb57f0257d506838aa71461faf0eaf2806e6d5071"
 dependencies = [
  "borsh 0.10.3",
  "bytemuck",
