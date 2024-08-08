@@ -174,12 +174,11 @@ pub(crate) fn check_stake<'info>(
     );
     let voter_bytes = voter_acc.to_account_info().data;
 
+    let voter_bytes = voter_bytes.borrow();
     require!(
-        (*voter_bytes.borrow())[..DISCRIMINATOR_LEN] == VOTER_DISCRIMINATOR,
+        voter_bytes[..DISCRIMINATOR_LEN] == VOTER_DISCRIMINATOR,
         BubblegumError::StakingVoterDiscriminatorMismatch
     );
-
-    let voter_bytes = voter_bytes.borrow();
     let voter: &Voter = bytemuck::from_bytes(&voter_bytes[DISCRIMINATOR_LEN..]);
 
     require!(
