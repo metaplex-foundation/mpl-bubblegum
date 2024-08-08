@@ -179,8 +179,7 @@ pub(crate) fn check_stake<'info>(
         BubblegumError::StakingVoterDiscriminatorMismatch
     );
 
-    // The Voter has a rather big structure. If we try to deserialize it on the stack it will be overflowed. Therefore, Box is used to move bytes that have been borrowed to the Heap.
-    let voter_bytes = Box::new(voter_bytes.borrow());
+    let voter_bytes = voter_bytes.borrow();
     let voter: &Voter = bytemuck::from_bytes(&voter_bytes[DISCRIMINATOR_LEN..]);
 
     require!(
