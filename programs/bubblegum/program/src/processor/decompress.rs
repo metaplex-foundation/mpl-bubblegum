@@ -113,7 +113,7 @@ pub(crate) fn decompress_v1(ctx: Context<DecompressV1>, metadata: MetadataArgs) 
                         ASSET_PREFIX.as_bytes(),
                         voucher.merkle_tree.key().as_ref(),
                         voucher.leaf_schema.nonce().to_le_bytes().as_ref(),
-                        &[*ctx.bumps.get("mint").unwrap()],
+                        &[ctx.bumps.mint],
                     ]],
                 )?;
                 invoke(
@@ -170,7 +170,7 @@ pub(crate) fn decompress_v1(ctx: Context<DecompressV1>, metadata: MetadataArgs) 
                 ],
                 &[&[
                     ctx.accounts.mint.key().as_ref(),
-                    &[ctx.bumps["mint_authority"]],
+                    &[ctx.bumps.mint_authority],
                 ]],
             )?;
         }
@@ -182,7 +182,7 @@ pub(crate) fn decompress_v1(ctx: Context<DecompressV1>, metadata: MetadataArgs) 
         &[ctx.accounts.mint_authority.to_account_info()],
         &[&[
             ctx.accounts.mint.key().as_ref(),
-            &[*ctx.bumps.get("mint_authority").unwrap()],
+            &[ctx.bumps.mint_authority],
         ]],
     )?;
 
@@ -210,7 +210,7 @@ pub(crate) fn decompress_v1(ctx: Context<DecompressV1>, metadata: MetadataArgs) 
         .is_mutable(metadata.is_mutable)
         .invoke_signed(&[&[
             ctx.accounts.mint.key().as_ref(),
-            &[ctx.bumps["mint_authority"]],
+            &[ctx.bumps.mint_authority],
         ]])?;
 
     msg!("Creating master edition");
@@ -226,7 +226,7 @@ pub(crate) fn decompress_v1(ctx: Context<DecompressV1>, metadata: MetadataArgs) 
         .max_supply(0)
         .invoke_signed(&[&[
             ctx.accounts.mint.key().as_ref(),
-            &[ctx.bumps["mint_authority"]],
+            &[ctx.bumps.mint_authority],
         ]])?;
 
     ctx.accounts
