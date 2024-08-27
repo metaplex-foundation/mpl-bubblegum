@@ -301,7 +301,8 @@ impl DigitalAsset {
             .mint(self.mint.pubkey(), true)
             .authority(payer_pubkey)
             .payer(payer_pubkey)
-            .update_authority(payer_pubkey, true);
+            .update_authority(payer_pubkey, true)
+            .spl_token_program(Some(spl_token::id()));
 
         let edition = match &token_standard {
             TokenStandard::NonFungible | TokenStandard::ProgrammableNonFungible => {
