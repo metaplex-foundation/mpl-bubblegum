@@ -739,6 +739,19 @@ nameToErrorMap.set(
   StakingVoterAuthorityMismatchError
 );
 
+/** MiningOwnerMismatch: Invalid mining owner */
+export class MiningOwnerMismatchError extends ProgramError {
+  readonly name: string = 'MiningOwnerMismatch';
+
+  readonly code: number = 0x17a3; // 6051
+
+  constructor(program: Program, cause?: Error) {
+    super('Invalid mining owner', program, cause);
+  }
+}
+codeToErrorMap.set(0x17a3, MiningOwnerMismatchError);
+nameToErrorMap.set('MiningOwnerMismatch', MiningOwnerMismatchError);
+
 /**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors

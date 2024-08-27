@@ -26,6 +26,8 @@ pub struct FinalizeTreeWithRootAndCollection {
 
     pub voter: solana_program::pubkey::Pubkey,
 
+    pub mining: solana_program::pubkey::Pubkey,
+
     pub fee_receiver: solana_program::pubkey::Pubkey,
     /// If there is no collecton authority record PDA then
     /// this must be the Bubblegum program address.
@@ -57,7 +59,7 @@ impl FinalizeTreeWithRootAndCollection {
         args: FinalizeTreeWithRootAndCollectionInstructionArgs,
         remaining_accounts: &[solana_program::instruction::AccountMeta],
     ) -> solana_program::instruction::Instruction {
-        let mut accounts = Vec::with_capacity(16 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(17 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new(
             self.tree_config,
             false,
@@ -87,6 +89,10 @@ impl FinalizeTreeWithRootAndCollection {
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.voter, false,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            self.mining,
+            false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new(
             self.fee_receiver,
@@ -176,6 +182,7 @@ pub struct FinalizeTreeWithRootAndCollectionBuilder {
     collection_authority: Option<solana_program::pubkey::Pubkey>,
     registrar: Option<solana_program::pubkey::Pubkey>,
     voter: Option<solana_program::pubkey::Pubkey>,
+    mining: Option<solana_program::pubkey::Pubkey>,
     fee_receiver: Option<solana_program::pubkey::Pubkey>,
     collection_authority_record_pda: Option<solana_program::pubkey::Pubkey>,
     collection_mint: Option<solana_program::pubkey::Pubkey>,
@@ -240,6 +247,11 @@ impl FinalizeTreeWithRootAndCollectionBuilder {
     #[inline(always)]
     pub fn voter(&mut self, voter: solana_program::pubkey::Pubkey) -> &mut Self {
         self.voter = Some(voter);
+        self
+    }
+    #[inline(always)]
+    pub fn mining(&mut self, mining: solana_program::pubkey::Pubkey) -> &mut Self {
+        self.mining = Some(mining);
         self
     }
     #[inline(always)]
@@ -361,6 +373,7 @@ impl FinalizeTreeWithRootAndCollectionBuilder {
                 .expect("collection_authority is not set"),
             registrar: self.registrar.expect("registrar is not set"),
             voter: self.voter.expect("voter is not set"),
+            mining: self.mining.expect("mining is not set"),
             fee_receiver: self.fee_receiver.expect("fee_receiver is not set"),
             collection_authority_record_pda: self.collection_authority_record_pda,
             collection_mint: self.collection_mint.expect("collection_mint is not set"),
@@ -419,6 +432,8 @@ pub struct FinalizeTreeWithRootAndCollectionCpiAccounts<'a, 'b> {
 
     pub voter: &'b solana_program::account_info::AccountInfo<'a>,
 
+    pub mining: &'b solana_program::account_info::AccountInfo<'a>,
+
     pub fee_receiver: &'b solana_program::account_info::AccountInfo<'a>,
     /// If there is no collecton authority record PDA then
     /// this must be the Bubblegum program address.
@@ -458,6 +473,8 @@ pub struct FinalizeTreeWithRootAndCollectionCpi<'a, 'b> {
 
     pub voter: &'b solana_program::account_info::AccountInfo<'a>,
 
+    pub mining: &'b solana_program::account_info::AccountInfo<'a>,
+
     pub fee_receiver: &'b solana_program::account_info::AccountInfo<'a>,
     /// If there is no collecton authority record PDA then
     /// this must be the Bubblegum program address.
@@ -494,6 +511,7 @@ impl<'a, 'b> FinalizeTreeWithRootAndCollectionCpi<'a, 'b> {
             collection_authority: accounts.collection_authority,
             registrar: accounts.registrar,
             voter: accounts.voter,
+            mining: accounts.mining,
             fee_receiver: accounts.fee_receiver,
             collection_authority_record_pda: accounts.collection_authority_record_pda,
             collection_mint: accounts.collection_mint,
@@ -538,7 +556,7 @@ impl<'a, 'b> FinalizeTreeWithRootAndCollectionCpi<'a, 'b> {
             bool,
         )],
     ) -> solana_program::entrypoint::ProgramResult {
-        let mut accounts = Vec::with_capacity(16 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(17 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new(
             *self.tree_config.key,
             false,
@@ -569,6 +587,10 @@ impl<'a, 'b> FinalizeTreeWithRootAndCollectionCpi<'a, 'b> {
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             *self.voter.key,
+            false,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            *self.mining.key,
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new(
@@ -628,7 +650,7 @@ impl<'a, 'b> FinalizeTreeWithRootAndCollectionCpi<'a, 'b> {
             accounts,
             data,
         };
-        let mut account_infos = Vec::with_capacity(16 + 1 + remaining_accounts.len());
+        let mut account_infos = Vec::with_capacity(17 + 1 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
         account_infos.push(self.tree_config.clone());
         account_infos.push(self.merkle_tree.clone());
@@ -638,6 +660,7 @@ impl<'a, 'b> FinalizeTreeWithRootAndCollectionCpi<'a, 'b> {
         account_infos.push(self.collection_authority.clone());
         account_infos.push(self.registrar.clone());
         account_infos.push(self.voter.clone());
+        account_infos.push(self.mining.clone());
         account_infos.push(self.fee_receiver.clone());
         if let Some(collection_authority_record_pda) = self.collection_authority_record_pda {
             account_infos.push(collection_authority_record_pda.clone());
@@ -677,6 +700,7 @@ impl<'a, 'b> FinalizeTreeWithRootAndCollectionCpiBuilder<'a, 'b> {
             collection_authority: None,
             registrar: None,
             voter: None,
+            mining: None,
             fee_receiver: None,
             collection_authority_record_pda: None,
             collection_mint: None,
@@ -750,6 +774,14 @@ impl<'a, 'b> FinalizeTreeWithRootAndCollectionCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn voter(&mut self, voter: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.voter = Some(voter);
+        self
+    }
+    #[inline(always)]
+    pub fn mining(
+        &mut self,
+        mining: &'b solana_program::account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.mining = Some(mining);
         self
     }
     #[inline(always)]
@@ -939,6 +971,8 @@ impl<'a, 'b> FinalizeTreeWithRootAndCollectionCpiBuilder<'a, 'b> {
 
             voter: self.instruction.voter.expect("voter is not set"),
 
+            mining: self.instruction.mining.expect("mining is not set"),
+
             fee_receiver: self
                 .instruction
                 .fee_receiver
@@ -994,6 +1028,7 @@ struct FinalizeTreeWithRootAndCollectionCpiBuilderInstruction<'a, 'b> {
     collection_authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     registrar: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     voter: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    mining: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     fee_receiver: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     collection_authority_record_pda: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     collection_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,

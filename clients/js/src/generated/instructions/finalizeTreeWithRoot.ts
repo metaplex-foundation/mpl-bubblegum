@@ -41,6 +41,7 @@ export type FinalizeTreeWithRootInstructionAccounts = {
   staker: Signer;
   registrar: PublicKey | Pda;
   voter: PublicKey | Pda;
+  mining: PublicKey | Pda;
   feeReceiver: PublicKey | Pda;
   logWrapper?: PublicKey | Pda;
   compressionProgram?: PublicKey | Pda;
@@ -124,23 +125,24 @@ export function finalizeTreeWithRoot(
     staker: { index: 4, isWritable: false, value: input.staker ?? null },
     registrar: { index: 5, isWritable: false, value: input.registrar ?? null },
     voter: { index: 6, isWritable: false, value: input.voter ?? null },
+    mining: { index: 7, isWritable: false, value: input.mining ?? null },
     feeReceiver: {
-      index: 7,
+      index: 8,
       isWritable: true,
       value: input.feeReceiver ?? null,
     },
     logWrapper: {
-      index: 8,
+      index: 9,
       isWritable: false,
       value: input.logWrapper ?? null,
     },
     compressionProgram: {
-      index: 9,
+      index: 10,
       isWritable: false,
       value: input.compressionProgram ?? null,
     },
     systemProgram: {
-      index: 10,
+      index: 11,
       isWritable: false,
       value: input.systemProgram ?? null,
     },

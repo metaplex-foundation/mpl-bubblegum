@@ -46,6 +46,7 @@ export type FinalizeTreeWithRootAndCollectionInstructionAccounts = {
   collectionAuthority?: Signer;
   registrar: PublicKey | Pda;
   voter: PublicKey | Pda;
+  mining: PublicKey | Pda;
   feeReceiver: PublicKey | Pda;
   /**
    * If there is no collecton authority record PDA then
@@ -143,43 +144,44 @@ export function finalizeTreeWithRootAndCollection(
     },
     registrar: { index: 6, isWritable: false, value: input.registrar ?? null },
     voter: { index: 7, isWritable: false, value: input.voter ?? null },
+    mining: { index: 8, isWritable: false, value: input.mining ?? null },
     feeReceiver: {
-      index: 8,
+      index: 9,
       isWritable: true,
       value: input.feeReceiver ?? null,
     },
     collectionAuthorityRecordPda: {
-      index: 9,
+      index: 10,
       isWritable: false,
       value: input.collectionAuthorityRecordPda ?? null,
     },
     collectionMint: {
-      index: 10,
+      index: 11,
       isWritable: false,
       value: input.collectionMint ?? null,
     },
     collectionMetadata: {
-      index: 11,
+      index: 12,
       isWritable: true,
       value: input.collectionMetadata ?? null,
     },
     collectionEdition: {
-      index: 12,
+      index: 13,
       isWritable: false,
       value: input.collectionEdition ?? null,
     },
     logWrapper: {
-      index: 13,
+      index: 14,
       isWritable: false,
       value: input.logWrapper ?? null,
     },
     compressionProgram: {
-      index: 14,
+      index: 15,
       isWritable: false,
       value: input.compressionProgram ?? null,
     },
     systemProgram: {
-      index: 15,
+      index: 16,
       isWritable: false,
       value: input.systemProgram ?? null,
     },
