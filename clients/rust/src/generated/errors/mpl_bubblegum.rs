@@ -163,6 +163,9 @@ pub enum MplBubblegumError {
     /// 6050 (0x17A2) - Staking voter authority mismatch
     #[error("Staking voter authority mismatch")]
     StakingVoterAuthorityMismatch,
+    /// 6051 (0x17A3) - Invalid mining owner
+    #[error("Invalid mining owner")]
+    MiningOwnerMismatch,
 }
 
 impl solana_program::program_error::PrintProgramError for MplBubblegumError {

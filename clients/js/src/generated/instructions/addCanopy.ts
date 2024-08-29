@@ -35,7 +35,7 @@ import {
 export type AddCanopyInstructionAccounts = {
   treeConfig?: PublicKey | Pda;
   merkleTree: PublicKey | Pda;
-  incomingTreeDelegate: Signer;
+  treeCreatorOrDelegate?: Signer;
   logWrapper?: PublicKey | Pda;
   compressionProgram?: PublicKey | Pda;
   systemProgram?: PublicKey | Pda;
@@ -82,7 +82,7 @@ export type AddCanopyInstructionArgs = AddCanopyInstructionDataArgs;
 
 // Instruction.
 export function addCanopy(
-  context: Pick<Context, 'eddsa' | 'programs'>,
+  context: Pick<Context, 'eddsa' | 'identity' | 'programs'>,
   input: AddCanopyInstructionAccounts & AddCanopyInstructionArgs
 ): TransactionBuilder {
   // Program ID.
@@ -99,10 +99,10 @@ export function addCanopy(
       value: input.treeConfig ?? null,
     },
     merkleTree: { index: 1, isWritable: true, value: input.merkleTree ?? null },
-    incomingTreeDelegate: {
+    treeCreatorOrDelegate: {
       index: 2,
       isWritable: false,
-      value: input.incomingTreeDelegate ?? null,
+      value: input.treeCreatorOrDelegate ?? null,
     },
     logWrapper: {
       index: 3,
@@ -129,6 +129,9 @@ export function addCanopy(
     resolvedAccounts.treeConfig.value = findTreeConfigPda(context, {
       merkleTree: expectPublicKey(resolvedAccounts.merkleTree.value),
     });
+  }
+  if (!resolvedAccounts.treeCreatorOrDelegate.value) {
+    resolvedAccounts.treeCreatorOrDelegate.value = context.identity;
   }
   if (!resolvedAccounts.logWrapper.value) {
     resolvedAccounts.logWrapper.value = context.programs.getPublicKey(
