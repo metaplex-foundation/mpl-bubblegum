@@ -3998,9 +3998,9 @@ dependencies = [
 
 [[package]]
 name = "solana-program"
-version = "2.0.7"
+version = "2.0.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c815bc3c9fa8cba56c3cf5d666b409a01c316bd97d994ccf4a7f99bec97291cd"
+checksum = "8d899c2a1d37290dcfeeb9d1c0032915a29bd48f35759f19ff1e0f6b096eca0b"
 dependencies = [
  "ark-bn254",
  "ark-ec",
@@ -4037,7 +4037,7 @@ dependencies = [
  "serde_derive",
  "sha2 0.10.8",
  "sha3 0.10.8",
- "solana-sdk-macro 2.0.7",
+ "solana-sdk-macro 2.0.8",
  "thiserror",
  "wasm-bindgen",
 ]
@@ -4380,9 +4380,9 @@ dependencies = [
 
 [[package]]
 name = "solana-sdk-macro"
-version = "2.0.7"
+version = "2.0.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8d9b401b1105318f89f73807fc9195cb41392639409cf629a7751487241d3171"
+checksum = "23198ed620c4a61c97fe49bd907fc965659aea9a5ed0ea0cf90084eecc72a3c1"
 dependencies = [
  "bs58 0.5.1",
  "proc-macro2 1.0.86",
@@ -4681,7 +4681,7 @@ checksum = "602499d5fe3b60280239c4656a361b283c8c5f73f769c6cf41d2e8a151ce72db"
 dependencies = [
  "anchor-lang",
  "bytemuck",
- "solana-program 2.0.7",
+ "solana-program 2.0.8",
  "spl-concurrent-merkle-tree",
  "spl-noop",
 ]
@@ -4709,7 +4709,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c7f5f45b971d82cbb0416fdffad3c9098f259545d54072e83a0a482f60f8f689"
 dependencies = [
  "bytemuck",
- "solana-program 2.0.7",
+ "solana-program 2.0.8",
  "thiserror",
 ]
 
