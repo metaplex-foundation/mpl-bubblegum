@@ -267,7 +267,7 @@ pub fn update_metadata<'info>(
         &ctx.accounts.leaf_delegate,
         &ctx.accounts.compression_program.to_account_info(),
         &ctx.accounts.tree_authority.to_account_info(),
-        *ctx.bumps.get("tree_authority").unwrap(),
+        ctx.bumps.tree_authority,
         &ctx.accounts.log_wrapper,
         ctx.remaining_accounts,
         root,
