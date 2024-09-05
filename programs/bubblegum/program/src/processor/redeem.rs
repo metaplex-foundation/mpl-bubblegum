@@ -27,7 +27,7 @@ pub struct Redeem<'info> {
     pub tree_authority: Account<'info, TreeConfig>,
     #[account(mut)]
     pub leaf_owner: Signer<'info>,
-    /// CHECK: This account is chekced in the instruction
+    /// CHECK: This account is checked in the instruction
     pub leaf_delegate: UncheckedAccount<'info>,
     #[account(mut)]
     /// CHECK: checked in cpi
