@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use mpl_token_metadata::types::MetadataDelegateRole;
 use spl_account_compression::{program::SplAccountCompression, wrap_application_data_v1, Noop};
 
 use crate::{
@@ -85,6 +86,7 @@ fn assert_authority_matches_collection<'info>(
         collection_mint.key,
         collection_authority.key,
         collection_authority_record.as_ref(),
+        MetadataDelegateRole::Data,
     )?;
 
     Ok(())
