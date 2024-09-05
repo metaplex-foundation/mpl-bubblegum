@@ -1,4 +1,13 @@
-import { createNft } from '@metaplex-foundation/mpl-token-metadata';
+import {
+  createNft,
+  delegateDataV1,
+  TokenStandard,
+  findMetadataDelegateRecordPda,
+  MetadataDelegateRole,
+  delegateCollectionV1,
+  approveCollectionAuthority,
+  findCollectionAuthorityRecordPda,
+} from '@metaplex-foundation/mpl-token-metadata';
 import {
   defaultPublicKey,
   generateSigner,
@@ -305,6 +314,267 @@ test('it can update metadata using collection update authority when collection i
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(updatedLeaf));
+});
+
+test('it can update metadata using old collection authority when collection is verified', async (t) => {
+  // Given an empty Bubblegum tree.
+  const umi = await createUmi();
+  const merkleTree = await createTree(umi);
+  const leafOwner = generateSigner(umi).publicKey;
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+
+  // And a Collection NFT.
+  const collectionMint = generateSigner(umi);
+  const collectionAuthority = generateSigner(umi);
+  await createNft(umi, {
+    mint: collectionMint,
+    authority: collectionAuthority,
+    name: 'My Collection',
+    uri: 'https://example.com/my-collection.json',
+    sellerFeeBasisPoints: percentAmount(5.5), // 5.5%
+    isCollection: true,
+  }).sendAndConfirm(umi);
+
+  // When we mint a new NFT from the tree using the following metadata, with collection verified.
+  const metadata: MetadataArgsArgs = {
+    name: 'My NFT',
+    uri: 'https://example.com/my-nft.json',
+    sellerFeeBasisPoints: 550, // 5.5%
+    collection: {
+      key: collectionMint.publicKey,
+      verified: true,
+    },
+    creators: [],
+  };
+  await mintToCollectionV1(umi, {
+    leafOwner,
+    merkleTree,
+    metadata,
+    collectionMint: collectionMint.publicKey,
+    collectionAuthority,
+  }).sendAndConfirm(umi);
+
+  // When we approve a collection authority record.
+  const newCollectionAuthority = generateSigner(umi);
+  let collectionAuthorityRecordPda = findCollectionAuthorityRecordPda(umi, {
+    mint: collectionMint.publicKey,
+    collectionAuthority: newCollectionAuthority.publicKey,
+  });
+
+  await approveCollectionAuthority(umi, {
+    collectionAuthorityRecord: collectionAuthorityRecordPda,
+    newCollectionAuthority: newCollectionAuthority.publicKey,
+    updateAuthority: collectionAuthority,
+    mint: collectionMint.publicKey,
+  }).sendAndConfirm(umi);
+
+  // And when metadata is updated.
+  const updateArgs: UpdateArgsArgs = {
+    name: some('New name'),
+    uri: some('https://updated-example.com/my-nft.json'),
+  };
+  await updateMetadata(umi, {
+    leafOwner,
+    merkleTree,
+    root: getCurrentRoot(merkleTreeAccount.tree),
+    nonce: 0,
+    index: 0,
+    currentMetadata: metadata,
+    proof: [],
+    updateArgs,
+    authority: newCollectionAuthority,
+    collectionMint: collectionMint.publicKey,
+    collectionAuthorityRecordPda,
+  }).sendAndConfirm(umi);
+
+  // Then the leaf was updated in the merkle tree.
+  const updatedLeaf = hashLeaf(umi, {
+    merkleTree,
+    owner: leafOwner,
+    leafIndex: 0,
+    metadata: {
+      ...metadata,
+      name: 'New name',
+      uri: 'https://updated-example.com/my-nft.json',
+    },
+  });
+  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(updatedLeaf));
+});
+
+test('it can update metadata using collection data delegate when collection is verified', async (t) => {
+  // Given an empty Bubblegum tree.
+  const umi = await createUmi();
+  const merkleTree = await createTree(umi);
+  const leafOwner = generateSigner(umi).publicKey;
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+
+  // And a Collection NFT.
+  const collectionMint = generateSigner(umi);
+  const collectionAuthority = generateSigner(umi);
+  await createNft(umi, {
+    mint: collectionMint,
+    authority: collectionAuthority,
+    name: 'My Collection',
+    uri: 'https://example.com/my-collection.json',
+    sellerFeeBasisPoints: percentAmount(5.5), // 5.5%
+    isCollection: true,
+  }).sendAndConfirm(umi);
+
+  // When we mint a new NFT from the tree using the following metadata, with collection verified.
+  const metadata: MetadataArgsArgs = {
+    name: 'My NFT',
+    uri: 'https://example.com/my-nft.json',
+    sellerFeeBasisPoints: 550, // 5.5%
+    collection: {
+      key: collectionMint.publicKey,
+      verified: true,
+    },
+    creators: [],
+  };
+  await mintToCollectionV1(umi, {
+    leafOwner,
+    merkleTree,
+    metadata,
+    collectionMint: collectionMint.publicKey,
+    collectionAuthority,
+  }).sendAndConfirm(umi);
+
+  // When we approve a data delegate.
+  const dataDelegate = generateSigner(umi);
+  await delegateDataV1(umi, {
+    mint: collectionMint.publicKey,
+    authority: collectionAuthority,
+    delegate: dataDelegate.publicKey,
+    tokenStandard: TokenStandard.NonFungible,
+  }).sendAndConfirm(umi);
+
+  let delegateRecordPda = findMetadataDelegateRecordPda(umi, {
+    mint: collectionMint.publicKey,
+    delegateRole: MetadataDelegateRole.Data,
+    delegate: dataDelegate.publicKey,
+    updateAuthority: collectionAuthority.publicKey,
+  });
+
+  // And when metadata is updated.
+  const updateArgs: UpdateArgsArgs = {
+    name: some('New name'),
+    uri: some('https://updated-example.com/my-nft.json'),
+  };
+  await updateMetadata(umi, {
+    leafOwner,
+    merkleTree,
+    root: getCurrentRoot(merkleTreeAccount.tree),
+    nonce: 0,
+    index: 0,
+    currentMetadata: metadata,
+    proof: [],
+    updateArgs,
+    authority: dataDelegate,
+    collectionMint: collectionMint.publicKey,
+    collectionAuthorityRecordPda: delegateRecordPda,
+  }).sendAndConfirm(umi);
+
+  // Then the leaf was updated in the merkle tree.
+  const updatedLeaf = hashLeaf(umi, {
+    merkleTree,
+    owner: leafOwner,
+    leafIndex: 0,
+    metadata: {
+      ...metadata,
+      name: 'New name',
+      uri: 'https://updated-example.com/my-nft.json',
+    },
+  });
+  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(updatedLeaf));
+});
+
+test('it cannot update metadata using collection collection delegate when collection is verified', async (t) => {
+  // Given an empty Bubblegum tree.
+  const umi = await createUmi();
+  const merkleTree = await createTree(umi);
+  const leafOwner = generateSigner(umi).publicKey;
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+
+  // And a Collection NFT.
+  const collectionMint = generateSigner(umi);
+  const collectionAuthority = generateSigner(umi);
+  await createNft(umi, {
+    mint: collectionMint,
+    authority: collectionAuthority,
+    name: 'My Collection',
+    uri: 'https://example.com/my-collection.json',
+    sellerFeeBasisPoints: percentAmount(5.5), // 5.5%
+    isCollection: true,
+  }).sendAndConfirm(umi);
+
+  // When we mint a new NFT from the tree using the following metadata, with collection verified.
+  const metadata: MetadataArgsArgs = {
+    name: 'My NFT',
+    uri: 'https://example.com/my-nft.json',
+    sellerFeeBasisPoints: 550, // 5.5%
+    collection: {
+      key: collectionMint.publicKey,
+      verified: true,
+    },
+    creators: [],
+  };
+  await mintToCollectionV1(umi, {
+    leafOwner,
+    merkleTree,
+    metadata,
+    collectionMint: collectionMint.publicKey,
+    collectionAuthority,
+  }).sendAndConfirm(umi);
+
+  // When we approve a data delegate.
+  const collectionDelegate = generateSigner(umi);
+  await delegateCollectionV1(umi, {
+    mint: collectionMint.publicKey,
+    authority: collectionAuthority,
+    delegate: collectionDelegate.publicKey,
+    tokenStandard: TokenStandard.NonFungible,
+  }).sendAndConfirm(umi);
+
+  let delegate_record_pda = findMetadataDelegateRecordPda(umi, {
+    mint: collectionMint.publicKey,
+    delegateRole: MetadataDelegateRole.Collection,
+    delegate: collectionDelegate.publicKey,
+    updateAuthority: collectionAuthority.publicKey,
+  });
+
+  // And when metadata is updated.
+  const updateArgs: UpdateArgsArgs = {
+    name: some('New name'),
+    uri: some('https://updated-example.com/my-nft.json'),
+  };
+  const promise = updateMetadata(umi, {
+    leafOwner,
+    merkleTree,
+    root: getCurrentRoot(merkleTreeAccount.tree),
+    nonce: 0,
+    index: 0,
+    currentMetadata: metadata,
+    proof: [],
+    updateArgs,
+    authority: collectionDelegate,
+    collectionMint: collectionMint.publicKey,
+    collectionAuthorityRecordPda: delegate_record_pda,
+  }).sendAndConfirm(umi);
+
+  // Then we expect a program error.
+  await t.throwsAsync(promise, { name: 'InvalidDelegateRecord' });
+
+  // And the leaf was not updated in the merkle tree.
+  const notUpdatedLeaf = hashLeaf(umi, {
+    merkleTree,
+    owner: leafOwner,
+    leafIndex: 0,
+    metadata,
+  });
+  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(notUpdatedLeaf));
 });
 
 test('it can update metadata using the getAssetWithProof helper with verified collection', async (t) => {
