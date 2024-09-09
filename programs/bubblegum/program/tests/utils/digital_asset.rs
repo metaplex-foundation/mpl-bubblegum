@@ -1,7 +1,10 @@
 #![allow(clippy::too_many_arguments)]
 
 use mpl_token_metadata::{
-    accounts::{EditionMarker, MasterEdition, Metadata, MetadataDelegateRecord, TokenRecord},
+    accounts::{
+        EditionMarker, HolderDelegateRecord, MasterEdition, Metadata, MetadataDelegateRecord,
+        TokenRecord,
+    },
     instructions::{
         BurnBuilder, CreateBuilder, DelegateBuilder, LockBuilder, MintBuilder,
         MintNewEditionFromMasterEditionViaToken,
@@ -10,7 +13,7 @@ use mpl_token_metadata::{
     },
     types::{
         AuthorizationData, BurnArgs, Collection, CollectionDetails, CreateArgs, Creator,
-        DelegateArgs, LockArgs, MetadataDelegateRole, MintArgs,
+        DelegateArgs, HolderDelegateRole, LockArgs, MetadataDelegateRole, MintArgs,
         MintNewEditionFromMasterEditionViaTokenArgs, PrintSupply, ProgrammableConfig, RevokeArgs,
         TokenDelegateRole, TokenStandard, TransferArgs, UnlockArgs, UpdateArgs, VerificationArgs,
     },
@@ -59,7 +62,7 @@ impl DirtyClone for DigitalAsset {
             token: self.token,
             edition: self.edition,
             token_record: self.token_record,
-            token_standard: self.token_standard.clone(),
+            token_standard: self.token_standard,
             edition_num: self.edition_num,
         }
     }
@@ -298,7 +301,8 @@ impl DigitalAsset {
             .mint(self.mint.pubkey(), true)
             .authority(payer_pubkey)
             .payer(payer_pubkey)
-            .update_authority(payer_pubkey, true);
+            .update_authority(payer_pubkey, true)
+            .spl_token_program(Some(spl_token::id()));
 
         let edition = match &token_standard {
             TokenStandard::NonFungible | TokenStandard::ProgrammableNonFungible => {
@@ -325,7 +329,7 @@ impl DigitalAsset {
                 is_mutable: true,
                 primary_sale_happened: false,
                 rule_set: authorization_rules,
-                token_standard: token_standard.clone(),
+                token_standard,
             })
             .instruction();
 
@@ -641,6 +645,16 @@ impl DigitalAsset {
                 builder.delegate_record(Some(delegate_record));
                 delegate_or_token_record = Some(delegate_record);
             }
+            DelegateArgs::PrintDelegateV1 { .. } => {
+                let (delegate_record, _) = HolderDelegateRecord::find_pda(
+                    &self.mint.pubkey(),
+                    HolderDelegateRole::PrintDelegate,
+                    &payer.pubkey(),
+                    &delegate,
+                );
+                builder.delegate_record(Some(delegate_record));
+                delegate_or_token_record = Some(delegate_record);
+            }
         }
 
         // determines if we need to set the rule set
@@ -753,7 +767,7 @@ impl DigitalAsset {
             token: Some(print_token.pubkey()),
             metadata: print_metadata,
             edition: Some(print_edition),
-            token_standard: self.token_standard.clone(),
+            token_standard: self.token_standard,
             token_record: None,
             edition_num: Some(edition_num),
         })
@@ -852,6 +866,15 @@ impl DigitalAsset {
                 let (delegate_record, _) = MetadataDelegateRecord::find_pda(
                     &self.mint.pubkey(),
                     MetadataDelegateRole::ProgrammableConfigItem,
+                    &payer.pubkey(),
+                    &delegate,
+                );
+                builder.delegate_record(Some(delegate_record));
+            }
+            RevokeArgs::PrintDelegateV1 { .. } => {
+                let (delegate_record, _) = HolderDelegateRecord::find_pda(
+                    &self.mint.pubkey(),
+                    HolderDelegateRole::PrintDelegate,
                     &payer.pubkey(),
                     &delegate,
                 );
@@ -1143,7 +1166,7 @@ impl DigitalAsset {
         &self,
         context: &mut ProgramTestContext,
     ) -> Result<(), BanksClientError> {
-        match self.token_standard.clone().unwrap() {
+        match self.token_standard.unwrap() {
             TokenStandard::NonFungible => {
                 self.non_fungigble_accounts_closed(context).await?;
             }

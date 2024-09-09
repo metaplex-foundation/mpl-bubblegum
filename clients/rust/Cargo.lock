@@ -2401,7 +2401,7 @@ dependencies = [
  "solana-sdk",
  "spl-account-compression",
  "spl-associated-token-account 3.0.2",
- "spl-concurrent-merkle-tree 0.2.0",
+ "spl-concurrent-merkle-tree 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "spl-merkle-tree-reference",
  "spl-noop",
  "spl-token",
@@ -4859,7 +4859,7 @@ dependencies = [
  "anchor-lang",
  "bytemuck",
  "solana-program",
- "spl-concurrent-merkle-tree 0.3.0",
+ "spl-concurrent-merkle-tree 0.3.0 (git+https://github.com/StanChe/solana-program-library.git?branch=feature/init_with_root)",
  "spl-noop",
 ]
 
@@ -4897,9 +4897,9 @@ dependencies = [
 
 [[package]]
 name = "spl-concurrent-merkle-tree"
-version = "0.2.0"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "141eaea58588beae81b71d101373a53f096737739873de42d6b1368bc2b8fc30"
+checksum = "c7f5f45b971d82cbb0416fdffad3c9098f259545d54072e83a0a482f60f8f689"
 dependencies = [
  "bytemuck",
  "solana-program",

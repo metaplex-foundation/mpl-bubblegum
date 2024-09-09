@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use mpl_token_metadata::types::MetadataDelegateRole;
 use solana_program::{account_info::AccountInfo, pubkey::Pubkey};
 use spl_account_compression::wrap_application_data_v1;
 
@@ -206,6 +207,7 @@ fn process_collection_verification_mpl_only<'info>(
             collection_mint.key,
             collection_authority.key,
             collection_authority_record,
+            MetadataDelegateRole::Collection,
         )?;
 
         // Update collection in metadata args.  Note since this is a mutable reference,

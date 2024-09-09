@@ -102,6 +102,7 @@ pub fn assert_has_collection_authority(
     mint: &Pubkey,
     collection_authority: &Pubkey,
     delegate_record: Option<&AccountInfo>,
+    metadata_delegate_role: MetadataDelegateRole,
 ) -> Result<()> {
     // Mint is the correct one for the metadata account.
     if collection_data.mint != *mint {
@@ -112,7 +113,7 @@ pub fn assert_has_collection_authority(
         let (ca_pda, ca_bump) = CollectionAuthorityRecord::find_pda(mint, collection_authority);
         let (md_pda, md_bump) = MetadataDelegateRecord::find_pda(
             mint,
-            MetadataDelegateRole::Collection,
+            metadata_delegate_role,
             &collection_data.update_authority,
             collection_authority,
         );
