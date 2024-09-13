@@ -37,6 +37,6 @@ async-trait = "0.1.71"
 mpl-token-auth-rules = { version = "1.5.1", features = ["no-entrypoint"] }
 solana-program-test = "~1.18.15"
 solana-sdk = "~1.18.15"
-spl-concurrent-merkle-tree = { git = "https://github.com/StanChe/solana-program-library.git", branch = "feature/init_with_root" }
-spl-merkle-tree-reference = { git = "https://github.com/StanChe/solana-program-library.git", branch = "feature/init_with_root" }
-spl-noop = { git = "https://github.com/StanChe/solana-program-library.git", branch = "feature/init_with_root", features = ["no-entrypoint"] }
+spl-concurrent-merkle-tree = "0.4.0"
+spl-merkle-tree-reference = "0.1.0"
+spl-noop = { version="0.2.0", features = ["no-entrypoint"] }
