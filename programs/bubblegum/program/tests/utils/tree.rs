@@ -396,7 +396,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         let accounts = bubblegum::accounts::AddCanopy {
             tree_authority,
             merkle_tree: self.tree_pubkey(),
-            incoming_tree_delegate: tree_delegate.pubkey(),
+            tree_delegate: tree_delegate.pubkey(),
             log_wrapper: spl_noop::id(),
             compression_program: spl_account_compression::id(),
             system_program: system_program::id(),

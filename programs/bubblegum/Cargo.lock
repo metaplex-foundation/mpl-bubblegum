@@ -1022,9 +1022,9 @@ dependencies = [
  "solana-sdk",
  "spl-account-compression",
  "spl-associated-token-account 2.3.0",
- "spl-concurrent-merkle-tree 0.4.0",
+ "spl-concurrent-merkle-tree",
  "spl-merkle-tree-reference",
- "spl-noop 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "spl-noop",
  "spl-token 4.0.0",
 ]
 
@@ -5217,14 +5217,15 @@ dependencies = [
 
 [[package]]
 name = "spl-account-compression"
-version = "0.3.0"
-source = "git+https://github.com/StanChe/solana-program-library.git?branch=feature/init_with_root#8778574e4498af8001d746926e07e0eee7731a03"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "31f461e20e8efb539d7f3f30cd82931ee128651c6366abe326f083b07253a1d6"
 dependencies = [
  "anchor-lang 0.29.0",
  "bytemuck",
  "solana-program",
- "spl-concurrent-merkle-tree 0.3.0",
- "spl-noop 0.2.0 (git+https://github.com/StanChe/solana-program-library.git?branch=feature/init_with_root)",
+ "spl-concurrent-merkle-tree",
+ "spl-noop",
 ]
 
 [[package]]
@@ -5256,16 +5257,6 @@ dependencies = [
  "solana-program",
  "spl-token 4.0.0",
  "spl-token-2022 1.0.0",
- "thiserror",
-]
-
-[[package]]
-name = "spl-concurrent-merkle-tree"
-version = "0.3.0"
-source = "git+https://github.com/StanChe/solana-program-library.git?branch=feature/init_with_root#8778574e4498af8001d746926e07e0eee7731a03"
-dependencies = [
- "bytemuck",
- "solana-program",
  "thiserror",
 ]
 
@@ -5348,14 +5339,6 @@ name = "spl-noop"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6dd67ea3d0070a12ff141f5da46f9695f49384a03bce1203a5608f5739437950"
-dependencies = [
- "solana-program",
-]
-
-[[package]]
-name = "spl-noop"
-version = "0.2.0"
-source = "git+https://github.com/StanChe/solana-program-library.git?branch=feature/init_with_root#8778574e4498af8001d746926e07e0eee7731a03"
 dependencies = [
  "solana-program",
 ]
