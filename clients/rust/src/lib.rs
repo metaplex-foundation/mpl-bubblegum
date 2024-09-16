@@ -86,3 +86,5 @@ impl LeafSchemaEvent {
         }
     }
 }
+
+pub const MAX_ACC_PROOFS_SIZE: u32 = 17;

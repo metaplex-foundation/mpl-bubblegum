@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use anchor_lang::{prelude::*, solana_program::clock::Clock, system_program::System};
 use mplx_staking_states::state::{registrar::Registrar, Voter, REGISTRAR_DISCRIMINATOR};
 use spl_account_compression::{program::SplAccountCompression, Noop};
@@ -5,10 +7,11 @@ use spl_account_compression::{program::SplAccountCompression, Noop};
 use crate::{
     error::BubblegumError,
     state::{
-        TreeConfig, FEE_RECEIVER, MINIMUM_WEIGHTED_STAKE, PROTOCOL_FEE_PER_1024_ASSETS, REALM,
-        REALM_GOVERNING_MINT, VOTER_DISCRIMINATOR,
+        TreeConfig, MINIMUM_WEIGHTED_STAKE, PROTOCOL_FEE_PER_1024_ASSETS, VOTER_DISCRIMINATOR,
     },
 };
+
+use mpl_common_constants::constants::{DAO_GOVERNING_MINT, DAO_PUBKEY, FEE_RECEIVER};
 
 const DISCRIMINATOR_LEN: usize = REGISTRAR_DISCRIMINATOR.len();
 #[derive(Accounts)]
@@ -57,7 +60,7 @@ pub(crate) fn finalize_tree_with_root<'info>(
     );
 
     require!(
-        ctx.accounts.fee_receiver.key == &FEE_RECEIVER,
+        ctx.accounts.fee_receiver.key.to_string() == FEE_RECEIVER,
         BubblegumError::FeeReceiverMismatch
     );
     check_stake(
@@ -126,11 +129,16 @@ pub(crate) fn check_stake<'info>(
         BubblegumError::MiningOwnerMismatch
     );
 
+    let realm_key =
+        Pubkey::from_str(DAO_PUBKEY).map_err(|_| BubblegumError::PubkeyReconstruction)?;
+    let realm_governing_mint_key =
+        Pubkey::from_str(DAO_GOVERNING_MINT).map_err(|_| BubblegumError::PubkeyReconstruction)?;
+
     let generated_registrar = Pubkey::find_program_address(
         &[
-            REALM.to_bytes().as_ref(),
+            realm_key.to_bytes().as_ref(),
             b"registrar".as_ref(),
-            REALM_GOVERNING_MINT.to_bytes().as_ref(),
+            realm_governing_mint_key.to_bytes().as_ref(),
         ],
         &mplx_staking_states::ID,
     )
@@ -164,11 +172,11 @@ pub(crate) fn check_stake<'info>(
     let registrar: &Registrar = bytemuck::from_bytes(&registrar_bytes[DISCRIMINATOR_LEN..]);
 
     require!(
-        registrar.realm == REALM,
+        registrar.realm.to_string() == DAO_PUBKEY,
         BubblegumError::StakingRegistrarRealmMismatch
     );
     require!(
-        registrar.realm_governing_token_mint == REALM_GOVERNING_MINT,
+        registrar.realm_governing_token_mint.to_string() == DAO_GOVERNING_MINT,
         BubblegumError::StakingRegistrarRealmMismatch
     );
     let voter_bytes = voter_acc.to_account_info().data;

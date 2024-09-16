@@ -108,6 +108,8 @@ pub enum BubblegumError {
     StakingVoterAuthorityMismatch,
     #[msg("Invalid mining owner")]
     MiningOwnerMismatch,
+    #[msg("Cannot create pubkey from string")]
+    PubkeyReconstruction,
 }
 
 // Converts certain Token Metadata errors into Bubblegum equivalents
