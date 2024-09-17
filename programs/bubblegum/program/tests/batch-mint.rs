@@ -155,14 +155,11 @@ async fn initialize_staking_accounts(
     let mining_key = Pubkey::new_unique();
     let reward_pool_key = Pubkey::new_unique();
 
-    let realm_key = Pubkey::from_str(DAO_PUBKEY).unwrap();
-    let realm_governing_mint_key = Pubkey::from_str(DAO_GOVERNING_MINT).unwrap();
-
     let registrar_key = Pubkey::find_program_address(
         &[
-            realm_key.to_bytes().as_ref(),
+            DAO_PUBKEY.as_ref(),
             b"registrar".as_ref(),
-            realm_governing_mint_key.to_bytes().as_ref(),
+            DAO_GOVERNING_MINT.as_ref(),
         ],
         &mplx_staking_states::ID,
     )
@@ -185,8 +182,8 @@ async fn initialize_staking_accounts(
 
     let registrar = Registrar {
         governance_program_id: governance_program_id.clone(),
-        realm: realm_key,
-        realm_governing_token_mint: realm_governing_mint_key,
+        realm: Pubkey::new_from_array(DAO_PUBKEY),
+        realm_governing_token_mint: Pubkey::new_from_array(DAO_GOVERNING_MINT),
         realm_authority: realm_authority.clone(),
         voting_mints: [voting_mint_config, voting_mint_config],
         reward_pool: reward_pool_key,
@@ -304,7 +301,7 @@ async fn test_prepare_tree_without_canopy() {
     let (registrar_key, voter_key, mining_key) =
         initialize_staking_accounts(&mut program_context).await;
 
-    let fee_receiver = Pubkey::from_str(FEE_RECEIVER).unwrap();
+    let fee_receiver = Pubkey::new_from_array(FEE_RECEIVER);
 
     program_context
         .fund_account(tree.creator_pubkey(), 10_000_000_000)
@@ -446,7 +443,7 @@ async fn test_prepare_tree_with_canopy() {
             .unwrap();
     }
 
-    let fee_receiver = Pubkey::from_str(FEE_RECEIVER).unwrap();
+    let fee_receiver = Pubkey::new_from_array(FEE_RECEIVER);
 
     let mut tree_tx_builder = tree.finalize_tree_with_root_tx(
         &program_context.test_context().payer,
@@ -527,7 +524,7 @@ async fn test_put_wrong_canopy() {
             .unwrap();
     }
 
-    let fee_receiver = Pubkey::from_str(FEE_RECEIVER).unwrap();
+    let fee_receiver = Pubkey::new_from_array(FEE_RECEIVER);
 
     let mut tree_tx_builder = tree.finalize_tree_with_root_tx(
         &program_context.test_context().payer,
@@ -637,7 +634,7 @@ async fn test_put_wrong_fee_receiver() {
     let (registrar_key, voter_key, mining_key) =
         initialize_staking_accounts(&mut program_context).await;
 
-    let fee_receiver = Pubkey::from_str(FEE_RECEIVER).unwrap();
+    let fee_receiver = Pubkey::new_from_array(FEE_RECEIVER);
 
     program_context
         .fund_account(tree.creator_pubkey(), 10_000_000_000)
@@ -718,7 +715,7 @@ async fn test_prepare_tree_with_collection() {
     )
     .await;
 
-    let fee_receiver = Pubkey::from_str(FEE_RECEIVER).unwrap();
+    let fee_receiver = Pubkey::new_from_array(FEE_RECEIVER);
 
     let rightmost_proof = tree.proof_of_leaf((num_of_assets_to_mint - 1) as u32);
     let rightmost_leaf = tree.get_node(num_of_assets_to_mint - 1);
@@ -791,7 +788,7 @@ async fn test_prepare_tree_with_collection_wrong_authority() {
     )
     .await;
 
-    let fee_receiver = Pubkey::from_str(FEE_RECEIVER).unwrap();
+    let fee_receiver = Pubkey::new_from_array(FEE_RECEIVER);
 
     let rightmost_leaf = tree.get_node(num_of_assets_to_mint - 1);
 
