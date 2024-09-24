@@ -7,6 +7,7 @@
  */
 
 export * from './addCanopy';
+export * from './appendCanopyNodes';
 export * from './burn';
 export * from './cancelRedeem';
 export * from './createTreeConfig';
@@ -14,8 +15,10 @@ export * from './decompressV1';
 export * from './delegate';
 export * from './finalizeTreeWithRoot';
 export * from './finalizeTreeWithRootAndCollection';
+export * from './initPreparedTreeWithRoot';
 export * from './mintToCollectionV1';
 export * from './mintV1';
+export * from './prepareBatchMerkleTree';
 export * from './prepareTree';
 export * from './redeem';
 export * from './setAndVerifyCollection';
