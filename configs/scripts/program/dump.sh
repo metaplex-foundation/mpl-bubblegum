@@ -16,7 +16,7 @@ cd $(dirname $(dirname $(dirname $SCRIPT_DIR)))
 OUTPUT=$1
 
 if [ -z ${RPC+x} ]; then
-    RPC="https://api.mainnet-beta.solana.com"
+    RPC="https://api.devnet.solana.com"
 fi
 
 if [ -z "$OUTPUT" ]; then
