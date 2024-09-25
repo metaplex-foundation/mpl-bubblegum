@@ -16,8 +16,8 @@ You will then have access to the following commands.
 - `pnpm programs:test` - Runs BPF tests for all programs (logs disabled).
 - `pnpm programs:debug` - Runs BPF tests for all programs.
 - `pnpm programs:clean` - Deletes all generated program binaries.
-- `clients:rust:test` - Runs BPF tests for the Rust client SDK.
-- `clients:js:test` - Runs the JavaScript tests (you must first start the local validator `pnpm validator`).
+- `pnpm clients:rust:test` - Runs BPF tests for the Rust client SDK.
+- `pnpm clients:js:test` - Runs the JavaScript tests (you must first start the local validator `pnpm validator`).
 - `pnpm generate` - Shortcut for `pnpm generate:idls && pnpm generate:clients`.
 - `pnpm generate:idls` - Generate IDLs for all programs, as configured in the `configs/shank.cjs` file.
 - `pnpm generate:clients` - Generate clients using Kinobi, as configured in the `configs/kinobi.cjs` file.

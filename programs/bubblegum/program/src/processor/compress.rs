@@ -13,7 +13,7 @@ pub struct Compress<'info> {
     pub tree_authority: UncheckedAccount<'info>,
     /// CHECK: This account is checked in the instruction
     pub leaf_owner: Signer<'info>,
-    /// CHECK: This account is chekced in the instruction
+    /// CHECK: This account is checked in the instruction
     pub leaf_delegate: UncheckedAccount<'info>,
     /// CHECK: This account is not read
     pub merkle_tree: UncheckedAccount<'info>,

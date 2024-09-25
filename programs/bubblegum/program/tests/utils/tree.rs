@@ -3,7 +3,7 @@ use super::{
     tx_builder::{
         BurnBuilder, CancelRedeemBuilder, CollectionVerificationInner, CreateBuilder,
         CreatorVerificationInner, DelegateBuilder, DelegateInner, MintToCollectionV1Builder,
-        MintV1Builder, RedeemBuilder, SetDecompressableStateBuilder, SetTreeDelegateBuilder,
+        MintV1Builder, RedeemBuilder, SetDecompressibleStateBuilder, SetTreeDelegateBuilder,
         TransferBuilder, TransferInner, TxBuilder, UnverifyCreatorBuilder, VerifyCollectionBuilder,
         VerifyCreatorBuilder,
     },
@@ -16,6 +16,7 @@ use bubblegum::{
     utils::get_asset_id,
 };
 use bytemuck::try_from_bytes;
+use mpl_token_metadata::accounts::{MasterEdition, Metadata};
 use solana_program::{
     instruction::{AccountMeta, Instruction},
     pubkey,
@@ -65,10 +66,14 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
     // customized some more via the public access, or we can add extra
     // methods to make things even easier.
     pub fn new(client: BanksClient) -> Self {
-        Self::with_creator(&Keypair::new(), client)
+        Self::with_creator_and_canopy(&Keypair::new(), None, client)
     }
 
-    pub fn with_creator(tree_creator: &Keypair, client: BanksClient) -> Self {
+    pub fn with_creator_and_canopy(
+        tree_creator: &Keypair,
+        canopy: Option<u32>,
+        client: BanksClient,
+    ) -> Self {
         // Default proof tree construction.
         let proof_tree = MerkleTree::new(vec![Node::default(); 1 << MAX_DEPTH].as_slice());
 
@@ -76,7 +81,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             tree_creator: clone_keypair(tree_creator),
             tree_delegate: clone_keypair(tree_creator),
             merkle_tree: Keypair::new(),
-            canopy_depth: 0,
+            canopy_depth: canopy.unwrap_or(0),
             client,
             proof_tree,
             num_minted: 0,
@@ -121,8 +126,10 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
     }
 
     pub fn merkle_tree_account_size(&self) -> usize {
+        let canopy_size = 32 * std::cmp::max((1 << (self.canopy_depth + 1)) - 2, 0);
         CONCURRENT_MERKLE_TREE_HEADER_SIZE_V1
             + size_of::<ConcurrentMerkleTree<MAX_DEPTH, MAX_BUFFER_SIZE>>()
+            + canopy_size
     }
 
     // Helper method to execute a transaction with the specified arguments
@@ -352,7 +359,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             bubblegum_signer: pubkey!("4ewWZC5gT6TGpm5LZNDs9wVonfUT2q5PP5sc9kVbwMAK"),
             log_wrapper: spl_noop::id(),
             compression_program: spl_account_compression::id(),
-            token_metadata_program: mpl_token_metadata::id(),
+            token_metadata_program: mpl_token_metadata::ID,
             system_program: system_program::id(),
         };
 
@@ -584,7 +591,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             bubblegum_signer: pubkey!("4ewWZC5gT6TGpm5LZNDs9wVonfUT2q5PP5sc9kVbwMAK"),
             log_wrapper: spl_noop::id(),
             compression_program: spl_account_compression::id(),
-            token_metadata_program: mpl_token_metadata::id(),
+            token_metadata_program: mpl_token_metadata::ID,
             system_program: system_program::id(),
         };
 
@@ -824,8 +831,8 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         let mint = voucher.decompress_mint_pda();
         let mint_authority = decompress_mint_auth_pda(mint);
         let token_account = get_associated_token_address(&args.owner.pubkey(), &mint);
-        let metadata = mpl_token_metadata::pda::find_metadata_account(&mint).0;
-        let master_edition = mpl_token_metadata::pda::find_master_edition_account(&mint).0;
+        let metadata = Metadata::find_pda(&mint).0;
+        let master_edition = MasterEdition::find_pda(&mint).0;
 
         let accounts = bubblegum::accounts::DecompressV1 {
             voucher: voucher.pda(),
@@ -837,7 +844,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             master_edition,
             system_program: system_program::id(),
             sysvar_rent: sysvar::rent::id(),
-            token_metadata_program: mpl_token_metadata::id(),
+            token_metadata_program: mpl_token_metadata::ID,
             token_program: spl_token::id(),
             associated_token_program: spl_associated_token_account::id(),
             log_wrapper: spl_noop::id(),
@@ -1018,13 +1025,13 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
     pub fn set_decompression_tx(
         &mut self,
         decompressable_state: DecompressibleState,
-    ) -> SetDecompressableStateBuilder<MAX_DEPTH, MAX_BUFFER_SIZE> {
+    ) -> SetDecompressibleStateBuilder<MAX_DEPTH, MAX_BUFFER_SIZE> {
         let accounts = bubblegum::accounts::SetDecompressibleState {
             tree_authority: self.authority(),
             tree_creator: self.creator_pubkey(),
         };
 
-        let data = bubblegum::instruction::SetDecompressableState {
+        let data = bubblegum::instruction::SetDecompressibleState {
             decompressable_state,
         };
 

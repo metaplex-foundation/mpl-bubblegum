@@ -1,18 +1,15 @@
 use anchor_lang::prelude::*;
-use mpl_token_metadata::{
-    assertions::collection::assert_collection_verify_is_valid, state::CollectionDetails,
-};
-use solana_program::{account_info::AccountInfo, program::invoke_signed, pubkey::Pubkey};
+use mpl_token_metadata::types::MetadataDelegateRole;
+use solana_program::{account_info::AccountInfo, pubkey::Pubkey};
 use spl_account_compression::wrap_application_data_v1;
 
 use crate::{
-    asserts::assert_has_collection_authority,
-    error::{metadata_error_into_bubblegum, BubblegumError},
+    asserts::{assert_collection_membership, assert_has_collection_authority},
+    error::BubblegumError,
     state::{
         leaf_schema::LeafSchema,
         metaplex_adapter::{self, Creator, MetadataArgs},
         metaplex_anchor::TokenMetadata,
-        COLLECTION_CPI_PREFIX,
     },
     utils::{get_asset_id, hash_creators, hash_metadata, replace_leaf},
 };
@@ -32,6 +29,7 @@ mod set_tree_delegate;
 mod transfer;
 mod unverify_collection;
 mod unverify_creator;
+mod update_metadata;
 mod verify_collection;
 mod verify_creator;
 
@@ -50,6 +48,7 @@ pub(crate) use set_tree_delegate::*;
 pub(crate) use transfer::*;
 pub(crate) use unverify_collection::*;
 pub(crate) use unverify_creator::*;
+pub(crate) use update_metadata::*;
 pub(crate) use verify_collection::*;
 pub(crate) use verify_creator::*;
 
@@ -141,7 +140,7 @@ fn process_creator_verification<'info>(
 
     replace_leaf(
         &merkle_tree.key(),
-        *ctx.bumps.get("tree_authority").unwrap(),
+        ctx.bumps.tree_authority,
         &ctx.accounts.compression_program.to_account_info(),
         &ctx.accounts.tree_authority.to_account_info(),
         &ctx.accounts.merkle_tree.to_account_info(),
@@ -161,9 +160,6 @@ fn process_collection_verification_mpl_only<'info>(
     collection_authority: &AccountInfo<'info>,
     collection_authority_record_pda: &AccountInfo<'info>,
     edition_account: &AccountInfo<'info>,
-    bubblegum_signer: &AccountInfo<'info>,
-    bubblegum_bump: u8,
-    token_metadata_program: &AccountInfo<'info>,
     message: &mut MetadataArgs,
     verify: bool,
 ) -> Result<()> {
@@ -176,7 +172,7 @@ fn process_collection_verification_mpl_only<'info>(
 
     // Verify correct account ownerships.
     require!(
-        *collection_metadata.to_account_info().owner == token_metadata_program.key(),
+        *collection_metadata.to_account_info().owner == mpl_token_metadata::ID,
         BubblegumError::IncorrectOwner
     );
     require!(
@@ -184,26 +180,25 @@ fn process_collection_verification_mpl_only<'info>(
         BubblegumError::IncorrectOwner
     );
     require!(
-        *edition_account.owner == token_metadata_program.key(),
+        *edition_account.owner == mpl_token_metadata::ID,
         BubblegumError::IncorrectOwner
     );
 
     // If the NFT has collection data, we set it to the correct value after doing some validation.
     if let Some(collection) = &mut message.collection {
-        // Collection verify assert from token-metadata program.
-        assert_collection_verify_is_valid(
+        assert_collection_membership(
             &Some(collection.adapt()),
             collection_metadata,
-            collection_mint,
+            collection_mint.key,
             edition_account,
-        )
-        .map_err(metadata_error_into_bubblegum)?;
+        )?;
 
         assert_has_collection_authority(
             collection_metadata,
             collection_mint.key,
             collection_authority.key,
             collection_authority_record,
+            MetadataDelegateRole::Collection,
         )?;
 
         // Update collection in metadata args.  Note since this is a mutable reference,
@@ -211,50 +206,6 @@ fn process_collection_verification_mpl_only<'info>(
         collection.verified = verify;
     } else {
         return Err(BubblegumError::CollectionNotFound.into());
-    }
-
-    // If this is a sized collection, then increment or decrement collection size.
-    if let Some(details) = &collection_metadata.collection_details {
-        // Increment or decrement existing size.
-        let new_size = match details {
-            CollectionDetails::V1 { size } => {
-                if verify {
-                    size.checked_add(1)
-                        .ok_or(BubblegumError::NumericalOverflowError)?
-                } else {
-                    size.checked_sub(1)
-                        .ok_or(BubblegumError::NumericalOverflowError)?
-                }
-            }
-        };
-
-        // CPI into to token-metadata program to change the collection size.
-        let mut bubblegum_set_collection_size_infos = vec![
-            collection_metadata.to_account_info(),
-            collection_authority.clone(),
-            collection_mint.clone(),
-            bubblegum_signer.clone(),
-        ];
-
-        if let Some(record) = collection_authority_record {
-            bubblegum_set_collection_size_infos.push(record.clone());
-        }
-
-        invoke_signed(
-            &mpl_token_metadata::instruction::bubblegum_set_collection_size(
-                token_metadata_program.key(),
-                collection_metadata.to_account_info().key(),
-                collection_authority.key(),
-                collection_mint.key(),
-                bubblegum_signer.key(),
-                collection_authority_record.map(|r| r.key()),
-                new_size,
-            ),
-            bubblegum_set_collection_size_infos.as_slice(),
-            &[&[COLLECTION_CPI_PREFIX.as_bytes(), &[bubblegum_bump]]],
-        )?;
-    } else {
-        return Err(BubblegumError::CollectionMustBeSized.into());
     }
 
     Ok(())
@@ -282,8 +233,6 @@ fn process_collection_verification<'info>(
         .accounts
         .collection_authority_record_pda
         .to_account_info();
-    let bubblegum_signer = ctx.accounts.bubblegum_signer.to_account_info();
-    let token_metadata_program = ctx.accounts.token_metadata_program.to_account_info();
 
     // User-provided metadata must result in same user-provided data hash.
     let incoming_data_hash = hash_metadata(&message)?;
@@ -318,9 +267,6 @@ fn process_collection_verification<'info>(
         &collection_authority,
         &collection_authority_record_pda,
         &edition_account,
-        &bubblegum_signer,
-        ctx.bumps["bubblegum_signer"],
-        &token_metadata_program,
         &mut message,
         verify,
     )?;
@@ -351,7 +297,7 @@ fn process_collection_verification<'info>(
 
     replace_leaf(
         &merkle_tree.key(),
-        *ctx.bumps.get("tree_authority").unwrap(),
+        ctx.bumps.tree_authority,
         &ctx.accounts.compression_program.to_account_info(),
         &ctx.accounts.tree_authority.to_account_info(),
         &ctx.accounts.merkle_tree.to_account_info(),

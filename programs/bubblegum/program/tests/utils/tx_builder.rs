@@ -386,18 +386,18 @@ impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExe
     }
 }
 
-pub type SetDecompressableStateBuilder<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> =
+pub type SetDecompressibleStateBuilder<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> =
     TxBuilder<
         'a,
         bubblegum::accounts::SetDecompressibleState,
-        bubblegum::instruction::SetDecompressableState,
+        bubblegum::instruction::SetDecompressibleState,
         (),
         MAX_DEPTH,
         MAX_BUFFER_SIZE,
     >;
 
 impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExec
-    for SetDecompressableStateBuilder<'a, MAX_DEPTH, MAX_BUFFER_SIZE>
+    for SetDecompressibleStateBuilder<'a, MAX_DEPTH, MAX_BUFFER_SIZE>
 {
     fn on_successful_execute(&mut self) -> Result<()> {
         Ok(())

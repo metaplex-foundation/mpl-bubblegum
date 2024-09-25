@@ -6,10 +6,7 @@
  * @see https://github.com/metaplex-foundation/kinobi
  */
 
-import {
-  findMasterEditionPda,
-  findMetadataPda,
-} from '@metaplex-foundation/mpl-token-metadata';
+import { findMetadataPda } from '@metaplex-foundation/mpl-token-metadata';
 import {
   Context,
   Pda,
@@ -29,7 +26,6 @@ import {
   u64,
   u8,
 } from '@metaplex-foundation/umi/serializers';
-import { resolveCreatorHash, resolveDataHash } from '../../hooked';
 import { findTreeConfigPda } from '../accounts';
 import {
   PickPartial,
@@ -42,34 +38,30 @@ import {
 import {
   MetadataArgs,
   MetadataArgsArgs,
+  UpdateArgs,
+  UpdateArgsArgs,
   getMetadataArgsSerializer,
+  getUpdateArgsSerializer,
 } from '../types';
 
 // Accounts.
-export type VerifyCollectionInstructionAccounts = {
+export type UpdateMetadataInstructionAccounts = {
   treeConfig?: PublicKey | Pda;
+  /**
+   * Either collection authority or tree owner/delegate, depending
+   * on whether the item is in a verified collection
+   */
+
+  authority?: Signer;
+  /** Used when item is in a verified collection */
+  collectionMint?: PublicKey | Pda;
+  /** Used when item is in a verified collection */
+  collectionMetadata?: PublicKey | Pda;
+  collectionAuthorityRecordPda?: PublicKey | Pda;
   leafOwner: PublicKey | Pda;
   leafDelegate?: PublicKey | Pda;
-  merkleTree: PublicKey | Pda;
   payer?: Signer;
-  /**
-   * This account is checked to be a signer in
-   * the case of `set_and_verify_collection` where
-   * we are actually changing the NFT metadata.
-   */
-
-  treeCreatorOrDelegate?: PublicKey | Pda;
-  collectionAuthority?: Signer;
-  /**
-   * If there is no collecton authority record PDA then
-   * this must be the Bubblegum program address.
-   */
-
-  collectionAuthorityRecordPda?: PublicKey | Pda;
-  collectionMint: PublicKey | Pda;
-  collectionMetadata?: PublicKey | Pda;
-  collectionEdition?: PublicKey | Pda;
-  bubblegumSigner?: PublicKey | Pda;
+  merkleTree: PublicKey | Pda;
   logWrapper?: PublicKey | Pda;
   compressionProgram?: PublicKey | Pda;
   tokenMetadataProgram?: PublicKey | Pda;
@@ -77,69 +69,66 @@ export type VerifyCollectionInstructionAccounts = {
 };
 
 // Data.
-export type VerifyCollectionInstructionData = {
+export type UpdateMetadataInstructionData = {
   discriminator: Array<number>;
   root: Uint8Array;
-  dataHash: Uint8Array;
-  creatorHash: Uint8Array;
   nonce: bigint;
   index: number;
-  metadata: MetadataArgs;
+  currentMetadata: MetadataArgs;
+  updateArgs: UpdateArgs;
 };
 
-export type VerifyCollectionInstructionDataArgs = {
+export type UpdateMetadataInstructionDataArgs = {
   root: Uint8Array;
-  dataHash: Uint8Array;
-  creatorHash: Uint8Array;
   nonce: number | bigint;
   index: number;
-  metadata: MetadataArgsArgs;
+  currentMetadata: MetadataArgsArgs;
+  updateArgs: UpdateArgsArgs;
 };
 
-export function getVerifyCollectionInstructionDataSerializer(): Serializer<
-  VerifyCollectionInstructionDataArgs,
-  VerifyCollectionInstructionData
+export function getUpdateMetadataInstructionDataSerializer(): Serializer<
+  UpdateMetadataInstructionDataArgs,
+  UpdateMetadataInstructionData
 > {
   return mapSerializer<
-    VerifyCollectionInstructionDataArgs,
+    UpdateMetadataInstructionDataArgs,
     any,
-    VerifyCollectionInstructionData
+    UpdateMetadataInstructionData
   >(
-    struct<VerifyCollectionInstructionData>(
+    struct<UpdateMetadataInstructionData>(
       [
         ['discriminator', array(u8(), { size: 8 })],
         ['root', bytes({ size: 32 })],
-        ['dataHash', bytes({ size: 32 })],
-        ['creatorHash', bytes({ size: 32 })],
         ['nonce', u64()],
         ['index', u32()],
-        ['metadata', getMetadataArgsSerializer()],
+        ['currentMetadata', getMetadataArgsSerializer()],
+        ['updateArgs', getUpdateArgsSerializer()],
       ],
-      { description: 'VerifyCollectionInstructionData' }
+      { description: 'UpdateMetadataInstructionData' }
     ),
     (value) => ({
       ...value,
-      discriminator: [56, 113, 101, 253, 79, 55, 122, 169],
+      discriminator: [170, 182, 43, 239, 97, 78, 225, 186],
     })
   ) as Serializer<
-    VerifyCollectionInstructionDataArgs,
-    VerifyCollectionInstructionData
+    UpdateMetadataInstructionDataArgs,
+    UpdateMetadataInstructionData
   >;
 }
 
 // Extra Args.
-export type VerifyCollectionInstructionExtraArgs = { proof: Array<PublicKey> };
+export type UpdateMetadataInstructionExtraArgs = { proof: Array<PublicKey> };
 
 // Args.
-export type VerifyCollectionInstructionArgs = PickPartial<
-  VerifyCollectionInstructionDataArgs & VerifyCollectionInstructionExtraArgs,
-  'dataHash' | 'creatorHash' | 'proof'
+export type UpdateMetadataInstructionArgs = PickPartial<
+  UpdateMetadataInstructionDataArgs & UpdateMetadataInstructionExtraArgs,
+  'proof'
 >;
 
 // Instruction.
-export function verifyCollection(
+export function updateMetadata(
   context: Pick<Context, 'eddsa' | 'identity' | 'payer' | 'programs'>,
-  input: VerifyCollectionInstructionAccounts & VerifyCollectionInstructionArgs
+  input: UpdateMetadataInstructionAccounts & UpdateMetadataInstructionArgs
 ): TransactionBuilder {
   // Program ID.
   const programId = context.programs.getPublicKey(
@@ -154,79 +143,70 @@ export function verifyCollection(
       isWritable: false,
       value: input.treeConfig ?? null,
     },
-    leafOwner: { index: 1, isWritable: false, value: input.leafOwner ?? null },
-    leafDelegate: {
-      index: 2,
-      isWritable: false,
-      value: input.leafDelegate ?? null,
-    },
-    merkleTree: { index: 3, isWritable: true, value: input.merkleTree ?? null },
-    payer: { index: 4, isWritable: false, value: input.payer ?? null },
-    treeCreatorOrDelegate: {
-      index: 5,
-      isWritable: false,
-      value: input.treeCreatorOrDelegate ?? null,
-    },
-    collectionAuthority: {
-      index: 6,
-      isWritable: false,
-      value: input.collectionAuthority ?? null,
-    },
-    collectionAuthorityRecordPda: {
-      index: 7,
-      isWritable: false,
-      value: input.collectionAuthorityRecordPda ?? null,
-    },
+    authority: { index: 1, isWritable: false, value: input.authority ?? null },
     collectionMint: {
-      index: 8,
+      index: 2,
       isWritable: false,
       value: input.collectionMint ?? null,
     },
     collectionMetadata: {
-      index: 9,
-      isWritable: true,
+      index: 3,
+      isWritable: false,
       value: input.collectionMetadata ?? null,
     },
-    collectionEdition: {
-      index: 10,
+    collectionAuthorityRecordPda: {
+      index: 4,
       isWritable: false,
-      value: input.collectionEdition ?? null,
+      value: input.collectionAuthorityRecordPda ?? null,
     },
-    bubblegumSigner: {
-      index: 11,
+    leafOwner: { index: 5, isWritable: false, value: input.leafOwner ?? null },
+    leafDelegate: {
+      index: 6,
       isWritable: false,
-      value: input.bubblegumSigner ?? null,
+      value: input.leafDelegate ?? null,
     },
+    payer: { index: 7, isWritable: false, value: input.payer ?? null },
+    merkleTree: { index: 8, isWritable: true, value: input.merkleTree ?? null },
     logWrapper: {
-      index: 12,
+      index: 9,
       isWritable: false,
       value: input.logWrapper ?? null,
     },
     compressionProgram: {
-      index: 13,
+      index: 10,
       isWritable: false,
       value: input.compressionProgram ?? null,
     },
     tokenMetadataProgram: {
-      index: 14,
+      index: 11,
       isWritable: false,
       value: input.tokenMetadataProgram ?? null,
     },
     systemProgram: {
-      index: 15,
+      index: 12,
       isWritable: false,
       value: input.systemProgram ?? null,
     },
   };
 
   // Arguments.
-  const resolvedArgs: VerifyCollectionInstructionArgs = { ...input };
+  const resolvedArgs: UpdateMetadataInstructionArgs = { ...input };
 
   // Default values.
   if (!resolvedAccounts.treeConfig.value) {
     resolvedAccounts.treeConfig.value = findTreeConfigPda(context, {
       merkleTree: expectPublicKey(resolvedAccounts.merkleTree.value),
     });
+  }
+  if (!resolvedAccounts.authority.value) {
+    resolvedAccounts.authority.value = context.identity;
+  }
+  if (!resolvedAccounts.collectionMetadata.value) {
+    if (resolvedAccounts.collectionMint.value) {
+      resolvedAccounts.collectionMetadata.value = findMetadataPda(context, {
+        mint: expectPublicKey(resolvedAccounts.collectionMint.value),
+      });
+    }
   }
   if (!resolvedAccounts.leafDelegate.value) {
     resolvedAccounts.leafDelegate.value = expectSome(
@@ -235,27 +215,6 @@ export function verifyCollection(
   }
   if (!resolvedAccounts.payer.value) {
     resolvedAccounts.payer.value = context.payer;
-  }
-  if (!resolvedAccounts.treeCreatorOrDelegate.value) {
-    resolvedAccounts.treeCreatorOrDelegate.value = context.identity.publicKey;
-  }
-  if (!resolvedAccounts.collectionAuthority.value) {
-    resolvedAccounts.collectionAuthority.value = context.identity;
-  }
-  if (!resolvedAccounts.collectionMetadata.value) {
-    resolvedAccounts.collectionMetadata.value = findMetadataPda(context, {
-      mint: expectPublicKey(resolvedAccounts.collectionMint.value),
-    });
-  }
-  if (!resolvedAccounts.collectionEdition.value) {
-    resolvedAccounts.collectionEdition.value = findMasterEditionPda(context, {
-      mint: expectPublicKey(resolvedAccounts.collectionMint.value),
-    });
-  }
-  if (!resolvedAccounts.bubblegumSigner.value) {
-    resolvedAccounts.bubblegumSigner.value = publicKey(
-      'BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'
-    );
   }
   if (!resolvedAccounts.logWrapper.value) {
     resolvedAccounts.logWrapper.value = context.programs.getPublicKey(
@@ -283,24 +242,6 @@ export function verifyCollection(
     );
     resolvedAccounts.systemProgram.isWritable = false;
   }
-  if (!resolvedArgs.dataHash) {
-    resolvedArgs.dataHash = resolveDataHash(
-      context,
-      resolvedAccounts,
-      resolvedArgs,
-      programId,
-      false
-    );
-  }
-  if (!resolvedArgs.creatorHash) {
-    resolvedArgs.creatorHash = resolveCreatorHash(
-      context,
-      resolvedAccounts,
-      resolvedArgs,
-      programId,
-      false
-    );
-  }
   if (!resolvedArgs.proof) {
     resolvedArgs.proof = [];
   }
@@ -326,8 +267,8 @@ export function verifyCollection(
   );
 
   // Data.
-  const data = getVerifyCollectionInstructionDataSerializer().serialize(
-    resolvedArgs as VerifyCollectionInstructionDataArgs
+  const data = getUpdateMetadataInstructionDataSerializer().serialize(
+    resolvedArgs as UpdateMetadataInstructionDataArgs
   );
 
   // Bytes Created On Chain.

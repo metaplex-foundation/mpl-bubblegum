@@ -112,6 +112,30 @@ pub enum MplBubblegumError {
     /// 6033 (0x1791) - Decompression is disabled for this tree.
     #[error("Decompression is disabled for this tree.")]
     DecompressionDisabled,
+    /// 6034 (0x1792) - Missing collection mint account
+    #[error("Missing collection mint account")]
+    MissingCollectionMintAccount,
+    /// 6035 (0x1793) - Missing collection metadata account
+    #[error("Missing collection metadata account")]
+    MissingCollectionMetadataAccount,
+    /// 6036 (0x1794) - Collection mismatch
+    #[error("Collection mismatch")]
+    CollectionMismatch,
+    /// 6037 (0x1795) - Metadata not mutable
+    #[error("Metadata not mutable")]
+    MetadataImmutable,
+    /// 6038 (0x1796) - Can only update primary sale to true
+    #[error("Can only update primary sale to true")]
+    PrimarySaleCanOnlyBeFlippedToTrue,
+    /// 6039 (0x1797) - Creator did not unverify the metadata
+    #[error("Creator did not unverify the metadata")]
+    CreatorDidNotUnverify,
+    /// 6040 (0x1798) - Only NonFungible standard is supported
+    #[error("Only NonFungible standard is supported")]
+    InvalidTokenStandard,
+    /// 6041 (0x1799) - Canopy size should be set bigger for this tree
+    #[error("Canopy size should be set bigger for this tree")]
+    InvalidCanopySize,
 }
 
 impl solana_program::program_error::PrintProgramError for MplBubblegumError {

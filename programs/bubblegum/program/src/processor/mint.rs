@@ -1,11 +1,10 @@
-use std::collections::HashSet;
-
 use anchor_lang::prelude::*;
 use solana_program::keccak;
 use spl_account_compression::{program::SplAccountCompression, wrap_application_data_v1, Noop};
+use std::collections::HashSet;
 
 use crate::{
-    asserts::assert_metadata_is_mpl_compatible,
+    asserts::{assert_metadata_is_mpl_compatible, assert_metadata_token_standard},
     error::BubblegumError,
     state::{leaf_schema::LeafSchema, metaplex_adapter::MetadataArgs, TreeConfig},
     utils::{append_leaf, get_asset_id},
@@ -33,7 +32,7 @@ pub struct MintV1<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub(crate) fn mint_v1(ctx: Context<MintV1>, message: MetadataArgs) -> Result<()> {
+pub(crate) fn mint_v1(ctx: Context<MintV1>, message: MetadataArgs) -> Result<LeafSchema> {
     // TODO -> Separate V1 / V1 into seperate instructions
     let payer = ctx.accounts.payer.key();
     let incoming_tree_delegate = ctx.accounts.tree_delegate.key();
@@ -41,6 +40,7 @@ pub(crate) fn mint_v1(ctx: Context<MintV1>, message: MetadataArgs) -> Result<()>
     let delegate = ctx.accounts.leaf_delegate.key();
     let authority = &mut ctx.accounts.tree_authority;
     let merkle_tree = &ctx.accounts.merkle_tree;
+
     if !authority.is_public {
         require!(
             incoming_tree_delegate == authority.tree_creator
@@ -68,12 +68,12 @@ pub(crate) fn mint_v1(ctx: Context<MintV1>, message: MetadataArgs) -> Result<()>
             .map(|a| a.key()),
     );
 
-    process_mint_v1(
+    let leaf = process_mint_v1(
         message,
         owner,
         delegate,
         metadata_auth,
-        *ctx.bumps.get("tree_authority").unwrap(),
+        ctx.bumps.tree_authority,
         authority,
         merkle_tree,
         &ctx.accounts.log_wrapper,
@@ -83,7 +83,7 @@ pub(crate) fn mint_v1(ctx: Context<MintV1>, message: MetadataArgs) -> Result<()>
 
     authority.increment_mint_count();
 
-    Ok(())
+    Ok(leaf)
 }
 
 pub(crate) fn process_mint_v1<'info>(
@@ -97,7 +97,7 @@ pub(crate) fn process_mint_v1<'info>(
     wrapper: &Program<'info, Noop>,
     compression_program: &AccountInfo<'info>,
     allow_verified_collection: bool,
-) -> Result<()> {
+) -> Result<LeafSchema> {
     assert_metadata_is_mpl_compatible(&message)?;
     if !allow_verified_collection {
         if let Some(collection) = &message.collection {
@@ -106,6 +106,8 @@ pub(crate) fn process_mint_v1<'info>(
             }
         }
     }
+
+    assert_metadata_token_standard(&message)?;
 
     // @dev: seller_fee_basis points is encoded twice so that it can be passed to marketplace
     // instructions, without passing the entire, un-hashed MetadataArgs struct
@@ -158,5 +160,7 @@ pub(crate) fn process_mint_v1<'info>(
         &merkle_tree.to_account_info(),
         &wrapper.to_account_info(),
         leaf.to_node(),
-    )
+    )?;
+
+    Ok(leaf)
 }

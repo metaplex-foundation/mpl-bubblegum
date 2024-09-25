@@ -11,12 +11,12 @@ on:
     inputs:
       rust:
         description: Rust version
-        default: 1.68.0
+        default: 1.75.0
         required: true
         type: string
       solana:
         description: Solana version
-        default: 1.16.8
+        default: 1.18.15
         required: true
         type: string
 
@@ -57,7 +57,7 @@ jobs:
         run: cargo build --all-features --release
 
       - name: Upload Rust client builds
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: rust-client-builds
           # First wildcard ensures exported paths are consistently under the clients folder.

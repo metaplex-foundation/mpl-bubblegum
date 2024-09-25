@@ -27,7 +27,7 @@ pub struct Redeem<'info> {
     pub tree_authority: Account<'info, TreeConfig>,
     #[account(mut)]
     pub leaf_owner: Signer<'info>,
-    /// CHECK: This account is chekced in the instruction
+    /// CHECK: This account is checked in the instruction
     pub leaf_delegate: UncheckedAccount<'info>,
     #[account(mut)]
     /// CHECK: checked in cpi
@@ -72,7 +72,7 @@ pub(crate) fn redeem<'info>(
 
     replace_leaf(
         &merkle_tree.key(),
-        *ctx.bumps.get("tree_authority").unwrap(),
+        ctx.bumps.tree_authority,
         &ctx.accounts.compression_program.to_account_info(),
         &ctx.accounts.tree_authority.to_account_info(),
         &ctx.accounts.merkle_tree.to_account_info(),

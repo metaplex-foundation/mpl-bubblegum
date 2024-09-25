@@ -4,8 +4,10 @@ pub mod utils;
 use anchor_lang::solana_program::instruction::InstructionError;
 
 use solana_program_test::{tokio, BanksClientError};
-use solana_sdk::signature::{Keypair, Signer};
-use solana_sdk::transaction::TransactionError;
+use solana_sdk::{
+    signature::{Keypair, Signer},
+    transaction::TransactionError,
+};
 
 use crate::utils::Error::BanksClient;
 use utils::{
@@ -231,4 +233,79 @@ async fn test_create_public_tree_and_mint_passes() {
     } else {
         panic!("Should have failed");
     }
+}
+
+#[tokio::test]
+async fn test_create_public_tree_with_canopy() {
+    let context = BubblegumTestContext::new().await.unwrap();
+    let payer = context.payer();
+
+    let mut tree = context
+        .create_tree_with_canopy::<18, 64>(1, true)
+        .await
+        .unwrap();
+
+    let cfg = tree.read_tree_config().await.unwrap();
+
+    assert_eq!(cfg.tree_creator, payer.pubkey());
+    assert_eq!(cfg.tree_delegate, payer.pubkey());
+    assert!(cfg.is_public);
+}
+
+#[tokio::test]
+async fn test_cannot_create_tree_needing_too_many_proofs_with_too_small_canopy() {
+    let context = BubblegumTestContext::new().await.unwrap();
+
+    let tree_create_result = context.create_tree_with_canopy::<19, 64>(1, true).await;
+
+    if let Err(err) = tree_create_result {
+        if let BanksClient(BanksClientError::TransactionError(e)) = *err {
+            assert_eq!(
+                e,
+                TransactionError::InstructionError(0, InstructionError::Custom(6041),)
+            );
+        } else {
+            panic!("Wrong variant");
+        }
+    } else {
+        panic!("Should have failed");
+    }
+}
+
+#[tokio::test]
+async fn test_cannot_create_tree_needing_too_many_proofs_with_no_canopy() {
+    let context = BubblegumTestContext::new().await.unwrap();
+
+    let tree_create_result = context.create_tree_with_canopy::<18, 64>(0, true).await;
+
+    if let Err(err) = tree_create_result {
+        if let BanksClient(BanksClientError::TransactionError(e)) = *err {
+            assert_eq!(
+                e,
+                TransactionError::InstructionError(0, InstructionError::Custom(6041),)
+            );
+        } else {
+            panic!("Wrong variant");
+        }
+    } else {
+        panic!("Should have failed");
+    }
+}
+
+#[tokio::test]
+async fn test_create_small_public_tree() {
+    let context = BubblegumTestContext::new().await.unwrap();
+    let payer = context.payer();
+
+    // to make sure canopy check allows creating small trees
+    let mut tree = context
+        .create_tree_with_canopy::<3, 8>(0, true)
+        .await
+        .unwrap();
+
+    let cfg = tree.read_tree_config().await.unwrap();
+
+    assert_eq!(cfg.tree_creator, payer.pubkey());
+    assert_eq!(cfg.tree_delegate, payer.pubkey());
+    assert!(cfg.is_public);
 }

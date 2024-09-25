@@ -5,17 +5,59 @@ const k = require("@metaplex-foundation/kinobi");
 const clientDir = path.join(__dirname, "..", "clients");
 const idlDir = path.join(__dirname, "..", "idls");
 
-// Instanciate Kinobi.
-const kinobi = k.createFromIdls([
-  path.join(idlDir, "bubblegum.json"),
-  path.join(idlDir, "spl_account_compression.json"),
-  path.join(idlDir, "spl_noop.json"),
-]);
+// Instantiate Kinobi without DefaultVisitor.
+const kinobi = k.createFromIdls(
+  [
+    path.join(idlDir, "bubblegum.json"),
+    path.join(idlDir, "spl_account_compression.json"),
+    path.join(idlDir, "spl_noop.json"),
+  ],
+  false
+);
 
 // Update programs.
 kinobi.update(
   new k.UpdateProgramsVisitor({
     bubblegum: { name: "mplBubblegum" },
+  })
+);
+
+// Add wrapper defined type with a link to UpdateArgs. This is to avoid the
+// type being inlined in the instruction.
+kinobi.update(
+  new k.TransformNodesVisitor([
+    {
+      selector: { kind: "programNode", name: "mplBubblegum" },
+      transformer: (node) => {
+        k.assertProgramNode(node);
+        return k.programNode({
+          ...node,
+          definedTypes: [
+            ...node.definedTypes,
+            // wrapper type
+            k.definedTypeNode({
+              name: "UpdateArgsWrapper",
+              data: k.structTypeNode([
+                k.structFieldTypeNode({
+                  name: "wrapped",
+                  child: k.linkTypeNode("UpdateArgs"),
+                }),
+              ]),
+            }),
+          ],
+        });
+      },
+    },
+  ])
+);
+
+// Apply the DefaultVisitor.
+kinobi.update(new k.DefaultVisitor());
+
+// Delete the unnecessary UpdateArgsWrapper type.
+kinobi.update(
+  new k.UpdateDefinedTypesVisitor({
+    UpdateArgsWrapper: { delete: true },
   })
 );
 
@@ -106,7 +148,24 @@ kinobi.update(
   ])
 );
 
-// Set default account values accross multiple instructions.
+const deprecatedTmIxes = [
+  "mintToCollectionV1",
+  "setAndVerifyCollection",
+  "unverifyCollection",
+  "updateMetadata",
+  "verifyCollection",
+];
+let deprecatedIxUpdaters = [];
+for (let ix of deprecatedTmIxes) {
+  deprecatedIxUpdaters.push(
+    {
+      account: "tokenMetadataProgram",
+      instruction: ix,
+      ...k.publicKeyDefault("BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY"),
+    })
+}
+
+// Set default account values across multiple instructions.
 kinobi.update(
   new k.SetInstructionAccountDefaultValuesVisitor([
     {
@@ -156,7 +215,7 @@ kinobi.update(
     {
       account: "bubblegumSigner",
       ignoreIfOptional: true,
-      ...k.publicKeyDefault("4ewWZC5gT6TGpm5LZNDs9wVonfUT2q5PP5sc9kVbwMAK"),
+      ...k.publicKeyDefault("BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY"),
     },
     {
       account: "collectionMetadata",
@@ -184,6 +243,7 @@ kinobi.update(
       ignoreIfOptional: true,
       ...k.identityDefault(),
     },
+    ...deprecatedIxUpdaters,
   ])
 );
 
@@ -311,6 +371,15 @@ kinobi.update(
       uses: k.vNone(),
       tokenProgramVersion: k.vEnum("TokenProgramVersion", "Original"),
     },
+    updateArgs: {
+      name: k.vNone(),
+      symbol: k.vNone(),
+      uri: k.vNone(),
+      creators: k.vNone(),
+      sellerFeeBasisPoints: k.vNone(),
+      primarySaleHappened: k.vNone(),
+      isMutable: k.vNone(),
+    },
   })
 );
 
@@ -368,6 +437,7 @@ kinobi.update(
           "verifyCreator",
           "unverifyCreator",
           "verifyLeaf",
+          "updateMetadata"
         ].includes(node.name),
       transformer: (node) => {
         k.assertInstructionNode(node);
@@ -399,6 +469,23 @@ kinobi.update(
   new k.UnwrapTupleEnumWithSingleStructVisitor([
     "ConcurrentMerkleTreeHeaderData",
   ])
+);
+
+kinobi.update(
+  new k.UpdateInstructionsVisitor({
+    updateMetadata: {
+      accounts: {
+        collectionMetadata: {
+          defaultsTo: k.conditionalDefault("account", "collectionMint", {
+            ifTrue: k.pdaDefault("metadata", {
+              importFrom: "mplTokenMetadata",
+              seeds: { mint: k.accountDefault("collectionMint") },
+            }),
+          }),
+        },
+      },
+    },
+  })
 );
 
 // Render JavaScript.

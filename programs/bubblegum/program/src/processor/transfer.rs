@@ -17,7 +17,7 @@ pub struct Transfer<'info> {
     pub tree_authority: Account<'info, TreeConfig>,
     /// CHECK: This account is checked in the instruction
     pub leaf_owner: UncheckedAccount<'info>,
-    /// CHECK: This account is chekced in the instruction
+    /// CHECK: This account is checked in the instruction
     pub leaf_delegate: UncheckedAccount<'info>,
     /// CHECK: This account is neither written to nor read from.
     pub new_leaf_owner: UncheckedAccount<'info>,
@@ -71,7 +71,7 @@ pub(crate) fn transfer<'info>(
 
     replace_leaf(
         &merkle_tree.key(),
-        *ctx.bumps.get("tree_authority").unwrap(),
+        ctx.bumps.tree_authority,
         &ctx.accounts.compression_program.to_account_info(),
         &ctx.accounts.tree_authority.to_account_info(),
         &ctx.accounts.merkle_tree.to_account_info(),

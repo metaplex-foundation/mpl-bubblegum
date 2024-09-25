@@ -92,6 +92,18 @@ impl LeafSchema {
         }
     }
 
+    pub fn owner(&self) -> Pubkey {
+        match self {
+            LeafSchema::V1 { owner, .. } => *owner,
+        }
+    }
+
+    pub fn delegate(&self) -> Pubkey {
+        match self {
+            LeafSchema::V1 { delegate, .. } => *delegate,
+        }
+    }
+
     pub fn nonce(&self) -> u64 {
         match self {
             LeafSchema::V1 { nonce, .. } => *nonce,

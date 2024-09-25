@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use mpl_token_metadata::error::MetadataError;
+use mpl_token_metadata::errors::MplTokenMetadataError;
 use num_traits::FromPrimitive;
 
 #[error_code]
@@ -72,6 +72,22 @@ pub enum BubblegumError {
     UnknownExternalError,
     #[msg("Decompression is disabled for this tree.")]
     DecompressionDisabled,
+    #[msg("Missing collection mint account")]
+    MissingCollectionMintAccount,
+    #[msg("Missing collection metadata account")]
+    MissingCollectionMetadataAccount,
+    #[msg("Collection mismatch")]
+    CollectionMismatch,
+    #[msg("Metadata not mutable")]
+    MetadataImmutable,
+    #[msg("Can only update primary sale to true")]
+    PrimarySaleCanOnlyBeFlippedToTrue,
+    #[msg("Creator did not unverify the metadata")]
+    CreatorDidNotUnverify,
+    #[msg("Only NonFungible standard is supported")]
+    InvalidTokenStandard,
+    #[msg("Canopy size should be set bigger for this tree")]
+    InvalidCanopySize,
 }
 
 // Converts certain Token Metadata errors into Bubblegum equivalents
@@ -82,12 +98,12 @@ pub fn metadata_error_into_bubblegum(error: ProgramError) -> BubblegumError {
                 FromPrimitive::from_u32(e).expect("Unknown error code from token-metadata");
 
             match metadata_error {
-                MetadataError::CollectionNotFound => BubblegumError::CollectionNotFound,
-                MetadataError::CollectionMustBeAUniqueMasterEdition => {
+                MplTokenMetadataError::CollectionNotFound => BubblegumError::CollectionNotFound,
+                MplTokenMetadataError::CollectionMustBeAUniqueMasterEdition => {
                     BubblegumError::CollectionMustBeAUniqueMasterEdition
                 }
 
-                MetadataError::CollectionMasterEditionAccountInvalid => {
+                MplTokenMetadataError::CollectionMasterEditionAccountInvalid => {
                     BubblegumError::CollectionMasterEditionAccountInvalid
                 }
 

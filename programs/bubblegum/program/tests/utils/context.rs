@@ -4,10 +4,13 @@ use super::{
     clone_keypair, digital_asset::DigitalAsset, program_test, tree::Tree, BanksResult, DirtyClone,
     Error, LeafArgs, Result,
 };
-use bubblegum::state::metaplex_adapter::{Collection, Creator, MetadataArgs, TokenProgramVersion};
+use bubblegum::state::metaplex_adapter::{
+    Collection, Creator, MetadataArgs, TokenProgramVersion, TokenStandard as MetadataTokenStandard,
+};
 use mpl_token_metadata::{
-    pda::find_collection_authority_account,
-    state::{CollectionDetails, TokenStandard},
+    accounts::CollectionAuthorityRecord,
+    instructions::ApproveCollectionAuthorityBuilder,
+    types::{CollectionDetails, TokenStandard},
 };
 use solana_program::pubkey::Pubkey;
 use solana_program_test::{BanksClient, ProgramTestContext, ProgramTestError};
@@ -129,7 +132,7 @@ impl BubblegumTestContext {
             primary_sale_happened: false,
             is_mutable: false,
             edition_nonce: None,
-            token_standard: None,
+            token_standard: Some(MetadataTokenStandard::NonFungible),
             token_program_version: TokenProgramVersion::Original,
             collection: Some(Collection {
                 verified: false,
@@ -165,7 +168,11 @@ impl BubblegumTestContext {
         &self,
     ) -> Result<Tree<MAX_DEPTH, MAX_BUFFER_SIZE>> {
         let payer = self.payer();
-        let mut tree = Tree::<MAX_DEPTH, MAX_BUFFER_SIZE>::with_creator(&payer, self.client());
+        let mut tree = Tree::<MAX_DEPTH, MAX_BUFFER_SIZE>::with_creator_and_canopy(
+            &payer,
+            None,
+            self.client(),
+        );
         tree.alloc(&payer).await?;
         tree.create(&payer).await?;
         Ok(tree)
@@ -175,9 +182,33 @@ impl BubblegumTestContext {
         &self,
     ) -> Result<Tree<MAX_DEPTH, MAX_BUFFER_SIZE>> {
         let payer = self.payer();
-        let mut tree = Tree::<MAX_DEPTH, MAX_BUFFER_SIZE>::with_creator(&payer, self.client());
+        let mut tree = Tree::<MAX_DEPTH, MAX_BUFFER_SIZE>::with_creator_and_canopy(
+            &payer,
+            None,
+            self.client(),
+        );
         tree.alloc(&payer).await?;
         tree.create_public(&payer).await?;
+        Ok(tree)
+    }
+
+    pub async fn create_tree_with_canopy<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize>(
+        &self,
+        canopy: u32,
+        is_public: bool,
+    ) -> Result<Tree<MAX_DEPTH, MAX_BUFFER_SIZE>> {
+        let payer = self.payer();
+        let mut tree = Tree::<MAX_DEPTH, MAX_BUFFER_SIZE>::with_creator_and_canopy(
+            &payer,
+            Some(canopy),
+            self.client(),
+        );
+        tree.alloc(&payer).await?;
+        if is_public {
+            tree.create_public(&payer).await?;
+        } else {
+            tree.create(&payer).await?;
+        }
         Ok(tree)
     }
 
@@ -219,17 +250,16 @@ impl BubblegumTestContext {
         let collection_asset = &self.default_collection;
 
         let (record, _) =
-            find_collection_authority_account(&collection_asset.mint.pubkey(), &delegate);
+            CollectionAuthorityRecord::find_pda(&collection_asset.mint.pubkey(), &delegate);
 
-        let ix = mpl_token_metadata::instruction::approve_collection_authority(
-            mpl_token_metadata::ID,
-            record,
-            delegate,
-            authority.pubkey(),
-            payer.pubkey(),
-            collection_asset.metadata,
-            collection_asset.mint.pubkey(),
-        );
+        let ix = ApproveCollectionAuthorityBuilder::default()
+            .collection_authority_record(record)
+            .new_collection_authority(delegate)
+            .update_authority(authority.pubkey())
+            .payer(payer.pubkey())
+            .metadata(collection_asset.metadata)
+            .mint(collection_asset.mint.pubkey())
+            .instruction();
 
         let tx = Transaction::new_signed_with_payer(
             &[ix],

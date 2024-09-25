@@ -1,8 +1,9 @@
 use anchor_lang::prelude::*;
 
 use crate::{
-    error::BubblegumError, processor::process_collection_verification,
-    processor::verify_collection::CollectionVerification, state::metaplex_adapter::MetadataArgs,
+    error::BubblegumError,
+    processor::{process_collection_verification, verify_collection::CollectionVerification},
+    state::metaplex_adapter::MetadataArgs,
 };
 
 pub(crate) fn set_and_verify_collection<'info>(
