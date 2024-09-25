@@ -2633,7 +2633,7 @@ dependencies = [
 [[package]]
 name = "mplx-rewards"
 version = "0.1.0"
-source = "git+https://github.com/adm-metaex/mplx-rewards.git#406078fcc3656dfeb57ae776ee81097480a27a62"
+source = "git+https://github.com/metaplex-foundation/aura-rewards.git#8dc168581e33ec08f472a9ee6f8300acf35d58cb"
 dependencies = [
  "borsh 1.5.0",
  "bytemuck",
@@ -2649,7 +2649,7 @@ dependencies = [
 [[package]]
 name = "mplx-staking-states"
 version = "0.0.1"
-source = "git+https://github.com/adm-metaex/mplx-staking.git#03459b9290d3fe58b5788728b434a6441adc1779"
+source = "git+https://github.com/metaplex-foundation/aura-staking.git#ac02337227d533fd3f2fc0d4195ba8f214785d3f"
 dependencies = [
  "anchor-lang 0.26.0",
  "anchor-spl 0.26.0",

@@ -29,8 +29,8 @@ solana-program = "~1.18.15"
 spl-account-compression = {version = "0.4.0", features = ["cpi"] }
 spl-associated-token-account = { version = ">= 1.1.3, < 3.0", features = ["no-entrypoint"] }
 spl-token = { version = ">= 3.5.0, < 5.0", features = ["no-entrypoint"] }
-mplx-staking-states = { git = "https://github.com/adm-metaex/mplx-staking.git" }
-mplx-rewards = { git = "https://github.com/adm-metaex/mplx-rewards.git", features = ["no-entrypoint"] }
+mplx-staking-states = { git = "https://github.com/metaplex-foundation/aura-staking.git" }
+mplx-rewards = { git = "https://github.com/metaplex-foundation/aura-rewards.git", features = ["no-entrypoint"] }
 
 [dev-dependencies]
 async-trait = "0.1.71"
