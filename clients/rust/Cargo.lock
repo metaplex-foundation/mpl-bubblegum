@@ -836,9 +836,9 @@ dependencies = [
 
 [[package]]
 name = "bytemuck"
-version = "1.17.1"
+version = "1.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "773d90827bc3feecfb67fab12e24de0749aad83c74b9504ecde46237b5cd24e2"
+checksum = "94bbb0ad554ad961ddc5da507a12a29b14e4ae5bda06b19f575a3e6079d2e2ae"
 dependencies = [
  "bytemuck_derive",
 ]
@@ -2389,7 +2389,7 @@ name = "mpl-bubblegum"
 version = "1.5.0"
 dependencies = [
  "assert_matches",
- "borsh 0.9.3",
+ "borsh 0.10.3",
  "bytemuck",
  "kaigan",
  "num-derive 0.3.3",
@@ -2401,7 +2401,7 @@ dependencies = [
  "solana-sdk",
  "spl-account-compression",
  "spl-associated-token-account",
- "spl-concurrent-merkle-tree 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "spl-concurrent-merkle-tree 0.3.0",
  "spl-merkle-tree-reference",
  "spl-noop",
  "spl-token",
@@ -4853,13 +4853,14 @@ dependencies = [
 
 [[package]]
 name = "spl-account-compression"
-version = "0.3.1"
-source = "git+https://github.com/StanChe/solana-program-library.git?branch=feature/init_with_root#f343436322f3d61f26058057ee9a83f42cc4b125"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "31f461e20e8efb539d7f3f30cd82931ee128651c6366abe326f083b07253a1d6"
 dependencies = [
  "anchor-lang",
  "bytemuck",
  "solana-program",
- "spl-concurrent-merkle-tree 0.3.0 (git+https://github.com/StanChe/solana-program-library.git?branch=feature/init_with_root)",
+ "spl-concurrent-merkle-tree 0.4.0",
  "spl-noop",
 ]
 
@@ -4892,8 +4893,9 @@ dependencies = [
 
 [[package]]
 name = "spl-concurrent-merkle-tree"
-version = "0.3.0"
-source = "git+https://github.com/StanChe/solana-program-library.git?branch=feature/init_with_root#f343436322f3d61f26058057ee9a83f42cc4b125"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "85d1bbb97252d8a1b90d3d56425038928382a306b71dbba4c836973c94b33f96"
 dependencies = [
  "bytemuck",
  "solana-program",
@@ -4957,7 +4959,8 @@ dependencies = [
 [[package]]
 name = "spl-noop"
 version = "0.2.0"
-source = "git+https://github.com/StanChe/solana-program-library.git?branch=feature/init_with_root#f343436322f3d61f26058057ee9a83f42cc4b125"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6dd67ea3d0070a12ff141f5da46f9695f49384a03bce1203a5608f5739437950"
 dependencies = [
  "solana-program",
 ]
