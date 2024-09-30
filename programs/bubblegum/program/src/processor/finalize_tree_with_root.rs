@@ -14,6 +14,13 @@ use crate::{
 use mpl_common_constants::constants::{DAO_GOVERNING_MINT, DAO_PUBKEY, FEE_RECEIVER};
 
 const DISCRIMINATOR_LEN: usize = REGISTRAR_DISCRIMINATOR.len();
+
+const DAO_GOVERNING_MINT_PUBKEY: Pubkey = Pubkey::new_from_array(DAO_GOVERNING_MINT);
+
+const DAO_KEY: Pubkey = Pubkey::new_from_array(DAO_PUBKEY);
+
+const FEE_RECEIVER_PUBKEY: Pubkey = Pubkey::new_from_array(FEE_RECEIVER);
+
 #[derive(Accounts)]
 pub struct FinalizeTreeWithRoot<'info> {
     #[account(
@@ -60,7 +67,7 @@ pub(crate) fn finalize_tree_with_root<'info>(
     );
 
     require!(
-        ctx.accounts.fee_receiver.key.to_bytes() == FEE_RECEIVER,
+        ctx.accounts.fee_receiver.key == &FEE_RECEIVER_PUBKEY,
         BubblegumError::FeeReceiverMismatch
     );
     check_stake(
@@ -167,11 +174,11 @@ pub(crate) fn check_stake<'info>(
     let registrar: &Registrar = bytemuck::from_bytes(&registrar_bytes[DISCRIMINATOR_LEN..]);
 
     require!(
-        registrar.realm.to_bytes() == DAO_PUBKEY,
+        registrar.realm == DAO_KEY,
         BubblegumError::StakingRegistrarRealmMismatch
     );
     require!(
-        registrar.realm_governing_token_mint.to_bytes() == DAO_GOVERNING_MINT,
+        registrar.realm_governing_token_mint == DAO_GOVERNING_MINT_PUBKEY,
         BubblegumError::StakingRegistrarRealmMismatch
     );
     let voter_bytes = voter_acc.to_account_info().data;
