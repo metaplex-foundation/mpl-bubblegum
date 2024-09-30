@@ -30,8 +30,12 @@ pub enum ConcurrentMerkleTreeHeaderData {
         /// Slot corresponding to when the Merkle tree was created.
         /// Provides a lower-bound on what slot to start (re-)building a tree from.
         creation_slot: u64,
+        /// A flag indicating whether the tree has been initialized with a root.
+        /// This field was added together with the `finalize_tree_with_root` instruction.
+        /// It takes 1 byte of space taken from the previous padding for existing accounts.
+        is_batch_initialized: bool,
         /// Needs padding for the account to be 8-byte aligned
         /// 8-byte alignment is necessary to zero-copy the SPL ConcurrentMerkleTree
-        padding: [u8; 6],
+        padding: [u8; 5],
     },
 }

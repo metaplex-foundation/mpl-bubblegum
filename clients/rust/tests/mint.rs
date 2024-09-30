@@ -23,7 +23,7 @@ mod mint {
 
         // Given a new merkle tree.
 
-        let mut tree_manager = TreeManager::<5, 8>::default();
+        let mut tree_manager = TreeManager::<6, 16>::default();
         tree_manager.create(&mut context).await.unwrap();
 
         assert!(find_account(&mut context, &tree_manager.tree.pubkey())
