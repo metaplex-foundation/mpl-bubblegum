@@ -5,12 +5,20 @@ use spl_account_compression::{program::SplAccountCompression, Noop};
 use crate::{
     error::BubblegumError,
     state::{
-        TreeConfig, FEE_RECEIVER, MINIMUM_WEIGHTED_STAKE, PROTOCOL_FEE_PER_1024_ASSETS, REALM,
-        REALM_GOVERNING_MINT, VOTER_DISCRIMINATOR,
+        TreeConfig, MINIMUM_WEIGHTED_STAKE, PROTOCOL_FEE_PER_1024_ASSETS, VOTER_DISCRIMINATOR,
     },
 };
 
+use mpl_common_constants::constants::{DAO_GOVERNING_MINT, DAO_PUBKEY, FEE_RECEIVER};
+
 const DISCRIMINATOR_LEN: usize = REGISTRAR_DISCRIMINATOR.len();
+
+const DAO_GOVERNING_MINT_PUBKEY: Pubkey = Pubkey::new_from_array(DAO_GOVERNING_MINT);
+
+const DAO_KEY: Pubkey = Pubkey::new_from_array(DAO_PUBKEY);
+
+const FEE_RECEIVER_PUBKEY: Pubkey = Pubkey::new_from_array(FEE_RECEIVER);
+
 #[derive(Accounts)]
 pub struct FinalizeTreeWithRoot<'info> {
     #[account(
@@ -57,7 +65,7 @@ pub(crate) fn finalize_tree_with_root<'info>(
     );
 
     require!(
-        ctx.accounts.fee_receiver.key == &FEE_RECEIVER,
+        ctx.accounts.fee_receiver.key == &FEE_RECEIVER_PUBKEY,
         BubblegumError::FeeReceiverMismatch
     );
     check_stake(
@@ -128,9 +136,9 @@ pub(crate) fn check_stake<'info>(
 
     let generated_registrar = Pubkey::find_program_address(
         &[
-            REALM.to_bytes().as_ref(),
+            DAO_PUBKEY.as_ref(),
             b"registrar".as_ref(),
-            REALM_GOVERNING_MINT.to_bytes().as_ref(),
+            DAO_GOVERNING_MINT.as_ref(),
         ],
         &mplx_staking_states::ID,
     )
@@ -164,11 +172,11 @@ pub(crate) fn check_stake<'info>(
     let registrar: &Registrar = bytemuck::from_bytes(&registrar_bytes[DISCRIMINATOR_LEN..]);
 
     require!(
-        registrar.realm == REALM,
+        registrar.realm == DAO_KEY,
         BubblegumError::StakingRegistrarRealmMismatch
     );
     require!(
-        registrar.realm_governing_token_mint == REALM_GOVERNING_MINT,
+        registrar.realm_governing_token_mint == DAO_GOVERNING_MINT_PUBKEY,
         BubblegumError::StakingRegistrarRealmMismatch
     );
     let voter_bytes = voter_acc.to_account_info().data;

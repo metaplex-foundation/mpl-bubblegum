@@ -7,10 +7,10 @@ use bubblegum::{
     error::BubblegumError,
     state::{
         metaplex_adapter::{MetadataArgs, TokenProgramVersion, TokenStandard},
-        FEE_RECEIVER, PROTOCOL_FEE_PER_1024_ASSETS, REALM, REALM_GOVERNING_MINT,
-        VOTER_DISCRIMINATOR,
+        PROTOCOL_FEE_PER_1024_ASSETS, VOTER_DISCRIMINATOR,
     },
 };
+use mpl_common_constants::constants::{DAO_GOVERNING_MINT, DAO_PUBKEY, FEE_RECEIVER};
 use mplx_staking_states::state::{
     DepositEntry, Lockup, LockupKind, LockupPeriod, Registrar, Voter, VotingMintConfig,
     REGISTRAR_DISCRIMINATOR,
@@ -157,9 +157,9 @@ async fn initialize_staking_accounts(
 
     let registrar_key = Pubkey::find_program_address(
         &[
-            REALM.to_bytes().as_ref(),
+            DAO_PUBKEY.as_ref(),
             b"registrar".as_ref(),
-            REALM_GOVERNING_MINT.to_bytes().as_ref(),
+            DAO_GOVERNING_MINT.as_ref(),
         ],
         &mplx_staking_states::ID,
     )
@@ -182,8 +182,8 @@ async fn initialize_staking_accounts(
 
     let registrar = Registrar {
         governance_program_id: governance_program_id.clone(),
-        realm: REALM,
-        realm_governing_token_mint: REALM_GOVERNING_MINT,
+        realm: DAO_PUBKEY.into(),
+        realm_governing_token_mint: DAO_GOVERNING_MINT.into(),
         realm_authority: realm_authority.clone(),
         voting_mints: [voting_mint_config, voting_mint_config],
         reward_pool: reward_pool_key,
@@ -301,17 +301,19 @@ async fn test_prepare_tree_without_canopy() {
     let (registrar_key, voter_key, mining_key) =
         initialize_staking_accounts(&mut program_context).await;
 
+    let fee_receiver = FEE_RECEIVER.into();
+
     program_context
         .fund_account(tree.creator_pubkey(), 10_000_000_000)
         .await
         .unwrap();
     program_context
-        .fund_account(FEE_RECEIVER, 10_000_000_000)
+        .fund_account(fee_receiver, 10_000_000_000)
         .await
         .unwrap();
     let start_fee_receiver_balance = program_context
         .client()
-        .get_account(FEE_RECEIVER)
+        .get_account(fee_receiver)
         .await
         .unwrap()
         .unwrap()
@@ -345,12 +347,12 @@ async fn test_prepare_tree_without_canopy() {
         registrar_key,
         voter_key,
         mining_key,
-        FEE_RECEIVER,
+        fee_receiver,
     );
 
     for proof in rightmost_proof {
         tree_tx_builder.additional_accounts.push(AccountMeta {
-            pubkey: Pubkey::new_from_array(proof),
+            pubkey: proof.into(),
             is_signer: false,
             is_writable: false,
         });
@@ -360,7 +362,7 @@ async fn test_prepare_tree_without_canopy() {
 
     let end_fee_receiver_balance = program_context
         .client()
-        .get_account(FEE_RECEIVER)
+        .get_account(fee_receiver)
         .await
         .unwrap()
         .unwrap()
@@ -441,6 +443,8 @@ async fn test_prepare_tree_with_canopy() {
             .unwrap();
     }
 
+    let fee_receiver = FEE_RECEIVER.into();
+
     let mut tree_tx_builder = tree.finalize_tree_with_root_tx(
         &program_context.test_context().payer,
         &tree_creator,
@@ -452,7 +456,7 @@ async fn test_prepare_tree_with_canopy() {
         registrar_key,
         voter_key,
         mining_key,
-        FEE_RECEIVER,
+        fee_receiver,
     );
 
     for proof in rightmost_proof[..canopy_depth as usize].iter() {
@@ -520,6 +524,8 @@ async fn test_put_wrong_canopy() {
             .unwrap();
     }
 
+    let fee_receiver = FEE_RECEIVER.into();
+
     let mut tree_tx_builder = tree.finalize_tree_with_root_tx(
         &program_context.test_context().payer,
         &tree_creator,
@@ -531,12 +537,12 @@ async fn test_put_wrong_canopy() {
         registrar_key,
         voter_key,
         mining_key,
-        FEE_RECEIVER,
+        fee_receiver,
     );
 
     for proof in rightmost_proof {
         tree_tx_builder.additional_accounts.push(AccountMeta {
-            pubkey: Pubkey::new_from_array(proof),
+            pubkey: proof.into(),
             is_signer: false,
             is_writable: false,
         });
@@ -628,12 +634,14 @@ async fn test_put_wrong_fee_receiver() {
     let (registrar_key, voter_key, mining_key) =
         initialize_staking_accounts(&mut program_context).await;
 
+    let fee_receiver = FEE_RECEIVER.into();
+
     program_context
         .fund_account(tree.creator_pubkey(), 10_000_000_000)
         .await
         .unwrap();
     program_context
-        .fund_account(FEE_RECEIVER, 10_000_000_000)
+        .fund_account(fee_receiver, 10_000_000_000)
         .await
         .unwrap();
 
@@ -664,7 +672,7 @@ async fn test_put_wrong_fee_receiver() {
 
     for proof in rightmost_proof {
         tree_tx_builder.additional_accounts.push(AccountMeta {
-            pubkey: Pubkey::new_from_array(proof),
+            pubkey: proof.into(),
             is_signer: false,
             is_writable: false,
         });
@@ -707,6 +715,8 @@ async fn test_prepare_tree_with_collection() {
     )
     .await;
 
+    let fee_receiver = FEE_RECEIVER.into();
+
     let rightmost_proof = tree.proof_of_leaf((num_of_assets_to_mint - 1) as u32);
     let rightmost_leaf = tree.get_node(num_of_assets_to_mint - 1);
 
@@ -718,7 +728,7 @@ async fn test_prepare_tree_with_collection() {
         .await
         .unwrap();
     program_context
-        .fund_account(FEE_RECEIVER, 10_000_000_000)
+        .fund_account(fee_receiver, 10_000_000_000)
         .await
         .unwrap();
 
@@ -745,12 +755,12 @@ async fn test_prepare_tree_with_collection() {
         registrar_key,
         voter_key,
         mining_key,
-        FEE_RECEIVER,
+        fee_receiver,
     );
 
     for proof in rightmost_proof {
         tree_tx_builder.additional_accounts.push(AccountMeta {
-            pubkey: Pubkey::new_from_array(proof),
+            pubkey: proof.into(),
             is_signer: false,
             is_writable: false,
         });
@@ -778,6 +788,8 @@ async fn test_prepare_tree_with_collection_wrong_authority() {
     )
     .await;
 
+    let fee_receiver = FEE_RECEIVER.into();
+
     let rightmost_leaf = tree.get_node(num_of_assets_to_mint - 1);
 
     let (registrar_key, voter_key, mining_key) =
@@ -788,7 +800,7 @@ async fn test_prepare_tree_with_collection_wrong_authority() {
         .await
         .unwrap();
     program_context
-        .fund_account(FEE_RECEIVER, 10_000_000_000)
+        .fund_account(fee_receiver, 10_000_000_000)
         .await
         .unwrap();
 
@@ -815,7 +827,7 @@ async fn test_prepare_tree_with_collection_wrong_authority() {
         registrar_key,
         voter_key,
         mining_key,
-        FEE_RECEIVER,
+        fee_receiver,
     );
 
     let res = tree_tx_builder.execute().await;
