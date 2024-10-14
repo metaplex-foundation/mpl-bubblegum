@@ -9,7 +9,6 @@ use solana_program::{
     program_pack::Pack,
     system_instruction,
 };
-use spl_account_compression::Noop;
 use spl_token::state::Mint;
 
 use crate::{
@@ -20,7 +19,7 @@ use crate::{
         metaplex_anchor::MplTokenMetadata,
         Voucher, ASSET_PREFIX, VOUCHER_PREFIX,
     },
-    utils::{cmp_bytes, cmp_pubkeys, hash_metadata},
+    utils::{cmp_bytes, cmp_pubkeys, hash_metadata, validate_log_wrapper_program},
 };
 
 #[derive(Accounts)]
@@ -71,10 +70,13 @@ pub struct DecompressV1<'info> {
     pub token_metadata_program: Program<'info, MplTokenMetadata>,
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
-    pub log_wrapper: Program<'info, Noop>,
+    /// CHECK: Program is verified in the instruction
+    pub log_wrapper: UncheckedAccount<'info>,
 }
 
 pub(crate) fn decompress_v1(ctx: Context<DecompressV1>, metadata: MetadataArgs) -> Result<()> {
+    validate_log_wrapper_program(&ctx.accounts.log_wrapper)?;
+
     // Validate the incoming metadata
 
     match ctx.accounts.voucher.leaf_schema {

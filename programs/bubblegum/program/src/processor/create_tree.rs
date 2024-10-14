@@ -1,17 +1,10 @@
-use bytemuck::cast_slice;
-
 use anchor_lang::{prelude::*, system_program::System};
-use spl_account_compression::{
-    program::SplAccountCompression,
-    state::{
-        merkle_tree_get_size, ConcurrentMerkleTreeHeader, CONCURRENT_MERKLE_TREE_HEADER_SIZE_V1,
-    },
-    Node, Noop,
-};
+use bytemuck::cast_slice;
 
 use crate::{
     error::BubblegumError,
     state::{DecompressibleState, TreeConfig, TREE_AUTHORITY_SIZE},
+    utils::validate_ownership_and_programs,
 };
 
 pub const MAX_ACC_PROOFS_SIZE: u32 = 17;
@@ -32,8 +25,10 @@ pub struct CreateTree<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
     pub tree_creator: Signer<'info>,
-    pub log_wrapper: Program<'info, Noop>,
-    pub compression_program: Program<'info, SplAccountCompression>,
+    /// CHECK: Program is verified in the instruction
+    pub log_wrapper: UncheckedAccount<'info>,
+    /// CHECK: Program is verified in the instruction
+    pub compression_program: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
 }
 
@@ -43,11 +38,17 @@ pub(crate) fn create_tree(
     max_buffer_size: u32,
     public: Option<bool>,
 ) -> Result<()> {
-    let merkle_tree = ctx.accounts.merkle_tree.to_account_info();
+    validate_ownership_and_programs(
+        &ctx.accounts.merkle_tree,
+        &ctx.accounts.log_wrapper,
+        &ctx.accounts.compression_program,
+    )?;
 
+    // Note this uses spl-account-compression to check the canopy size, and is assumed
+    // to be a valid check for mpl-account-compression.
     check_canopy_size(&ctx, max_depth, max_buffer_size)?;
 
-    let seed = merkle_tree.key();
+    let seed = ctx.accounts.merkle_tree.key();
     let seeds = &[seed.as_ref(), &[ctx.bumps.tree_authority]];
     let authority = &mut ctx.accounts.tree_authority;
     authority.set_inner(TreeConfig {
@@ -59,16 +60,32 @@ pub(crate) fn create_tree(
         is_decompressible: DecompressibleState::Disabled,
     });
     let authority_pda_signer = &[&seeds[..]];
-    let cpi_ctx = CpiContext::new_with_signer(
-        ctx.accounts.compression_program.to_account_info(),
-        spl_account_compression::cpi::accounts::Initialize {
-            authority: ctx.accounts.tree_authority.to_account_info(),
-            merkle_tree,
-            noop: ctx.accounts.log_wrapper.to_account_info(),
-        },
-        authority_pda_signer,
-    );
-    spl_account_compression::cpi::init_empty_merkle_tree(cpi_ctx, max_depth, max_buffer_size)
+
+    if ctx.accounts.compression_program.key
+        == &spl_account_compression::program::SplAccountCompression::id()
+    {
+        let cpi_ctx = CpiContext::new_with_signer(
+            ctx.accounts.compression_program.to_account_info(),
+            spl_account_compression::cpi::accounts::Initialize {
+                authority: ctx.accounts.tree_authority.to_account_info(),
+                merkle_tree: ctx.accounts.merkle_tree.to_account_info(),
+                noop: ctx.accounts.log_wrapper.to_account_info(),
+            },
+            authority_pda_signer,
+        );
+        spl_account_compression::cpi::init_empty_merkle_tree(cpi_ctx, max_depth, max_buffer_size)
+    } else {
+        let cpi_ctx = CpiContext::new_with_signer(
+            ctx.accounts.compression_program.to_account_info(),
+            mpl_account_compression::cpi::accounts::Initialize {
+                authority: ctx.accounts.tree_authority.to_account_info(),
+                merkle_tree: ctx.accounts.merkle_tree.to_account_info(),
+                noop: ctx.accounts.log_wrapper.to_account_info(),
+            },
+            authority_pda_signer,
+        );
+        mpl_account_compression::cpi::init_empty_merkle_tree(cpi_ctx, max_depth, max_buffer_size)
+    }
 }
 
 fn check_canopy_size(
@@ -76,6 +93,10 @@ fn check_canopy_size(
     max_depth: u32,
     max_buffer_size: u32,
 ) -> Result<()> {
+    use spl_account_compression::state::{
+        merkle_tree_get_size, ConcurrentMerkleTreeHeader, CONCURRENT_MERKLE_TREE_HEADER_SIZE_V1,
+    };
+
     let merkle_tree_bytes = ctx.accounts.merkle_tree.data.borrow();
 
     let (header_bytes, rest) = merkle_tree_bytes.split_at(CONCURRENT_MERKLE_TREE_HEADER_SIZE_V1);
@@ -92,7 +113,7 @@ fn check_canopy_size(
 
     let (_tree_bytes, canopy_bytes) = rest.split_at(merkle_tree_size);
 
-    let canopy = cast_slice::<u8, Node>(canopy_bytes);
+    let canopy = cast_slice::<u8, spl_account_compression::Node>(canopy_bytes);
 
     let cached_path_len = get_cached_path_length(canopy, max_depth)?;
 
@@ -108,7 +129,7 @@ fn check_canopy_size(
 
 // Method is taken from account-compression Solana program
 #[inline(always)]
-fn get_cached_path_length(canopy: &[Node], max_depth: u32) -> Result<u32> {
+fn get_cached_path_length(canopy: &[spl_account_compression::Node], max_depth: u32) -> Result<u32> {
     // The offset of 2 is applied because the canopy is a full binary tree without the root node
     // Size: (2^n - 2) -> Size + 2 must be a power of 2
     let closest_power_of_2 = (canopy.len() + 2) as u32;

@@ -1,5 +1,4 @@
 use anchor_lang::prelude::*;
-use spl_account_compression::{program::SplAccountCompression, Noop};
 
 use crate::state::metaplex_anchor::{MasterEdition, TokenMetadata};
 
@@ -30,8 +29,10 @@ pub struct Compress<'info> {
     pub master_edition: Box<Account<'info, MasterEdition>>,
     #[account(mut)]
     pub payer: Signer<'info>,
-    pub log_wrapper: Program<'info, Noop>,
-    pub compression_program: Program<'info, SplAccountCompression>,
+    /// CHECK:
+    pub log_wrapper: UncheckedAccount<'info>,
+    /// CHECK:
+    pub compression_program: UncheckedAccount<'info>,
     /// CHECK:
     pub token_program: UncheckedAccount<'info>,
     /// CHECK:

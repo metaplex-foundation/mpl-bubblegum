@@ -1,7 +1,6 @@
 use crate::state::BubblegumEventType;
 use anchor_lang::{prelude::*, solana_program::keccak};
 use borsh::{BorshDeserialize, BorshSerialize};
-use spl_account_compression::Node;
 
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct LeafSchemaEvent {
@@ -126,7 +125,7 @@ impl LeafSchema {
         LeafSchemaEvent::new(self.version(), self.clone(), self.to_node())
     }
 
-    pub fn to_node(&self) -> Node {
+    pub fn to_node(&self) -> spl_account_compression::Node {
         let hashed_leaf = match self {
             LeafSchema::V1 {
                 id,
