@@ -36,10 +36,14 @@ export const createTree = async (
           newAccount: input.merkleTree,
           lamports,
           space,
-          programId: context.programs.getPublicKey(
-            'splAccountCompression',
-            SPL_ACCOUNT_COMPRESSION_PROGRAM_ID
-          ),
+          programId: input.compressionProgram
+            ? Array.isArray(input.compressionProgram)
+              ? input.compressionProgram[0]
+              : input.compressionProgram
+            : context.programs.getPublicKey(
+                'splAccountCompression',
+                SPL_ACCOUNT_COMPRESSION_PROGRAM_ID
+              ),
         })
       )
       // Create the tree config.

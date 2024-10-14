@@ -3,7 +3,6 @@ use anchor_lang::{
     solana_program::{program::invoke, program_memory::sol_memcmp, pubkey::PUBKEY_BYTES},
 };
 use solana_program::keccak;
-use std::str::FromStr;
 
 use crate::{
     error::BubblegumError,
@@ -56,7 +55,7 @@ pub fn replace_leaf<'info>(
     let seeds = &[seed.as_ref(), &[bump]];
     let authority_pda_signer = &[&seeds[..]];
 
-    if compression_program.key == &spl_account_compression::program::SplAccountCompression::id() {
+    if compression_program.key == &spl_account_compression::id() {
         let cpi_ctx = CpiContext::new_with_signer(
             compression_program.clone(),
             spl_account_compression::cpi::accounts::Modify {
@@ -107,7 +106,7 @@ pub fn append_leaf<'info>(
     let seeds = &[seed.as_ref(), &[bump]];
     let authority_pda_signer = &[&seeds[..]];
 
-    if compression_program.key == &spl_account_compression::program::SplAccountCompression::id() {
+    if compression_program.key == &spl_account_compression::id() {
         let cpi_ctx = CpiContext::new_with_signer(
             compression_program.clone(),
             spl_account_compression::cpi::accounts::Modify {
@@ -169,14 +168,12 @@ pub(crate) fn wrap_application_data_v1(
     );
     let serialized_event: Vec<u8> = event.try_to_vec()?;
 
-    if noop_program.key == &spl_account_compression::Noop::id() {
+    if noop_program.key == &spl_noop::id() {
         invoke(
             &spl_noop::instruction(serialized_event),
             &[noop_program.to_account_info()],
         )?;
-    } else if noop_program.key
-        == &Pubkey::from_str("FGrro6PzpWjBRSYScqmRRRXpQNHAQNtJQwfSK8Dm94NQ").unwrap()
-    {
+    } else if noop_program.key == &mpl_noop::id() {
         invoke(
             &mpl_noop::instruction(serialized_event),
             &[noop_program.to_account_info()],
@@ -195,27 +192,22 @@ pub(crate) fn validate_ownership_and_programs(
     log_wrapper: &AccountInfo<'_>,
     compression_program: &AccountInfo<'_>,
 ) -> Result<()> {
-    if merkle_tree.owner == &spl_account_compression::program::SplAccountCompression::id() {
+    if merkle_tree.owner == &spl_account_compression::id() {
         require!(
-            log_wrapper.key == &spl_account_compression::Noop::id(),
+            log_wrapper.key == &spl_noop::id(),
             BubblegumError::InvalidLogWrapper
         );
         require!(
-            compression_program.key
-                == &spl_account_compression::program::SplAccountCompression::id(),
+            compression_program.key == &spl_account_compression::id(),
             BubblegumError::InvalidCompressionProgram
         );
-    } else if merkle_tree.owner
-        == &Pubkey::from_str("2Kqj8s8JssJoR35E81jyQHFEhKZokfEtf8BLTPEnkQr4").unwrap()
-    {
+    } else if merkle_tree.owner == &mpl_account_compression::id() {
         require!(
-            log_wrapper.key
-                == &Pubkey::from_str("FGrro6PzpWjBRSYScqmRRRXpQNHAQNtJQwfSK8Dm94NQ").unwrap(),
+            log_wrapper.key == &mpl_noop::id(),
             BubblegumError::InvalidLogWrapper
         );
         require!(
-            compression_program.key
-                == &Pubkey::from_str("2Kqj8s8JssJoR35E81jyQHFEhKZokfEtf8BLTPEnkQr4").unwrap(),
+            compression_program.key == &mpl_account_compression::id(),
             BubblegumError::InvalidCompressionProgram
         );
     } else {
@@ -234,9 +226,7 @@ pub(crate) fn validate_ownership_and_programs(
 /// Validate the provided log wrapper program is one of the valid choices.
 pub(crate) fn validate_log_wrapper_program(log_wrapper: &AccountInfo<'_>) -> Result<()> {
     require!(
-        log_wrapper.key == &spl_account_compression::Noop::id()
-            || log_wrapper.key
-                == &Pubkey::from_str("FGrro6PzpWjBRSYScqmRRRXpQNHAQNtJQwfSK8Dm94NQ").unwrap(),
+        log_wrapper.key == &spl_noop::id() || log_wrapper.key == &mpl_noop::id(),
         BubblegumError::InvalidLogWrapper
     );
     require!(log_wrapper.executable, BubblegumError::InvalidLogWrapper);

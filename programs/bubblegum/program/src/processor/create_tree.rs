@@ -61,9 +61,7 @@ pub(crate) fn create_tree(
     });
     let authority_pda_signer = &[&seeds[..]];
 
-    if ctx.accounts.compression_program.key
-        == &spl_account_compression::program::SplAccountCompression::id()
-    {
+    if ctx.accounts.compression_program.key == &spl_account_compression::id() {
         let cpi_ctx = CpiContext::new_with_signer(
             ctx.accounts.compression_program.to_account_info(),
             spl_account_compression::cpi::accounts::Initialize {
