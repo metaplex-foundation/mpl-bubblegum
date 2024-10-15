@@ -1,9 +1,11 @@
 use anchor_lang::prelude::*;
-use spl_account_compression::Node;
 
 use crate::{
     error::BubblegumError,
-    state::{leaf_schema::LeafSchema, TreeConfig},
+    state::{
+        leaf_schema::{LeafSchema, Node},
+        TreeConfig,
+    },
     utils::{get_asset_id, replace_leaf, validate_ownership_and_programs},
 };
 

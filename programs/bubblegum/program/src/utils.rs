@@ -7,6 +7,7 @@ use solana_program::keccak;
 use crate::{
     error::BubblegumError,
     state::{
+        leaf_schema::Node,
         metaplex_adapter::{Creator, MetadataArgs},
         ASSET_PREFIX,
     },
@@ -47,9 +48,9 @@ pub fn replace_leaf<'info>(
     merkle_tree: &AccountInfo<'info>,
     log_wrapper: &AccountInfo<'info>,
     remaining_accounts: &[AccountInfo<'info>],
-    root_node: spl_account_compression::Node,
-    previous_leaf: spl_account_compression::Node,
-    new_leaf: spl_account_compression::Node,
+    root_node: Node,
+    previous_leaf: Node,
+    new_leaf: Node,
     index: u32,
 ) -> Result<()> {
     let seeds = &[seed.as_ref(), &[bump]];
@@ -101,7 +102,7 @@ pub fn append_leaf<'info>(
     authority: &AccountInfo<'info>,
     merkle_tree: &AccountInfo<'info>,
     log_wrapper: &AccountInfo<'info>,
-    leaf_node: spl_account_compression::Node,
+    leaf_node: Node,
 ) -> Result<()> {
     let seeds = &[seed.as_ref(), &[bump]];
     let authority_pda_signer = &[&seeds[..]];
@@ -158,24 +159,28 @@ pub(crate) fn wrap_application_data_v1(
     custom_data: Vec<u8>,
     noop_program: &AccountInfo<'_>,
 ) -> Result<()> {
-    // We wrap the event using spl-account-compression no matter whether we are sending the data
-    // to spl-account-compression or mpl-account-compression.
-    let versioned_data = spl_account_compression::events::ApplicationDataEventV1 {
-        application_data: custom_data,
-    };
-    let event = spl_account_compression::events::AccountCompressionEvent::ApplicationData(
-        spl_account_compression::events::ApplicationDataEvent::V1(versioned_data),
-    );
-    let serialized_event: Vec<u8> = event.try_to_vec()?;
-
     if noop_program.key == &spl_noop::id() {
+        let versioned_data = spl_account_compression::events::ApplicationDataEventV1 {
+            application_data: custom_data,
+        };
+        let event = spl_account_compression::events::AccountCompressionEvent::ApplicationData(
+            spl_account_compression::events::ApplicationDataEvent::V1(versioned_data),
+        );
+
         invoke(
-            &spl_noop::instruction(serialized_event),
+            &spl_noop::instruction(event.try_to_vec()?),
             &[noop_program.to_account_info()],
         )?;
     } else if noop_program.key == &mpl_noop::id() {
+        let versioned_data = mpl_account_compression::events::ApplicationDataEventV1 {
+            application_data: custom_data,
+        };
+        let event = mpl_account_compression::events::AccountCompressionEvent::ApplicationData(
+            mpl_account_compression::events::ApplicationDataEvent::V1(versioned_data),
+        );
+
         invoke(
-            &mpl_noop::instruction(serialized_event),
+            &mpl_noop::instruction(event.try_to_vec()?),
             &[noop_program.to_account_info()],
         )?;
     } else {

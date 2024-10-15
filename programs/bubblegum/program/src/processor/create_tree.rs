@@ -3,7 +3,7 @@ use bytemuck::cast_slice;
 
 use crate::{
     error::BubblegumError,
-    state::{DecompressibleState, TreeConfig, TREE_AUTHORITY_SIZE},
+    state::{leaf_schema::Node, DecompressibleState, TreeConfig, TREE_AUTHORITY_SIZE},
     utils::validate_ownership_and_programs,
 };
 
@@ -111,7 +111,7 @@ fn check_canopy_size(
 
     let (_tree_bytes, canopy_bytes) = rest.split_at(merkle_tree_size);
 
-    let canopy = cast_slice::<u8, spl_account_compression::Node>(canopy_bytes);
+    let canopy = cast_slice::<u8, Node>(canopy_bytes);
 
     let cached_path_len = get_cached_path_length(canopy, max_depth)?;
 
@@ -127,7 +127,7 @@ fn check_canopy_size(
 
 // Method is taken from account-compression Solana program
 #[inline(always)]
-fn get_cached_path_length(canopy: &[spl_account_compression::Node], max_depth: u32) -> Result<u32> {
+fn get_cached_path_length(canopy: &[Node], max_depth: u32) -> Result<u32> {
     // The offset of 2 is applied because the canopy is a full binary tree without the root node
     // Size: (2^n - 2) -> Size + 2 must be a power of 2
     let closest_power_of_2 = (canopy.len() + 2) as u32;

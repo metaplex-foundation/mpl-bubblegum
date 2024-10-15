@@ -2,6 +2,10 @@ use crate::state::BubblegumEventType;
 use anchor_lang::{prelude::*, solana_program::keccak};
 use borsh::{BorshDeserialize, BorshSerialize};
 
+/// Abstract type for 32 byte leaf data.  Same type as spl-account-compression and
+/// mpl-account-compression `Node` types.
+pub type Node = [u8; 32];
+
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct LeafSchemaEvent {
     pub event_type: BubblegumEventType,
@@ -125,7 +129,7 @@ impl LeafSchema {
         LeafSchemaEvent::new(self.version(), self.clone(), self.to_node())
     }
 
-    pub fn to_node(&self) -> spl_account_compression::Node {
+    pub fn to_node(&self) -> Node {
         let hashed_leaf = match self {
             LeafSchema::V1 {
                 id,
