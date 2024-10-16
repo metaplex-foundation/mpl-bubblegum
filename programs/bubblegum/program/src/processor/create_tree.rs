@@ -1,9 +1,10 @@
 use anchor_lang::{prelude::*, system_program::System};
 use bytemuck::cast_slice;
+use spl_concurrent_merkle_tree::node::Node;
 
 use crate::{
     error::BubblegumError,
-    state::{leaf_schema::Node, DecompressibleState, TreeConfig, TREE_AUTHORITY_SIZE},
+    state::{DecompressibleState, TreeConfig, TREE_AUTHORITY_SIZE},
     utils::validate_ownership_and_programs,
 };
 

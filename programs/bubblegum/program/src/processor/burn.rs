@@ -1,11 +1,9 @@
 use anchor_lang::prelude::*;
+use spl_concurrent_merkle_tree::node::Node;
 
 use crate::{
     error::BubblegumError,
-    state::{
-        leaf_schema::{LeafSchema, Node},
-        TreeConfig,
-    },
+    state::{leaf_schema::LeafSchema, TreeConfig},
     utils::{get_asset_id, replace_leaf, validate_ownership_and_programs},
 };
 

@@ -1,10 +1,7 @@
 use crate::state::BubblegumEventType;
 use anchor_lang::{prelude::*, solana_program::keccak};
 use borsh::{BorshDeserialize, BorshSerialize};
-
-/// Abstract type for 32 byte leaf data.  Same type as spl-account-compression and
-/// mpl-account-compression `Node` types.
-pub type Node = [u8; 32];
+use spl_concurrent_merkle_tree::node::Node;
 
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct LeafSchemaEvent {

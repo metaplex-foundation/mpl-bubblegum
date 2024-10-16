@@ -3,11 +3,11 @@ use anchor_lang::{
     solana_program::{program::invoke, program_memory::sol_memcmp, pubkey::PUBKEY_BYTES},
 };
 use solana_program::keccak;
+use spl_concurrent_merkle_tree::node::Node;
 
 use crate::{
     error::BubblegumError,
     state::{
-        leaf_schema::Node,
         metaplex_adapter::{Creator, MetadataArgs},
         ASSET_PREFIX,
     },
