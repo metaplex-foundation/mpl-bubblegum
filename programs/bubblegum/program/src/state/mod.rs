@@ -81,6 +81,9 @@ pub enum BubblegumEventType {
     LeafSchemaEvent,
 }
 
+#[cfg(feature = "idl-build")]
+impl anchor_lang::IdlBuild for DecompressibleState {}
+
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, Copy)]
 #[repr(u8)]
 pub enum DecompressibleState {
