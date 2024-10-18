@@ -243,7 +243,6 @@ dependencies = [
  "anchor-derive-accounts",
  "anchor-derive-serde",
  "anchor-derive-space",
- "anchor-syn",
  "arrayref",
  "base64 0.13.1",
  "bincode",
@@ -699,7 +698,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4114279215a005bc675e386011e594e1d9b800918cea18fcadadcce864a2046b"
 dependencies = [
  "borsh-derive 0.10.3",
- "hashbrown 0.13.2",
+ "hashbrown 0.12.3",
 ]
 
 [[package]]
@@ -2417,9 +2416,9 @@ dependencies = [
 
 [[package]]
 name = "mpl-account-compression"
-version = "0.4.1"
+version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4321ebb1c041f6e4b08f85f003ebdecdba64247abb9ed85313ef71c8dee4b3d9"
+checksum = "e2ad6a6ba15b2e880d43b94f40510f1b64f2981a843cfc7b8877919467d2ab1a"
 dependencies = [
  "anchor-lang",
  "bytemuck",
@@ -2664,7 +2663,7 @@ version = "0.7.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "af1844ef2428cc3e1cb900be36181049ef3d3193c63e43026cfe202983b27a56"
 dependencies = [
- "proc-macro-crate 3.2.0",
+ "proc-macro-crate 1.3.1",
  "proc-macro2",
  "quote",
  "syn 2.0.76",
@@ -4969,9 +4968,9 @@ dependencies = [
 
 [[package]]
 name = "spl-account-compression"
-version = "0.4.1"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8ce8314ec6ae26084ec7c6c0802c3dc173ee86aee5f5d5026a3f82c52cfe1c07"
+checksum = "31f461e20e8efb539d7f3f30cd82931ee128651c6366abe326f083b07253a1d6"
 dependencies = [
  "anchor-lang",
  "bytemuck",

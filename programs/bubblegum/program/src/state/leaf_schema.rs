@@ -36,9 +36,6 @@ impl Version {
     }
 }
 
-#[cfg(feature = "idl-build")]
-impl anchor_lang::IdlBuild for LeafSchema {}
-
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum LeafSchema {
     V1 {
