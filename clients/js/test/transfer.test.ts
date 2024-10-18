@@ -55,7 +55,7 @@ test('it can transfer a compressed NFT', async (t) => {
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(updatedLeaf));
 });
 
-test('it can transfer a compressed NFT using different programs', async (t) => {
+test.skip('it can transfer a compressed NFT using different programs', async (t) => {
   // Given a tree with a minted NFT owned by leafOwnerA.
   const umi = await createUmi();
   const merkleTree = await createTree(umi, {

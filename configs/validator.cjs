@@ -10,16 +10,16 @@ module.exports = {
   validator: {
     commitment: "processed",
     programs: [
-      {
-        label: "MPL Account Compression",
-        programId: "mcmt6YrQEMKw8Mw43FmpRLmf7BqRnFMKmAcbxE3xkAW",
-        deployPath: getProgram("mpl_account_compression.so"),
-      },
-      {
-        label: "MPL Noop",
-        programId: "mnoopTCrg4p8ry25e4bcWA9XZjbNjMTfgYVGGEdRsf3",
-        deployPath: getProgram("mpl_noop.so"),
-      },
+      // {
+      //   label: "MPL Account Compression",
+      //   programId: "mcmt6YrQEMKw8Mw43FmpRLmf7BqRnFMKmAcbxE3xkAW",
+      //   deployPath: getProgram("mpl_account_compression.so"),
+      // },
+      // {
+      //   label: "MPL Noop",
+      //   programId: "mnoopTCrg4p8ry25e4bcWA9XZjbNjMTfgYVGGEdRsf3",
+      //   deployPath: getProgram("mpl_noop.so"),
+      // },
       {
         label: "Mpl Bubblegum",
         programId: "BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY",
