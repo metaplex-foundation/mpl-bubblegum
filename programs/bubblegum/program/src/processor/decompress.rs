@@ -19,7 +19,7 @@ use crate::{
         metaplex_anchor::MplTokenMetadata,
         Voucher, ASSET_PREFIX, VOUCHER_PREFIX,
     },
-    utils::{cmp_bytes, cmp_pubkeys, hash_metadata, validate_log_wrapper_program},
+    utils::{cmp_bytes, cmp_pubkeys, hash_metadata},
 };
 
 #[derive(Accounts)]
@@ -70,13 +70,11 @@ pub struct DecompressV1<'info> {
     pub token_metadata_program: Program<'info, MplTokenMetadata>,
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
-    /// CHECK: Program is verified in the instruction
+    /// CHECK: Program is not used in the instruction
     pub log_wrapper: UncheckedAccount<'info>,
 }
 
 pub(crate) fn decompress_v1(ctx: Context<DecompressV1>, metadata: MetadataArgs) -> Result<()> {
-    validate_log_wrapper_program(&ctx.accounts.log_wrapper)?;
-
     // Validate the incoming metadata
 
     match ctx.accounts.voucher.leaf_schema {

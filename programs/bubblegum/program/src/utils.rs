@@ -227,14 +227,3 @@ pub(crate) fn validate_ownership_and_programs(
 
     Ok(())
 }
-
-/// Validate the provided log wrapper program is one of the valid choices.
-pub(crate) fn validate_log_wrapper_program(log_wrapper: &AccountInfo<'_>) -> Result<()> {
-    require!(
-        log_wrapper.key == &spl_noop::id() || log_wrapper.key == &mpl_noop::id(),
-        BubblegumError::InvalidLogWrapper
-    );
-    require!(log_wrapper.executable, BubblegumError::InvalidLogWrapper);
-
-    Ok(())
-}
