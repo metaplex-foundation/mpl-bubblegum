@@ -22,6 +22,7 @@ RPC_DEVNET="https://api.devnet.solana.com"
 
 if [ -z "$OUTPUT" ]; then
     echo "missing output directory"
+    cd ${CURRENT_DIR}
     exit 1
 fi
 
@@ -41,17 +42,20 @@ copy_from_chain() {
         "bin")
             solana account -u "$RPC" "$ACCOUNT_ID" -o ${OUTPUT}/$4$3 > /dev/null || {
                 echo $(RED "[  ERROR  ] Failed to dump program '$ACCOUNT_ID'")
+                cd ${CURRENT_DIR}
                 exit 1
             }
             ;;
         "so")
-            solana program dump -u "$RPC" "$ACCOUNT_ID" ${OUTPUT}/$4$3 > /dev/null|| {
+            solana program dump -u "$RPC" "$ACCOUNT_ID" ${OUTPUT}/$4$3 > /dev/null || {
                 echo $(RED "[  ERROR  ] Failed to dump program '$ACCOUNT_ID'")
+                cd ${CURRENT_DIR}
                 exit 1
             }
             ;;
         *)
             echo $(RED "[  ERROR  ] unknown account type for '$3'")
+            cd ${CURRENT_DIR}
             exit 1
             ;;
     esac
