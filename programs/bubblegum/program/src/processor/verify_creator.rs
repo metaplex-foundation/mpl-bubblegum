@@ -1,9 +1,9 @@
 use anchor_lang::prelude::*;
-use spl_account_compression::{program::SplAccountCompression, Noop};
 
 use crate::{
     processor::process_creator_verification,
     state::{metaplex_adapter::MetadataArgs, TreeConfig},
+    utils::validate_ownership_and_programs,
 };
 
 #[derive(Accounts)]
@@ -22,8 +22,10 @@ pub struct CreatorVerification<'info> {
     pub merkle_tree: UncheckedAccount<'info>,
     pub payer: Signer<'info>,
     pub creator: Signer<'info>,
-    pub log_wrapper: Program<'info, Noop>,
-    pub compression_program: Program<'info, SplAccountCompression>,
+    /// CHECK: Program is verified in the instruction
+    pub log_wrapper: UncheckedAccount<'info>,
+    /// CHECK: Program is verified in the instruction
+    pub compression_program: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
 }
 
@@ -36,6 +38,12 @@ pub(crate) fn verify_creator<'info>(
     index: u32,
     message: MetadataArgs,
 ) -> Result<()> {
+    validate_ownership_and_programs(
+        &ctx.accounts.merkle_tree,
+        &ctx.accounts.log_wrapper,
+        &ctx.accounts.compression_program,
+    )?;
+
     process_creator_verification(
         ctx,
         root,

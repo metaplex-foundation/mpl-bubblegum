@@ -1,7 +1,9 @@
 use anchor_lang::prelude::*;
-use spl_account_compression::{program::SplAccountCompression, Noop};
 
-use crate::state::{metaplex_adapter::MetadataArgs, metaplex_anchor::TokenMetadata, TreeConfig};
+use crate::{
+    state::{metaplex_adapter::MetadataArgs, metaplex_anchor::TokenMetadata, TreeConfig},
+    utils::validate_ownership_and_programs,
+};
 
 use super::process_collection_verification;
 
@@ -38,8 +40,10 @@ pub struct CollectionVerification<'info> {
     pub edition_account: UncheckedAccount<'info>,
     /// CHECK: This is no longer needed but kept for backwards compatibility.
     pub bubblegum_signer: UncheckedAccount<'info>,
-    pub log_wrapper: Program<'info, Noop>,
-    pub compression_program: Program<'info, SplAccountCompression>,
+    /// CHECK: Program is verified in the instruction
+    pub log_wrapper: UncheckedAccount<'info>,
+    /// CHECK: Program is verified in the instruction
+    pub compression_program: UncheckedAccount<'info>,
     /// CHECK: This is no longer needed but kept for backwards compatibility.
     pub token_metadata_program: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
@@ -54,6 +58,12 @@ pub(crate) fn verify_collection<'info>(
     index: u32,
     message: MetadataArgs,
 ) -> Result<()> {
+    validate_ownership_and_programs(
+        &ctx.accounts.merkle_tree,
+        &ctx.accounts.log_wrapper,
+        &ctx.accounts.compression_program,
+    )?;
+
     process_collection_verification(
         ctx,
         root,

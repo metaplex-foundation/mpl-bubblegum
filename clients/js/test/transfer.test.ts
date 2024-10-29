@@ -55,6 +55,140 @@ test('it can transfer a compressed NFT', async (t) => {
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(updatedLeaf));
 });
 
+test('it can transfer a compressed NFT using mpl-account-compression and mpl-noop', async (t) => {
+  // Given a tree with a minted NFT owned by leafOwnerA.
+  const umi = await createUmi();
+  const merkleTree = await createTree(umi, {
+    logWrapper: publicKey('mnoopTCrg4p8ry25e4bcWA9XZjbNjMTfgYVGGEdRsf3'),
+    compressionProgram: publicKey(
+      'mcmt6YrQEMKw8Mw43FmpRLmf7BqRnFMKmAcbxE3xkAW'
+    ),
+  });
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  const leafOwnerA = generateSigner(umi);
+  const { metadata, leafIndex } = await mint(umi, {
+    merkleTree,
+    leafOwner: leafOwnerA.publicKey,
+    logWrapper: publicKey('mnoopTCrg4p8ry25e4bcWA9XZjbNjMTfgYVGGEdRsf3'),
+    compressionProgram: publicKey(
+      'mcmt6YrQEMKw8Mw43FmpRLmf7BqRnFMKmAcbxE3xkAW'
+    ),
+  });
+
+  // When leafOwnerA transfers the NFT to leafOwnerB.
+  const leafOwnerB = generateSigner(umi);
+  await transfer(umi, {
+    leafOwner: leafOwnerA,
+    newLeafOwner: leafOwnerB.publicKey,
+    merkleTree,
+    root: getCurrentRoot(merkleTreeAccount.tree),
+    dataHash: hashMetadataData(metadata),
+    creatorHash: hashMetadataCreators(metadata.creators),
+    nonce: leafIndex,
+    index: leafIndex,
+    proof: [],
+    logWrapper: publicKey('mnoopTCrg4p8ry25e4bcWA9XZjbNjMTfgYVGGEdRsf3'),
+    compressionProgram: publicKey(
+      'mcmt6YrQEMKw8Mw43FmpRLmf7BqRnFMKmAcbxE3xkAW'
+    ),
+  }).sendAndConfirm(umi);
+
+  // Then the leaf was updated in the merkle tree.
+  const updatedLeaf = hashLeaf(umi, {
+    merkleTree,
+    owner: leafOwnerB.publicKey,
+    leafIndex,
+    metadata,
+  });
+  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(updatedLeaf));
+});
+
+test('it cannot transfer a compressed NFT owned by spl-account-compression using mpl programs', async (t) => {
+  // Given a tree with a minted NFT owned by leafOwnerA.
+  const umi = await createUmi();
+  const merkleTree = await createTree(umi);
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  const leafOwnerA = generateSigner(umi);
+  const { metadata, leafIndex } = await mint(umi, {
+    merkleTree,
+    leafOwner: leafOwnerA.publicKey,
+  });
+
+  // When leafOwnerA transfers the NFT to leafOwnerB.
+  const leafOwnerB = generateSigner(umi);
+  const promise = transfer(umi, {
+    leafOwner: leafOwnerA,
+    newLeafOwner: leafOwnerB.publicKey,
+    merkleTree,
+    root: getCurrentRoot(merkleTreeAccount.tree),
+    dataHash: hashMetadataData(metadata),
+    creatorHash: hashMetadataCreators(metadata.creators),
+    nonce: leafIndex,
+    index: leafIndex,
+    proof: [],
+    logWrapper: publicKey('mnoopTCrg4p8ry25e4bcWA9XZjbNjMTfgYVGGEdRsf3'),
+    compressionProgram: publicKey(
+      'mcmt6YrQEMKw8Mw43FmpRLmf7BqRnFMKmAcbxE3xkAW'
+    ),
+  }).sendAndConfirm(umi);
+
+  // Then we expect a program error.
+  await t.throwsAsync(promise, { name: 'InvalidLogWrapper' });
+
+  // Then the leaf was not updated in the merkle tree.
+  const originalLeaf = hashLeaf(umi, {
+    merkleTree,
+    owner: leafOwnerA.publicKey,
+    leafIndex,
+    metadata,
+  });
+  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(originalLeaf));
+});
+
+test('it cannot transfer a compressed NFT owned by spl-account-compression using mpl-account-compression', async (t) => {
+  // Given a tree with a minted NFT owned by leafOwnerA.
+  const umi = await createUmi();
+  const merkleTree = await createTree(umi);
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  const leafOwnerA = generateSigner(umi);
+  const { metadata, leafIndex } = await mint(umi, {
+    merkleTree,
+    leafOwner: leafOwnerA.publicKey,
+  });
+
+  // When leafOwnerA transfers the NFT to leafOwnerB.
+  const leafOwnerB = generateSigner(umi);
+  const promise = transfer(umi, {
+    leafOwner: leafOwnerA,
+    newLeafOwner: leafOwnerB.publicKey,
+    merkleTree,
+    root: getCurrentRoot(merkleTreeAccount.tree),
+    dataHash: hashMetadataData(metadata),
+    creatorHash: hashMetadataCreators(metadata.creators),
+    nonce: leafIndex,
+    index: leafIndex,
+    proof: [],
+    compressionProgram: publicKey(
+      'mcmt6YrQEMKw8Mw43FmpRLmf7BqRnFMKmAcbxE3xkAW'
+    ),
+  }).sendAndConfirm(umi);
+
+  // Then we expect a program error.
+  await t.throwsAsync(promise, { name: 'InvalidCompressionProgram' });
+
+  // Then the leaf was not updated in the merkle tree.
+  const originalLeaf = hashLeaf(umi, {
+    merkleTree,
+    owner: leafOwnerA.publicKey,
+    leafIndex,
+    metadata,
+  });
+  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(originalLeaf));
+});
+
 test('it can transfer a compressed NFT as a delegated authority', async (t) => {
   // Given a tree with a delegated compressed NFT owned by leafOwnerA.
   const umi = await createUmi();

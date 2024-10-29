@@ -9,7 +9,6 @@ use solana_program::{
     program_pack::Pack,
     system_instruction,
 };
-use spl_account_compression::Noop;
 use spl_token::state::Mint;
 
 use crate::{
@@ -71,7 +70,8 @@ pub struct DecompressV1<'info> {
     pub token_metadata_program: Program<'info, MplTokenMetadata>,
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
-    pub log_wrapper: Program<'info, Noop>,
+    /// CHECK: Program is not used in the instruction
+    pub log_wrapper: UncheckedAccount<'info>,
 }
 
 pub(crate) fn decompress_v1(ctx: Context<DecompressV1>, metadata: MetadataArgs) -> Result<()> {

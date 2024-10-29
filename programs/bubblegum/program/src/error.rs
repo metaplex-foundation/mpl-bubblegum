@@ -88,6 +88,10 @@ pub enum BubblegumError {
     InvalidTokenStandard,
     #[msg("Canopy size should be set bigger for this tree")]
     InvalidCanopySize,
+    #[msg("Invalid log wrapper program")]
+    InvalidLogWrapper,
+    #[msg("Invalid compression program")]
+    InvalidCompressionProgram,
 }
 
 // Converts certain Token Metadata errors into Bubblegum equivalents

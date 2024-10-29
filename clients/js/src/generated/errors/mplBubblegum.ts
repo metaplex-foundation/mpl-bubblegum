@@ -604,6 +604,32 @@ export class InvalidCanopySizeError extends ProgramError {
 codeToErrorMap.set(0x1799, InvalidCanopySizeError);
 nameToErrorMap.set('InvalidCanopySize', InvalidCanopySizeError);
 
+/** InvalidLogWrapper: Invalid log wrapper program */
+export class InvalidLogWrapperError extends ProgramError {
+  readonly name: string = 'InvalidLogWrapper';
+
+  readonly code: number = 0x179a; // 6042
+
+  constructor(program: Program, cause?: Error) {
+    super('Invalid log wrapper program', program, cause);
+  }
+}
+codeToErrorMap.set(0x179a, InvalidLogWrapperError);
+nameToErrorMap.set('InvalidLogWrapper', InvalidLogWrapperError);
+
+/** InvalidCompressionProgram: Invalid compression program */
+export class InvalidCompressionProgramError extends ProgramError {
+  readonly name: string = 'InvalidCompressionProgram';
+
+  readonly code: number = 0x179b; // 6043
+
+  constructor(program: Program, cause?: Error) {
+    super('Invalid compression program', program, cause);
+  }
+}
+codeToErrorMap.set(0x179b, InvalidCompressionProgramError);
+nameToErrorMap.set('InvalidCompressionProgram', InvalidCompressionProgramError);
+
 /**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
