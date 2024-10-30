@@ -17,6 +17,9 @@ import {
   safeFetchTreeConfigFromSeeds,
   getMerkleTreeSize,
   SPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
+  getCompressionPrograms,
+  MPL_NOOP_PROGRAM_ID,
+  MPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
 } from '../src';
 import { createUmi } from './_setup';
 
@@ -133,15 +136,17 @@ test('it can create a Bubblegum tree using mpl-account-compression and mpl-noop'
   const umi = await createUmi();
   const merkleTree = generateSigner(umi);
 
+  // For these tests, make sure `getCompressionPrograms` doesn't return spl programs.
+  const { logWrapper, compressionProgram } = await getCompressionPrograms(umi);
+  t.is(logWrapper, MPL_NOOP_PROGRAM_ID);
+  t.is(compressionProgram, MPL_ACCOUNT_COMPRESSION_PROGRAM_ID);
+
   // When we create a tree at this address.
   const builder = await createTree(umi, {
     merkleTree,
     maxDepth: 14,
     maxBufferSize: 64,
-    logWrapper: publicKey('mnoopTCrg4p8ry25e4bcWA9XZjbNjMTfgYVGGEdRsf3'),
-    compressionProgram: publicKey(
-      'mcmt6YrQEMKw8Mw43FmpRLmf7BqRnFMKmAcbxE3xkAW'
-    ),
+    ...(await getCompressionPrograms(umi)),
   });
   await builder.sendAndConfirm(umi);
 
@@ -200,9 +205,7 @@ test('it cannot create a Bubblegum tree using invalid logWrapper with mpl-accoun
     maxDepth: 14,
     maxBufferSize: 64,
     logWrapper: generateSigner(umi).publicKey,
-    compressionProgram: publicKey(
-      'mcmt6YrQEMKw8Mw43FmpRLmf7BqRnFMKmAcbxE3xkAW'
-    ),
+    compressionProgram: MPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
   });
 
   const promise = builder.sendAndConfirm(umi);
@@ -262,9 +265,9 @@ test('it cannot create a Bubblegum tree when compression program does not match 
     merkleTree,
     maxDepth: 14,
     maxBufferSize: 64,
-    logWrapper: publicKey('mnoopTCrg4p8ry25e4bcWA9XZjbNjMTfgYVGGEdRsf3'),
+    logWrapper: MPL_NOOP_PROGRAM_ID,
     compressionProgram: generateSigner(umi).publicKey,
-    merkleTreeOwner: publicKey('mcmt6YrQEMKw8Mw43FmpRLmf7BqRnFMKmAcbxE3xkAW'),
+    merkleTreeOwner: MPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
   });
 
   const promise = builder.sendAndConfirm(umi);

@@ -12,6 +12,9 @@ import {
   hashMetadataData,
   transfer,
   verifyLeaf,
+  getCompressionPrograms,
+  MPL_NOOP_PROGRAM_ID,
+  MPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
 } from '../src';
 import { createTree, createUmi, mint } from './_setup';
 import {
@@ -58,21 +61,21 @@ test('it can transfer a compressed NFT', async (t) => {
 test('it can transfer a compressed NFT using mpl-account-compression and mpl-noop', async (t) => {
   // Given a tree with a minted NFT owned by leafOwnerA.
   const umi = await createUmi();
+
+  // For these tests, make sure `getCompressionPrograms` doesn't return spl programs.
+  const { logWrapper, compressionProgram } = await getCompressionPrograms(umi);
+  t.is(logWrapper, MPL_NOOP_PROGRAM_ID);
+  t.is(compressionProgram, MPL_ACCOUNT_COMPRESSION_PROGRAM_ID);
+
   const merkleTree = await createTree(umi, {
-    logWrapper: publicKey('mnoopTCrg4p8ry25e4bcWA9XZjbNjMTfgYVGGEdRsf3'),
-    compressionProgram: publicKey(
-      'mcmt6YrQEMKw8Mw43FmpRLmf7BqRnFMKmAcbxE3xkAW'
-    ),
+    ...(await getCompressionPrograms(umi)),
   });
   let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const leafOwnerA = generateSigner(umi);
   const { metadata, leafIndex } = await mint(umi, {
     merkleTree,
     leafOwner: leafOwnerA.publicKey,
-    logWrapper: publicKey('mnoopTCrg4p8ry25e4bcWA9XZjbNjMTfgYVGGEdRsf3'),
-    compressionProgram: publicKey(
-      'mcmt6YrQEMKw8Mw43FmpRLmf7BqRnFMKmAcbxE3xkAW'
-    ),
+    ...(await getCompressionPrograms(umi)),
   });
 
   // When leafOwnerA transfers the NFT to leafOwnerB.
@@ -87,10 +90,7 @@ test('it can transfer a compressed NFT using mpl-account-compression and mpl-noo
     nonce: leafIndex,
     index: leafIndex,
     proof: [],
-    logWrapper: publicKey('mnoopTCrg4p8ry25e4bcWA9XZjbNjMTfgYVGGEdRsf3'),
-    compressionProgram: publicKey(
-      'mcmt6YrQEMKw8Mw43FmpRLmf7BqRnFMKmAcbxE3xkAW'
-    ),
+    ...(await getCompressionPrograms(umi)),
   }).sendAndConfirm(umi);
 
   // Then the leaf was updated in the merkle tree.
@@ -107,6 +107,12 @@ test('it can transfer a compressed NFT using mpl-account-compression and mpl-noo
 test('it cannot transfer a compressed NFT owned by spl-account-compression using mpl programs', async (t) => {
   // Given a tree with a minted NFT owned by leafOwnerA.
   const umi = await createUmi();
+
+  // For these tests, make sure `getCompressionPrograms` doesn't return spl programs.
+  const { logWrapper, compressionProgram } = await getCompressionPrograms(umi);
+  t.is(logWrapper, MPL_NOOP_PROGRAM_ID);
+  t.is(compressionProgram, MPL_ACCOUNT_COMPRESSION_PROGRAM_ID);
+
   const merkleTree = await createTree(umi);
   let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const leafOwnerA = generateSigner(umi);
@@ -127,10 +133,7 @@ test('it cannot transfer a compressed NFT owned by spl-account-compression using
     nonce: leafIndex,
     index: leafIndex,
     proof: [],
-    logWrapper: publicKey('mnoopTCrg4p8ry25e4bcWA9XZjbNjMTfgYVGGEdRsf3'),
-    compressionProgram: publicKey(
-      'mcmt6YrQEMKw8Mw43FmpRLmf7BqRnFMKmAcbxE3xkAW'
-    ),
+    ...(await getCompressionPrograms(umi)),
   }).sendAndConfirm(umi);
 
   // Then we expect a program error.
@@ -170,9 +173,7 @@ test('it cannot transfer a compressed NFT owned by spl-account-compression using
     nonce: leafIndex,
     index: leafIndex,
     proof: [],
-    compressionProgram: publicKey(
-      'mcmt6YrQEMKw8Mw43FmpRLmf7BqRnFMKmAcbxE3xkAW'
-    ),
+    compressionProgram: MPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
   }).sendAndConfirm(umi);
 
   // Then we expect a program error.
