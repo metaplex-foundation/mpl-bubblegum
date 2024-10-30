@@ -29,14 +29,14 @@ export async function getCompressionPrograms(
   const genesisHash = await context.rpc.call<string>('getGenesisHash');
 
   // Determine if the genesis hash matches known clusters.
-  const isKnownCluster = [
+  const isSolanaCluster = [
     SOLANA_MAINNET_GENESIS_HASH,
     SOLANA_DEVNET_GENESIS_HASH,
     SOLANA_TESTNET_GENESIS_HASH,
   ].includes(genesisHash);
 
   // Return appropriate program IDs based on the cluster.
-  if (isKnownCluster) {
+  if (isSolanaCluster) {
     return {
       logWrapper: SPL_NOOP_PROGRAM_ID,
       compressionProgram: SPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
