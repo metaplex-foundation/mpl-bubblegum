@@ -5,6 +5,8 @@ on:
     inputs:
       program_matrix:
         type: string
+      git_ref:
+        type: string
 
 env:
   CACHE: true
@@ -15,7 +17,9 @@ jobs:
     runs-on: ubuntu-latest-16-cores
     steps:
       - name: Git checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.git_ref }}
 
       - name: Load environment variables
         run: cat .github/.env >> $GITHUB_ENV
@@ -34,7 +38,7 @@ jobs:
       - name: Download program builds
         uses: actions/download-artifact@v4
         with:
-          name: program-builds
+          name: program-builds-${{ inputs.git_ref }}
 
       - name: Run tests
         shell: bash

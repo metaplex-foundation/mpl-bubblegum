@@ -2,6 +2,9 @@ name: Test JS client
 
 on:
   workflow_call:
+    inputs:
+      git_ref:
+        type: string
 
 env:
   CACHE: true
@@ -15,7 +18,9 @@ jobs:
         node: ["18.x", "20.x"]
     steps:
       - name: Git checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.git_ref }}
 
       - name: Load environment variables
         run: cat .github/.env >> $GITHUB_ENV
@@ -26,6 +31,7 @@ jobs:
           node: ${{ matrix.node }}
           solana: ${{ env.SOLANA_VERSION }}
           cache: ${{ env.CACHE }}
+          artifacts: program-builds-${{ inputs.git_ref }}
 
       - name: Install dependencies
         uses: metaplex-foundation/actions/install-node-dependencies@v1
@@ -49,7 +55,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Git checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.git_ref }}
 
       - name: Load environment variables
         run: cat .github/.env >> $GITHUB_ENV

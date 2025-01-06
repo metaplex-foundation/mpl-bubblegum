@@ -1,0 +1,139 @@
+name: Create release
+
+on:
+  workflow_dispatch:
+    inputs:
+      program:
+        description: Program
+        required: true
+        default: bubblegum
+        type: choice
+        options:
+          - bubblegum
+      bump:
+        description: Version bump
+        required: true
+        default: patch
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      git_ref:
+        description: Commit hash or branch to create release
+        required: false
+        type: string
+        default: main
+
+
+env:
+  CACHE: true
+
+jobs:
+  build_programs:
+    name: Programs
+    uses: ./.github/workflows/build-programs.yml
+    secrets: inherit
+    with:
+      git_ref: ${{ inputs.git_ref }}
+
+  test_programs:
+    name: Programs
+    uses: ./.github/workflows/test-programs.yml
+    secrets: inherit
+    with:
+      program_matrix: '["mpl-${{ inputs.program }}"]'
+      git_ref: ${{ inputs.git_ref }}
+
+  test_js:
+    name: JS client
+    needs: build_programs
+    uses: ./.github/workflows/test-js-client.yml
+    secrets: inherit
+    with:
+      git_ref: ${{ inputs.git_ref }}
+  
+  test_rust:
+    name: Rust client
+    needs: build_programs
+    uses: ./.github/workflows/test-rust-client.yml
+    secrets: inherit
+    with:
+      git_ref: ${{ inputs.git_ref }}
+  
+  create_release:
+    name: Create program release
+    runs-on: ubuntu-latest
+    needs: test_js
+    permissions:
+      contents: write
+    steps:  
+    - name: Git checkout
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ inputs.git_ref }}
+    - name: Bump Program Version
+      run: |
+        git fetch --tags --all
+        VERSION=`git tag -l --sort -version:refname "release/${{ inputs.program }}@*" | head -n 1 | sed 's|release/${{ inputs.program }}@||'`
+        MAJOR=`echo ${VERSION} | cut -d. -f1`
+        MINOR=`echo ${VERSION} | cut -d. -f2`
+        PATCH=`echo ${VERSION} | cut -d. -f3`
+        
+        if [ "${{ inputs.bump }}" == "major" ]; then
+            MAJOR=$((MAJOR + 1))
+            MINOR=0
+            PATCH=0
+        elif [ "${{ inputs.bump }}" == "minor" ]; then
+            MINOR=$((MINOR + 1))
+            PATCH=0
+        else
+            PATCH=$((PATCH + 1))
+        fi
+        
+        PROGRAM_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+
+        echo PROGRAM_VERSION="${PROGRAM_VERSION}" >> $GITHUB_ENV
+
+    - name: Download Program Builds
+      uses: actions/download-artifact@v4
+      with:
+        name: program-builds-${{ inputs.git_ref }}
+    
+    - name: Identify Program
+      run: |
+        echo PROGRAM_NAME="mpl_core" >> $GITHUB_ENV
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: release/${{ inputs.program }}@${{ env.PROGRAM_VERSION }}
+        release_name: ${{ inputs.program }} v${{ env.PROGRAM_VERSION }}
+        body: |
+          Release ${{ inputs.program }} v${{ env.PROGRAM_VERSION }}
+        draft: false
+        prerelease: false
+  
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./programs/.bin/${{ env.PROGRAM_NAME }}.so
+        asset_name: ${{ env.PROGRAM_NAME }}.so
+        asset_content_type: application/octet-stream
+
+    # - name: Update latest tag
+    #   uses: actions/github-script@v5
+    #   with:
+    #     script: |
+    #       github.rest.git.createRef({
+    #         owner: context.repo.owner,
+    #         repo: context.repo.repo,
+    #         ref: 'refs/tags/release/${{ inputs.program }}@latest',
+    #         sha: '${{ github.sha }}'
+    #       });
