@@ -47,8 +47,8 @@ jobs:
     - name: Check tag
       id: set_program
       run: |
-        echo program="bubblegum" >> $GITHUB_OUTPUT
-        if [[ "${{ inputs.git_ref }}" =~ ^release/bubblegum@* ]]; then
+        echo program="${{ inputs.program }}" >> $GITHUB_OUTPUT
+        if [[ "${{ inputs.git_ref }}" =~ ^release/${{ inputs.program }}* ]]; then
           echo type="release" >> $GITHUB_OUTPUT
         else
           echo type="ref" >> $GITHUB_OUTPUT
@@ -151,7 +151,7 @@ jobs:
 
       - name: Identify program
         run: |
-          echo PROGRAM_NAME="bubblegum" >> $GITHUB_ENV
+          echo PROGRAM_NAME="${{ inputs.program }}" >> $GITHUB_ENV
           echo ${{ secrets.BUBBLEGUM_ID }} > ./program-id.json
           
           if [[ "${{ inputs.cluster }}" == "sonic"* ]]; then
@@ -175,11 +175,22 @@ jobs:
             exit 1
           fi  
 
+      - name: Sanitize Ref
+        id: sanitize
+        shell: bash
+        run: |
+          REF="${{ inputs.git_ref }}"
+          if [ -z "$REF" ]; then
+            REF="default"
+          fi
+          SANITIZED=${REF//\//-}
+          echo "sanitized=$SANITIZED" >> "$GITHUB_OUTPUT"
+
       - name: Download program builds
         uses: actions/download-artifact@v4
         if: needs.check_tag.outputs.type == 'ref'
         with:
-          name: program-builds-${{ inputs.git_ref }}
+          name: program-builds-${{ steps.sanitize.outputs.sanitized }}
 
       - name: Deploy program
         if: github.event.inputs.dry_run == 'false' && env.DEPLOY_TYPE == 'direct'

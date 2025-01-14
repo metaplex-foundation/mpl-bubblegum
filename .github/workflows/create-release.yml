@@ -1,30 +1,27 @@
 name: Create release
 
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
       program:
         description: Program
         required: true
         default: bubblegum
-        type: choice
-        options:
-          - bubblegum
+        type: string
+      type:
+        description: Type of release
+        required: true
+        default: solana
+        type: string
       bump:
-        description: Version bump
+        description: Version bump (patch, minor, major)
         required: true
         default: patch
-        type: choice
-        options:
-          - patch
-          - minor
-          - major
+        type: string
       git_ref:
         description: Commit hash or branch to create release
         required: false
         type: string
-        default: main
-
 
 env:
   CACHE: true
@@ -42,7 +39,7 @@ jobs:
     uses: ./.github/workflows/test-programs.yml
     secrets: inherit
     with:
-      program_matrix: '["mpl-${{ inputs.program }}"]'
+      program_matrix: '["${{ inputs.program }}"]'
       git_ref: ${{ inputs.git_ref }}
 
   test_js:
@@ -75,7 +72,19 @@ jobs:
     - name: Bump Program Version
       run: |
         git fetch --tags --all
-        VERSION=`git tag -l --sort -version:refname "release/${{ inputs.program }}@*" | head -n 1 | sed 's|release/${{ inputs.program }}@||'`
+        
+        if [ "${{ inputs.type }}" == "solana" ]; then
+          TAG_NAME="release/${{ inputs.program }}"
+        elif [ "${{ inputs.type }}" == "svm" ]; then  
+          TAG_NAME="release/${{ inputs.program }}-svm"
+        elif [ "${{ inputs.type }}" == "commit" ]; then
+          COMMIT_SHORTENED=`echo ${{ inputs.git_ref }} | cut -c1-7`
+          TAG_NAME="release/${{ inputs.program }}-${COMMIT_SHORTENED}"
+        else
+          echo "Invalid type: ${{ inputs.type }}"
+          exit 1
+        fi
+        VERSION=`git tag | grep '^release/${{ inputs.program }}' | sort -t@ -k2 -V | tail -n1 | cut -d@ -f2`
         MAJOR=`echo ${VERSION} | cut -d. -f1`
         MINOR=`echo ${VERSION} | cut -d. -f2`
         PATCH=`echo ${VERSION} | cut -d. -f3`
@@ -94,15 +103,28 @@ jobs:
         PROGRAM_VERSION="${MAJOR}.${MINOR}.${PATCH}"
 
         echo PROGRAM_VERSION="${PROGRAM_VERSION}" >> $GITHUB_ENV
+        echo TAG_NAME="${TAG_NAME}" >> $GITHUB_ENV
+        echo COMMIT_SHORTENED="${COMMIT_SHORTENED}" >> $GITHUB_ENV
+
+    - name: Sanitize Ref
+      id: sanitize
+      shell: bash
+      run: |
+        REF="${{ inputs.git_ref }}"
+        if [ -z "$REF" ]; then
+          REF="default"
+        fi
+        SANITIZED=${REF//\//-}
+        echo "sanitized=$SANITIZED" >> "$GITHUB_OUTPUT"
 
     - name: Download Program Builds
       uses: actions/download-artifact@v4
       with:
-        name: program-builds-${{ inputs.git_ref }}
+        name: program-builds-${{ steps.sanitize.outputs.sanitized }}
     
     - name: Identify Program
       run: |
-        echo PROGRAM_NAME="mpl_core" >> $GITHUB_ENV
+        echo PROGRAM_NAME="${{ inputs.program }}" >> $GITHUB_ENV
 
     - name: Create Release
       id: create_release
@@ -110,10 +132,10 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: release/${{ inputs.program }}@${{ env.PROGRAM_VERSION }}
-        release_name: ${{ inputs.program }} v${{ env.PROGRAM_VERSION }}
+        tag_name: ${{ env.TAG_NAME }}@${{ env.PROGRAM_VERSION }}
+        release_name: ${{ env.TAG_NAME }}@${{ env.PROGRAM_VERSION }}
         body: |
-          Release ${{ inputs.program }} v${{ env.PROGRAM_VERSION }}
+          Release ${{ env.TAG_NAME }}@${{ env.PROGRAM_VERSION }}
         draft: false
         prerelease: false
   

@@ -59,11 +59,20 @@ jobs:
         run: ./build.sh
         env:
           PROGRAMS: ${{ env.PROGRAMS }}
-
+      - name: Sanitize Ref
+        id: sanitize
+        shell: bash
+        run: |
+          REF="${{ inputs.git_ref }}"
+          if [ -z "$REF" ]; then
+            REF="default"
+          fi
+          SANITIZED=${REF//\//-}
+          echo "sanitized=$SANITIZED" >> "$GITHUB_OUTPUT"
       - name: Upload program builds
         uses: actions/upload-artifact@v4
         with:
-          name: program-builds-${{ inputs.git_ref }}
+          name: program-builds-${{ steps.sanitize.outputs.sanitized }}
           # First wildcard ensures exported paths are consistently under the programs folder.
           path: ./program*/.bin/*.so
           include-hidden-files: true
