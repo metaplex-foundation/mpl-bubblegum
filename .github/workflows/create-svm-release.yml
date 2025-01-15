@@ -23,7 +23,7 @@ env:
 
 jobs:
   create_release:
-    name: Create release
+    name: SVM
     uses: ./.github/workflows/create-release.yml
     secrets: inherit
     with:
