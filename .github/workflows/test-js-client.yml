@@ -25,13 +25,24 @@ jobs:
       - name: Load environment variables
         run: cat .github/.env >> $GITHUB_ENV
 
+      - name: Sanitize Ref
+        id: sanitize
+        shell: bash
+        run: |
+          REF="${{ inputs.git_ref }}"
+          if [ -z "$REF" ]; then
+            REF="default"
+          fi
+          SANITIZED=${REF//\//-}
+          echo "sanitized=$SANITIZED" >> "$GITHUB_OUTPUT"
+
       - name: Start validator
         uses: metaplex-foundation/actions/start-validator@v1
         with:
           node: ${{ matrix.node }}
           solana: ${{ env.SOLANA_VERSION }}
           cache: ${{ env.CACHE }}
-          artifacts: program-builds-${{ inputs.git_ref }}
+          artifacts: program-builds-${{ steps.sanitize.outputs.sanitized }}
 
       - name: Install dependencies
         uses: metaplex-foundation/actions/install-node-dependencies@v1
