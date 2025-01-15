@@ -284,7 +284,7 @@ jobs:
             const refData = await github.rest.git.getRef({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              ref: 'tags/${{ inputs.git_ref }}'
+              ref: '${{ (needs.check_tag.outputs.type == 'release' && format('tags/{0}', inputs.git_ref)) || inputs.git_ref }}'
             });
             if (refData.status !== 200) {
               throw new Error('Failed to fetch existing tag');
