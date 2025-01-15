@@ -24,16 +24,10 @@ env:
 jobs:
   create_release:
     name: Create release
-    runs-on: ubuntu-latest
-    steps:
-      - name: Git checkout
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.git_ref }}
-      - name: Create release
-        uses: ./.github/workflows/create-release.yml
-        with:
-          git_ref: ${{ inputs.git_ref }}
-          bump: ${{ inputs.bump }}
-          program: bubblegum
-          type: svm
+    uses: ./.github/workflows/create-release.yml
+    secrets: inherit
+    with:
+      git_ref: ${{ inputs.git_ref }}
+      bump: ${{ inputs.bump }}
+      program: bubblegum
+      type: svm
