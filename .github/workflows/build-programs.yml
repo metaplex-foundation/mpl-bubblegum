@@ -7,6 +7,8 @@ on:
         type: string
       solana:
         type: string
+      git_ref:
+        type: string
   workflow_dispatch:
     inputs:
       rust:
@@ -29,7 +31,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Git checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.git_ref }}
 
       - name: Load environment variables
         run: cat .github/.env >> $GITHUB_ENV
@@ -55,11 +59,20 @@ jobs:
         run: ./build.sh
         env:
           PROGRAMS: ${{ env.PROGRAMS }}
-
+      - name: Sanitize Ref
+        id: sanitize
+        shell: bash
+        run: |
+          REF="${{ inputs.git_ref }}"
+          if [ -z "$REF" ]; then
+            REF="default"
+          fi
+          SANITIZED=${REF//\//-}
+          echo "sanitized=$SANITIZED" >> "$GITHUB_OUTPUT"
       - name: Upload program builds
         uses: actions/upload-artifact@v4
         with:
-          name: program-builds
+          name: program-builds-${{ steps.sanitize.outputs.sanitized }}
           # First wildcard ensures exported paths are consistently under the programs folder.
           path: ./program*/.bin/*.so
           include-hidden-files: true
