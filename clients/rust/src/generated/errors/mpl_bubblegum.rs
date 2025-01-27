@@ -136,6 +136,12 @@ pub enum MplBubblegumError {
     /// 6041 (0x1799) - Canopy size should be set bigger for this tree
     #[error("Canopy size should be set bigger for this tree")]
     InvalidCanopySize,
+    /// 6042 (0x179A) - Invalid log wrapper program
+    #[error("Invalid log wrapper program")]
+    InvalidLogWrapper,
+    /// 6043 (0x179B) - Invalid compression program
+    #[error("Invalid compression program")]
+    InvalidCompressionProgram,
 }
 
 impl solana_program::program_error::PrintProgramError for MplBubblegumError {

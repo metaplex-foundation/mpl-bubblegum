@@ -1,10 +1,9 @@
 use anchor_lang::prelude::*;
-use spl_account_compression::{program::SplAccountCompression, wrap_application_data_v1, Noop};
 
 use crate::{
     error::BubblegumError,
     state::{leaf_schema::LeafSchema, TreeConfig},
-    utils::{get_asset_id, replace_leaf},
+    utils::{get_asset_id, replace_leaf, validate_ownership_and_programs},
 };
 
 #[derive(Accounts)]
@@ -24,8 +23,10 @@ pub struct Transfer<'info> {
     #[account(mut)]
     /// CHECK: This account is modified in the downstream program
     pub merkle_tree: UncheckedAccount<'info>,
-    pub log_wrapper: Program<'info, Noop>,
-    pub compression_program: Program<'info, SplAccountCompression>,
+    /// CHECK: Program is verified in the instruction
+    pub log_wrapper: UncheckedAccount<'info>,
+    /// CHECK: Program is verified in the instruction
+    pub compression_program: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
 }
 
@@ -37,6 +38,12 @@ pub(crate) fn transfer<'info>(
     nonce: u64,
     index: u32,
 ) -> Result<()> {
+    validate_ownership_and_programs(
+        &ctx.accounts.merkle_tree,
+        &ctx.accounts.log_wrapper,
+        &ctx.accounts.compression_program,
+    )?;
+
     // TODO add back version to select hash schema
     let merkle_tree = ctx.accounts.merkle_tree.to_account_info();
     let owner = ctx.accounts.leaf_owner.to_account_info();
@@ -67,7 +74,10 @@ pub(crate) fn transfer<'info>(
         creator_hash,
     );
 
-    wrap_application_data_v1(new_leaf.to_event().try_to_vec()?, &ctx.accounts.log_wrapper)?;
+    crate::utils::wrap_application_data_v1(
+        new_leaf.to_event().try_to_vec()?,
+        &ctx.accounts.log_wrapper,
+    )?;
 
     replace_leaf(
         &merkle_tree.key(),

@@ -1,6 +1,6 @@
 {
   "name": "@metaplex-foundation/mpl-bubblegum",
-  "version": "4.2.1",
+  "version": "4.3.1-beta.0",
   "description": "Create and interact with compressed Metaplex NFTs",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",

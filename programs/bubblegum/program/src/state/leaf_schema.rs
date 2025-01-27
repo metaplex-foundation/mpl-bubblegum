@@ -1,7 +1,7 @@
 use crate::state::BubblegumEventType;
 use anchor_lang::{prelude::*, solana_program::keccak};
 use borsh::{BorshDeserialize, BorshSerialize};
-use spl_account_compression::Node;
+use spl_concurrent_merkle_tree::node::Node;
 
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct LeafSchemaEvent {

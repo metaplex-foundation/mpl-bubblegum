@@ -1,6 +1,5 @@
 use anchor_lang::prelude::*;
 use mpl_token_metadata::types::MetadataDelegateRole;
-use spl_account_compression::{program::SplAccountCompression, wrap_application_data_v1, Noop};
 
 use crate::{
     asserts::{assert_has_collection_authority, assert_metadata_is_mpl_compatible},
@@ -11,7 +10,9 @@ use crate::{
         metaplex_anchor::TokenMetadata,
         TreeConfig,
     },
-    utils::{get_asset_id, hash_creators, hash_metadata, replace_leaf},
+    utils::{
+        get_asset_id, hash_creators, hash_metadata, replace_leaf, validate_ownership_and_programs,
+    },
 };
 
 #[derive(Accounts)]
@@ -40,8 +41,10 @@ pub struct UpdateMetadata<'info> {
     #[account(mut)]
     /// CHECK: This account is modified in the downstream program
     pub merkle_tree: UncheckedAccount<'info>,
-    pub log_wrapper: Program<'info, Noop>,
-    pub compression_program: Program<'info, SplAccountCompression>,
+    /// CHECK: Program is verified in the instruction
+    pub log_wrapper: UncheckedAccount<'info>,
+    /// CHECK: Program is verified in the instruction
+    pub compression_program: UncheckedAccount<'info>,
     /// CHECK: This is no longer needed but kept for backwards compatibility.
     pub token_metadata_program: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
@@ -110,7 +113,7 @@ fn process_update_metadata<'info>(
     compression_program: &AccountInfo<'info>,
     tree_authority: &AccountInfo<'info>,
     tree_authority_bump: u8,
-    log_wrapper: &Program<'info, Noop>,
+    log_wrapper: &AccountInfo<'info>,
     remaining_accounts: &[AccountInfo<'info>],
     root: [u8; 32],
     current_metadata: MetadataArgs,
@@ -203,7 +206,7 @@ fn process_update_metadata<'info>(
         updated_creator_hash,
     );
 
-    wrap_application_data_v1(new_leaf.to_event().try_to_vec()?, log_wrapper)?;
+    crate::utils::wrap_application_data_v1(new_leaf.to_event().try_to_vec()?, log_wrapper)?;
 
     replace_leaf(
         &merkle_tree.key(),
@@ -228,6 +231,12 @@ pub fn update_metadata<'info>(
     current_metadata: MetadataArgs,
     update_args: UpdateArgs,
 ) -> Result<()> {
+    validate_ownership_and_programs(
+        &ctx.accounts.merkle_tree,
+        &ctx.accounts.log_wrapper,
+        &ctx.accounts.compression_program,
+    )?;
+
     match &current_metadata.collection {
         // Verified collection case.
         Some(collection) if collection.verified => {

@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use spl_account_compression::{program::SplAccountCompression, Node, Noop};
+use spl_concurrent_merkle_tree::node::Node;
 
 use crate::{
     error::BubblegumError,
@@ -7,7 +7,7 @@ use crate::{
         leaf_schema::LeafSchema, DecompressibleState, TreeConfig, Voucher, VOUCHER_PREFIX,
         VOUCHER_SIZE,
     },
-    utils::{get_asset_id, replace_leaf},
+    utils::{get_asset_id, replace_leaf, validate_ownership_and_programs},
 };
 
 #[derive(Accounts)]
@@ -44,8 +44,10 @@ pub struct Redeem<'info> {
     bump
     )]
     pub voucher: Account<'info, Voucher>,
-    pub log_wrapper: Program<'info, Noop>,
-    pub compression_program: Program<'info, SplAccountCompression>,
+    /// CHECK: Program is verified in the instruction
+    pub log_wrapper: UncheckedAccount<'info>,
+    /// CHECK: Program is verified in the instruction
+    pub compression_program: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
 }
 
@@ -57,6 +59,12 @@ pub(crate) fn redeem<'info>(
     nonce: u64,
     index: u32,
 ) -> Result<()> {
+    validate_ownership_and_programs(
+        &ctx.accounts.merkle_tree,
+        &ctx.accounts.log_wrapper,
+        &ctx.accounts.compression_program,
+    )?;
+
     if ctx.accounts.tree_authority.is_decompressible == DecompressibleState::Disabled {
         return Err(BubblegumError::DecompressionDisabled.into());
     }

@@ -1,13 +1,12 @@
 use anchor_lang::prelude::*;
 use solana_program::keccak;
-use spl_account_compression::{program::SplAccountCompression, wrap_application_data_v1, Noop};
 use std::collections::HashSet;
 
 use crate::{
     asserts::{assert_metadata_is_mpl_compatible, assert_metadata_token_standard},
     error::BubblegumError,
     state::{leaf_schema::LeafSchema, metaplex_adapter::MetadataArgs, TreeConfig},
-    utils::{append_leaf, get_asset_id},
+    utils::{append_leaf, get_asset_id, validate_ownership_and_programs},
 };
 
 #[derive(Accounts)]
@@ -27,13 +26,20 @@ pub struct MintV1<'info> {
     pub merkle_tree: UncheckedAccount<'info>,
     pub payer: Signer<'info>,
     pub tree_delegate: Signer<'info>,
-    pub log_wrapper: Program<'info, Noop>,
-    pub compression_program: Program<'info, SplAccountCompression>,
+    /// CHECK: Program is verified in the instruction
+    pub log_wrapper: UncheckedAccount<'info>,
+    /// CHECK: Program is verified in the instruction
+    pub compression_program: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
 }
 
 pub(crate) fn mint_v1(ctx: Context<MintV1>, message: MetadataArgs) -> Result<LeafSchema> {
-    // TODO -> Separate V1 / V1 into seperate instructions
+    validate_ownership_and_programs(
+        &ctx.accounts.merkle_tree,
+        &ctx.accounts.log_wrapper,
+        &ctx.accounts.compression_program,
+    )?;
+
     let payer = ctx.accounts.payer.key();
     let incoming_tree_delegate = ctx.accounts.tree_delegate.key();
     let owner = ctx.accounts.leaf_owner.key();
@@ -94,7 +100,7 @@ pub(crate) fn process_mint_v1<'info>(
     authority_bump: u8,
     authority: &mut Account<'info, TreeConfig>,
     merkle_tree: &AccountInfo<'info>,
-    wrapper: &Program<'info, Noop>,
+    wrapper: &AccountInfo<'info>,
     compression_program: &AccountInfo<'info>,
     allow_verified_collection: bool,
 ) -> Result<LeafSchema> {
@@ -150,15 +156,15 @@ pub(crate) fn process_mint_v1<'info>(
         creator_hash.to_bytes(),
     );
 
-    wrap_application_data_v1(leaf.to_event().try_to_vec()?, wrapper)?;
+    crate::utils::wrap_application_data_v1(leaf.to_event().try_to_vec()?, wrapper)?;
 
     append_leaf(
         &merkle_tree.key(),
         authority_bump,
-        &compression_program.to_account_info(),
+        compression_program,
         &authority.to_account_info(),
-        &merkle_tree.to_account_info(),
-        &wrapper.to_account_info(),
+        merkle_tree,
+        wrapper,
         leaf.to_node(),
     )?;
 

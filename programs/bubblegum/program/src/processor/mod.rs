@@ -1,7 +1,6 @@
 use anchor_lang::prelude::*;
 use mpl_token_metadata::types::MetadataDelegateRole;
 use solana_program::{account_info::AccountInfo, pubkey::Pubkey};
-use spl_account_compression::wrap_application_data_v1;
 
 use crate::{
     asserts::{assert_collection_membership, assert_has_collection_authority},
@@ -136,7 +135,10 @@ fn process_creator_verification<'info>(
         updated_creator_hash,
     );
 
-    wrap_application_data_v1(new_leaf.to_event().try_to_vec()?, &ctx.accounts.log_wrapper)?;
+    crate::utils::wrap_application_data_v1(
+        new_leaf.to_event().try_to_vec()?,
+        &ctx.accounts.log_wrapper,
+    )?;
 
     replace_leaf(
         &merkle_tree.key(),
@@ -293,7 +295,10 @@ fn process_collection_verification<'info>(
         creator_hash,
     );
 
-    wrap_application_data_v1(new_leaf.to_event().try_to_vec()?, &ctx.accounts.log_wrapper)?;
+    crate::utils::wrap_application_data_v1(
+        new_leaf.to_event().try_to_vec()?,
+        &ctx.accounts.log_wrapper,
+    )?;
 
     replace_leaf(
         &merkle_tree.key(),

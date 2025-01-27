@@ -2285,6 +2285,16 @@
       "code": 6041,
       "name": "InvalidCanopySize",
       "msg": "Canopy size should be set bigger for this tree"
+    },
+    {
+      "code": 6042,
+      "name": "InvalidLogWrapper",
+      "msg": "Invalid log wrapper program"
+    },
+    {
+      "code": 6043,
+      "name": "InvalidCompressionProgram",
+      "msg": "Invalid compression program"
     }
   ],
   "metadata": {

@@ -1,10 +1,10 @@
 use anchor_lang::prelude::*;
-use spl_account_compression::{program::SplAccountCompression, Node, Noop};
+use spl_concurrent_merkle_tree::node::Node;
 
 use crate::{
     error::BubblegumError,
     state::{leaf_schema::LeafSchema, TreeConfig},
-    utils::{get_asset_id, replace_leaf},
+    utils::{get_asset_id, replace_leaf, validate_ownership_and_programs},
 };
 
 #[derive(Accounts)]
@@ -21,8 +21,10 @@ pub struct Burn<'info> {
     #[account(mut)]
     /// CHECK: This account is modified in the downstream program
     pub merkle_tree: UncheckedAccount<'info>,
-    pub log_wrapper: Program<'info, Noop>,
-    pub compression_program: Program<'info, SplAccountCompression>,
+    /// CHECK: Program is verified in the instruction
+    pub log_wrapper: UncheckedAccount<'info>,
+    /// CHECK: Program is verified in the instruction
+    pub compression_program: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
 }
 
@@ -34,6 +36,11 @@ pub(crate) fn burn<'info>(
     nonce: u64,
     index: u32,
 ) -> Result<()> {
+    validate_ownership_and_programs(
+        &ctx.accounts.merkle_tree,
+        &ctx.accounts.log_wrapper,
+        &ctx.accounts.compression_program,
+    )?;
     let owner = ctx.accounts.leaf_owner.to_account_info();
     let delegate = ctx.accounts.leaf_delegate.to_account_info();
 
