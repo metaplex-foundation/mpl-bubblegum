@@ -1,6 +1,6 @@
 [package]
 name = "bubblegum"
-version = "0.12.0"
+version = "0.13.0"
 description = "NFT Compression"
 authors = ["Metaplex Developers <dev@metaplex.com>"]
 repository = "https://github.com/metaplex-foundation/mpl-bubblegum"
@@ -17,7 +17,9 @@ no-idl = []
 no-log-ix-name = []
 cpi = ["no-entrypoint"]
 test-sbf = []
-default = []
+default = ["mainnet"]
+mainnet = ["mpl-common-constants/mainnet"]
+devnet = ["mpl-common-constants/devnet"]
 
 [dependencies]
 anchor-lang = { version = "0.29.0", features = ["init-if-needed"] }
@@ -26,15 +28,18 @@ bytemuck = "1.13.0"
 mpl-token-metadata = "4.1.2"
 num-traits = "0.2.15"
 solana-program = "~1.18.15"
-spl-account-compression = { version = "0.3.1", features = ["cpi"] }
+spl-account-compression = { version = "0.4.0", features = ["cpi"] }
 spl-associated-token-account = { version = ">= 1.1.3, < 3.0", features = ["no-entrypoint"] }
 spl-token = { version = ">= 3.5.0, < 5.0", features = ["no-entrypoint"] }
+mplx-staking-states = { git = "https://github.com/metaplex-foundation/aura-staking.git" }
+mplx-rewards = { git = "https://github.com/metaplex-foundation/aura-rewards.git", features = ["no-entrypoint"] }
+mpl-common-constants = { git = "https://github.com/adm-metaex/mpl-common-constants.git", branch = "main" }
 
 [dev-dependencies]
 async-trait = "0.1.71"
 mpl-token-auth-rules = { version = "1.5.1", features = ["no-entrypoint"] }
 solana-program-test = "~1.18.15"
 solana-sdk = "~1.18.15"
-spl-concurrent-merkle-tree = "0.3.0"
+spl-concurrent-merkle-tree = "0.4.0"
 spl-merkle-tree-reference = "0.1.0"
 spl-noop = { version = "0.2.0", features = ["no-entrypoint"] }

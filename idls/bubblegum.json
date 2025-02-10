@@ -1,5 +1,5 @@
 {
-  "version": "0.12.0",
+  "version": "0.13.0",
   "name": "bubblegum",
   "instructions": [
     {
@@ -216,6 +216,114 @@
       "args": []
     },
     {
+      "name": "prepareTree",
+      "accounts": [
+        {
+          "name": "treeAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "merkleTree",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "treeCreator",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "logWrapper",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "compressionProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "maxDepth",
+          "type": "u32"
+        },
+        {
+          "name": "maxBufferSize",
+          "type": "u32"
+        },
+        {
+          "name": "public",
+          "type": {
+            "option": "bool"
+          }
+        }
+      ]
+    },
+    {
+      "name": "addCanopy",
+      "accounts": [
+        {
+          "name": "treeAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "merkleTree",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "treeDelegate",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "logWrapper",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "compressionProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "startIndex",
+          "type": "u32"
+        },
+        {
+          "name": "canopyNodes",
+          "type": {
+            "vec": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "createTree",
       "docs": [
         "Creates a new tree."
@@ -271,6 +379,229 @@
           "type": {
             "option": "bool"
           }
+        }
+      ]
+    },
+    {
+      "name": "finalizeTreeWithRoot",
+      "accounts": [
+        {
+          "name": "treeAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "merkleTree",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "treeDelegate",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "staker",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "registrar",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "voter",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "mining",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "feeReceiver",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "logWrapper",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "compressionProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "root",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "rightmostLeaf",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "rightmostIndex",
+          "type": "u32"
+        },
+        {
+          "name": "metadataUrl",
+          "type": "string"
+        },
+        {
+          "name": "metadataHash",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "finalizeTreeWithRootAndCollection",
+      "accounts": [
+        {
+          "name": "treeAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "merkleTree",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "treeDelegate",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "staker",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "collectionAuthority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "registrar",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "voter",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "mining",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "feeReceiver",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "collectionAuthorityRecordPda",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "If there is no collecton authority record PDA then",
+            "this must be the Bubblegum program address."
+          ]
+        },
+        {
+          "name": "collectionMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "collectionMetadata",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "editionAccount",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "logWrapper",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "compressionProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "root",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "rightmostLeaf",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "rightmostIndex",
+          "type": "u32"
+        },
+        {
+          "name": "metadataUrl",
+          "type": "string"
+        },
+        {
+          "name": "metadataHash",
+          "type": "string"
         }
       ]
     },
@@ -2070,6 +2401,18 @@
           },
           {
             "name": "UpdateMetadata"
+          },
+          {
+            "name": "FinalizeTreeWithRoot"
+          },
+          {
+            "name": "FinalizeTreeWithRootAndCollection"
+          },
+          {
+            "name": "PrepareTree"
+          },
+          {
+            "name": "AddCanopy"
           }
         ]
       }
@@ -2285,6 +2628,56 @@
       "code": 6041,
       "name": "InvalidCanopySize",
       "msg": "Canopy size should be set bigger for this tree"
+    },
+    {
+      "code": 6042,
+      "name": "NotEnoughStakeForOperation",
+      "msg": "Not enough tokens staked to call this instruction"
+    },
+    {
+      "code": 6043,
+      "name": "StakingRegistrarMismatch",
+      "msg": "Staking registrar mismatch"
+    },
+    {
+      "code": 6044,
+      "name": "StakingVoterMismatch",
+      "msg": "Staking voter mismatch"
+    },
+    {
+      "code": 6045,
+      "name": "FeeReceiverMismatch",
+      "msg": "Fee receiver mismatch"
+    },
+    {
+      "code": 6046,
+      "name": "StakingRegistrarRealmMismatch",
+      "msg": "Staking registrar realm mismatch"
+    },
+    {
+      "code": 6047,
+      "name": "StakingRegistrarDiscriminatorMismatch",
+      "msg": "Staking registrar discriminator mismatch"
+    },
+    {
+      "code": 6048,
+      "name": "StakingVoterDiscriminatorMismatch",
+      "msg": "Staking voter discriminator mismatch"
+    },
+    {
+      "code": 6049,
+      "name": "StakingVoterRegistrarMismatch",
+      "msg": "Staking voter registrar mismatch"
+    },
+    {
+      "code": 6050,
+      "name": "StakingVoterAuthorityMismatch",
+      "msg": "Staking voter authority mismatch"
+    },
+    {
+      "code": 6051,
+      "name": "MiningOwnerMismatch",
+      "msg": "Invalid mining owner"
     }
   ],
   "metadata": {

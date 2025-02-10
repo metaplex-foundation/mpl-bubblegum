@@ -23,15 +23,16 @@ See [README.md](https://github.com/metaplex-foundation/mpl-bubblegum/blob/main/c
 `Bubblegum` is the Metaplex Protocol program for creating and interacting with Metaplex compressed NFTs (cNFTs).  Compressed NFTs are secured on-chain using Merkle trees.
 
 With Bubblegum you can:
-* Create a tree
+* Create a tree.
 * Delegate authority for a tree.
 * Mint a cNFT to a tree.
-* Verify/unverify creators
+* Verify/unverify creators.
 * Verify/unverify membership of a cNFT to a Metaplex Verified Collection.
 * Transfer ownership of a cNFT.
 * Delegate authority for a cNFT.
 * Burn a cNFT.
 * Redeem a cNFT and decompress it into an uncompressed Token Metadata NFT.
+* Batch-mint a complete tree with verified creators and a single Metaplex Verified Collection.
 
 ## Background
 
@@ -42,6 +43,10 @@ Compressed NFTs are secured on-chain by the hashing of the state data when it is
 In the unlikely scenario that all RPC providers were to lose their data stores, the off-chain state of compressed NFTs could be recovered by replaying transactions (provided that the given tree was started from the beginning).
 
 Compressed NFTs can also be losslessly decompressed into uncompressed Metaplex NFTs.  Decompression will cost rent for the Metadata and Master Edition `token-metadata` program accounts that need to be created.
+
+### Batch operations
+
+As was observed, minting of assets constitutes over 90% of all operations pertaining to digital assets. In order to reduce the number of transactions and optimize the time and cost it takes to put your tree on-chain during the Solana heavy load events Metaplex has introduced the batch-mint operations. The batch extension to the Bubblegum program introduces offline Merkle tree creation, enabling users to prepare and manage Merkle trees offline before finalizing them on-chain. The resulting trees are fully compatible with the regular trees. The snapshot of the tree created is required to be stored off-chain so the replay of the tree creation is possible on any indexer.
 
 ## Basic operation
 
@@ -71,6 +76,52 @@ Compressed NFTs support transferring ownership, delegating authority, and burnin
 ### Redeem a cNFT and decompress it into an uncompressed Token Metadata NFT
 
 Redeeming a cNFT removes the leaf from the Merkle tree and creates a voucher PDA account.  The voucher account can be sent to the `decompress_v1` instruction to decompress the cNFT into a Token Metadata NFT.  As mentioned above this will cost rent for the Metadata and Master Edition `token-metadata` accounts that are created during the decompression process.  Note that after a cNFT is redeemed but before it is decompressed, the process can be reversed using `cancel_redeem`.  This puts the cNFT back into the Merkle tree.
+
+## Batch-Mint Operations
+
+### Introduction
+The latest extension to the Bubblegum contract introduces batch-mint operations, allowing users to mint multiple cNFTs in just several transactions, which significantly reduces on-chain overhead and optimizes minting processes for large collections.
+
+### How It Works
+With the batch-mint operations, users can prepare an entire set of NFTs off-chain, populate them within a Merkle tree structure, and then mint them to the tree in a small number of transactions. This process is designed to handle large-scale NFT collections more efficiently.
+
+### Steps to Perform a Batch-Mint
+
+In order to simplify the Merkle tree creation and interactions we recommend using the [SDK](https://github.com/metaplex-foundation/rollup-sdk).
+
+To understand the batch-mint flow, let's recall the structure of a tree data account:
+
+```
++--------+----------------------+-----------------+
+| Header |     Tree body        |     Canopy      |
++--------+----------------------+-----------------+
+   56      depends on the tree    (2ⁿ⁺¹ - 2) * 32
+  bytes    depth and buffer size       bytes
+```
+where n is the depth of the canopy.
+
+1. **Prepare Tree**
+  - Invoke the `prepare_tree` method to initialize an account with a tree header and an empty tree body and empty canopy buffer.
+  - The tree is set up with initial parameters (tree size and canopy if required) but remains empty, allowing offline filling.
+
+2. **Fill Tree Offline**
+  - User populates the tree offline, ensuring all necessary leaves are in place.
+  - If the canopy is required, then canopy leaf nodes are populated in the process of adding asset leaves to tree.
+  - The final root, proof, and last leaf are prepared for submission.
+
+3. **Serialize and Upload the Tree**
+  - The offline tree is serialized and uploaded to an IPFS-like service, such as Arweave, ensuring public access.
+
+4. **Adding canopy (for a tree with a canopy)**
+  - To transfer canopy leaf nodes from offline tree to the solana tree data account the `add_canopy` method is invoked, tree body at this stage stays empty
+
+5. **Finalize Tree**
+  - To finalize the tree the methods `finalize_tree_with_root` for a tree without verified collections or `finalize_tree_with_root_and_collection` for a tree with one verified collection are used. Signatures from both the tree owner and a designated staker are required.
+  - The staker is responsible for ensuring the data's availability and consistency, verifying it before signing off.
+
+6. **Manage the Tree**
+   - Once the batch minting process is complete, you can manage the tree and its NFTs using all the standard Bubblegum operations.
+   - You can also mint additional assets into a batch-minted tree as if it's a regular tree.
 
 ## Accounts
 
@@ -125,6 +176,7 @@ This instruction creates a Merkle Tree.
 | --------------------------------- | ------ | ---- | --
 | `max_depth`                       | 0      | 4    | The maximum depth of the Merkle tree.  The capacity of the Merkle tree is 2 ^ max_depth.
 | `max_buffer_size`                 | 4      | 4    | The minimum concurrency limit of the Merkle tree.  See [Solana Program Library documentation](https://docs.rs/spl-account-compression/0.1.3/spl_account_compression/spl_account_compression/fn.init_empty_merkle_tree.html) on this for more details.
+| `public`                          | 8      | 1    | An optional boolean indicating if the tree is public.
 
 </details>
 
@@ -536,5 +588,145 @@ Decompress a cNFT into an uncompressed Token Metadata NFT.  This will cost rent 
 | Argument                          | Offset | Size | Description
 | --------------------------------- | ------ | ---- | --
 | `data`                            | 0      | ~    | [`MetadataArgs`](program/src/state/metaplex_adapter.rs#L83) struct.
+
+</details>
+
+
+### 📄 `prepare_tree`
+
+Prepare a tree structure that will be used to hold multiple NFTs in a batch-mint operation. This step initializes the tree and allocates the necessary resources for subsequent operations.
+
+<details>
+  <summary>Accounts</summary>
+
+| Name                   | Writable | Signer | Optional | Description |
+|------------------------|:--------:|:------:|:--------:|-------------|
+| `tree_authority`       |    ✅    |        |          | The [`TreeConfig`](program/src/state/mod.rs#L17) PDA account that is initialized by this instruction. |
+| `merkle_tree`          |    ✅    |        |          | Unchecked account representing the Merkle tree, must be zero-initialized. |
+| `payer`                |    ✅    |   ✅   |          | The account responsible for paying the transaction fees. |
+| `tree_creator`         |          |   ✅   |          | The creator of the tree, who must sign the transaction. |
+| `log_wrapper`          |          |        |          | The Solana Program Library Wrapper (`spl-noop`) program ID for logging. |
+| `compression_program`  |          |        |          | The Solana Program Library `spl-account-compression` program ID. |
+| `system_program`       |          |        |          | The Solana System Program ID. |
+
+</details>
+
+<details>
+  <summary>Arguments</summary>
+
+| Argument         | Offset | Size | Description |
+|------------------|--------|------|-------------|
+| `max_depth`      | 0      | 4    | The maximum depth of the Merkle tree. |
+| `max_buffer_size`| 4      | 4    | The maximum buffer size for the Merkle tree. |
+| `public`         | 8      | 1    | An optional boolean indicating if the tree is public. |
+
+</details>
+
+### 📄 `add_canopy`
+
+Add an optional canopy to the tree structure. A canopy is used to optimize the verification process for the tree, making it easier to validate NFT ownership.
+
+<details>
+  <summary>Accounts</summary>
+
+| Name                      | Writable | Signer | Optional | Description |
+|---------------------------|:--------:|:------:|:--------:|-------------|
+| `tree_authority`          |          |        |          | The [`TreeConfig`](program/src/state/mod.rs#L17) PDA account previously initialized by `prepare_tree`. |
+| `merkle_tree`             |    ✅    |        |          | The account representing the Merkle tree to which the canopy is being added. |
+| `tree_delegate`           |          |   ✅   |          | The delegate authorized to modify the tree. |
+| `log_wrapper`             |          |        |          | The Solana Program Library Wrapper (`spl-noop`) program ID for logging. |
+| `compression_program`     |          |        |          | The Solana Program Library `spl-account-compression` program ID. |
+| `system_program`          |          |        |          | The Solana System Program ID. |
+
+</details>
+
+<details>
+  <summary>Arguments</summary>
+
+| Argument        | Offset | Size | Description |
+|-----------------|--------|------|-------------|
+| `start_index`   | 0      | 4    | The starting index for the canopy nodes being added. |
+| `canopy_nodes`  | 4      | ???  | A vector of canopy nodes (32-byte arrays) to append to the Merkle tree. |
+
+</details>
+
+### 📄 `finalize_tree_with_root`
+
+Finalize the tree structure by setting the Merkle root, which represents the entire batch of NFTs. This operation completes the preparation phase and makes the tree ready for usage.
+
+<details>
+  <summary>Accounts</summary>
+
+| Name                   | Writable | Signer | Optional | Description |
+|------------------------|:--------:|:------:|:--------:|-------------|
+| `tree_authority`       |    ✅    |        |          | The [`TreeConfig`](program/src/state/mod.rs#L17) PDA account previously initialized by `prepare_tree`. |
+| `merkle_tree`          |    ✅    |        |          | The account containing the Merkle tree structure. |
+| `payer`                |    ✅    |   ✅   |          | The account responsible for paying the transaction fees. |
+| `tree_delegate`        |          |   ✅   |          | The delegate of the tree, responsible for finalizing it. |
+| `staker`               |          |   ✅   |          | The account of the staker, required to have the minimal required stake to allow batch-minting. |
+| `registrar`            |          |        |          | The account representing the registrar for managing stake accounts. |
+| `voter`                |          |        |          | The account representing the voting account. |
+| `mining`               |          |        |          | The account representing the mining account on rewards contract. |
+| `fee_receiver`         |    ✅    |        |          | The account designated to receive protocol fees. |
+| `log_wrapper`          |          |        |          | The Solana Program Library Wrapper (`spl-noop`) program ID for logging. |
+| `compression_program`  |          |        |          | The Solana Program Library `spl-account-compression` program ID. |
+| `system_program`       |          |        |          | The Solana System Program ID. |
+| _remaining accounts_   |          |        |    ✅    | `Pubkeys`(s) that are 32-byte Keccak256 hash values that represent the nodes for this cNFT's Merkle proof. |
+
+</details>
+
+<details>
+  <summary>Arguments</summary>
+
+| Argument           | Offset | Size | Description |
+|--------------------|--------|------|-------------|
+| `root`             | 0      | 32   | The Merkle root hash for the tree. |
+| `rightmost_leaf`   | 32     | 32   | The hash of the rightmost leaf node in the tree. |
+| `rightmost_index`  | 64     | 4    | The index of the rightmost leaf node in the tree. |
+| `_metadata_url`    | 68     | ???  | A string - URL for the uploaded batch-mint json, required by indexers to fetch the tree for initialization. |
+| `_metadata_hash`   | ???    | ???  | A string representing a hex-encoded xxh3_128 hash of the uploaded batch-mint json-file. |
+
+</details>
+
+### 📄 `finalize_tree_with_root_and_collection`
+
+Finalize the tree structure by setting the Merkle root and associating it with a specific NFT collection. This operation allows having a verified collection for NFTs in the batch.
+
+<details>
+  <summary>Accounts</summary>
+
+| Name                             | Writable | Signer | Optional | Description |
+|----------------------------------|:--------:|:------:|:--------:|-------------|
+| `tree_authority`                 |    ✅    |        |          | The [`TreeConfig`](program/src/state/mod.rs#L17) PDA account previously initialized by `prepare_tree`. |
+| `merkle_tree`                    |    ✅    |        |          | The account containing the Merkle tree structure. |
+| `payer`                          |    ✅    |   ✅   |          | The account responsible for paying the transaction fees. |
+| `tree_delegate`                  |          |   ✅   |          | The delegate of the tree, responsible for finalizing it. |
+| `staker`                         |          |   ✅   |          | The account of the staker, required to have the minimal required stake to allow batch-minting. |
+| `collection_authority`           |          |   ✅   |          | Either the collection update authority or a delegate. |
+| `registrar`                      |          |        |          | The account representing the registrar for managing stake accounts. |
+| `voter`                          |          |        |          | The account representing the voting account. |
+| `mining`                         |          |        |          | The account representing the mining authority. |
+| `fee_receiver`                   |    ✅    |        |          | The account designated to receive protocol fees. |
+| `collection_authority_record_pda`|          |        |    ✅    | Either a metadata delegate record PDA for a collection delegate, or a legacy collection authority record PDA. |
+| `collection_mint`                |          |        |          | The account representing the collection mint. |
+| `collection_metadata`            |    ✅    |        |          | Metadata account of the collection.  Modified in the case of a sized collection. |
+| `edition_account`                |          |        |          | The account representing the Master Edition account of the collection. |
+| `log_wrapper`                    |          |        |          | The Solana Program Library Wrapper (`spl-noop`) program ID for logging. |
+| `compression_program`            |          |        |          | The Solana Program Library `spl-account-compression` program ID. |
+| `system_program`                 |          |        |          | The Solana System Program ID. |
+| _remaining accounts_             |          |        |    ✅    | `Pubkeys`(s) that are 32-byte Keccak256 hash values that represent the nodes for this cNFT's Merkle proof. |
+
+</details>
+
+<details>
+  <summary>Arguments</summary>
+
+| Argument           | Offset | Size | Description |
+|--------------------|--------|------|-------------|
+| `root`             | 0      | 32   | The Merkle root hash for the tree. |
+| `rightmost_leaf`   | 32     | 32   | The hash of the rightmost leaf node in the tree. |
+| `rightmost_index`  | 64     | 4    | The index of the rightmost leaf node in the tree. |
+| `_metadata_url`    | 68     | ???  | A string - URL for the uploaded batch-mint json, required by indexers to fetch the tree for initialization. |
+| `_metadata_hash`   | ???    | ???  | A string representing a hex-encoded xxh3_128 hash of the uploaded batch-mint json-file. |
 
 </details>

@@ -12,6 +12,7 @@ import {
   GetDataEnumKindContent,
   Serializer,
   array,
+  bool,
   dataEnum,
   publicKey as publicKeySerializer,
   struct,
@@ -44,6 +45,12 @@ export type ConcurrentMerkleTreeHeaderData = {
    */
   creationSlot: bigint;
   /**
+   * A flag indicating whether the tree has been initialized with a root.
+   * This field was added together with the `finalize_tree_with_root` instruction.
+   * It takes 1 byte of space taken from the previous padding for existing accounts.
+   */
+  isBatchInitialized: boolean;
+  /**
    * Needs padding for the account to be 8-byte aligned
    * 8-byte alignment is necessary to zero-copy the SPL ConcurrentMerkleTree
    */
@@ -74,6 +81,12 @@ export type ConcurrentMerkleTreeHeaderDataArgs = {
    */
   creationSlot: number | bigint;
   /**
+   * A flag indicating whether the tree has been initialized with a root.
+   * This field was added together with the `finalize_tree_with_root` instruction.
+   * It takes 1 byte of space taken from the previous padding for existing accounts.
+   */
+  isBatchInitialized: boolean;
+  /**
    * Needs padding for the account to be 8-byte aligned
    * 8-byte alignment is necessary to zero-copy the SPL ConcurrentMerkleTree
    */
@@ -93,7 +106,8 @@ export function getConcurrentMerkleTreeHeaderDataSerializer(): Serializer<
           ['maxDepth', u32()],
           ['authority', publicKeySerializer()],
           ['creationSlot', u64()],
-          ['padding', array(u8(), { size: 6 })],
+          ['isBatchInitialized', bool()],
+          ['padding', array(u8(), { size: 5 })],
         ]),
       ],
     ],

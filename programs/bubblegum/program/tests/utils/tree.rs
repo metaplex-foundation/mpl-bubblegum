@@ -1,15 +1,19 @@
 use super::{
     clone_keypair, compute_metadata_hashes,
     tx_builder::{
-        BurnBuilder, CancelRedeemBuilder, CollectionVerificationInner, CreateBuilder,
-        CreatorVerificationInner, DelegateBuilder, DelegateInner, MintToCollectionV1Builder,
-        MintV1Builder, RedeemBuilder, SetDecompressibleStateBuilder, SetTreeDelegateBuilder,
-        TransferBuilder, TransferInner, TxBuilder, UnverifyCreatorBuilder, VerifyCollectionBuilder,
+        AddCanopyBuilder, BurnBuilder, CancelRedeemBuilder, CollectionVerificationInner,
+        CreateBuilder, CreatorVerificationInner, DelegateBuilder, DelegateInner,
+        FinalizeWithRootBuilder, MintToCollectionV1Builder, MintV1Builder, PrepareTreeBuilder,
+        RedeemBuilder, SetDecompressibleStateBuilder, SetTreeDelegateBuilder, TransferBuilder,
+        TransferInner, TxBuilder, UnverifyCreatorBuilder, VerifyCollectionBuilder,
         VerifyCreatorBuilder,
     },
     Error, LeafArgs, Result,
 };
-use crate::utils::tx_builder::DecompressV1Builder;
+use crate::utils::{
+    digital_asset::DigitalAsset,
+    tx_builder::{DecompressV1Builder, FinalizeWithRootAndCollectionBuilder},
+};
 use anchor_lang::{self, AccountDeserialize};
 use bubblegum::{
     state::{leaf_schema::LeafSchema, DecompressibleState, TreeConfig, Voucher, VOUCHER_PREFIX},
@@ -85,6 +89,25 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             client,
             proof_tree,
             num_minted: 0,
+        }
+    }
+
+    pub fn with_preinitialised_tree(
+        tree_creator: &Keypair,
+        merkle_tree: &Keypair,
+        client: BanksClient,
+        proof_tree: MerkleTree,
+        num_minted: u64,
+        canopy_depth: u32,
+    ) -> Self {
+        Tree {
+            tree_creator: clone_keypair(tree_creator),
+            tree_delegate: clone_keypair(tree_creator),
+            merkle_tree: clone_keypair(merkle_tree),
+            canopy_depth,
+            client,
+            proof_tree,
+            num_minted,
         }
     }
 
@@ -251,6 +274,178 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
 
     pub async fn create_public(&mut self, payer: &Keypair) -> Result<()> {
         self.create_tree_tx(payer, true).execute().await
+    }
+
+    pub fn finalize_tree_with_root_tx(
+        &mut self,
+        payer: &Keypair,
+        tree_delegate: &Keypair,
+        root: [u8; 32],
+        rightmost_leaf: [u8; 32],
+        rightmost_index: u32,
+        metadata_url: String,
+        metadata_hash: String,
+        registrar: Pubkey,
+        voter: Pubkey,
+        mining: Pubkey,
+        fee_receiver: Pubkey,
+    ) -> FinalizeWithRootBuilder<MAX_DEPTH, MAX_BUFFER_SIZE> {
+        let tree_authority =
+            Pubkey::find_program_address(&[self.tree_pubkey().as_ref()], &bubblegum::id()).0;
+
+        let accounts = bubblegum::accounts::FinalizeTreeWithRoot {
+            tree_authority,
+            merkle_tree: self.tree_pubkey(),
+            staker: payer.pubkey(), // TODO: this should be a separate account in a general case
+            tree_delegate: tree_delegate.pubkey(),
+            payer: payer.pubkey(),
+            registrar,
+            voter,
+            mining,
+            fee_receiver,
+            log_wrapper: spl_noop::id(),
+            compression_program: spl_account_compression::id(),
+            system_program: system_program::id(),
+        };
+
+        let data = bubblegum::instruction::FinalizeTreeWithRoot {
+            root,
+            rightmost_leaf,
+            rightmost_index,
+            metadata_url,
+            metadata_hash,
+        };
+
+        self.tx_builder(
+            accounts,
+            data,
+            None,
+            (),
+            payer.pubkey(),
+            &[payer, tree_delegate],
+        )
+    }
+
+    pub fn finalize_tree_with_root_and_collection_tx(
+        &mut self,
+        collection_authority: &Keypair,
+        collection: &DigitalAsset,
+        payer: &Keypair,
+        tree_delegate: &Keypair,
+        root: [u8; 32],
+        rightmost_leaf: [u8; 32],
+        rightmost_index: u32,
+        metadata_url: String,
+        metadata_hash: String,
+        registrar: Pubkey,
+        voter: Pubkey,
+        mining: Pubkey,
+        fee_receiver: Pubkey,
+    ) -> FinalizeWithRootAndCollectionBuilder<MAX_DEPTH, MAX_BUFFER_SIZE> {
+        let tree_authority =
+            Pubkey::find_program_address(&[self.tree_pubkey().as_ref()], &bubblegum::id()).0;
+
+        let accounts = bubblegum::accounts::FinalizeTreeWithRootAndCollection {
+            tree_authority,
+            merkle_tree: self.tree_pubkey(),
+            staker: payer.pubkey(), // TODO: this should be a separate account in a general case
+            tree_delegate: tree_delegate.pubkey(),
+            payer: payer.pubkey(),
+            registrar,
+            voter,
+            mining,
+            collection_authority: collection_authority.pubkey(),
+            collection_authority_record_pda: bubblegum::id(),
+            collection_mint: collection.mint.pubkey(),
+            fee_receiver,
+            log_wrapper: spl_noop::id(),
+            compression_program: spl_account_compression::id(),
+            system_program: system_program::id(),
+            collection_metadata: collection.metadata,
+            edition_account: collection.edition.unwrap(),
+        };
+
+        let data = bubblegum::instruction::FinalizeTreeWithRootAndCollection {
+            root,
+            rightmost_leaf,
+            rightmost_index,
+            metadata_url,
+            metadata_hash,
+        };
+
+        self.tx_builder(
+            accounts,
+            data,
+            None,
+            (),
+            payer.pubkey(),
+            &[payer, tree_delegate, collection_authority],
+        )
+    }
+
+    pub fn add_canopy_tx(
+        &mut self,
+        payer: &Keypair,
+        tree_delegate: &Keypair,
+        start_index: u32,
+        canopy_nodes: Vec<[u8; 32]>,
+    ) -> AddCanopyBuilder<MAX_DEPTH, MAX_BUFFER_SIZE> {
+        let tree_authority =
+            Pubkey::find_program_address(&[self.tree_pubkey().as_ref()], &bubblegum::id()).0;
+
+        let accounts = bubblegum::accounts::AddCanopy {
+            tree_authority,
+            merkle_tree: self.tree_pubkey(),
+            tree_delegate: tree_delegate.pubkey(),
+            log_wrapper: spl_noop::id(),
+            compression_program: spl_account_compression::id(),
+            system_program: system_program::id(),
+        };
+
+        let data = bubblegum::instruction::AddCanopy {
+            start_index,
+            canopy_nodes,
+        };
+
+        self.tx_builder(
+            accounts,
+            data,
+            None,
+            (),
+            payer.pubkey(),
+            &[tree_delegate, payer],
+        )
+    }
+
+    pub fn prepare_tree_tx(
+        &mut self,
+        payer: &Keypair,
+        creator: &Keypair,
+        public: bool,
+        max_depth: u32,
+        max_buffer_size: u32,
+    ) -> PrepareTreeBuilder<MAX_DEPTH, MAX_BUFFER_SIZE> {
+        let tree_authority =
+            Pubkey::find_program_address(&[self.tree_pubkey().as_ref()], &bubblegum::id()).0;
+
+        assert_eq!(creator.pubkey(), self.creator_pubkey());
+        let accounts = bubblegum::accounts::PrepareTree {
+            tree_authority,
+            merkle_tree: self.tree_pubkey(),
+            payer: payer.pubkey(),
+            tree_creator: self.creator_pubkey(),
+            log_wrapper: spl_noop::id(),
+            compression_program: spl_account_compression::id(),
+            system_program: system_program::id(),
+        };
+
+        let data = bubblegum::instruction::PrepareTree {
+            max_depth,
+            max_buffer_size,
+            public: Some(public),
+        };
+
+        self.tx_builder(accounts, data, None, (), payer.pubkey(), &[payer, creator])
     }
 
     pub fn mint_v1_non_owner_tx<'a>(
@@ -1019,6 +1214,11 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             .into_iter()
             .map(|node| AccountMeta::new_readonly(Pubkey::new_from_array(node), false))
             .collect()
+    }
+
+    // Returns node's hash by its index
+    pub fn get_node(&self, index: usize) -> Node {
+        self.proof_tree.get_node(index)
     }
 
     // Set Decompression Permission TX

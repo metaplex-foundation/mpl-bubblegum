@@ -155,6 +155,86 @@ export class LeafIndexOutOfBoundsError extends ProgramError {
 codeToErrorMap.set(0x1778, LeafIndexOutOfBoundsError);
 nameToErrorMap.set('LeafIndexOutOfBounds', LeafIndexOutOfBoundsError);
 
+/** CanopyNotAllocated: Tree was initialized without allocating space for the canopy */
+export class CanopyNotAllocatedError extends ProgramError {
+  readonly name: string = 'CanopyNotAllocated';
+
+  readonly code: number = 0x1779; // 6009
+
+  constructor(program: Program, cause?: Error) {
+    super(
+      'Tree was initialized without allocating space for the canopy',
+      program,
+      cause
+    );
+  }
+}
+codeToErrorMap.set(0x1779, CanopyNotAllocatedError);
+nameToErrorMap.set('CanopyNotAllocated', CanopyNotAllocatedError);
+
+/** TreeAlreadyInitialized: Tree was already initialized */
+export class TreeAlreadyInitializedError extends ProgramError {
+  readonly name: string = 'TreeAlreadyInitialized';
+
+  readonly code: number = 0x177a; // 6010
+
+  constructor(program: Program, cause?: Error) {
+    super('Tree was already initialized', program, cause);
+  }
+}
+codeToErrorMap.set(0x177a, TreeAlreadyInitializedError);
+nameToErrorMap.set('TreeAlreadyInitialized', TreeAlreadyInitializedError);
+
+/** BatchNotInitialized: Tree header was not initialized for batch processing */
+export class BatchNotInitializedError extends ProgramError {
+  readonly name: string = 'BatchNotInitialized';
+
+  readonly code: number = 0x177b; // 6011
+
+  constructor(program: Program, cause?: Error) {
+    super(
+      'Tree header was not initialized for batch processing',
+      program,
+      cause
+    );
+  }
+}
+codeToErrorMap.set(0x177b, BatchNotInitializedError);
+nameToErrorMap.set('BatchNotInitialized', BatchNotInitializedError);
+
+/** CanopyRootMismatch: Canopy root does not match the root of the tree */
+export class CanopyRootMismatchError extends ProgramError {
+  readonly name: string = 'CanopyRootMismatch';
+
+  readonly code: number = 0x177c; // 6012
+
+  constructor(program: Program, cause?: Error) {
+    super('Canopy root does not match the root of the tree', program, cause);
+  }
+}
+codeToErrorMap.set(0x177c, CanopyRootMismatchError);
+nameToErrorMap.set('CanopyRootMismatch', CanopyRootMismatchError);
+
+/** CanopyRightmostLeafMismatch: Canopy contains nodes to the right of the rightmost leaf of the tree */
+export class CanopyRightmostLeafMismatchError extends ProgramError {
+  readonly name: string = 'CanopyRightmostLeafMismatch';
+
+  readonly code: number = 0x177d; // 6013
+
+  constructor(program: Program, cause?: Error) {
+    super(
+      'Canopy contains nodes to the right of the rightmost leaf of the tree',
+      program,
+      cause
+    );
+  }
+}
+codeToErrorMap.set(0x177d, CanopyRightmostLeafMismatchError);
+nameToErrorMap.set(
+  'CanopyRightmostLeafMismatch',
+  CanopyRightmostLeafMismatchError
+);
+
 /**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors

@@ -37,6 +37,10 @@ pub enum InstructionName {
     MintToCollectionV1,
     SetDecompressibleState,
     UpdateMetadata,
+    FinalizeTreeWithRoot,
+    FinalizeTreeWithRootAndCollection,
+    PrepareTree,
+    AddCanopy,
 }
 
 pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
@@ -55,6 +59,8 @@ pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
         [54, 85, 76, 70, 228, 250, 164, 81] => InstructionName::DecompressV1,
         [116, 110, 29, 56, 107, 219, 42, 93] => InstructionName::Burn,
         [82, 193, 176, 117, 176, 21, 115, 253] => InstructionName::Compress,
+        [77, 73, 220, 153, 126, 225, 64, 204] => InstructionName::FinalizeTreeWithRoot,
+        [194, 98, 45, 168, 183, 72, 67, 155] => InstructionName::FinalizeTreeWithRootAndCollection,
         [165, 83, 136, 142, 89, 202, 47, 220] => InstructionName::CreateTree,
         [52, 17, 96, 132, 71, 4, 85, 194] => InstructionName::VerifyCreator,
         [107, 178, 57, 39, 105, 115, 112, 152] => InstructionName::UnverifyCreator,
@@ -65,6 +71,8 @@ pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
         // `SetDecompressableState` instruction mapped to `SetDecompressibleState` instruction
         [18, 135, 238, 168, 246, 195, 61, 115] => InstructionName::SetDecompressibleState,
         [170, 182, 43, 239, 97, 78, 225, 186] => InstructionName::UpdateMetadata,
+        [41, 56, 189, 77, 58, 12, 142, 71] => InstructionName::PrepareTree,
+        [247, 118, 145, 92, 84, 66, 207, 25] => InstructionName::AddCanopy,
         _ => InstructionName::Unknown,
     }
 }
@@ -98,14 +106,67 @@ pub mod bubblegum {
         processor::compress(ctx)
     }
 
+    pub fn prepare_tree<'info>(
+        ctx: Context<'_, '_, '_, 'info, PrepareTree<'info>>,
+        max_depth: u32,
+        max_buffer_size: u32,
+        public: Option<bool>,
+    ) -> Result<()> {
+        processor::prepare_tree(ctx, max_depth, max_buffer_size, public)
+    }
+
+    pub fn add_canopy<'info>(
+        ctx: Context<'_, '_, '_, 'info, AddCanopy<'info>>,
+        start_index: u32,
+        canopy_nodes: Vec<[u8; 32]>,
+    ) -> Result<()> {
+        processor::add_canopy(ctx, start_index, canopy_nodes)
+    }
+
     /// Creates a new tree.
-    pub fn create_tree(
-        ctx: Context<CreateTree>,
+    pub fn create_tree<'info>(
+        ctx: Context<'_, '_, '_, 'info, CreateTree<'info>>,
         max_depth: u32,
         max_buffer_size: u32,
         public: Option<bool>,
     ) -> Result<()> {
         processor::create_tree(ctx, max_depth, max_buffer_size, public)
+    }
+
+    pub(crate) fn finalize_tree_with_root<'info>(
+        ctx: Context<'_, '_, '_, 'info, FinalizeTreeWithRoot<'info>>,
+        root: [u8; 32],
+        rightmost_leaf: [u8; 32],
+        rightmost_index: u32,
+        metadata_url: String,
+        metadata_hash: String,
+    ) -> Result<()> {
+        processor::finalize_tree_with_root(
+            ctx,
+            root,
+            rightmost_leaf,
+            rightmost_index,
+            metadata_url,
+            metadata_hash,
+        )
+    }
+
+    pub(crate) fn finalize_tree_with_root_and_collection<'info>(
+        ctx: Context<'_, '_, '_, 'info, FinalizeTreeWithRootAndCollection<'info>>,
+        root: [u8; 32],
+        rightmost_leaf: [u8; 32],
+        rightmost_index: u32,
+        metadata_url: String,
+        metadata_hash: String,
+    ) -> Result<()> {
+        processor::finalize_tree_with_root_and_collection(
+            ctx,
+            root,
+            rightmost_leaf,
+            rightmost_index,
+            metadata_url,
+            metadata_hash,
+        )
     }
 
     /// Decompresses a leaf node from the tree.

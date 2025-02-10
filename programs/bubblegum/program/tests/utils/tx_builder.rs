@@ -47,7 +47,7 @@ where
     T: ToAccountMetas,
     U: InstructionData,
 {
-    pub async fn execute(&mut self) -> Result<()>
+    async fn execute_tx(&mut self) -> Result<()>
     where
         Self: OnSuccessfulTxExec,
     {
@@ -85,8 +85,24 @@ where
 
         self.on_successful_execute()?;
 
+        Ok(())
+    }
+
+    pub async fn execute(&mut self) -> Result<()>
+    where
+        Self: OnSuccessfulTxExec,
+    {
+        self.execute_tx().await?;
+
         // Check the expected tree root matches on-chain state post tx.
         self.tree.check_expected_root().await
+    }
+
+    pub async fn execute_without_root_check(&mut self) -> Result<()>
+    where
+        Self: OnSuccessfulTxExec,
+    {
+        self.execute_tx().await
     }
 
     // Returning `&mut Self` to allow method chaining.
@@ -140,6 +156,83 @@ pub type CreateBuilder<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize>
 
 impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExec
     for CreateBuilder<'a, MAX_DEPTH, MAX_BUFFER_SIZE>
+{
+    fn on_successful_execute(&mut self) -> Result<()> {
+        // Do nothing here.
+        Ok(())
+    }
+}
+
+pub type FinalizeWithRootBuilder<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> =
+    TxBuilder<
+        'a,
+        bubblegum::accounts::FinalizeTreeWithRoot,
+        bubblegum::instruction::FinalizeTreeWithRoot,
+        (),
+        MAX_DEPTH,
+        MAX_BUFFER_SIZE,
+    >;
+
+pub type FinalizeWithRootAndCollectionBuilder<
+    'a,
+    const MAX_DEPTH: usize,
+    const MAX_BUFFER_SIZE: usize,
+> = TxBuilder<
+    'a,
+    bubblegum::accounts::FinalizeTreeWithRootAndCollection,
+    bubblegum::instruction::FinalizeTreeWithRootAndCollection,
+    (),
+    MAX_DEPTH,
+    MAX_BUFFER_SIZE,
+>;
+
+impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExec
+    for FinalizeWithRootBuilder<'a, MAX_DEPTH, MAX_BUFFER_SIZE>
+{
+    fn on_successful_execute(&mut self) -> Result<()> {
+        // Do nothing here.
+        Ok(())
+    }
+}
+
+impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExec
+    for FinalizeWithRootAndCollectionBuilder<'a, MAX_DEPTH, MAX_BUFFER_SIZE>
+{
+    fn on_successful_execute(&mut self) -> Result<()> {
+        // Do nothing here.
+        Ok(())
+    }
+}
+
+pub type AddCanopyBuilder<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> = TxBuilder<
+    'a,
+    bubblegum::accounts::AddCanopy,
+    bubblegum::instruction::AddCanopy,
+    (),
+    MAX_DEPTH,
+    MAX_BUFFER_SIZE,
+>;
+
+impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExec
+    for AddCanopyBuilder<'a, MAX_DEPTH, MAX_BUFFER_SIZE>
+{
+    fn on_successful_execute(&mut self) -> Result<()> {
+        // Do nothing here.
+        Ok(())
+    }
+}
+
+pub type PrepareTreeBuilder<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> = TxBuilder<
+    'a,
+    bubblegum::accounts::PrepareTree,
+    bubblegum::instruction::PrepareTree,
+    (),
+    MAX_DEPTH,
+    MAX_BUFFER_SIZE,
+>;
+
+impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExec
+    for PrepareTreeBuilder<'a, MAX_DEPTH, MAX_BUFFER_SIZE>
 {
     fn on_successful_execute(&mut self) -> Result<()> {
         // Do nothing here.

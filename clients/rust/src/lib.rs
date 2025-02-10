@@ -28,6 +28,10 @@ pub enum InstructionName {
     MintToCollectionV1,
     SetDecompressibleState,
     UpdateMetadata,
+    FinalizeTreeWithRoot,
+    FinalizeTreeWithRootAndCollection,
+    PrepareTree,
+    AddCanopy,
 }
 
 pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
@@ -56,6 +60,10 @@ pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
         // `SetDecompressableState` instruction mapped to `SetDecompressibleState` instruction
         [18, 135, 238, 168, 246, 195, 61, 115] => InstructionName::SetDecompressibleState,
         [170, 182, 43, 239, 97, 78, 225, 186] => InstructionName::UpdateMetadata,
+        [77, 73, 220, 153, 126, 225, 64, 204] => InstructionName::FinalizeTreeWithRoot,
+        [194, 98, 45, 168, 183, 72, 67, 155] => InstructionName::FinalizeTreeWithRootAndCollection,
+        [41, 56, 189, 77, 58, 12, 142, 71] => InstructionName::PrepareTree,
+        [247, 118, 145, 92, 84, 66, 207, 25] => InstructionName::AddCanopy,
         _ => InstructionName::Unknown,
     }
 }
@@ -78,3 +86,5 @@ impl LeafSchemaEvent {
         }
     }
 }
+
+pub const MAX_ACC_PROOFS_SIZE: u32 = 17;

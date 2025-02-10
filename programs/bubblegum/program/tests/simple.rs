@@ -239,14 +239,11 @@ async fn test_create_public_tree_and_mint_passes() {
 async fn test_create_public_tree_with_canopy() {
     let context = BubblegumTestContext::new().await.unwrap();
     let payer = context.payer();
-
     let mut tree = context
         .create_tree_with_canopy::<18, 64>(1, true)
         .await
         .unwrap();
-
     let cfg = tree.read_tree_config().await.unwrap();
-
     assert_eq!(cfg.tree_creator, payer.pubkey());
     assert_eq!(cfg.tree_delegate, payer.pubkey());
     assert!(cfg.is_public);
@@ -274,6 +271,26 @@ async fn test_cannot_create_tree_needing_too_many_proofs_with_too_small_canopy()
 
 #[tokio::test]
 async fn test_cannot_create_tree_needing_too_many_proofs_with_no_canopy() {
+    let context = BubblegumTestContext::new().await.unwrap();
+
+    let tree_create_result = context.create_tree_with_canopy::<19, 64>(1, true).await;
+
+    if let Err(err) = tree_create_result {
+        if let BanksClient(BanksClientError::TransactionError(e)) = *err {
+            assert_eq!(
+                e,
+                TransactionError::InstructionError(0, InstructionError::Custom(6041),)
+            );
+        } else {
+            panic!("Wrong variant");
+        }
+    } else {
+        panic!("Should have failed");
+    }
+}
+
+#[tokio::test]
+async fn test_create_public_tree_with_zero_canopy() {
     let context = BubblegumTestContext::new().await.unwrap();
 
     let tree_create_result = context.create_tree_with_canopy::<18, 64>(0, true).await;

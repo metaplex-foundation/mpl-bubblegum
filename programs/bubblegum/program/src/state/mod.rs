@@ -12,6 +12,14 @@ pub const VOUCHER_PREFIX: &str = "voucher";
 pub const ASSET_PREFIX: &str = "asset";
 pub const COLLECTION_CPI_PREFIX: &str = "collection_cpi";
 
+pub const MAX_ACC_PROOFS_SIZE: u32 = 17;
+
+pub const VOTER_DISCRIMINATOR: [u8; 8] = [241, 93, 35, 191, 254, 147, 17, 202];
+
+pub const MINIMUM_WEIGHTED_STAKE: u64 = 30_000_000_000_000; // 30 weighted MPLX
+
+pub const PROTOCOL_FEE_PER_1024_ASSETS: u64 = 1_280_000; // 0.00128 SOL in lamports
+
 #[account]
 #[derive(Copy, Debug, PartialEq, Eq)]
 pub struct TreeConfig {
@@ -26,6 +34,10 @@ pub struct TreeConfig {
 impl TreeConfig {
     pub fn increment_mint_count(&mut self) {
         self.num_minted = self.num_minted.saturating_add(1);
+    }
+
+    pub fn increment_mint_count_by(&mut self, count: u64) {
+        self.num_minted = self.num_minted.saturating_add(count);
     }
 
     pub fn contains_mint_capacity(&self, requested_capacity: u64) -> bool {

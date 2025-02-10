@@ -136,6 +136,36 @@ pub enum MplBubblegumError {
     /// 6041 (0x1799) - Canopy size should be set bigger for this tree
     #[error("Canopy size should be set bigger for this tree")]
     InvalidCanopySize,
+    /// 6042 (0x179A) - Not enough tokens staked to call this instruction
+    #[error("Not enough tokens staked to call this instruction")]
+    NotEnoughStakeForOperation,
+    /// 6043 (0x179B) - Staking registrar mismatch
+    #[error("Staking registrar mismatch")]
+    StakingRegistrarMismatch,
+    /// 6044 (0x179C) - Staking voter mismatch
+    #[error("Staking voter mismatch")]
+    StakingVoterMismatch,
+    /// 6045 (0x179D) - Fee receiver mismatch
+    #[error("Fee receiver mismatch")]
+    FeeReceiverMismatch,
+    /// 6046 (0x179E) - Staking registrar realm mismatch
+    #[error("Staking registrar realm mismatch")]
+    StakingRegistrarRealmMismatch,
+    /// 6047 (0x179F) - Staking registrar discriminator mismatch
+    #[error("Staking registrar discriminator mismatch")]
+    StakingRegistrarDiscriminatorMismatch,
+    /// 6048 (0x17A0) - Staking voter discriminator mismatch
+    #[error("Staking voter discriminator mismatch")]
+    StakingVoterDiscriminatorMismatch,
+    /// 6049 (0x17A1) - Staking voter registrar mismatch
+    #[error("Staking voter registrar mismatch")]
+    StakingVoterRegistrarMismatch,
+    /// 6050 (0x17A2) - Staking voter authority mismatch
+    #[error("Staking voter authority mismatch")]
+    StakingVoterAuthorityMismatch,
+    /// 6051 (0x17A3) - Invalid mining owner
+    #[error("Invalid mining owner")]
+    MiningOwnerMismatch,
 }
 
 impl solana_program::program_error::PrintProgramError for MplBubblegumError {
