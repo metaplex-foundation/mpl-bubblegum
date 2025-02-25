@@ -3,23 +3,7 @@ name: Build Rust Client
 on:
   workflow_call:
     inputs:
-      rust:
-        type: string
-      solana:
-        type: string
       git_ref:
-        type: string
-  workflow_dispatch:
-    inputs:
-      rust:
-        description: Rust version
-        default: 1.75.0
-        required: true
-        type: string
-      solana:
-        description: Solana version
-        default: 1.18.15
-        required: true
         type: string
 
 env:
@@ -41,12 +25,12 @@ jobs:
       - name: Install Rust
         uses: metaplex-foundation/actions/install-rust@v1
         with:
-          toolchain: ${{ inputs.rust || env.RUST_VERSION }}
+          toolchain: ${{ env.RUST_VERSION }}
 
       - name: Install Solana
         uses: metaplex-foundation/actions/install-solana@v1
         with:
-          version: ${{ inputs.solana || env.SOLANA_VERSION }}
+          version: ${{ env.SOLANA_VERSION }}
           cache: ${{ env.CACHE }}
 
       - name: Run cargo clippy
