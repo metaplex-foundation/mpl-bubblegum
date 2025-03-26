@@ -5,6 +5,7 @@ import {
   Signer,
   TransactionBuilder,
   transactionBuilder,
+  publicKey,
 } from '@metaplex-foundation/umi';
 import {
   SPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
@@ -27,17 +28,12 @@ export const createTree = async (
     getMerkleTreeSize(input.maxDepth, input.maxBufferSize, input.canopyDepth);
   const lamports = await context.rpc.getRent(space);
 
-  let programId;
-  if (input.compressionProgram) {
-    programId = Array.isArray(input.compressionProgram)
-      ? input.compressionProgram[0]
-      : input.compressionProgram;
-  } else {
-    programId = context.programs.getPublicKey(
-      'splAccountCompression',
-      SPL_ACCOUNT_COMPRESSION_PROGRAM_ID
-    );
-  }
+  const programId = input.compressionProgram
+    ? publicKey(input.compressionProgram)
+    : context.programs.getPublicKey(
+        'splAccountCompression',
+        SPL_ACCOUNT_COMPRESSION_PROGRAM_ID
+      );
 
   return (
     transactionBuilder()
