@@ -2413,7 +2413,7 @@ dependencies = [
 
 [[package]]
 name = "mpl-bubblegum"
-version = "2.0.0-beta.8"
+version = "2.0.0-beta.9"
 dependencies = [
  "assert_matches",
  "borsh 0.9.3",
