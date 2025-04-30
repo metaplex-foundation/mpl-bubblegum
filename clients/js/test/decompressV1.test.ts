@@ -8,12 +8,14 @@ import { defaultPublicKey, none, some } from '@metaplex-foundation/umi';
 import { generateSignerWithSol } from '@metaplex-foundation/umi-bundle-tests';
 import test from 'ava';
 import {
-  decompressV1,
   fetchMerkleTree,
+  getCurrentRoot,
+} from '@metaplex-foundation/spl-account-compression';
+import {
+  decompressV1,
   findLeafAssetIdPda,
   findMintAuthorityPda,
   findVoucherPda,
-  getCurrentRoot,
   hashMetadataCreators,
   hashMetadataData,
   redeem,

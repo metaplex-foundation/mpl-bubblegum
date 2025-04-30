@@ -1,13 +1,10 @@
 import { defaultPublicKey, generateSigner } from '@metaplex-foundation/umi';
 import test from 'ava';
 import {
-  burn,
-  delegate,
   fetchMerkleTree,
   getCurrentRoot,
-  hashMetadataCreators,
-  hashMetadataData,
-} from '../src';
+} from '@metaplex-foundation/spl-account-compression';
+import { burn, delegate, hashMetadataCreators, hashMetadataData } from '../src';
 import { createTree, createUmi, mint } from './_setup';
 
 test('it can burn a compressed NFT', async (t) => {

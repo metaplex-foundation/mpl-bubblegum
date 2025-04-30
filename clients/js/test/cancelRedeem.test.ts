@@ -2,10 +2,12 @@ import { defaultPublicKey, publicKey } from '@metaplex-foundation/umi';
 import { generateSignerWithSol } from '@metaplex-foundation/umi-bundle-tests';
 import test from 'ava';
 import {
-  cancelRedeem,
   fetchMerkleTree,
-  findVoucherPda,
   getCurrentRoot,
+} from '@metaplex-foundation/spl-account-compression';
+import {
+  cancelRedeem,
+  findVoucherPda,
   hashLeaf,
   hashMetadataCreators,
   hashMetadataData,

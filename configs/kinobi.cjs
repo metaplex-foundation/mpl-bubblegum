@@ -9,8 +9,6 @@ const idlDir = path.join(__dirname, "..", "idls");
 const kinobi = k.createFromIdls(
   [
     path.join(idlDir, "bubblegum.json"),
-    path.join(idlDir, "spl_account_compression.json"),
-    path.join(idlDir, "spl_noop.json"),
   ],
   false
 );
@@ -165,6 +163,104 @@ for (let ix of deprecatedTmIxes) {
     })
 }
 
+const v1Ixs = [
+  "burn",
+  "cancel_redeem",
+  "compress",
+  "create_tree",
+  "decompressV1",
+  "delegate",
+  "mintToCollectionV1",
+  "mintV1",
+  "redeem",
+  "setAndVerifyCollection",
+  "transfer",
+  "unverifyCollection",
+  "unverifyCreator",
+  "updateMetadata",
+  "verifyCollection",
+  "verifyCreator",
+];
+let v1IxUpdaters = [];
+for (let ix of v1Ixs) {
+  v1IxUpdaters.push(
+    {
+      account: "logWrapper",
+      ignoreIfOptional: true,
+      instruction: ix,
+      ...k.programDefault(
+        "splNoop",
+        "noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV"
+      ),
+    })
+  v1IxUpdaters.push(
+    {
+      account: "compressionProgram",
+      ignoreIfOptional: true,
+      instruction: ix,
+      ...k.programDefault(
+        "splAccountCompression",
+        "cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK"
+      ),
+    })
+}
+
+const v2Ixs = [
+  "burnV2",
+  "createTreeV2",
+  "delegateAndFreezeV2",
+  "delegateV2",
+  "freezeV2",
+  "mintV2",
+  "setCollectionV2",
+  "setNonTransferableV2",
+  "thawAndRevokeV2",
+  "thawV2",
+  "transferV2",
+  "unverifyCreatorV2",
+  "updateAssetDataV2",
+  "updateMetadataV2",
+  "verifyCreatorV2",
+];
+let v2IxUpdaters = [];
+for (let ix of v2Ixs) {
+  v2IxUpdaters.push(
+    {
+      account: "logWrapper",
+      ignoreIfOptional: true,
+      instruction: ix,
+      ...k.programDefault(
+        "mplNoop",
+        "mnoopTCrg4p8ry25e4bcWA9XZjbNjMTfgYVGGEdRsf3"
+      ),
+    })
+  v2IxUpdaters.push(
+    {
+      account: "compressionProgram",
+      ignoreIfOptional: true,
+      instruction: ix,
+      ...k.programDefault(
+        "mplAccountCompression",
+        "mcmt6YrQEMKw8Mw43FmpRLmf7BqRnFMKmAcbxE3xkAW"
+      ),
+    })
+}
+
+const allLeafDelegateIxs = [...v1Ixs, ...v2Ixs];
+const skipLeafDelegateDefaultFor = new Set([
+  "freezeV2",
+  "thawV2",
+]);
+
+const leafDelegateUpdaters = allLeafDelegateIxs
+  .filter((ix) => !skipLeafDelegateDefaultFor.has(ix))
+  .map((ix) => ({
+    instruction: ix,
+    account: "leafDelegate",
+    ignoreIfOptional: true,
+    ...k.accountDefault("leafOwner"),
+  }));
+
 // Set default account values across multiple instructions.
 kinobi.update(
   new k.SetInstructionAccountDefaultValuesVisitor([
@@ -177,19 +273,11 @@ kinobi.update(
       ),
     },
     {
-      account: "logWrapper",
+      account: "mplCoreProgram",
       ignoreIfOptional: true,
       ...k.programDefault(
-        "splNoop",
-        "noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV"
-      ),
-    },
-    {
-      account: "compressionProgram",
-      ignoreIfOptional: true,
-      ...k.programDefault(
-        "splAccountCompression",
-        "cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK"
+        "mplCore",
+        "CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d"
       ),
     },
     {
@@ -201,11 +289,6 @@ kinobi.update(
       account: "treeCreatorOrDelegate",
       ignoreIfOptional: true,
       ...k.identityDefault(),
-    },
-    {
-      account: "leafDelegate",
-      ignoreIfOptional: true,
-      ...k.accountDefault("leafOwner"),
     },
     {
       account: "treeConfig",
@@ -243,7 +326,16 @@ kinobi.update(
       ignoreIfOptional: true,
       ...k.identityDefault(),
     },
+    {
+      account: "mplCoreCpiSigner",
+      // TODO would be great if I could add this if a collection is present but otherwise not.
+      // ignoreIfOptional: true,
+      ...k.publicKeyDefault("CbNY3JiXdXNE9tPNEk1aRZVEkWdj2v7kfJLNQwZZgpXk"),
+    },
     ...deprecatedIxUpdaters,
+    ...v1IxUpdaters,
+    ...v2IxUpdaters,
+    ...leafDelegateUpdaters,
   ])
 );
 
@@ -260,6 +352,7 @@ const hashDefaults = {
     ]),
   },
 };
+
 kinobi.update(
   new k.UpdateInstructionsVisitor({
     createTree: {
@@ -353,6 +446,107 @@ kinobi.update(
     noopInstruction: { delete: true },
     replaceLeaf: { delete: true },
     transferAuthority: { delete: true },
+    burnV2: {
+      args: {
+        assetDataHash: { defaultsTo: k.valueDefault(k.vNone()) },
+        flags: { defaultsTo: k.valueDefault(k.vNone()) },
+      }
+    },
+    collectV2: {
+      accounts: {
+        destination: {
+          defaultsTo: k.publicKeyDefault("2dgJVPC5fjLTBTmMvKDRig9JJUGK2Fgwr3EHShFxckhv")
+        }
+      }
+    },
+    createTreeV2: {
+      name: "createTreeConfigV2",
+      bytesCreatedOnChain: k.bytesFromAccount("treeConfig"),
+    },
+    delegateAndFreezeV2: {
+      args: {
+        collectionHash: { defaultsTo: k.valueDefault(k.vNone()) },
+        assetDataHash: { defaultsTo: k.valueDefault(k.vNone()) },
+        flags: { defaultsTo: k.valueDefault(k.vNone()) }
+      }
+    },
+    delegateV2: {
+      args: {
+        collectionHash: { defaultsTo: k.valueDefault(k.vNone()) },
+        assetDataHash: { defaultsTo: k.valueDefault(k.vNone()) },
+        flags: { defaultsTo: k.valueDefault(k.vNone()) }
+      }
+    },
+    freezeV2: {
+      args: {
+        assetDataHash: { defaultsTo: k.valueDefault(k.vNone()) },
+        flags: { defaultsTo: k.valueDefault(k.vNone()) }
+      }
+    },
+    mintV2: {
+      args: {
+        metadataArgs: { name: "metadata" },
+        assetData: { defaultsTo: k.valueDefault(k.vNone()) },
+        assetDataSchema: { defaultsTo: k.valueDefault(k.vNone()) }
+      },
+    },
+    setCollectionV2: {
+      args: {
+        assetDataHash: { defaultsTo: k.valueDefault(k.vNone()) },
+        flags: { defaultsTo: k.valueDefault(k.vNone()) },
+      }
+    },
+    setNonTransferableV2: {
+      args: {
+        assetDataHash: { defaultsTo: k.valueDefault(k.vNone()) },
+        flags: { defaultsTo: k.valueDefault(k.vNone()) },
+      }
+    },
+    thawAndRevokeV2: {
+      args: {
+        collectionHash: { defaultsTo: k.valueDefault(k.vNone()) },
+        assetDataHash: { defaultsTo: k.valueDefault(k.vNone()) },
+        flags: { defaultsTo: k.valueDefault(k.vNone()) }
+      }
+    },
+    thawV2: {
+      args: {
+        assetDataHash: { defaultsTo: k.valueDefault(k.vNone()) },
+        flags: { defaultsTo: k.valueDefault(k.vNone()) }
+      }
+    },
+    transferV2: {
+      args: {
+        assetDataHash: { defaultsTo: k.valueDefault(k.vNone()) },
+        flags: { defaultsTo: k.valueDefault(k.vNone()) },
+      }
+    },
+    unverifyCreatorV2: {
+      args: {
+        assetDataHash: { defaultsTo: k.valueDefault(k.vNone()) },
+        flags: { defaultsTo: k.valueDefault(k.vNone()) },
+      }
+    },
+    updateAssetDataV2: {
+      args: {
+        previousAssetDataHash: { defaultsTo: k.valueDefault(k.vNone()) },
+        flags: { defaultsTo: k.valueDefault(k.vNone()) },
+        newAssetData: { defaultsTo: k.valueDefault(k.vNone()) },
+        newAssetDataSchema: { defaultsTo: k.valueDefault(k.vNone()) }
+      }
+    },
+    updateMetadataV2: {
+      args: {
+        assetDataHash: { defaultsTo: k.valueDefault(k.vNone()) },
+        flags: { defaultsTo: k.valueDefault(k.vNone()) },
+      }
+    },
+    verifyCreatorV2: {
+      args: {
+        assetDataHash: { defaultsTo: k.valueDefault(k.vNone()) },
+        flags: { defaultsTo: k.valueDefault(k.vNone()) },
+      }
+    }
   })
 );
 
@@ -360,6 +554,9 @@ kinobi.update(
 kinobi.update(
   new k.SetStructDefaultValuesVisitor({
     createTreeConfigInstructionData: {
+      public: k.vNone(),
+    },
+    createTreeConfigV2InstructionData: {
       public: k.vNone(),
     },
     metadataArgs: {
@@ -370,6 +567,12 @@ kinobi.update(
       tokenStandard: k.vSome(k.vEnum("TokenStandard", "NonFungible")),
       uses: k.vNone(),
       tokenProgramVersion: k.vEnum("TokenProgramVersion", "Original"),
+    },
+    metadataArgsV2: {
+      symbol: k.vScalar(""),
+      primarySaleHappened: k.vScalar(false),
+      isMutable: k.vScalar(true),
+      tokenStandard: k.vSome(k.vEnum("TokenStandard", "NonFungible")),
     },
     updateArgs: {
       name: k.vNone(),
@@ -437,7 +640,20 @@ kinobi.update(
           "verifyCreator",
           "unverifyCreator",
           "verifyLeaf",
-          "updateMetadata"
+          "updateMetadata",
+          "burnV2",
+          "delegateAndFreezeV2",
+          "delegateV2",
+          "freezeV2",
+          "setCollectionV2",
+          "setNonTransferableV2",
+          "thawAndRevokeV2",
+          "thawV2",
+          "transferV2",
+          "unverifyCreatorV2",
+          "updateAssetDataV2",
+          "updateMetadataV2",
+          "verifyCreatorV2"
         ].includes(node.name),
       transformer: (node) => {
         k.assertInstructionNode(node);

@@ -2,12 +2,14 @@ import { defaultPublicKey } from '@metaplex-foundation/umi';
 import { generateSignerWithSol } from '@metaplex-foundation/umi-bundle-tests';
 import test from 'ava';
 import {
+  fetchMerkleTree,
+  getCurrentRoot,
+} from '@metaplex-foundation/spl-account-compression';
+import {
   LeafSchema,
   Voucher,
-  fetchMerkleTree,
   fetchVoucherFromSeeds,
   findLeafAssetIdPda,
-  getCurrentRoot,
   hashMetadataCreators,
   hashMetadataData,
   redeem,

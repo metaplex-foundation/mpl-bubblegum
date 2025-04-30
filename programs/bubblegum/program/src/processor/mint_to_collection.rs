@@ -5,13 +5,14 @@ use spl_account_compression::{program::SplAccountCompression, Noop};
 
 use crate::{
     error::BubblegumError,
+    processor::{mint::process_mint, process_collection_verification_mpl_only},
     state::{
-        leaf_schema::LeafSchema, metaplex_adapter::MetadataArgs, metaplex_anchor::TokenMetadata,
+        leaf_schema::{LeafSchema, Version},
+        metaplex_adapter::MetadataArgs,
+        metaplex_anchor::TokenMetadata,
         TreeConfig,
     },
 };
-
-use super::{mint::process_mint_v1, process_collection_verification_mpl_only};
 
 #[derive(Accounts)]
 pub struct MintToCollectionV1<'info> {
@@ -25,8 +26,8 @@ pub struct MintToCollectionV1<'info> {
     pub leaf_owner: AccountInfo<'info>,
     /// CHECK: This account is neither written to nor read from.
     pub leaf_delegate: AccountInfo<'info>,
+    /// CHECK: This account is modified in the downstream program
     #[account(mut)]
-    /// CHECK: unsafe
     pub merkle_tree: UncheckedAccount<'info>,
     pub payer: Signer<'info>,
     pub tree_delegate: Signer<'info>,
@@ -54,12 +55,15 @@ pub(crate) fn mint_to_collection_v1(
     ctx: Context<MintToCollectionV1>,
     metadata_args: MetadataArgs,
 ) -> Result<LeafSchema> {
+    // V1 instructions only work with V1 trees.
+    require!(
+        ctx.accounts.tree_authority.version == Version::V1,
+        BubblegumError::UnsupportedSchemaVersion
+    );
+
     let mut message = metadata_args;
-    // TODO -> Separate V1 / V1 into seperate instructions
     let payer = ctx.accounts.payer.key();
     let incoming_tree_delegate = ctx.accounts.tree_delegate.key();
-    let owner = ctx.accounts.leaf_owner.key();
-    let delegate = ctx.accounts.leaf_delegate.key();
     let authority = &mut ctx.accounts.tree_authority;
     let merkle_tree = &ctx.accounts.merkle_tree;
 
@@ -99,20 +103,26 @@ pub(crate) fn mint_to_collection_v1(
             .map(|a| a.key()),
     );
 
+    let collection = message
+        .collection
+        .as_mut()
+        .ok_or(BubblegumError::CollectionNotFound)?;
+
+    collection.verified = true;
+
     process_collection_verification_mpl_only(
         collection_metadata,
         &collection_mint,
         &collection_authority,
         &collection_authority_record_pda,
         &edition_account,
-        &mut message,
-        true,
+        collection,
     )?;
 
-    let leaf = process_mint_v1(
+    let leaf = process_mint(
         message,
-        owner,
-        delegate,
+        &ctx.accounts.leaf_owner,
+        Some(&ctx.accounts.leaf_delegate),
         metadata_auth,
         ctx.bumps.tree_authority,
         authority,

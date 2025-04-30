@@ -8,10 +8,8 @@ import test from 'ava';
 import {
   fetchMerkleTree,
   getCurrentRoot,
-  hashLeaf,
-  setAndVerifyCollection,
-  verifyCollection,
-} from '../src';
+} from '@metaplex-foundation/spl-account-compression';
+import { hashLeaf, setAndVerifyCollection, verifyCollection } from '../src';
 import { createTree, createUmi, mint } from './_setup';
 
 test('it can verify the collection of a minted compressed NFT', async (t) => {

@@ -1,23 +1,26 @@
 import { PublicKey, generateSigner, publicKey } from '@metaplex-foundation/umi';
 import test from 'ava';
 import {
-  delegate,
+  DasApiAsset,
+  GetAssetProofRpcResponse,
+} from '@metaplex-foundation/digital-asset-standard-api';
+import {
   fetchMerkleTree,
+  getCurrentRoot,
+  verifyLeaf,
+} from '@metaplex-foundation/spl-account-compression';
+import {
+  delegate,
   findLeafAssetIdPda,
   getAssetWithProof,
-  getCurrentRoot,
   getMerkleProof,
   hashLeaf,
   hashMetadataCreators,
   hashMetadataData,
   transfer,
-  verifyLeaf,
+  canTransfer,
 } from '../src';
 import { createTree, createUmi, mint } from './_setup';
-import {
-  DasApiAsset,
-  GetAssetProofRpcResponse,
-} from '@metaplex-foundation/digital-asset-standard-api';
 
 test('it can transfer a compressed NFT', async (t) => {
   // Given a tree with a minted NFT owned by leafOwnerA.
@@ -232,6 +235,9 @@ test('it can transfer a compressed NFT using the getAssetWithProof helper', asyn
 
   // When we use the getAssetWithProof helper.
   const assetWithProof = await getAssetWithProof(umi, assetId);
+
+  // Check using the canTransfer helper.
+  t.is(canTransfer(assetWithProof), true);
 
   // Then leafOwnerA can use it to transfer the NFT to leafOwnerB.
   const leafOwnerB = generateSigner(umi);

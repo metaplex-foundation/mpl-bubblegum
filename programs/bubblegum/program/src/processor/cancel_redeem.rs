@@ -1,10 +1,10 @@
 use anchor_lang::prelude::*;
-use spl_account_compression::{program::SplAccountCompression, wrap_application_data_v1, Noop};
+use spl_account_compression::{program::SplAccountCompression, Noop};
 
 use crate::{
     asserts::assert_pubkey_equal,
     error::BubblegumError,
-    state::{leaf_schema::LeafSchema, TreeConfig, Voucher, VOUCHER_PREFIX},
+    state::{leaf_schema::Version, TreeConfig, Voucher, VOUCHER_PREFIX},
     utils::replace_leaf,
 };
 
@@ -18,8 +18,8 @@ pub struct CancelRedeem<'info> {
     pub tree_authority: Account<'info, TreeConfig>,
     #[account(mut)]
     pub leaf_owner: Signer<'info>,
+    /// CHECK: This account is modified in the downstream program
     #[account(mut)]
-    /// CHECK: unsafe
     pub merkle_tree: UncheckedAccount<'info>,
     #[account(
         mut,
@@ -41,22 +41,29 @@ pub(crate) fn cancel_redeem<'info>(
     ctx: Context<'_, '_, '_, 'info, CancelRedeem<'info>>,
     root: [u8; 32],
 ) -> Result<()> {
+    // V1 instructions only work with V1 trees.
+    require!(
+        ctx.accounts.tree_authority.version == Version::V1,
+        BubblegumError::UnsupportedSchemaVersion
+    );
+
     let voucher = &ctx.accounts.voucher;
-    match ctx.accounts.voucher.leaf_schema {
-        LeafSchema::V1 { owner, .. } => assert_pubkey_equal(
-            &ctx.accounts.leaf_owner.key(),
-            &owner,
-            Some(BubblegumError::AssetOwnerMismatch.into()),
-        ),
-    }?;
+    assert_pubkey_equal(
+        &ctx.accounts.leaf_owner.key(),
+        &ctx.accounts.voucher.leaf_schema.owner(),
+        Some(BubblegumError::AssetOwnerMismatch.into()),
+    )?;
+
     let merkle_tree = ctx.accounts.merkle_tree.to_account_info();
 
-    wrap_application_data_v1(
+    crate::utils::wrap_application_data_v1(
+        Version::V1,
         voucher.leaf_schema.to_event().try_to_vec()?,
         &ctx.accounts.log_wrapper,
     )?;
 
     replace_leaf(
+        Version::V1,
         &merkle_tree.key(),
         ctx.bumps.tree_authority,
         &ctx.accounts.compression_program.to_account_info(),

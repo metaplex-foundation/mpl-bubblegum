@@ -136,6 +136,48 @@ pub enum MplBubblegumError {
     /// 6041 (0x1799) - Canopy size should be set bigger for this tree
     #[error("Canopy size should be set bigger for this tree")]
     InvalidCanopySize,
+    /// 6042 (0x179A) - Invalid log wrapper program
+    #[error("Invalid log wrapper program")]
+    InvalidLogWrapper,
+    /// 6043 (0x179B) - Invalid compression program
+    #[error("Invalid compression program")]
+    InvalidCompressionProgram,
+    /// 6044 (0x179C) - Leaf must be delegated to someone other than the leaf owner
+    #[error("Leaf must be delegated to someone other than the leaf owner")]
+    LeafMustBeDelegated,
+    /// 6045 (0x179D) - Asset is frozen
+    #[error("Asset is frozen")]
+    AssetIsFrozen,
+    /// 6046 (0x179E) - Asset is non-transferable
+    #[error("Asset is non-transferable")]
+    AssetIsNonTransferable,
+    /// 6047 (0x179F) - Invalid authority
+    #[error("Invalid authority")]
+    InvalidAuthority,
+    /// 6048 (0x17A0) - Collection is frozen
+    #[error("Collection is frozen")]
+    CollectionIsFrozen,
+    /// 6049 (0x17A1) - Core collections must have the Bubblegum V1 plugin on them
+    #[error("Core collections must have the Bubblegum V1 plugin on them")]
+    CollectionMustHaveBubblegumPlugin,
+    /// 6050 (0x17A2) - Feature not currently available
+    #[error("Feature not currently available")]
+    NotAvailable,
+    /// 6051 (0x17A3) - Missing collection account
+    #[error("Missing collection account")]
+    MissingCollectionAccount,
+    /// 6052 (0x17A4) - Asset data length too long
+    #[error("Asset data length too long")]
+    AssetDataLengthTooLong,
+    /// 6053 (0x17A5) - Item is already in the collection
+    #[error("Item is already in the collection")]
+    AlreadyInCollection,
+    /// 6054 (0x17A6) - Item is already not in a collection
+    #[error("Item is already not in a collection")]
+    AlreadyNotInCollection,
+    /// 6055 (0x17A7) - Missing mpl-core CPI signer account
+    #[error("Missing mpl-core CPI signer account")]
+    MissingMplCoreCpiSignerAccount,
 }
 
 impl solana_program::program_error::PrintProgramError for MplBubblegumError {

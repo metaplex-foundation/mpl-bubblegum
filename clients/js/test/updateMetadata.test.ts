@@ -24,10 +24,12 @@ import {
   GetAssetProofRpcResponse,
 } from '@metaplex-foundation/digital-asset-standard-api';
 import {
-  MetadataArgsArgs,
-  UpdateArgsArgs,
   fetchMerkleTree,
   getCurrentRoot,
+} from '@metaplex-foundation/spl-account-compression';
+import {
+  MetadataArgsArgs,
+  UpdateArgsArgs,
   hashLeaf,
   updateMetadata,
   mintV1,
@@ -356,7 +358,7 @@ test('it can update metadata using old collection authority when collection is v
 
   // When we approve a collection authority record.
   const newCollectionAuthority = generateSigner(umi);
-  let collectionAuthorityRecordPda = findCollectionAuthorityRecordPda(umi, {
+  const collectionAuthorityRecordPda = findCollectionAuthorityRecordPda(umi, {
     mint: collectionMint.publicKey,
     collectionAuthority: newCollectionAuthority.publicKey,
   });
@@ -449,7 +451,7 @@ test('it can update metadata using collection data delegate when collection is v
     tokenStandard: TokenStandard.NonFungible,
   }).sendAndConfirm(umi);
 
-  let delegateRecordPda = findMetadataDelegateRecordPda(umi, {
+  const delegateRecordPda = findMetadataDelegateRecordPda(umi, {
     mint: collectionMint.publicKey,
     delegateRole: MetadataDelegateRole.Data,
     delegate: dataDelegate.publicKey,
@@ -537,7 +539,7 @@ test('it cannot update metadata using collection collection delegate when collec
     tokenStandard: TokenStandard.NonFungible,
   }).sendAndConfirm(umi);
 
-  let delegate_record_pda = findMetadataDelegateRecordPda(umi, {
+  const delegateRecordPda = findMetadataDelegateRecordPda(umi, {
     mint: collectionMint.publicKey,
     delegateRole: MetadataDelegateRole.Collection,
     delegate: collectionDelegate.publicKey,
@@ -560,7 +562,7 @@ test('it cannot update metadata using collection collection delegate when collec
     updateArgs,
     authority: collectionDelegate,
     collectionMint: collectionMint.publicKey,
-    collectionAuthorityRecordPda: delegate_record_pda,
+    collectionAuthorityRecordPda: delegateRecordPda,
   }).sendAndConfirm(umi);
 
   // Then we expect a program error.

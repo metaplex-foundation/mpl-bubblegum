@@ -12,12 +12,8 @@ import {
   DasApiInterface,
   GetAssetProofRpcResponse,
 } from '@metaplex-foundation/digital-asset-standard-api';
-import {
-  fetchMerkleTree,
-  MetadataArgs,
-  TokenProgramVersion,
-  TokenStandard,
-} from './generated';
+import { fetchMerkleTree } from '@metaplex-foundation/spl-account-compression';
+import { MetadataArgs, TokenProgramVersion, TokenStandard } from './generated';
 
 export type AssetWithProof = {
   leafOwner: PublicKey;
@@ -26,6 +22,9 @@ export type AssetWithProof = {
   root: Uint8Array;
   dataHash: Uint8Array;
   creatorHash: Uint8Array;
+  collection_hash?: Uint8Array;
+  asset_data_hash?: Uint8Array;
+  flags?: number;
   nonce: number;
   index: number;
   proof: PublicKey[];
@@ -83,6 +82,14 @@ export const getAssetWithProof = async (
     creators: rpcAsset.creators,
   };
 
+  const collectionHashBytes = rpcAsset.compression.collection_hash
+    ? publicKeyBytes(rpcAsset.compression.collection_hash)
+    : undefined;
+  const assetDataHashBytes = rpcAsset.compression.asset_data_hash
+    ? publicKeyBytes(rpcAsset.compression.asset_data_hash)
+    : undefined;
+  const flagsValue = rpcAsset.compression.flags ?? undefined;
+
   return {
     leafOwner: rpcAsset.ownership.owner,
     leafDelegate: rpcAsset.ownership.delegate
@@ -92,6 +99,9 @@ export const getAssetWithProof = async (
     root: publicKeyBytes(rpcAssetProof.root),
     dataHash: publicKeyBytes(rpcAsset.compression.data_hash),
     creatorHash: publicKeyBytes(rpcAsset.compression.creator_hash),
+    collection_hash: collectionHashBytes,
+    asset_data_hash: assetDataHashBytes,
+    flags: flagsValue,
     nonce: rpcAsset.compression.leaf_id,
     index: rpcAssetProof.node_index - 2 ** rpcAssetProof.proof.length,
     proof,

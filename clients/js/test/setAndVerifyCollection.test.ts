@@ -9,9 +9,8 @@ import test from 'ava';
 import {
   fetchMerkleTree,
   getCurrentRoot,
-  hashLeaf,
-  setAndVerifyCollection,
-} from '../src';
+} from '@metaplex-foundation/spl-account-compression';
+import { hashLeaf, setAndVerifyCollection } from '../src';
 import { createTree, createUmi, mint } from './_setup';
 
 test('it can set and verify the collection of a minted compressed NFT', async (t) => {
@@ -170,7 +169,7 @@ test('it cannot set and verify the collection if there is already a verified col
   }).sendAndConfirm(umi);
 
   // When the second collection authority attempts to set and verify the second collection.
-  let promise = setAndVerifyCollection(umi, {
+  const promise = setAndVerifyCollection(umi, {
     leafOwner,
     treeCreatorOrDelegate: treeCreator,
     collectionMint: secondCollectionMint.publicKey,

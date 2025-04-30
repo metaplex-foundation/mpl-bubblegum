@@ -3,9 +3,8 @@ import test from 'ava';
 import {
   fetchMerkleTree,
   getCurrentRoot,
-  hashLeaf,
-  verifyCreator,
-} from '../src';
+} from '@metaplex-foundation/spl-account-compression';
+import { hashLeaf, verifyCreator } from '../src';
 import { createTree, createUmi, mint } from './_setup';
 
 test('it can verify the creator of a minted compressed NFT', async (t) => {

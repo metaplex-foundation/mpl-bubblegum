@@ -7,9 +7,9 @@ import {
 } from '@metaplex-foundation/umi';
 import { createNft } from '@metaplex-foundation/mpl-token-metadata';
 import test from 'ava';
+import { fetchMerkleTree } from '@metaplex-foundation/spl-account-compression';
 import {
   MetadataArgsArgs,
-  fetchMerkleTree,
   findLeafAssetIdPda,
   mintToCollectionV1,
   mintV1,

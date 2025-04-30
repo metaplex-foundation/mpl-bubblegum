@@ -15,9 +15,9 @@ import {
   some,
 } from '@metaplex-foundation/umi';
 import test from 'ava';
+import { fetchMerkleTree } from '@metaplex-foundation/spl-account-compression';
 import {
   MetadataArgsArgs,
-  fetchMerkleTree,
   findLeafAssetIdPda,
   getLeafSchemaSerializer,
   hashLeaf,

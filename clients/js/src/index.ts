@@ -7,4 +7,5 @@ export * from './hooked';
 export * from './leafAssetId';
 export * from './merkle';
 export * from './plugin';
-export * from './getCompressionPrograms';
+export * from './canTransfer';
+export * from './getCompressionProgramsForV1Ixs';

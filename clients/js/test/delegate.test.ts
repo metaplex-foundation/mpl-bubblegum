@@ -1,9 +1,11 @@
 import { generateSigner, publicKey } from '@metaplex-foundation/umi';
 import test from 'ava';
 import {
-  delegate,
   fetchMerkleTree,
   getCurrentRoot,
+} from '@metaplex-foundation/spl-account-compression';
+import {
+  delegate,
   hashLeaf,
   hashMetadataCreators,
   hashMetadataData,

@@ -1,6 +1,6 @@
 use crate::{
     error::BubblegumError,
-    state::metaplex_adapter::{MetadataArgs, TokenStandard as MetadataTokenStandard},
+    state::metaplex_adapter::{MetadataArgsCommon, TokenStandard as MetadataTokenStandard},
     utils::cmp_pubkeys,
 };
 use anchor_lang::prelude::*;
@@ -10,31 +10,33 @@ use mpl_token_metadata::{
 };
 
 /// Assert that the provided MetadataArgs are compatible with MPL `Data`
-pub fn assert_metadata_is_mpl_compatible(metadata: &MetadataArgs) -> Result<()> {
-    if metadata.name.len() > mpl_token_metadata::MAX_NAME_LENGTH {
+pub fn assert_metadata_is_mpl_compatible<T: MetadataArgsCommon>(metadata: &T) -> Result<()> {
+    if metadata.name().len() > mpl_token_metadata::MAX_NAME_LENGTH {
         return Err(BubblegumError::MetadataNameTooLong.into());
     }
 
-    if metadata.symbol.len() > mpl_token_metadata::MAX_SYMBOL_LENGTH {
+    if metadata.symbol().len() > mpl_token_metadata::MAX_SYMBOL_LENGTH {
         return Err(BubblegumError::MetadataSymbolTooLong.into());
     }
 
-    if metadata.uri.len() > mpl_token_metadata::MAX_URI_LENGTH {
+    if metadata.uri().len() > mpl_token_metadata::MAX_URI_LENGTH {
         return Err(BubblegumError::MetadataUriTooLong.into());
     }
 
-    if metadata.seller_fee_basis_points > 10000 {
+    if metadata.seller_fee_basis_points() > 10000 {
         return Err(BubblegumError::MetadataBasisPointsTooHigh.into());
     }
-    if !metadata.creators.is_empty() {
-        if metadata.creators.len() > mpl_token_metadata::MAX_CREATOR_LIMIT {
+
+    let creators = metadata.creators();
+    if !creators.is_empty() {
+        if creators.len() > mpl_token_metadata::MAX_CREATOR_LIMIT {
             return Err(BubblegumError::CreatorsTooLong.into());
         }
 
         let mut total: u8 = 0;
-        for i in 0..metadata.creators.len() {
-            let creator = &metadata.creators[i];
-            for iter in metadata.creators.iter().skip(i + 1) {
+        for i in 0..creators.len() {
+            let creator = &creators[i];
+            for iter in creators.iter().skip(i + 1) {
                 if iter.address == creator.address {
                     return Err(BubblegumError::DuplicateCreatorAddress.into());
                 }
@@ -47,6 +49,7 @@ pub fn assert_metadata_is_mpl_compatible(metadata: &MetadataArgs) -> Result<()> 
             return Err(BubblegumError::CreatorShareTotalMustBe100.into());
         }
     }
+
     Ok(())
 }
 
@@ -164,7 +167,7 @@ pub fn assert_collection_membership(
     match membership {
         Some(collection) => {
             if collection.key != *collection_mint || collection_metadata.mint != *collection_mint {
-                return Err(BubblegumError::CollectionNotFound.into());
+                return Err(BubblegumError::CollectionMismatch.into());
             }
         }
         None => {
@@ -195,8 +198,8 @@ pub fn assert_collection_membership(
 
 /// Assert that the provided MetadataArgs contains info about Token Standard
 /// and ensures that it's NonFungible
-pub fn assert_metadata_token_standard(metadata: &MetadataArgs) -> Result<()> {
-    match metadata.token_standard {
+pub fn assert_metadata_token_standard<T: MetadataArgsCommon>(metadata: &T) -> Result<()> {
+    match metadata.token_standard() {
         Some(MetadataTokenStandard::NonFungible) => Ok(()),
         _ => Err(BubblegumError::InvalidTokenStandard.into()),
     }

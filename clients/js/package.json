@@ -1,6 +1,6 @@
 {
   "name": "@metaplex-foundation/mpl-bubblegum",
-  "version": "4.4.0",
+  "version": "5.0.0-beta.4",
   "description": "Create and interact with compressed Metaplex NFTs",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -25,9 +25,11 @@
   "author": "Metaplex Maintainers <contact@metaplex.com>",
   "license": "Apache-2.0",
   "dependencies": {
+    "@metaplex-foundation/digital-asset-standard-api": "1.1.0-beta.1",
+    "@metaplex-foundation/mpl-account-compression": "0.0.1",
     "@metaplex-foundation/mpl-token-metadata": "3.2.1",
-    "@metaplex-foundation/digital-asset-standard-api": "^1.0.5",
     "@metaplex-foundation/mpl-toolbox": "^0.10.0",
+    "@metaplex-foundation/spl-account-compression": "^0.0.1",
     "@noble/hashes": "^1.3.1",
     "merkletreejs": "^0.3.11"
   },
@@ -36,8 +38,10 @@
   },
   "devDependencies": {
     "@ava/typescript": "^3.0.1",
-    "@metaplex-foundation/umi": "^1.0.0",
+    "@metaplex-foundation/mpl-core": "1.3.0-alpha.0",
+    "@metaplex-foundation/umi": "^1.2.0",
     "@metaplex-foundation/umi-bundle-tests": "^1.0.0",
+    "@metaplex-foundation/umi-rpc-web3js": "^1.2.0",
     "@solana/web3.js": "^1.73.0",
     "@typescript-eslint/eslint-plugin": "^5.13.0",
     "@typescript-eslint/parser": "^5.46.1",
