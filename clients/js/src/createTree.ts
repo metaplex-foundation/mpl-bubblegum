@@ -5,6 +5,7 @@ import {
   Signer,
   TransactionBuilder,
   transactionBuilder,
+  publicKey,
 } from '@metaplex-foundation/umi';
 import {
   SPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
@@ -27,6 +28,13 @@ export const createTree = async (
     getMerkleTreeSize(input.maxDepth, input.maxBufferSize, input.canopyDepth);
   const lamports = await context.rpc.getRent(space);
 
+  const programId = input.compressionProgram
+    ? publicKey(input.compressionProgram)
+    : context.programs.getPublicKey(
+        'splAccountCompression',
+        SPL_ACCOUNT_COMPRESSION_PROGRAM_ID
+      );
+
   return (
     transactionBuilder()
       // Create the empty Merkle tree account.
@@ -36,10 +44,7 @@ export const createTree = async (
           newAccount: input.merkleTree,
           lamports,
           space,
-          programId: context.programs.getPublicKey(
-            'splAccountCompression',
-            SPL_ACCOUNT_COMPRESSION_PROGRAM_ID
-          ),
+          programId,
         })
       )
       // Create the tree config.
