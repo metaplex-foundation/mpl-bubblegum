@@ -34,7 +34,7 @@ test('it can mint an NFT from a collection and then transfer it using V2 instruc
     uri: 'https://example.com/collection.json',
     plugins: [
       {
-        type: 'BubblegumV1',
+        type: 'BubblegumV2',
       },
     ],
   }).sendAndConfirm(umi);

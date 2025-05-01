@@ -396,8 +396,8 @@ fn process_collection_verification_mpl_core_only<'info>(
         return Err(BubblegumError::InvalidCollectionAuthority.into());
     }
 
-    // Make sure the collection has the `BubblegumV1` plugin.
-    if collection.plugin_list.bubblegum_v1.is_none() {
+    // Make sure the collection has the `BubblegumV2` plugin.
+    if collection.plugin_list.bubblegum_v2.is_none() {
         return Err(BubblegumError::CollectionMustHaveBubblegumPlugin.into());
     }
 

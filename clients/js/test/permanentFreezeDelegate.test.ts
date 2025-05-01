@@ -41,7 +41,7 @@ test('permanent freeze delegate on collection can freeze a compressed NFT', asyn
     uri: 'https://example.com/collection.json',
     plugins: [
       {
-        type: 'BubblegumV1',
+        type: 'BubblegumV2',
       },
       {
         type: 'PermanentFreezeDelegate',
@@ -130,7 +130,7 @@ test('permanent freeze delegate on collection can thaw compressed NFT it previou
     uri: 'https://example.com/collection.json',
     plugins: [
       {
-        type: 'BubblegumV1',
+        type: 'BubblegumV2',
       },
       {
         type: 'PermanentFreezeDelegate',
@@ -246,7 +246,7 @@ test('asset cannot be transferred by owner when asset is frozen by permanent fre
     uri: 'https://example.com/collection.json',
     plugins: [
       {
-        type: 'BubblegumV1',
+        type: 'BubblegumV2',
       },
       {
         type: 'PermanentFreezeDelegate',
@@ -359,7 +359,7 @@ test('asset cannot be transferred by owner when collection is frozen', async (t)
     uri: 'https://example.com/collection.json',
     plugins: [
       {
-        type: 'BubblegumV1',
+        type: 'BubblegumV2',
       },
       {
         type: 'PermanentFreezeDelegate',
@@ -456,7 +456,7 @@ test('asset cannot be burned by owner when asset is frozen by permanent freeze d
     uri: 'https://example.com/collection.json',
     plugins: [
       {
-        type: 'BubblegumV1',
+        type: 'BubblegumV2',
       },
       {
         type: 'PermanentFreezeDelegate',
@@ -567,7 +567,7 @@ test('asset cannot be burned by owner when collection is frozen', async (t) => {
     uri: 'https://example.com/collection.json',
     plugins: [
       {
-        type: 'BubblegumV1',
+        type: 'BubblegumV2',
       },
       {
         type: 'PermanentFreezeDelegate',

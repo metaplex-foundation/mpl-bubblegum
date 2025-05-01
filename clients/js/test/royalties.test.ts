@@ -35,7 +35,7 @@ test('A core collection with Royalties plugin can block a transfer of a compress
     uri: 'https://example.com/collection.json',
     plugins: [
       {
-        type: 'BubblegumV1',
+        type: 'BubblegumV2',
       },
       {
         type: 'Royalties',
@@ -126,7 +126,7 @@ test('A core collection with Royalties plugin can block a transfer of a compress
     uri: 'https://example.com/collection.json',
     plugins: [
       {
-        type: 'BubblegumV1',
+        type: 'BubblegumV2',
       },
       {
         type: 'Royalties',
@@ -217,7 +217,7 @@ test('A core collection with Royalties plugin can allow a transfer of a compress
     uri: 'https://example.com/collection.json',
     plugins: [
       {
-        type: 'BubblegumV1',
+        type: 'BubblegumV2',
       },
       {
         type: 'Royalties',
@@ -311,7 +311,7 @@ test('A core collection with Royalties plugin can allow a transfer of a compress
     uri: 'https://example.com/collection.json',
     plugins: [
       {
-        type: 'BubblegumV1',
+        type: 'BubblegumV2',
       },
       {
         type: 'Royalties',

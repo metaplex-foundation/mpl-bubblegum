@@ -157,8 +157,8 @@ pub enum MplBubblegumError {
     /// 6048 (0x17A0) - Collection is frozen
     #[error("Collection is frozen")]
     CollectionIsFrozen,
-    /// 6049 (0x17A1) - Core collections must have the Bubblegum V1 plugin on them
-    #[error("Core collections must have the Bubblegum V1 plugin on them")]
+    /// 6049 (0x17A1) - Core collections must have the Bubblegum V2 plugin on them
+    #[error("Core collections must have the Bubblegum V2 plugin on them")]
     CollectionMustHaveBubblegumPlugin,
     /// 6050 (0x17A2) - Feature not currently available
     #[error("Feature not currently available")]

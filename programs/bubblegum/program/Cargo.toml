@@ -25,7 +25,7 @@ anchor-spl = "0.29.0"
 bytemuck = "1.13.0"
 modular-bitfield = "0.11.2"
 mpl-account-compression = { version = "0.4.2", features = ["cpi"] }
-mpl-core = "0.10.0-alpha.1"
+mpl-core = "0.10.0-beta.1"
 mpl-noop = { version = "0.2.1", features = ["no-entrypoint"] }
 mpl-token-metadata = "4.1.2"
 num-traits = "0.2.15"

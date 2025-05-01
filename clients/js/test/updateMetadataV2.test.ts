@@ -200,7 +200,7 @@ test('it can update metadata using collection update authority if NFT is in a co
     uri: 'https://example.com/collection.json',
     plugins: [
       {
-        type: 'BubblegumV1',
+        type: 'BubblegumV2',
       },
     ],
   }).sendAndConfirm(umi);
@@ -274,7 +274,7 @@ test('it can update metadata using collection update delegate when NFT is in a c
     uri: 'https://example.com/collection.json',
     plugins: [
       {
-        type: 'BubblegumV1',
+        type: 'BubblegumV2',
       },
       {
         type: 'UpdateDelegate',
@@ -356,7 +356,7 @@ test('it can update metadata using collection update delegate additional delegat
     uri: 'https://example.com/collection.json',
     plugins: [
       {
-        type: 'BubblegumV1',
+        type: 'BubblegumV2',
       },
       {
         type: 'UpdateDelegate',
@@ -447,7 +447,7 @@ test('it can update metadata using the getAssetWithProof helper with collection'
     uri: 'https://example.com/collection.json',
     plugins: [
       {
-        type: 'BubblegumV1',
+        type: 'BubblegumV2',
       },
     ],
   }).sendAndConfirm(umi);
@@ -553,7 +553,7 @@ test('it cannot update metadata using tree owner when NFT is in collection', asy
     uri: 'https://example.com/collection.json',
     plugins: [
       {
-        type: 'BubblegumV1',
+        type: 'BubblegumV2',
       },
     ],
   }).sendAndConfirm(umi);
