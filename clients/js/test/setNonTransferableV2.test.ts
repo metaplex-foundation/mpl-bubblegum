@@ -36,7 +36,7 @@ test('permanent freeze delegate on collection can set a compressed NFT to non-tr
     uri: 'https://example.com/collection.json',
     plugins: [
       {
-        type: 'BubblegumV1',
+        type: 'BubblegumV2',
       },
       {
         type: 'PermanentFreezeDelegate',
@@ -123,7 +123,7 @@ test('owner as authority of Perm Freeze Delegate cannot set a compressed NFT to 
     uri: 'https://example.com/collection.json',
     plugins: [
       {
-        type: 'BubblegumV1',
+        type: 'BubblegumV2',
       },
       {
         type: 'PermanentFreezeDelegate',
@@ -205,7 +205,7 @@ test('owner cannot set a compressed NFT to non-transferrable - no permanent free
     uri: 'https://example.com/collection.json',
     plugins: [
       {
-        type: 'BubblegumV1',
+        type: 'BubblegumV2',
       },
     ],
   }).sendAndConfirm(umi);
@@ -281,7 +281,7 @@ test('asset set to non-transferrable cannot be transferred by owner', async (t) 
     uri: 'https://example.com/collection.json',
     plugins: [
       {
-        type: 'BubblegumV1',
+        type: 'BubblegumV2',
       },
       {
         type: 'PermanentFreezeDelegate',
@@ -394,7 +394,7 @@ test('asset set to non-transferrable cannot be transferred by permanent transfer
     uri: 'https://example.com/collection.json',
     plugins: [
       {
-        type: 'BubblegumV1',
+        type: 'BubblegumV2',
       },
       {
         type: 'PermanentTransferDelegate',

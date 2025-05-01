@@ -45,7 +45,7 @@ test('permanent burn delegate on collection can burn a compressed NFT', async (t
     uri: 'https://example.com/collection.json',
     plugins: [
       {
-        type: 'BubblegumV1',
+        type: 'BubblegumV2',
       },
       {
         type: 'PermanentBurnDelegate',
@@ -125,7 +125,7 @@ test('permanent burn delegate can burn a compressed NFT even if asset is frozen 
     uri: 'https://example.com/collection.json',
     plugins: [
       {
-        type: 'BubblegumV1',
+        type: 'BubblegumV2',
       },
       {
         type: 'PermanentBurnDelegate',
@@ -233,7 +233,7 @@ test('permanent burn delegate can burn a compressed NFT even if asset is frozen 
     uri: 'https://example.com/collection.json',
     plugins: [
       {
-        type: 'BubblegumV1',
+        type: 'BubblegumV2',
       },
       {
         type: 'PermanentBurnDelegate',
@@ -348,7 +348,7 @@ test('permanent burn delegate can burn a compressed NFT even if collection is fr
     uri: 'https://example.com/collection.json',
     plugins: [
       {
-        type: 'BubblegumV1',
+        type: 'BubblegumV2',
       },
       {
         type: 'PermanentBurnDelegate',
@@ -443,7 +443,7 @@ test('item set to non-transferrable can be burnt by permanent burn delegate', as
     uri: 'https://example.com/collection.json',
     plugins: [
       {
-        type: 'BubblegumV1',
+        type: 'BubblegumV2',
       },
       {
         type: 'PermanentBurnDelegate',

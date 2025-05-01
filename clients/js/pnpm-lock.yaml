@@ -6,8 +6,8 @@ settings:
 
 dependencies:
   '@metaplex-foundation/digital-asset-standard-api':
-    specifier: 1.1.0-beta.1
-    version: 1.1.0-beta.1(@metaplex-foundation/umi@1.2.0)
+    specifier: 2.0.0
+    version: 2.0.0(@metaplex-foundation/umi@1.2.0)
   '@metaplex-foundation/mpl-account-compression':
     specifier: 0.0.1
     version: 0.0.1(@metaplex-foundation/umi@1.2.0)
@@ -32,8 +32,8 @@ devDependencies:
     specifier: ^3.0.1
     version: 3.0.1
   '@metaplex-foundation/mpl-core':
-    specifier: 1.3.0-alpha.0
-    version: 1.3.0-alpha.0(@metaplex-foundation/umi@1.2.0)(@noble/hashes@1.3.1)
+    specifier: 1.4.0-beta.0
+    version: 1.4.0-beta.0(@metaplex-foundation/umi@1.2.0)(@noble/hashes@1.3.1)
   '@metaplex-foundation/umi':
     specifier: ^1.2.0
     version: 1.2.0
@@ -290,8 +290,8 @@ packages:
       '@metaplex-foundation/umi': 1.2.0
     dev: false
 
-  /@metaplex-foundation/digital-asset-standard-api@1.1.0-beta.1(@metaplex-foundation/umi@1.2.0):
-    resolution: {integrity: sha512-srgyQ/GGFlWsfwd+4bLgWte2gnstumCXkPORHbO4wOQoiFyAD135X6aliIVOtgOvqoKvR277wDr/hKpqsl46vg==}
+  /@metaplex-foundation/digital-asset-standard-api@2.0.0(@metaplex-foundation/umi@1.2.0):
+    resolution: {integrity: sha512-CnFN7epCwNcei+OzDvIg7KpTcB+O827YKomdjKEl72LF/DHfDMXqpbnXf2qsIF4iGaBEOviwxkjUwbXIDLpAxQ==}
     peerDependencies:
       '@metaplex-foundation/umi': '>= 0.8.2 <= 1'
     dependencies:
@@ -309,8 +309,8 @@ packages:
       merkletreejs: 0.3.11
     dev: false
 
-  /@metaplex-foundation/mpl-core@1.3.0-alpha.0(@metaplex-foundation/umi@1.2.0)(@noble/hashes@1.3.1):
-    resolution: {integrity: sha512-cSBhDLBT5pTX4jzLPi7vX07oxWX4ke7H2mRPj6sYQm36C8l01kCEVxIoRCdVcDfK/JJZ13XzLw4E8cMviL/XkA==}
+  /@metaplex-foundation/mpl-core@1.4.0-beta.0(@metaplex-foundation/umi@1.2.0)(@noble/hashes@1.3.1):
+    resolution: {integrity: sha512-HVgvHyvf6tGYlTSrfvNNfeBJQSDwa6vGW53Z/Nyy5Qt4t0UdGslbNHUN0iGG8pn29h0KTNeW153dAjGm96oEBQ==}
     peerDependencies:
       '@metaplex-foundation/umi': '>=0.8.2 <= 1.0'
       '@noble/hashes': ^1.3.1

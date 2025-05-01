@@ -699,7 +699,7 @@ export class CollectionIsFrozenError extends ProgramError {
 codeToErrorMap.set(0x17a0, CollectionIsFrozenError);
 nameToErrorMap.set('CollectionIsFrozen', CollectionIsFrozenError);
 
-/** CollectionMustHaveBubblegumPlugin: Core collections must have the Bubblegum V1 plugin on them */
+/** CollectionMustHaveBubblegumPlugin: Core collections must have the Bubblegum V2 plugin on them */
 export class CollectionMustHaveBubblegumPluginError extends ProgramError {
   readonly name: string = 'CollectionMustHaveBubblegumPlugin';
 
@@ -707,7 +707,7 @@ export class CollectionMustHaveBubblegumPluginError extends ProgramError {
 
   constructor(program: Program, cause?: Error) {
     super(
-      'Core collections must have the Bubblegum V1 plugin on them',
+      'Core collections must have the Bubblegum V2 plugin on them',
       program,
       cause
     );

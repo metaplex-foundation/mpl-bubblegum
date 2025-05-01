@@ -102,7 +102,7 @@ pub enum BubblegumError {
     InvalidAuthority,
     #[msg("Collection is frozen")]
     CollectionIsFrozen,
-    #[msg("Core collections must have the Bubblegum V1 plugin on them")]
+    #[msg("Core collections must have the Bubblegum V2 plugin on them")]
     CollectionMustHaveBubblegumPlugin,
     #[msg("Feature not currently available")]
     NotAvailable,

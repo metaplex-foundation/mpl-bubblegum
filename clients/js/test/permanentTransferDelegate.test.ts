@@ -39,7 +39,7 @@ test('permanent transfer delegate on collection can transfer a compressed NFT', 
     uri: 'https://example.com/collection.json',
     plugins: [
       {
-        type: 'BubblegumV1',
+        type: 'BubblegumV2',
       },
       {
         type: 'PermanentTransferDelegate',
@@ -127,7 +127,7 @@ test('permanent transfer delegate can transfer a compressed NFT even asset is fr
     uri: 'https://example.com/collection.json',
     plugins: [
       {
-        type: 'BubblegumV1',
+        type: 'BubblegumV2',
       },
       {
         type: 'PermanentTransferDelegate',
@@ -244,7 +244,7 @@ test('permanent transfer delegate can transfer a compressed NFT even asset is fr
     uri: 'https://example.com/collection.json',
     plugins: [
       {
-        type: 'BubblegumV1',
+        type: 'BubblegumV2',
       },
       {
         type: 'PermanentTransferDelegate',
@@ -368,7 +368,7 @@ test('permanent transfer delegate can transfer a compressed NFT even if collecti
     uri: 'https://example.com/collection.json',
     plugins: [
       {
-        type: 'BubblegumV1',
+        type: 'BubblegumV2',
       },
       {
         type: 'PermanentTransferDelegate',
@@ -470,7 +470,7 @@ test('permanent transfer delegate can transfer a compressed NFT even if it would
     uri: 'https://example.com/collection.json',
     plugins: [
       {
-        type: 'BubblegumV1',
+        type: 'BubblegumV2',
       },
       {
         type: 'PermanentTransferDelegate',

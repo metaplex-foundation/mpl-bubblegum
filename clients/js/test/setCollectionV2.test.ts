@@ -37,7 +37,7 @@ test('it can mint an NFT to a collection and then remove it from collection usin
     uri: 'https://example.com/collection.json',
     plugins: [
       {
-        type: 'BubblegumV1',
+        type: 'BubblegumV2',
       },
     ],
   }).sendAndConfirm(umi);
@@ -146,7 +146,7 @@ test('it can mint an NFT not in a collection then add it to collection using V2 
     uri: 'https://example.com/collection.json',
     plugins: [
       {
-        type: 'BubblegumV1',
+        type: 'BubblegumV2',
       },
     ],
   }).sendAndConfirm(umi);
@@ -199,7 +199,7 @@ test('it can mint an NFT to a collection and move it to a new collection using V
     uri: 'https://example.com/collection.json',
     plugins: [
       {
-        type: 'BubblegumV1',
+        type: 'BubblegumV2',
       },
     ],
   }).sendAndConfirm(umi);
@@ -243,7 +243,7 @@ test('it can mint an NFT to a collection and move it to a new collection using V
     uri: 'https://example.com/collection2.json',
     plugins: [
       {
-        type: 'BubblegumV1',
+        type: 'BubblegumV2',
       },
     ],
   }).sendAndConfirm(umi);

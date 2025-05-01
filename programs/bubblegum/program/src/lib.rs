@@ -294,8 +294,8 @@ pub mod bubblegum {
     ///      flag.  In `MetadataV2`, any collection included is automatically considered verified.
     ///   3. Allows for use of plugins such as Royalties, Permanent Burn Delegate, etc. on the
     ///      MPL Core collection to authorize operations on the Bubblegum asset.  Note the
-    ///      `BubblegumV1` plugin must also be present on the MPL Core collection for it to be
-    ///      used for Bubblegum.  See MPL Core `BubblegumV1` plugin for list of compatible
+    ///      `BubblegumV2` plugin must also be present on the MPL Core collection for it to be
+    ///      used for Bubblegum.  See MPL Core `BubblegumV2` plugin for list of compatible
     ///      collection-level plugins.
     ///   4. Allows for freezing/thawing of the asset, as well as setting an asset to be
     ///      permanently non-transferable (soulbound).  Non-transferable is similar to freezing

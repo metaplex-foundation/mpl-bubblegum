@@ -114,7 +114,7 @@ test('item set to non-transferrable can be burnt by owner', async (t) => {
     uri: 'https://example.com/collection.json',
     plugins: [
       {
-        type: 'BubblegumV1',
+        type: 'BubblegumV2',
       },
       {
         type: 'PermanentFreezeDelegate',
