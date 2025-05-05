@@ -186,9 +186,11 @@ export function burnV2(
     resolvedAccounts.authority.value = context.identity;
   }
   if (!resolvedAccounts.mplCoreCpiSigner.value) {
-    resolvedAccounts.mplCoreCpiSigner.value = publicKey(
-      'CbNY3JiXdXNE9tPNEk1aRZVEkWdj2v7kfJLNQwZZgpXk'
-    );
+    if (resolvedAccounts.coreCollection.value) {
+      resolvedAccounts.mplCoreCpiSigner.value = publicKey(
+        'CbNY3JiXdXNE9tPNEk1aRZVEkWdj2v7kfJLNQwZZgpXk'
+      );
+    }
   }
   if (!resolvedAccounts.logWrapper.value) {
     resolvedAccounts.logWrapper.value = context.programs.getPublicKey(

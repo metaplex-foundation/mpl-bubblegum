@@ -330,7 +330,9 @@ kinobi.update(
       account: "mplCoreCpiSigner",
       // TODO would be great if I could add this if a collection is present but otherwise not.
       // ignoreIfOptional: true,
-      ...k.publicKeyDefault("CbNY3JiXdXNE9tPNEk1aRZVEkWdj2v7kfJLNQwZZgpXk"),
+      ...k.conditionalDefault("account", "coreCollection", {
+        ifTrue: k.publicKeyDefault("CbNY3JiXdXNE9tPNEk1aRZVEkWdj2v7kfJLNQwZZgpXk"),
+      }),
     },
     ...deprecatedIxUpdaters,
     ...v1IxUpdaters,

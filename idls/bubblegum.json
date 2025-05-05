@@ -3790,7 +3790,7 @@
                 "type": "u64"
               },
               {
-                "name": "dataHash",
+                "name": "data_hash",
                 "type": {
                   "array": [
                     "u8",
@@ -3799,7 +3799,7 @@
                 }
               },
               {
-                "name": "creatorHash",
+                "name": "creator_hash",
                 "type": {
                   "array": [
                     "u8",
@@ -3829,7 +3829,7 @@
                 "type": "u64"
               },
               {
-                "name": "dataHash",
+                "name": "data_hash",
                 "type": {
                   "array": [
                     "u8",
@@ -3838,7 +3838,7 @@
                 }
               },
               {
-                "name": "creatorHash",
+                "name": "creator_hash",
                 "type": {
                   "array": [
                     "u8",
@@ -3847,7 +3847,7 @@
                 }
               },
               {
-                "name": "collectionHash",
+                "name": "collection_hash",
                 "type": {
                   "array": [
                     "u8",
@@ -3856,7 +3856,7 @@
                 }
               },
               {
-                "name": "assetDataHash",
+                "name": "asset_data_hash",
                 "type": {
                   "array": [
                     "u8",
@@ -4365,7 +4365,7 @@
   "metadata": {
     "address": "BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY",
     "origin": "anchor",
-    "binaryVersion": "0.29.0",
+    "binaryVersion": "0.27.0",
     "libVersion": "0.29.0"
   }
 }
