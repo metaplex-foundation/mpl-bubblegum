@@ -134,7 +134,8 @@ pub(crate) fn delegate_v2<'info>(
     );
 
     // Ensure asset is not frozen.
-    let flags = flags.unwrap_or(DEFAULT_FLAGS);
+    let raw_flags = flags.unwrap_or(DEFAULT_FLAGS);
+    let flags = Flags::from_bytes([raw_flags]);
     asset_validate_delegate(flags)?;
 
     // Gather info for previous leaf and new leaf.
@@ -166,7 +167,7 @@ pub(crate) fn delegate_v2<'info>(
         creator_hash,
         collection_hash,
         asset_data_hash,
-        flags,
+        raw_flags,
     );
 
     let new_leaf = LeafSchema::new_v2(
@@ -178,7 +179,7 @@ pub(crate) fn delegate_v2<'info>(
         creator_hash,
         collection_hash,
         asset_data_hash,
-        flags,
+        raw_flags,
     );
 
     crate::utils::wrap_application_data_v1(
@@ -203,9 +204,7 @@ pub(crate) fn delegate_v2<'info>(
     )
 }
 
-pub(crate) fn asset_validate_delegate(flags: u8) -> Result<()> {
-    let flags = Flags::from_bytes([flags]);
-
+pub(crate) fn asset_validate_delegate(flags: Flags) -> Result<()> {
     if flags.asset_lvl_frozen() || flags.permanent_lvl_frozen() {
         return Err(BubblegumError::AssetIsFrozen.into());
     }

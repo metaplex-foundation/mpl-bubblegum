@@ -146,6 +146,8 @@ kinobi.update(
   ])
 );
 
+// The CPI call to Token Metadata has been deprecated in these
+// V1 insructions.
 const deprecatedTmIxes = [
   "mintToCollectionV1",
   "setAndVerifyCollection",
@@ -163,6 +165,8 @@ for (let ix of deprecatedTmIxes) {
     })
 }
 
+// Use spl-noop and spl-account-compression as defaults for all
+// V2 instructions.
 const v1Ixs = [
   "burn",
   "cancel_redeem",
@@ -205,6 +209,8 @@ for (let ix of v1Ixs) {
     })
 }
 
+// Use mpl-noop and mpl-account-compression as defaults for all
+// V2 instructions.
 const v2Ixs = [
   "burnV2",
   "createTreeV2",
@@ -246,6 +252,8 @@ for (let ix of v2Ixs) {
     })
 }
 
+// We skip defaulting leaf delegate only for `freezeV2` and `thawV2` where
+// we want the delegate to be made explicit by the caller.
 const allLeafDelegateIxs = [...v1Ixs, ...v2Ixs];
 const skipLeafDelegateDefaultFor = new Set([
   "freezeV2",
@@ -331,6 +339,13 @@ kinobi.update(
       ...k.conditionalDefault("account", "coreCollection", {
         ifTrue: k.publicKeyDefault("CbNY3JiXdXNE9tPNEk1aRZVEkWdj2v7kfJLNQwZZgpXk"),
       }),
+    },
+    // `setCollectionV2` always requires the MPL Core signer so it's not a conditional
+    // default based on `coreCollection`.
+    {
+      account: "mplCoreCpiSigner",
+      instruction: "setCollectionV2",
+      ...k.publicKeyDefault("CbNY3JiXdXNE9tPNEk1aRZVEkWdj2v7kfJLNQwZZgpXk"),
     },
     ...deprecatedIxUpdaters,
     ...v1IxUpdaters,

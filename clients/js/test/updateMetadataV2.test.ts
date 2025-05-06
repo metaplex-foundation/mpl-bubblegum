@@ -641,14 +641,14 @@ test('it cannot update immutable metadata using V2 instructions', async (t) => {
     ...metadata,
     isMutable: false,
   };
-  const updatedLeaf = hashLeafV2(umi, {
+  const leaf = hashLeafV2(umi, {
     merkleTree,
     owner: leafOwner,
     leafIndex: 0,
     metadata: immutableMetadata,
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
-  t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(updatedLeaf));
+  t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(leaf));
 
   // Then we attempt to update metadata.
   const updateArgs: UpdateArgsArgs = {
@@ -670,14 +670,8 @@ test('it cannot update immutable metadata using V2 instructions', async (t) => {
   await t.throwsAsync(promise, { name: 'MetadataImmutable' });
 
   // And the leaf was not updated in the merkle tree.
-  const notUpdatedLeaf = hashLeafV2(umi, {
-    merkleTree,
-    owner: leafOwner,
-    leafIndex,
-    metadata: immutableMetadata,
-  });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
-  t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(notUpdatedLeaf));
+  t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(leaf));
 });
 
 test('it cannot verify currently unverified creator if not signer using V2 instructions', async (t) => {

@@ -800,6 +800,19 @@ nameToErrorMap.set(
   MissingMplCoreCpiSignerAccountError
 );
 
+/** AssetIsNotFrozen: Asset is not frozen */
+export class AssetIsNotFrozenError extends ProgramError {
+  readonly name: string = 'AssetIsNotFrozen';
+
+  readonly code: number = 0x17a8; // 6056
+
+  constructor(program: Program, cause?: Error) {
+    super('Asset is not frozen', program, cause);
+  }
+}
+codeToErrorMap.set(0x17a8, AssetIsNotFrozenError);
+nameToErrorMap.set('AssetIsNotFrozen', AssetIsNotFrozenError);
+
 /**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors

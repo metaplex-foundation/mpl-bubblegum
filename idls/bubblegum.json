@@ -130,7 +130,8 @@
         {
           "name": "mplCoreCpiSigner",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "isOptional": true
         },
         {
           "name": "logWrapper",
@@ -4360,6 +4361,11 @@
       "code": 6055,
       "name": "MissingMplCoreCpiSignerAccount",
       "msg": "Missing mpl-core CPI signer account"
+    },
+    {
+      "code": 6056,
+      "name": "AssetIsNotFrozen",
+      "msg": "Asset is not frozen"
     }
   ],
   "metadata": {

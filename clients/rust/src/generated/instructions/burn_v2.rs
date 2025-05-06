@@ -23,7 +23,7 @@ pub struct BurnV2 {
 
     pub core_collection: Option<solana_program::pubkey::Pubkey>,
 
-    pub mpl_core_cpi_signer: solana_program::pubkey::Pubkey,
+    pub mpl_core_cpi_signer: Option<solana_program::pubkey::Pubkey>,
 
     pub log_wrapper: solana_program::pubkey::Pubkey,
 
@@ -86,10 +86,17 @@ impl BurnV2 {
                 false,
             ));
         }
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            self.mpl_core_cpi_signer,
-            false,
-        ));
+        if let Some(mpl_core_cpi_signer) = self.mpl_core_cpi_signer {
+            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+                mpl_core_cpi_signer,
+                false,
+            ));
+        } else {
+            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+                crate::MPL_BUBBLEGUM_ID,
+                false,
+            ));
+        }
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.log_wrapper,
             false,
@@ -213,12 +220,13 @@ impl BurnV2Builder {
         self.core_collection = core_collection;
         self
     }
+    /// `[optional account]`
     #[inline(always)]
     pub fn mpl_core_cpi_signer(
         &mut self,
-        mpl_core_cpi_signer: solana_program::pubkey::Pubkey,
+        mpl_core_cpi_signer: Option<solana_program::pubkey::Pubkey>,
     ) -> &mut Self {
-        self.mpl_core_cpi_signer = Some(mpl_core_cpi_signer);
+        self.mpl_core_cpi_signer = mpl_core_cpi_signer;
         self
     }
     /// `[optional account, default to 'mnoopTCrg4p8ry25e4bcWA9XZjbNjMTfgYVGGEdRsf3']`
@@ -315,9 +323,7 @@ impl BurnV2Builder {
             leaf_delegate: self.leaf_delegate,
             merkle_tree: self.merkle_tree.expect("merkle_tree is not set"),
             core_collection: self.core_collection,
-            mpl_core_cpi_signer: self
-                .mpl_core_cpi_signer
-                .expect("mpl_core_cpi_signer is not set"),
+            mpl_core_cpi_signer: self.mpl_core_cpi_signer,
             log_wrapper: self.log_wrapper.unwrap_or(solana_program::pubkey!(
                 "mnoopTCrg4p8ry25e4bcWA9XZjbNjMTfgYVGGEdRsf3"
             )),
@@ -360,7 +366,7 @@ pub struct BurnV2CpiAccounts<'a, 'b> {
 
     pub core_collection: Option<&'b solana_program::account_info::AccountInfo<'a>>,
 
-    pub mpl_core_cpi_signer: &'b solana_program::account_info::AccountInfo<'a>,
+    pub mpl_core_cpi_signer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
 
     pub log_wrapper: &'b solana_program::account_info::AccountInfo<'a>,
 
@@ -389,7 +395,7 @@ pub struct BurnV2Cpi<'a, 'b> {
 
     pub core_collection: Option<&'b solana_program::account_info::AccountInfo<'a>>,
 
-    pub mpl_core_cpi_signer: &'b solana_program::account_info::AccountInfo<'a>,
+    pub mpl_core_cpi_signer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
 
     pub log_wrapper: &'b solana_program::account_info::AccountInfo<'a>,
 
@@ -496,10 +502,17 @@ impl<'a, 'b> BurnV2Cpi<'a, 'b> {
                 false,
             ));
         }
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            *self.mpl_core_cpi_signer.key,
-            false,
-        ));
+        if let Some(mpl_core_cpi_signer) = self.mpl_core_cpi_signer {
+            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+                *mpl_core_cpi_signer.key,
+                false,
+            ));
+        } else {
+            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+                crate::MPL_BUBBLEGUM_ID,
+                false,
+            ));
+        }
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             *self.log_wrapper.key,
             false,
@@ -544,7 +557,9 @@ impl<'a, 'b> BurnV2Cpi<'a, 'b> {
         if let Some(core_collection) = self.core_collection {
             account_infos.push(core_collection.clone());
         }
-        account_infos.push(self.mpl_core_cpi_signer.clone());
+        if let Some(mpl_core_cpi_signer) = self.mpl_core_cpi_signer {
+            account_infos.push(mpl_core_cpi_signer.clone());
+        }
         account_infos.push(self.log_wrapper.clone());
         account_infos.push(self.compression_program.clone());
         account_infos.push(self.mpl_core_program.clone());
@@ -645,12 +660,13 @@ impl<'a, 'b> BurnV2CpiBuilder<'a, 'b> {
         self.instruction.core_collection = core_collection;
         self
     }
+    /// `[optional account]`
     #[inline(always)]
     pub fn mpl_core_cpi_signer(
         &mut self,
-        mpl_core_cpi_signer: &'b solana_program::account_info::AccountInfo<'a>,
+        mpl_core_cpi_signer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     ) -> &mut Self {
-        self.instruction.mpl_core_cpi_signer = Some(mpl_core_cpi_signer);
+        self.instruction.mpl_core_cpi_signer = mpl_core_cpi_signer;
         self
     }
     #[inline(always)]
@@ -801,10 +817,7 @@ impl<'a, 'b> BurnV2CpiBuilder<'a, 'b> {
 
             core_collection: self.instruction.core_collection,
 
-            mpl_core_cpi_signer: self
-                .instruction
-                .mpl_core_cpi_signer
-                .expect("mpl_core_cpi_signer is not set"),
+            mpl_core_cpi_signer: self.instruction.mpl_core_cpi_signer,
 
             log_wrapper: self
                 .instruction

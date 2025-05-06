@@ -1,7 +1,4 @@
-import {
-  generateSigner,
-  publicKey,
-} from '@metaplex-foundation/umi';
+import { generateSigner, publicKey } from '@metaplex-foundation/umi';
 import test from 'ava';
 import {
   fetchMerkleTree,

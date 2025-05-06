@@ -8,7 +8,8 @@ use crate::{
         TreeConfig,
     },
     utils::{
-        get_asset_id, replace_leaf, DEFAULT_ASSET_DATA_HASH, DEFAULT_COLLECTION_HASH, DEFAULT_FLAGS,
+        get_asset_id, replace_leaf, Flags, DEFAULT_ASSET_DATA_HASH, DEFAULT_COLLECTION_HASH,
+        DEFAULT_FLAGS,
     },
 };
 
@@ -50,9 +51,16 @@ pub(crate) fn thaw_and_revoke_v2<'info>(
         BubblegumError::UnsupportedSchemaVersion
     );
 
+    let raw_flags = flags.unwrap_or(DEFAULT_FLAGS);
+    let flags = Flags::from_bytes([raw_flags]);
+
+    // Ensure asset is already frozen at the asset-level.
+    if !flags.asset_lvl_frozen() {
+        return Err(BubblegumError::AssetIsNotFrozen.into());
+    }
+
     // Clear freeze flag.
-    let flags = flags.unwrap_or(DEFAULT_FLAGS);
-    let updated_flags = set_asset_lvl_freeze_flag(flags, false);
+    let updated_flags = set_asset_lvl_freeze_flag(raw_flags, false);
 
     // Gather info for previous leaf and new leaf.
     let merkle_tree = &ctx.accounts.merkle_tree;
@@ -77,7 +85,7 @@ pub(crate) fn thaw_and_revoke_v2<'info>(
         creator_hash,
         collection_hash,
         asset_data_hash,
-        flags,
+        raw_flags,
     );
 
     // Reset delegate to leaf owner, and use updated flags.
