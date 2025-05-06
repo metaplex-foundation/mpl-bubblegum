@@ -178,6 +178,9 @@ pub enum MplBubblegumError {
     /// 6055 (0x17A7) - Missing mpl-core CPI signer account
     #[error("Missing mpl-core CPI signer account")]
     MissingMplCoreCpiSignerAccount,
+    /// 6056 (0x17A8) - Asset is not frozen
+    #[error("Asset is not frozen")]
+    AssetIsNotFrozen,
 }
 
 impl solana_program::program_error::PrintProgramError for MplBubblegumError {

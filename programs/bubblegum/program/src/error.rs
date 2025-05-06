@@ -116,6 +116,8 @@ pub enum BubblegumError {
     AlreadyNotInCollection,
     #[msg("Missing mpl-core CPI signer account")]
     MissingMplCoreCpiSignerAccount,
+    #[msg("Asset is not frozen")]
+    AssetIsNotFrozen,
 }
 
 // Converts certain Token Metadata errors into Bubblegum equivalents
