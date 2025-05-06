@@ -106,15 +106,6 @@ test('owner cannot thaw a compressed NFT that was frozen using delegateAndFreeze
   await t.throwsAsync(promise, { name: 'InvalidAuthority' });
 
   // And the leaf was not updated in the merkle tree.
-  const stillFrozenLeaf = hashLeafV2(umi, {
-    merkleTree,
-    owner: leafOwner.publicKey,
-    delegate: newDelegate.publicKey,
-    leafIndex,
-    metadata,
-    flags: 1,
-  });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
-  t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(stillFrozenLeaf));
+  t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(frozenLeaf));
 });
-
