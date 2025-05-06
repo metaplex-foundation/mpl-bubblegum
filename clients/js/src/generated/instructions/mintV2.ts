@@ -182,9 +182,11 @@ export function mintV2(
     resolvedAccounts.payer.value = context.payer;
   }
   if (!resolvedAccounts.mplCoreCpiSigner.value) {
-    resolvedAccounts.mplCoreCpiSigner.value = publicKey(
-      'CbNY3JiXdXNE9tPNEk1aRZVEkWdj2v7kfJLNQwZZgpXk'
-    );
+    if (resolvedAccounts.coreCollection.value) {
+      resolvedAccounts.mplCoreCpiSigner.value = publicKey(
+        'CbNY3JiXdXNE9tPNEk1aRZVEkWdj2v7kfJLNQwZZgpXk'
+      );
+    }
   }
   if (!resolvedAccounts.logWrapper.value) {
     resolvedAccounts.logWrapper.value = context.programs.getPublicKey(
