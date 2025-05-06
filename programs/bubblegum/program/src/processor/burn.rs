@@ -116,7 +116,7 @@ pub struct BurnV2<'info> {
         seeds = [MPL_CORE_CPI_SIGNER_PREFIX.as_ref()],
         bump,
     )]
-    pub mpl_core_cpi_signer: UncheckedAccount<'info>,
+    pub mpl_core_cpi_signer: Option<UncheckedAccount<'info>>,
     pub log_wrapper: Program<'info, MplNoop>,
     pub compression_program: Program<'info, MplAccountCompression>,
     pub mpl_core_program: Program<'info, MplCore>,
@@ -149,17 +149,16 @@ pub(crate) fn burn_v2<'info>(
         .unwrap_or(leaf_owner);
 
     let validation_result = if let Some(core_collection) = &ctx.accounts.core_collection {
-        // Create a new scope so that the reference to `core_collection_account` is dropped prior
-        // to the CPI.
-        let collection = {
-            let core_collection_data = &core_collection.data.borrow()[..];
-            MplCoreCollection::from_bytes(core_collection_data)?
-        };
+        let mpl_core_cpi_signer = &ctx
+            .accounts
+            .mpl_core_cpi_signer
+            .as_ref()
+            .ok_or(BubblegumError::MissingMplCoreCpiSignerAccount)?;
 
         // Update collection info.
         UpdateCollectionInfoV1CpiBuilder::new(&ctx.accounts.mpl_core_program)
             .collection(core_collection)
-            .bubblegum_signer(&ctx.accounts.mpl_core_cpi_signer)
+            .bubblegum_signer(mpl_core_cpi_signer)
             .update_type(UpdateType::Remove)
             .amount(1)
             .invoke_signed(&[&[
@@ -167,6 +166,8 @@ pub(crate) fn burn_v2<'info>(
                 &[ctx.bumps.mpl_core_cpi_signer],
             ]])?;
 
+        let core_collection_data = &core_collection.data.borrow()[..];
+        let collection = MplCoreCollection::from_bytes(core_collection_data)?;
         mpl_core_collection_validate_burn(&collection, authority, leaf_owner)?
     } else {
         ValidationResult::Abstain

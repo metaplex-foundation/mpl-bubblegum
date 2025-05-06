@@ -281,6 +281,7 @@ impl SetCollectionV2Builder {
         self.new_core_collection = new_core_collection;
         self
     }
+    /// `[optional account, default to 'CbNY3JiXdXNE9tPNEk1aRZVEkWdj2v7kfJLNQwZZgpXk']`
     #[inline(always)]
     pub fn mpl_core_cpi_signer(
         &mut self,
@@ -381,9 +382,9 @@ impl SetCollectionV2Builder {
             merkle_tree: self.merkle_tree.expect("merkle_tree is not set"),
             core_collection: self.core_collection,
             new_core_collection: self.new_core_collection,
-            mpl_core_cpi_signer: self
-                .mpl_core_cpi_signer
-                .expect("mpl_core_cpi_signer is not set"),
+            mpl_core_cpi_signer: self.mpl_core_cpi_signer.unwrap_or(solana_program::pubkey!(
+                "CbNY3JiXdXNE9tPNEk1aRZVEkWdj2v7kfJLNQwZZgpXk"
+            )),
             log_wrapper: self.log_wrapper.unwrap_or(solana_program::pubkey!(
                 "mnoopTCrg4p8ry25e4bcWA9XZjbNjMTfgYVGGEdRsf3"
             )),

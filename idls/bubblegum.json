@@ -130,7 +130,8 @@
         {
           "name": "mplCoreCpiSigner",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "isOptional": true
         },
         {
           "name": "logWrapper",
