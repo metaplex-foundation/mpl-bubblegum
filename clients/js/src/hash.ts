@@ -23,6 +23,7 @@ import {
   getMetadataArgsV2Serializer,
 } from './generated';
 import { findLeafAssetIdPda } from './leafAssetId';
+import { LeafSchemaV2Flags, isValidLeafSchemaV2Flags } from './flags';
 
 export function hash(input: Uint8Array | Uint8Array[]): Uint8Array {
   return keccak_256(Array.isArray(input) ? mergeBytes(input) : input);
@@ -65,7 +66,7 @@ export function hashLeafV2(
     leafIndex: number | bigint;
     metadata: MetadataArgsV2Args;
     assetData?: string | Uint8Array;
-    flags?: number;
+    flags?: LeafSchemaV2Flags;
     nftVersion?: number;
   }
 ): Uint8Array {
@@ -87,6 +88,10 @@ export function hashLeafV2(
     throw new Error(
       `Flags value ${flags} is out of range – expected 0‑255 (fits in u8).`
     );
+  }
+
+  if (!isValidLeafSchemaV2Flags(flags)) {
+    throw new Error(`Invalid flags value: ${flags}`);
   }
 
   return hash([

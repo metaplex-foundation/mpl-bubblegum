@@ -13,6 +13,7 @@ import {
   GetAssetProofRpcResponse,
 } from '@metaplex-foundation/digital-asset-standard-api';
 import { fetchMerkleTree } from '@metaplex-foundation/spl-account-compression';
+import { LeafSchemaV2Flags, isValidLeafSchemaV2Flags } from './flags';
 import { MetadataArgs, TokenProgramVersion, TokenStandard } from './generated';
 
 export type AssetWithProof = {
@@ -88,7 +89,11 @@ export const getAssetWithProof = async (
   const assetDataHashBytes = rpcAsset.compression.asset_data_hash
     ? publicKeyBytes(rpcAsset.compression.asset_data_hash)
     : undefined;
-  const flagsValue = rpcAsset.compression.flags ?? undefined;
+
+  const rawFlags = rpcAsset.compression.flags;
+  const flagsValue = isValidLeafSchemaV2Flags(rawFlags)
+    ? (rawFlags as LeafSchemaV2Flags)
+    : undefined;
 
   return {
     leafOwner: rpcAsset.ownership.owner,

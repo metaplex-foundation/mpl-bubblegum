@@ -135,4 +135,25 @@ test('delegate cannot thaw and revoke a compressed NFT when it is not frozen', a
   // And the leaf was not updated in the merkle tree.
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(leaf));
+
+  // And when trying again with the frozen flag explicitly sent.
+  const promiseAgain = thawAndRevokeV2(umi, {
+    leafDelegate: newDelegate,
+    leafOwner: leafOwner.publicKey,
+    merkleTree,
+    root: getCurrentRoot(merkleTreeAccount.tree),
+    dataHash: hashMetadataDataV2(metadata),
+    creatorHash: hashMetadataCreators(metadata.creators),
+    flags: LeafSchemaV2Flags.FrozenByOwner,
+    nonce: leafIndex,
+    index: leafIndex,
+    proof: [],
+  }).sendAndConfirm(umi);
+
+  // We expect the Merkle root to be wrong.
+  await t.throwsAsync(promiseAgain, { name: 'PublicKeyMismatch' });
+
+  // And the leaf was still not updated in the merkle tree.
+  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(leaf));
 });

@@ -1,4 +1,5 @@
 /* eslint-disable import/no-extraneous-dependencies */
+import { fetchMerkleTree as fetchMerkleTreeV2 } from '@metaplex-foundation/mpl-account-compression';
 import { mplTokenMetadata } from '@metaplex-foundation/mpl-token-metadata';
 import {
   Context,
@@ -11,7 +12,7 @@ import {
   publicKey,
 } from '@metaplex-foundation/umi';
 import { createUmi as baseCreateUmi } from '@metaplex-foundation/umi-bundle-tests';
-import { fetchMerkleTree } from '@metaplex-foundation/spl-account-compression';
+import { fetchMerkleTree as fetchMerkleTreeV1 } from '@metaplex-foundation/spl-account-compression';
 import {
   DecompressibleState,
   MetadataArgsArgs,
@@ -90,7 +91,7 @@ export const mint = async (
   const leafOwner = input.leafOwner ?? context.identity.publicKey;
   const leafIndex = Number(
     input.leafIndex ??
-      (await fetchMerkleTree(context, merkleTree)).tree.activeIndex
+      (await fetchMerkleTreeV1(context, merkleTree)).tree.activeIndex
   );
   const metadata: MetadataArgsArgs = {
     name: 'My NFT',
@@ -144,7 +145,7 @@ export const mintV2 = async (
   const leafOwner = input.leafOwner ?? context.identity.publicKey;
   const leafIndex = Number(
     input.leafIndex ??
-      (await fetchMerkleTree(context, merkleTree)).tree.activeIndex
+      (await fetchMerkleTreeV2(context, merkleTree)).tree.activeIndex
   );
   const metadata: MetadataArgsV2Args = {
     name: 'My NFT',
