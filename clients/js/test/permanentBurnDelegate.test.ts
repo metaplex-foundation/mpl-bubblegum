@@ -22,6 +22,7 @@ import {
   mintV2,
   freezeV2,
   setNonTransferableV2,
+  LeafSchemaV2Flags,
 } from '../src';
 import { createTreeV2, createUmi } from './_setup';
 
@@ -187,7 +188,7 @@ test('permanent burn delegate can burn a compressed NFT even if asset is frozen 
     owner: leafOwnerKey,
     leafIndex: 0,
     metadata,
-    flags: 1,
+    flags: LeafSchemaV2Flags.FrozenByOwner,
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(frozenLeaf));
@@ -201,7 +202,7 @@ test('permanent burn delegate can burn a compressed NFT even if asset is frozen 
     root: getCurrentRoot(merkleTreeAccount.tree),
     dataHash: hashMetadataDataV2(metadata),
     creatorHash: hashMetadataCreators(metadata.creators),
-    flags: 1,
+    flags: LeafSchemaV2Flags.FrozenByOwner,
     nonce: 0,
     index: 0,
     proof: [],
@@ -303,7 +304,7 @@ test('permanent burn delegate can burn a compressed NFT even if asset is frozen 
     owner: leafOwnerKey,
     leafIndex: 0,
     metadata,
-    flags: 2,
+    flags: LeafSchemaV2Flags.FrozenByPermDelegate,
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(frozenLeaf));
@@ -317,7 +318,7 @@ test('permanent burn delegate can burn a compressed NFT even if asset is frozen 
     root: getCurrentRoot(merkleTreeAccount.tree),
     dataHash: hashMetadataDataV2(metadata),
     creatorHash: hashMetadataCreators(metadata.creators),
-    flags: 2,
+    flags: LeafSchemaV2Flags.FrozenByPermDelegate,
     nonce: 0,
     index: 0,
     proof: [],
@@ -512,7 +513,7 @@ test('item set to non-transferrable can be burnt by permanent burn delegate', as
     owner: leafOwnerKey,
     leafIndex: 0,
     metadata,
-    flags: 4,
+    flags: LeafSchemaV2Flags.NonTransferable,
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(soulboundLeaf));
@@ -526,7 +527,7 @@ test('item set to non-transferrable can be burnt by permanent burn delegate', as
     root: getCurrentRoot(merkleTreeAccount.tree),
     dataHash: hashMetadataDataV2(metadata),
     creatorHash: hashMetadataCreators(metadata.creators),
-    flags: 4,
+    flags: LeafSchemaV2Flags.NonTransferable,
     nonce: 0,
     index: 0,
     proof: [],

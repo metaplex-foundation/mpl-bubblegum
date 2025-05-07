@@ -10,6 +10,7 @@ import {
   hashMetadataCreators,
   hashMetadataDataV2,
   thawV2,
+  LeafSchemaV2Flags,
 } from '../src';
 import { createTreeV2, createUmi, mintV2 } from './_setup';
 
@@ -45,7 +46,7 @@ test('owner can delegate and freeze a compressed NFT with V2 instructions', asyn
     delegate: newDelegate.publicKey,
     leafIndex,
     metadata,
-    flags: 1,
+    flags: LeafSchemaV2Flags.FrozenByOwner,
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(frozenLeaf));
@@ -83,7 +84,7 @@ test('owner cannot thaw a compressed NFT that was frozen using delegateAndFreeze
     delegate: newDelegate.publicKey,
     leafIndex,
     metadata,
-    flags: 1,
+    flags: LeafSchemaV2Flags.FrozenByOwner,
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(frozenLeaf));

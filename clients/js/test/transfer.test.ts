@@ -242,6 +242,7 @@ test('it can transfer a compressed NFT using the getAssetWithProof helper', asyn
   // Then leafOwnerA can use it to transfer the NFT to leafOwnerB.
   const leafOwnerB = generateSigner(umi);
   await transfer(umi, {
+    // Pass parameters from the asset with proof.
     ...assetWithProof,
     leafOwner: leafOwnerA,
     newLeafOwner: leafOwnerB.publicKey,

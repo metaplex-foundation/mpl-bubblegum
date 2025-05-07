@@ -26,6 +26,7 @@ import {
   hashCollection,
   hashAssetData,
   canTransfer,
+  LeafSchemaV2Flags,
 } from '../src';
 import { createTreeV2, createUmi, mintV2 } from './_setup';
 
@@ -229,7 +230,7 @@ test('owner can transfer a compressed NFT using the getAssetWithProof helper', a
       creator_hash: publicKey(hashMetadataCreators(metadata.creators)),
       collection_hash: publicKey(hashCollection(defaultPublicKey())),
       asset_data_hash: publicKey(hashAssetData()),
-      flags: 0,
+      flags: LeafSchemaV2Flags.None,
     },
   } as DasApiAsset;
   const rpcAssetProof = {
@@ -259,6 +260,7 @@ test('owner can transfer a compressed NFT using the getAssetWithProof helper', a
   // Then leafOwnerA can use it to transfer the NFT to leafOwnerB.
   const leafOwnerB = generateSigner(umi);
   await transferV2(umi, {
+    // Pass parameters from the asset with proof.
     ...assetWithProof,
     authority: leafOwnerA,
     newLeafOwner: leafOwnerB.publicKey,

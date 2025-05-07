@@ -19,6 +19,7 @@ import {
   setNonTransferableV2,
   mintV2 as baseMintV2,
   MetadataArgsV2Args,
+  LeafSchemaV2Flags,
 } from '../src';
 import { createTreeV2, createUmi, mintV2 } from './_setup';
 
@@ -176,7 +177,7 @@ test('item set to non-transferrable can be burnt by owner', async (t) => {
     owner: leafOwnerKey,
     leafIndex: 0,
     metadata,
-    flags: 4,
+    flags: LeafSchemaV2Flags.NonTransferable,
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(soulboundLeaf));
@@ -190,7 +191,7 @@ test('item set to non-transferrable can be burnt by owner', async (t) => {
     root: getCurrentRoot(merkleTreeAccount.tree),
     dataHash: hashMetadataDataV2(metadata),
     creatorHash: hashMetadataCreators(metadata.creators),
-    flags: 4,
+    flags: LeafSchemaV2Flags.NonTransferable,
     nonce: 0,
     index: 0,
     proof: [],

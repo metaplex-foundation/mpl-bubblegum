@@ -16,6 +16,7 @@ import {
   MetadataArgsV2Args,
   mintV2,
   freezeV2,
+  LeafSchemaV2Flags,
 } from '../src';
 import { createTreeV2, createUmi } from './_setup';
 
@@ -189,7 +190,7 @@ test('permanent transfer delegate can transfer a compressed NFT even asset is fr
     owner: leafOwnerKey,
     leafIndex: 0,
     metadata,
-    flags: 1,
+    flags: LeafSchemaV2Flags.FrozenByOwner,
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(frozenLeaf));
@@ -205,7 +206,7 @@ test('permanent transfer delegate can transfer a compressed NFT even asset is fr
     root: getCurrentRoot(merkleTreeAccount.tree),
     dataHash: hashMetadataDataV2(metadata),
     creatorHash: hashMetadataCreators(metadata.creators),
-    flags: 1,
+    flags: LeafSchemaV2Flags.FrozenByOwner,
     nonce: 0,
     index: 0,
     proof: [],
@@ -217,7 +218,7 @@ test('permanent transfer delegate can transfer a compressed NFT even asset is fr
     owner: leafOwnerB.publicKey,
     leafIndex: 0,
     metadata,
-    flags: 1,
+    flags: LeafSchemaV2Flags.FrozenByOwner,
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(updatedLeaf));
@@ -314,7 +315,7 @@ test('permanent transfer delegate can transfer a compressed NFT even asset is fr
     owner: leafOwnerKey,
     leafIndex: 0,
     metadata,
-    flags: 2,
+    flags: LeafSchemaV2Flags.FrozenByPermDelegate,
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(frozenLeaf));
@@ -330,7 +331,7 @@ test('permanent transfer delegate can transfer a compressed NFT even asset is fr
     root: getCurrentRoot(merkleTreeAccount.tree),
     dataHash: hashMetadataDataV2(metadata),
     creatorHash: hashMetadataCreators(metadata.creators),
-    flags: 2,
+    flags: LeafSchemaV2Flags.FrozenByPermDelegate,
     nonce: 0,
     index: 0,
     proof: [],
@@ -342,7 +343,7 @@ test('permanent transfer delegate can transfer a compressed NFT even asset is fr
     owner: leafOwnerB.publicKey,
     leafIndex: 0,
     metadata,
-    flags: 2,
+    flags: LeafSchemaV2Flags.FrozenByPermDelegate,
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(updatedLeaf));

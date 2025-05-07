@@ -55,7 +55,7 @@ test('it can unverify the creator of a minted compressed NFT', async (t) => {
     )
     .sendAndConfirm(umi);
 
-  // When creator A unverifies themselves.
+  // When creator A unverifies themselves after both creators were verified.
   const verifiedMetadata = {
     ...metadata,
     creators: [

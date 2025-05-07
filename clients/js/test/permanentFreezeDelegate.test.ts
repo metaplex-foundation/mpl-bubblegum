@@ -18,6 +18,7 @@ import {
   transferV2,
   burnV2,
   thawV2,
+  LeafSchemaV2Flags,
 } from '../src';
 import { createTreeV2, createUmi } from './_setup';
 
@@ -104,7 +105,7 @@ test('permanent freeze delegate on collection can freeze a compressed NFT', asyn
     owner: leafOwner.publicKey,
     leafIndex: 0,
     metadata,
-    flags: 2,
+    flags: LeafSchemaV2Flags.FrozenByPermDelegate,
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(frozenLeaf));
@@ -193,12 +194,12 @@ test('permanent freeze delegate on collection can thaw compressed NFT it previou
     owner: leafOwner.publicKey,
     leafIndex: 0,
     metadata,
-    flags: 2,
+    flags: LeafSchemaV2Flags.FrozenByPermDelegate,
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(frozenLeaf));
 
-  // When the permanent freeze delegate of the collection freezes the NFT.
+  // When the permanent freeze delegate of the collection thaws the NFT.
   await thawV2(umi, {
     authority: permanentFreezeDelegate,
     leafOwner: leafOwnerKey,
@@ -208,7 +209,7 @@ test('permanent freeze delegate on collection can thaw compressed NFT it previou
     root: getCurrentRoot(merkleTreeAccount.tree),
     dataHash: hashMetadataDataV2(metadata),
     creatorHash: hashMetadataCreators(metadata.creators),
-    flags: 2,
+    flags: LeafSchemaV2Flags.FrozenByPermDelegate,
     nonce: 0,
     index: 0,
     proof: [],
@@ -220,7 +221,7 @@ test('permanent freeze delegate on collection can thaw compressed NFT it previou
     owner: leafOwner.publicKey,
     leafIndex: 0,
     metadata,
-    flags: 0,
+    flags: LeafSchemaV2Flags.None,
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(thawedLeaf));
@@ -309,7 +310,7 @@ test('asset cannot be transferred by owner when asset is frozen by permanent fre
     owner: leafOwnerKey,
     leafIndex: 0,
     metadata,
-    flags: 2,
+    flags: LeafSchemaV2Flags.FrozenByPermDelegate,
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(frozenLeaf));
@@ -325,7 +326,7 @@ test('asset cannot be transferred by owner when asset is frozen by permanent fre
     root: getCurrentRoot(merkleTreeAccount.tree),
     dataHash: hashMetadataDataV2(metadata),
     creatorHash: hashMetadataCreators(metadata.creators),
-    flags: 2,
+    flags: LeafSchemaV2Flags.FrozenByPermDelegate,
     nonce: 0,
     index: 0,
     proof: [],
@@ -422,7 +423,7 @@ test('asset cannot be transferred by owner when collection is frozen', async (t)
     root: getCurrentRoot(merkleTreeAccount.tree),
     dataHash: hashMetadataDataV2(metadata),
     creatorHash: hashMetadataCreators(metadata.creators),
-    flags: 2,
+    flags: LeafSchemaV2Flags.FrozenByPermDelegate,
     nonce: 0,
     index: 0,
     proof: [],
@@ -519,7 +520,7 @@ test('asset cannot be burned by owner when asset is frozen by permanent freeze d
     owner: leafOwnerKey,
     leafIndex: 0,
     metadata,
-    flags: 2,
+    flags: LeafSchemaV2Flags.FrozenByPermDelegate,
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(frozenLeaf));
@@ -533,7 +534,7 @@ test('asset cannot be burned by owner when asset is frozen by permanent freeze d
     root: getCurrentRoot(merkleTreeAccount.tree),
     dataHash: hashMetadataDataV2(metadata),
     creatorHash: hashMetadataCreators(metadata.creators),
-    flags: 2,
+    flags: LeafSchemaV2Flags.FrozenByPermDelegate,
     nonce: 0,
     index: 0,
     proof: [],
@@ -628,7 +629,7 @@ test('asset cannot be burned by owner when collection is frozen', async (t) => {
     root: getCurrentRoot(merkleTreeAccount.tree),
     dataHash: hashMetadataDataV2(metadata),
     creatorHash: hashMetadataCreators(metadata.creators),
-    flags: 2,
+    flags: LeafSchemaV2Flags.FrozenByPermDelegate,
     nonce: 0,
     index: 0,
     proof: [],

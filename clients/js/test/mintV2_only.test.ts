@@ -10,6 +10,10 @@ import { AssetDataSchema, hashLeafV2 } from '../src';
 import { createTreeV2, createUmi, mintV2 } from './_setup';
 
 test('it can mint a compressed NFT using V2 instructions', async (t) => {
+  // NOTE: This test verifies the current behavior where asset data is not yet supported.
+  // In a future update, this functionality is expected to be implemented and this test
+  // will need to be updated accordingly.
+
   // Given a tree with a minted NFT owned by leafOwnerA.
   const umi = await createUmi();
   const merkleTree = await createTreeV2(umi);

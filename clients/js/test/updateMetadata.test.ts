@@ -176,6 +176,7 @@ test('it can update metadata using the getAssetWithProof helper', async (t) => {
     uri: some('https://updated-example.com/my-nft.json'),
   };
   await updateMetadata(umi, {
+    // Pass parameters from the asset with proof.
     ...assetWithProof,
     leafOwner,
     currentMetadata: metadata,
@@ -676,6 +677,7 @@ test('it can update metadata using the getAssetWithProof helper with verified co
     uri: some('https://updated-example.com/my-nft.json'),
   };
   await updateMetadata(umi, {
+    // Pass parameters from the asset with proof.
     ...assetWithProof,
     leafOwner,
     currentMetadata: metadata,
