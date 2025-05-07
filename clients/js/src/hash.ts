@@ -83,12 +83,7 @@ export function hashLeafV2(
 
   const collection = unwrapOption(collectionOption, () => defaultPublicKey());
 
-  const flags = input.flags ?? 0;
-  if (flags < 0 || flags > 0xff) {
-    throw new Error(
-      `Flags value ${flags} is out of range – expected 0‑255 (fits in u8).`
-    );
-  }
+  const flags = input.flags ?? LeafSchemaV2Flags.None;
 
   if (!isValidLeafSchemaV2Flags(flags)) {
     throw new Error(`Invalid flags value: ${flags}`);
