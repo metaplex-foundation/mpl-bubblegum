@@ -68,8 +68,6 @@ test('it can mint an NFT from a collection and then transfer it using V2 instruc
   });
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(leaf));
 
-  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
-
   // When leafOwnerA transfers the NFT to leafOwnerB.
   const leafOwnerB = generateSigner(umi);
   await transferV2(umi, {

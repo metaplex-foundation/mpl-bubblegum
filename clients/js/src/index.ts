@@ -1,5 +1,6 @@
 export * from './createTree';
 export * from './errors';
+export * from './flags';
 export * from './generated';
 export * from './getAssetWithProof';
 export * from './hash';

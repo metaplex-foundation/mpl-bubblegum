@@ -143,11 +143,15 @@ export function hashCollection(collection: PublicKey): Uint8Array {
 }
 
 export function hashAssetData(assetData?: string | Uint8Array): Uint8Array {
+  let dataBytes: Uint8Array;
+
   if (assetData === undefined || assetData === null) {
-    assetData = new Uint8Array(0);
+    dataBytes = new Uint8Array(0);
   } else if (typeof assetData === 'string') {
-    assetData = new TextEncoder().encode(assetData);
+    dataBytes = new TextEncoder().encode(assetData);
+  } else {
+    dataBytes = assetData;
   }
 
-  return hash(assetData);
+  return hash(dataBytes);
 }

@@ -83,7 +83,7 @@ test('A core collection with Royalties plugin can block a transfer of a compress
   });
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(leaf));
 
-  // When the owner attempts to transfer the NFT to the .
+  // When the owner attempts to transfer the NFT to a new owner.
   const promise = transferV2(umi, {
     authority: leafOwner,
     leafOwner: leafOwner.publicKey,
@@ -265,7 +265,7 @@ test('A core collection with Royalties plugin can allow a transfer of a compress
   });
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(leaf));
 
-  // When the owner attempts to transfer the NFT to the .
+  // When the owner attempts to transfer the NFT to a new owner.
   await transferV2(umi, {
     authority: leafOwner,
     leafOwner: leafOwner.publicKey,
@@ -281,14 +281,14 @@ test('A core collection with Royalties plugin can allow a transfer of a compress
   }).sendAndConfirm(umi);
 
   // Then the leaf was updated in the merkle tree.
-  const frozenLeaf = hashLeafV2(umi, {
+  const updatedLeaf = hashLeafV2(umi, {
     merkleTree,
     owner: leafOwnerB.publicKey,
     leafIndex: 0,
     metadata,
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
-  t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(frozenLeaf));
+  t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(updatedLeaf));
 });
 
 test('A core collection with Royalties plugin can allow a transfer of a compressed NFT using ProgramAllowList', async (t) => {
@@ -359,7 +359,7 @@ test('A core collection with Royalties plugin can allow a transfer of a compress
   });
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(leaf));
 
-  // When the owner attempts to transfer the NFT to the .
+  // When the owner attempts to transfer the NFT to a new owner.
   await transferV2(umi, {
     authority: leafOwner,
     leafOwner: leafOwner.publicKey,

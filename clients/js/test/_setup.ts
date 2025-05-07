@@ -177,7 +177,7 @@ export const mintV2 = async (
   };
 };
 
-// TransactionWithMeta doesn't have ReturnData field that is discribed in
+// TransactionWithMeta doesn't have ReturnData field that is described in
 // https://solana.com/docs/rpc/http/gettransaction#result
 // so ugly log parsing is provided
 export function getReturnLog(

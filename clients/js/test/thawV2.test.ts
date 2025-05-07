@@ -22,6 +22,7 @@ import {
   hashCollection,
   hashAssetData,
   canTransfer,
+  LeafSchemaV2Flags,
 } from '../src';
 import { createTreeV2, createUmi, mintV2 } from './_setup';
 import {
@@ -86,7 +87,7 @@ test('delegate can thaw a compressed NFT using V2 instructions', async (t) => {
     delegate: newDelegate.publicKey,
     leafIndex,
     metadata,
-    flags: 1,
+    flags: LeafSchemaV2Flags.FrozenByOwner,
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(frozenLeaf));
@@ -100,7 +101,7 @@ test('delegate can thaw a compressed NFT using V2 instructions', async (t) => {
     root: getCurrentRoot(merkleTreeAccount.tree),
     dataHash: hashMetadataDataV2(metadata),
     creatorHash: hashMetadataCreators(metadata.creators),
-    flags: 1,
+    flags: LeafSchemaV2Flags.FrozenByOwner,
     nonce: leafIndex,
     index: leafIndex,
     proof: [],
@@ -113,7 +114,7 @@ test('delegate can thaw a compressed NFT using V2 instructions', async (t) => {
     delegate: newDelegate.publicKey,
     leafIndex,
     metadata,
-    flags: 0,
+    flags: LeafSchemaV2Flags.None,
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(unfrozenLeaf));
@@ -176,7 +177,7 @@ test('owner cannot thaw a compressed NFT using V2 instructions', async (t) => {
     delegate: newDelegate.publicKey,
     leafIndex,
     metadata,
-    flags: 1,
+    flags: LeafSchemaV2Flags.FrozenByOwner,
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(frozenLeaf));
@@ -235,7 +236,7 @@ test('owner as default leaf delegate can thaw a compressed NFT it previously fro
     delegate: leafOwner.publicKey,
     leafIndex,
     metadata,
-    flags: 1,
+    flags: LeafSchemaV2Flags.FrozenByOwner,
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(frozenLeaf));
@@ -249,7 +250,7 @@ test('owner as default leaf delegate can thaw a compressed NFT it previously fro
     root: getCurrentRoot(merkleTreeAccount.tree),
     dataHash: hashMetadataDataV2(metadata),
     creatorHash: hashMetadataCreators(metadata.creators),
-    flags: 1,
+    flags: LeafSchemaV2Flags.FrozenByOwner,
     nonce: leafIndex,
     index: leafIndex,
     proof: [],
@@ -262,7 +263,7 @@ test('owner as default leaf delegate can thaw a compressed NFT it previously fro
     delegate: leafOwner.publicKey,
     leafIndex,
     metadata,
-    flags: 0,
+    flags: LeafSchemaV2Flags.None,
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(unfrozenLeaf));
@@ -297,7 +298,7 @@ test('can thaw a compressed NFT using the getAssetWithProof helper using V2 inst
   // And given we mock the RPC client to return the following asset and proof.
   let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const [assetId] = findLeafAssetIdPda(umi, { merkleTree, leafIndex });
-  let rpcAsset = {
+  const rpcAsset = {
     ownership: {
       owner: leafOwner.publicKey,
       frozen: false,
@@ -309,7 +310,7 @@ test('can thaw a compressed NFT using the getAssetWithProof helper using V2 inst
       creator_hash: publicKey(hashMetadataCreators(metadata.creators)),
       collection_hash: publicKey(hashCollection(defaultPublicKey())),
       asset_data_hash: publicKey(hashAssetData()),
-      flags: 0,
+      flags: LeafSchemaV2Flags.None,
     },
   } as DasApiAsset;
   const rpcAssetProof = {
@@ -335,6 +336,7 @@ test('can thaw a compressed NFT using the getAssetWithProof helper using V2 inst
 
   // And the owner of the NFT freezes it.
   await freezeV2(umi, {
+    // Pass parameters from the asset with proof.
     ...assetWithProof,
     authority: leafOwner,
   }).sendAndConfirm(umi);
@@ -345,7 +347,7 @@ test('can thaw a compressed NFT using the getAssetWithProof helper using V2 inst
     owner: leafOwner.publicKey,
     leafIndex,
     metadata,
-    flags: 1,
+    flags: LeafSchemaV2Flags.FrozenByOwner,
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(frozenLeaf));
@@ -364,6 +366,7 @@ test('can thaw a compressed NFT using the getAssetWithProof helper using V2 inst
 
   // And the owner of the NFT thaws it.
   await thawV2(umi, {
+    // Pass parameters from the asset with proof.
     ...assetWithProof,
     authority: leafOwner,
   }).sendAndConfirm(umi);
@@ -374,7 +377,7 @@ test('can thaw a compressed NFT using the getAssetWithProof helper using V2 inst
     owner: leafOwner.publicKey,
     leafIndex,
     metadata,
-    flags: 0,
+    flags: LeafSchemaV2Flags.None,
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(unfrozenLeaf));

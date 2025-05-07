@@ -9,7 +9,7 @@ A Umi-compatible JavaScript library for the project.
    ```sh
    npm install @metaplex-foundation/mpl-bubblegum
    ```
-2. Finally, register the library with your Umi instance like so.
+3. Finally, register the library with your Umi instance like so.
    ```ts
    import { mplBubblegum } from '@metaplex-foundation/mpl-bubblegum';
    umi.use(mplBubblegum());

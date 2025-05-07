@@ -25,8 +25,8 @@
   "author": "Metaplex Maintainers <contact@metaplex.com>",
   "license": "Apache-2.0",
   "dependencies": {
-    "@metaplex-foundation/digital-asset-standard-api": "2.0.0",
-    "@metaplex-foundation/mpl-account-compression": "0.0.1",
+    "@metaplex-foundation/digital-asset-standard-api": "^2.0.0",
+    "@metaplex-foundation/mpl-account-compression": "^0.0.1",
     "@metaplex-foundation/mpl-token-metadata": "3.2.1",
     "@metaplex-foundation/mpl-toolbox": "^0.10.0",
     "@metaplex-foundation/spl-account-compression": "^0.0.1",
@@ -38,7 +38,7 @@
   },
   "devDependencies": {
     "@ava/typescript": "^3.0.1",
-    "@metaplex-foundation/mpl-core": "1.4.0-beta.0",
+    "@metaplex-foundation/mpl-core": "^1.4.0",
     "@metaplex-foundation/umi": "^1.2.0",
     "@metaplex-foundation/umi-bundle-tests": "^1.0.0",
     "@metaplex-foundation/umi-rpc-web3js": "^1.2.0",

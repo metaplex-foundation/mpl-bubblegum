@@ -12,6 +12,7 @@ import {
   freezeV2,
   transferV2,
   burnV2,
+  LeafSchemaV2Flags,
 } from '../src';
 import { createTreeV2, createUmi, mintV2 } from './_setup';
 
@@ -72,7 +73,7 @@ test('delegate can freeze a compressed NFT with V2 instructions', async (t) => {
     delegate: newDelegate.publicKey,
     leafIndex,
     metadata,
-    flags: 1,
+    flags: LeafSchemaV2Flags.FrozenByOwner,
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(frozenLeaf));
@@ -135,7 +136,7 @@ test('item frozen by leaf delegate cannot be transferred by owner', async (t) =>
     delegate: newDelegate.publicKey,
     leafIndex,
     metadata,
-    flags: 1,
+    flags: LeafSchemaV2Flags.FrozenByOwner,
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(frozenLeaf));
@@ -150,9 +151,9 @@ test('item frozen by leaf delegate cannot be transferred by owner', async (t) =>
     root: getCurrentRoot(merkleTreeAccount.tree),
     dataHash: hashMetadataDataV2(metadata),
     creatorHash: hashMetadataCreators(metadata.creators),
-    flags: 1,
-    nonce: 0,
-    index: 0,
+    flags: LeafSchemaV2Flags.FrozenByOwner,
+    nonce: leafIndex,
+    index: leafIndex,
     proof: [],
   }).sendAndConfirm(umi);
 
@@ -221,7 +222,7 @@ test('item frozen by leaf delegate cannot be burned by owner', async (t) => {
     delegate: newDelegate.publicKey,
     leafIndex,
     metadata,
-    flags: 1,
+    flags: LeafSchemaV2Flags.FrozenByOwner,
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(frozenLeaf));
@@ -234,9 +235,9 @@ test('item frozen by leaf delegate cannot be burned by owner', async (t) => {
     root: getCurrentRoot(merkleTreeAccount.tree),
     dataHash: hashMetadataDataV2(metadata),
     creatorHash: hashMetadataCreators(metadata.creators),
-    flags: 1,
-    nonce: 0,
-    index: 0,
+    flags: LeafSchemaV2Flags.FrozenByOwner,
+    nonce: leafIndex,
+    index: leafIndex,
     proof: [],
   }).sendAndConfirm(umi);
 
@@ -280,7 +281,7 @@ test('owner as default leaf delegate can freeze a compressed NFT', async (t) => 
     delegate: leafOwner.publicKey,
     leafIndex,
     metadata,
-    flags: 1,
+    flags: LeafSchemaV2Flags.FrozenByOwner,
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(frozenLeaf));

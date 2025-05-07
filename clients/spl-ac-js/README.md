@@ -11,7 +11,7 @@ A Umi-compatible JavaScript library for the project.
    npm install @metaplex-foundation/spl-account-compression
    ```
 
-2. Finally, register the library with your Umi instance like so.
+3. Finally, register the library with your Umi instance like so.
 
    ```ts
    import { splAccountCompression } from '@metaplex-foundation/spl-account-compression';

@@ -31,6 +31,7 @@ import {
   verifyCreatorV2,
   hashAssetData,
   hashCollection,
+  LeafSchemaV2Flags,
 } from '../src';
 import { createTreeV2, createUmi, mintV2 } from './_setup';
 
@@ -142,7 +143,7 @@ test('it can update metadata using the getAssetWithProof helper using V2 instruc
       creator_hash: publicKey(hashMetadataCreators(metadata.creators)),
       collection_hash: publicKey(hashCollection(defaultPublicKey())),
       asset_data_hash: publicKey(hashAssetData()),
-      flags: 0,
+      flags: LeafSchemaV2Flags.None,
     },
   } as DasApiAsset;
   const rpcAssetProof = {
@@ -172,6 +173,7 @@ test('it can update metadata using the getAssetWithProof helper using V2 instruc
     uri: some('https://updated-example.com/my-nft.json'),
   };
   await updateMetadataV2(umi, {
+    // Pass parameters from the asset with proof.
     ...assetWithProof,
     leafOwner,
     currentMetadata: metadata,
@@ -490,7 +492,7 @@ test('it can update metadata using the getAssetWithProof helper with collection'
       creator_hash: publicKey(hashMetadataCreators(metadata.creators)),
       collection_hash: publicKey(hashCollection(defaultPublicKey())),
       asset_data_hash: publicKey(hashAssetData()),
-      flags: 0,
+      flags: LeafSchemaV2Flags.None,
     },
   } as DasApiAsset;
   const rpcAssetProof = {
@@ -521,6 +523,7 @@ test('it can update metadata using the getAssetWithProof helper with collection'
   };
 
   await updateMetadataV2(umi, {
+    // Pass parameters from the asset with proof.
     ...assetWithProof,
     authority: collectionUpdateAuthority,
     leafOwner,
@@ -644,7 +647,7 @@ test('it cannot update immutable metadata using V2 instructions', async (t) => {
   const leaf = hashLeafV2(umi, {
     merkleTree,
     owner: leafOwner,
-    leafIndex: 0,
+    leafIndex,
     metadata: immutableMetadata,
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);

@@ -13,6 +13,7 @@ import {
   mintV2,
   transferV2,
   setNonTransferableV2,
+  LeafSchemaV2Flags,
 } from '../src';
 import { createTreeV2, createUmi } from './_setup';
 
@@ -98,7 +99,7 @@ test('permanent freeze delegate on collection can set a compressed NFT to non-tr
     owner: leafOwner.publicKey,
     leafIndex: 0,
     metadata,
-    flags: 4,
+    flags: LeafSchemaV2Flags.NonTransferable,
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(soulboundLeaf));
@@ -343,7 +344,7 @@ test('asset set to non-transferrable cannot be transferred by owner', async (t) 
     owner: leafOwnerKey,
     leafIndex: 0,
     metadata,
-    flags: 4,
+    flags: LeafSchemaV2Flags.NonTransferable,
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(soulboundLeaf));
@@ -359,7 +360,7 @@ test('asset set to non-transferrable cannot be transferred by owner', async (t) 
     root: getCurrentRoot(merkleTreeAccount.tree),
     dataHash: hashMetadataDataV2(metadata),
     creatorHash: hashMetadataCreators(metadata.creators),
-    flags: 4,
+    flags: LeafSchemaV2Flags.NonTransferable,
     nonce: 0,
     index: 0,
     proof: [],
@@ -463,7 +464,7 @@ test('asset set to non-transferrable cannot be transferred by permanent transfer
     owner: leafOwnerKey,
     leafIndex: 0,
     metadata,
-    flags: 4,
+    flags: LeafSchemaV2Flags.NonTransferable,
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(soulboundLeaf));
@@ -479,7 +480,7 @@ test('asset set to non-transferrable cannot be transferred by permanent transfer
     root: getCurrentRoot(merkleTreeAccount.tree),
     dataHash: hashMetadataDataV2(metadata),
     creatorHash: hashMetadataCreators(metadata.creators),
-    flags: 4,
+    flags: LeafSchemaV2Flags.NonTransferable,
     nonce: 0,
     index: 0,
     proof: [],

@@ -6,10 +6,10 @@ settings:
 
 dependencies:
   '@metaplex-foundation/digital-asset-standard-api':
-    specifier: 2.0.0
+    specifier: ^2.0.0
     version: 2.0.0(@metaplex-foundation/umi@1.2.0)
   '@metaplex-foundation/mpl-account-compression':
-    specifier: 0.0.1
+    specifier: ^0.0.1
     version: 0.0.1(@metaplex-foundation/umi@1.2.0)
   '@metaplex-foundation/mpl-token-metadata':
     specifier: 3.2.1
@@ -32,8 +32,8 @@ devDependencies:
     specifier: ^3.0.1
     version: 3.0.1
   '@metaplex-foundation/mpl-core':
-    specifier: 1.4.0-beta.0
-    version: 1.4.0-beta.0(@metaplex-foundation/umi@1.2.0)(@noble/hashes@1.3.1)
+    specifier: ^1.4.0
+    version: 1.4.0(@metaplex-foundation/umi@1.2.0)(@noble/hashes@1.3.1)
   '@metaplex-foundation/umi':
     specifier: ^1.2.0
     version: 1.2.0
@@ -309,8 +309,8 @@ packages:
       merkletreejs: 0.3.11
     dev: false
 
-  /@metaplex-foundation/mpl-core@1.4.0-beta.0(@metaplex-foundation/umi@1.2.0)(@noble/hashes@1.3.1):
-    resolution: {integrity: sha512-HVgvHyvf6tGYlTSrfvNNfeBJQSDwa6vGW53Z/Nyy5Qt4t0UdGslbNHUN0iGG8pn29h0KTNeW153dAjGm96oEBQ==}
+  /@metaplex-foundation/mpl-core@1.4.0(@metaplex-foundation/umi@1.2.0)(@noble/hashes@1.3.1):
+    resolution: {integrity: sha512-XRvodR0KJokqcfw+wZjpar3lb6Rmf/8eAUpM4QFpSQTCanexdsrLd/Ol1zfPZ2VDYOgUh641LUHxcnGx0zvLUA==}
     peerDependencies:
       '@metaplex-foundation/umi': '>=0.8.2 <= 1.0'
       '@noble/hashes': ^1.3.1
