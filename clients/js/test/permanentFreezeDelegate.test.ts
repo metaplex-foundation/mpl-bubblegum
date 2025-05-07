@@ -423,7 +423,7 @@ test('asset cannot be transferred by owner when collection is frozen', async (t)
     root: getCurrentRoot(merkleTreeAccount.tree),
     dataHash: hashMetadataDataV2(metadata),
     creatorHash: hashMetadataCreators(metadata.creators),
-    flags: LeafSchemaV2Flags.FrozenByPermDelegate,
+    flags: LeafSchemaV2Flags.None,
     nonce: 0,
     index: 0,
     proof: [],

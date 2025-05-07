@@ -22,4 +22,4 @@ You can learn more about this library's API by reading its generated [TypeDoc do
 
 ## Contributing
 
-Check out the [Contributing Guide](./CONTRIBUTING.md) the learn more about how to contribute to this library.
+Check out the [Contributing Guide](./CONTRIBUTING.md) to learn more about how to contribute to this library.
