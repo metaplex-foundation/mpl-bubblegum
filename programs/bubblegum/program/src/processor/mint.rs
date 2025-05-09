@@ -302,6 +302,8 @@ pub(crate) fn process_mint<'info, T: MetadataArgsCommon>(
     );
 
     let asset_id = get_asset_id(&merkle_tree.key(), tree_authority.num_minted);
+    solana_program::msg!("Leaf asset ID: {}", asset_id);
+
     let leaf_delegate = leaf_delegate.unwrap_or(leaf_owner);
     let version = message.version();
     let leaf = match version {

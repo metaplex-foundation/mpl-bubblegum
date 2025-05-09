@@ -62,3 +62,37 @@ export async function parseLeafFromMintToCollectionV1Transaction(
 
   throw new Error('Could not parse leaf from transaction');
 }
+
+export async function parseLeafFromMintV2Transaction(
+  context: Pick<Context, 'programs' | 'eddsa' | 'rpc'>,
+  signature: TransactionSignature
+): Promise<LeafSchema> {
+  const transaction = await context.rpc.getTransaction(signature);
+  if (!transaction) {
+    throw new Error('Could not get transaction from signature');
+  }
+
+  const instruction = transaction.message.instructions[0];
+  const collectionIndex = instruction.accountIndexes[7];
+  const collection = transaction.message.accounts[collectionIndex];
+
+  if (!collection) {
+    throw new Error('Account at index 7 is missing');
+  }
+
+  const programId = context.programs.getPublicKey(
+    'mplBubblegum',
+    'BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'
+  );
+
+  const instructionIndex = collection === programId ? 0 : 1;
+  const { innerInstructions } = transaction.meta;
+  if (innerInstructions) {
+    const leaf = getLeafSchemaSerializer().deserialize(
+      innerInstructions[0].instructions[instructionIndex].data.slice(8)
+    );
+    return leaf[0];
+  }
+
+  throw new Error('Could not parse leaf from transaction');
+}

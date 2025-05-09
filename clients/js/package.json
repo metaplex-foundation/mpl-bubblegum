@@ -34,7 +34,7 @@
     "merkletreejs": "^0.3.11"
   },
   "peerDependencies": {
-    "@metaplex-foundation/umi": ">= 0.8.9 <= 1"
+    "@metaplex-foundation/umi": ">= 0.8.9 <= 2.0.0"
   },
   "devDependencies": {
     "@ava/typescript": "^3.0.1",
