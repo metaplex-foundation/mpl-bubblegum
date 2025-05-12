@@ -53,7 +53,7 @@ test('it can parse the leaf from mintV2 instructions', async (t) => {
   }
 });
 
-test('it can parse the leaf from mintV2 to collection instructions)', async (t) => {
+test('it can parse the leaf from mintV2 to collection instructions', async (t) => {
   // Given an empty Bubblegum tree.
   const umi = await createUmi();
   const merkleTree = await createTreeV2(umi);

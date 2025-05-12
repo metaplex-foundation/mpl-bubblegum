@@ -13,7 +13,7 @@ use borsh::BorshSerialize;
 /// Accounts.
 pub struct UpdateMetadataV2 {
     pub tree_config: solana_program::pubkey::Pubkey,
-    /// Optional payer, defaults to `authority`
+
     pub payer: solana_program::pubkey::Pubkey,
     /// Either collection authority or tree owner/delegate, depending
     /// on whether the item is in a verified collection.  Defaults to `payer`
@@ -48,11 +48,11 @@ impl UpdateMetadataV2 {
         remaining_accounts: &[solana_program::instruction::AccountMeta],
     ) -> solana_program::instruction::Instruction {
         let mut accounts = Vec::with_capacity(10 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_program::instruction::AccountMeta::new(
             self.tree_config,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_program::instruction::AccountMeta::new(
             self.payer, true,
         ));
         if let Some(authority) = self.authority {
@@ -177,7 +177,6 @@ impl UpdateMetadataV2Builder {
         self.tree_config = Some(tree_config);
         self
     }
-    /// Optional payer, defaults to `authority`
     #[inline(always)]
     pub fn payer(&mut self, payer: solana_program::pubkey::Pubkey) -> &mut Self {
         self.payer = Some(payer);
@@ -336,7 +335,7 @@ impl UpdateMetadataV2Builder {
 /// `update_metadata_v2` CPI accounts.
 pub struct UpdateMetadataV2CpiAccounts<'a, 'b> {
     pub tree_config: &'b solana_program::account_info::AccountInfo<'a>,
-    /// Optional payer, defaults to `authority`
+
     pub payer: &'b solana_program::account_info::AccountInfo<'a>,
     /// Either collection authority or tree owner/delegate, depending
     /// on whether the item is in a verified collection.  Defaults to `payer`
@@ -363,7 +362,7 @@ pub struct UpdateMetadataV2Cpi<'a, 'b> {
     pub __program: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub tree_config: &'b solana_program::account_info::AccountInfo<'a>,
-    /// Optional payer, defaults to `authority`
+
     pub payer: &'b solana_program::account_info::AccountInfo<'a>,
     /// Either collection authority or tree owner/delegate, depending
     /// on whether the item is in a verified collection.  Defaults to `payer`
@@ -441,11 +440,11 @@ impl<'a, 'b> UpdateMetadataV2Cpi<'a, 'b> {
         )],
     ) -> solana_program::entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(10 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_program::instruction::AccountMeta::new(
             *self.tree_config.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_program::instruction::AccountMeta::new(
             *self.payer.key,
             true,
         ));
@@ -586,7 +585,6 @@ impl<'a, 'b> UpdateMetadataV2CpiBuilder<'a, 'b> {
         self.instruction.tree_config = Some(tree_config);
         self
     }
-    /// Optional payer, defaults to `authority`
     #[inline(always)]
     pub fn payer(&mut self, payer: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.payer = Some(payer);

@@ -28,7 +28,6 @@ test('it can verify the collection of a minted compressed NFT', async (t) => {
 
   // And a tree with a minted NFT that has an unverified collection.
   const merkleTree = await createTree(umi);
-  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const leafOwner = generateSigner(umi).publicKey;
   const { metadata, leafIndex } = await mint(umi, {
     merkleTree,
@@ -42,6 +41,7 @@ test('it can verify the collection of a minted compressed NFT', async (t) => {
   });
 
   // When the collection authority verifies the collection.
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   await verifyCollection(umi, {
     leafOwner,
     collectionMint: collectionMint.publicKey,
@@ -87,9 +87,10 @@ test('it cannot verify the collection if it is already verified', async (t) => {
 
   // And a tree with a minted NFT that has a verified collection.
   const merkleTree = await createTree(umi);
-  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const leafOwner = generateSigner(umi).publicKey;
   const { metadata, leafIndex } = await mint(umi, { merkleTree, leafOwner });
+
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   await setAndVerifyCollection(umi, {
     leafOwner,
     collectionMint: collectionMint.publicKey,
@@ -109,6 +110,7 @@ test('it cannot verify the collection if it is already verified', async (t) => {
   };
 
   // When the collection authority attempts to verify the collection.
+  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const promise = verifyCollection(umi, {
     leafOwner,
     collectionMint: collectionMint.publicKey,

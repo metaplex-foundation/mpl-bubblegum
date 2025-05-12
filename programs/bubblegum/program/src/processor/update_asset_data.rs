@@ -23,10 +23,12 @@ pub const MAX_ASSET_DATA_LEN: usize = 128;
 #[derive(Accounts)]
 pub struct UpdateAssetDataV2<'info> {
     #[account(
+        mut,
         seeds = [merkle_tree.key().as_ref()],
         bump,
     )]
     pub tree_authority: Account<'info, TreeConfig>,
+    #[account(mut)]
     pub payer: Signer<'info>,
     /// Either collection authority or tree owner/delegate, depending on
     /// whether the item is in a verified collection.  Defaults to `payer`

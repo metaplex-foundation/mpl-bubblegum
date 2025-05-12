@@ -77,12 +77,12 @@ export async function parseLeafFromMintV2Transaction(
   const collection = transaction.message.accounts[collectionIndex];
 
   if (!collection) {
-    throw new Error('Account at index 7 is missing');
+    throw new Error('Collection account at index 7 is missing');
   }
 
   const programId = context.programs.getPublicKey(
     'mplBubblegum',
-    'BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'
+    MPL_BUBBLEGUM_PROGRAM_ID
   );
 
   const instructionIndex = collection === programId ? 0 : 1;

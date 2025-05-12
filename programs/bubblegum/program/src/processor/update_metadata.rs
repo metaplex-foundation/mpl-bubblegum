@@ -142,11 +142,12 @@ pub fn update_metadata<'info>(
 #[derive(Accounts)]
 pub struct UpdateMetadataV2<'info> {
     #[account(
+        mut,
         seeds = [merkle_tree.key().as_ref()],
         bump,
     )]
     pub tree_authority: Account<'info, TreeConfig>,
-    /// Optional payer, defaults to `authority`
+    #[account(mut)]
     pub payer: Signer<'info>,
     /// Either collection authority or tree owner/delegate, depending
     /// on whether the item is in a verified collection.  Defaults to `payer`

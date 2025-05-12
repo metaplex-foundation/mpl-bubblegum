@@ -4,7 +4,9 @@ import {
   generateSigner,
   publicKey,
   some,
+  publicKeyBytes,
 } from '@metaplex-foundation/umi';
+import { generateSignerWithSol } from '@metaplex-foundation/umi-bundle-tests';
 import test from 'ava';
 import {
   fetchMerkleTree,
@@ -27,7 +29,6 @@ test('owner can burn a compressed NFT using V2 instructions', async (t) => {
   // Given a tree with a minted NFT.
   const umi = await createUmi();
   const merkleTree = await createTreeV2(umi);
-  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const leafOwner = generateSigner(umi);
   const { metadata, leafIndex } = await mintV2(umi, {
     merkleTree,
@@ -35,6 +36,7 @@ test('owner can burn a compressed NFT using V2 instructions', async (t) => {
   });
 
   // When the owner of the NFT burns it.
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   await burnV2(umi, {
     authority: leafOwner,
     leafOwner: leafOwner.publicKey,
@@ -52,11 +54,89 @@ test('owner can burn a compressed NFT using V2 instructions', async (t) => {
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, defaultPublicKey());
 });
 
+test('tree creator cannot burn a compressed NFT using V2 instructions', async (t) => {
+  // Given a tree with a minted NFT.
+  const umi = await createUmi();
+  const treeCreator = await generateSignerWithSol(umi);
+  const merkleTree = await createTreeV2(umi, { treeCreator });
+  const leafOwner = generateSigner(umi);
+  const { metadata, leafIndex } = await mintV2(umi, {
+    treeCreatorOrDelegate: treeCreator,
+    merkleTree,
+    leafOwner: leafOwner.publicKey,
+  });
+
+  // When tree creator attempts to burn the NFT.
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  const promise = burnV2(umi, {
+    authority: treeCreator,
+    leafOwner: leafOwner.publicKey,
+    merkleTree,
+    root: getCurrentRoot(merkleTreeAccount.tree),
+    dataHash: hashMetadataDataV2(metadata),
+    creatorHash: hashMetadataCreators(metadata.creators),
+    nonce: leafIndex,
+    index: leafIndex,
+    proof: [],
+  }).sendAndConfirm(umi);
+
+  // We expect a failure.
+  await t.throwsAsync(promise, { name: 'InvalidAuthority' });
+
+  // And the leaf was not deleted in the merkle tree.
+  const leaf = hashLeafV2(umi, {
+    merkleTree,
+    owner: leafOwner.publicKey,
+    leafIndex: 0,
+    metadata,
+  });
+  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(leaf));
+});
+
+test('owner cannot burn a compressed NFT using invalid data hash with V2 instructions', async (t) => {
+  // Given a tree with a minted NFT.
+  const umi = await createUmi();
+  const merkleTree = await createTreeV2(umi);
+  const leafOwner = generateSigner(umi);
+  const { metadata, leafIndex } = await mintV2(umi, {
+    merkleTree,
+    leafOwner: leafOwner.publicKey,
+  });
+
+  // When the owner of the NFT attempts to burn it with invalid data hash.
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  const invalidDataHash = publicKeyBytes(defaultPublicKey());
+  const promise = burnV2(umi, {
+    authority: leafOwner,
+    leafOwner: leafOwner.publicKey,
+    merkleTree,
+    root: getCurrentRoot(merkleTreeAccount.tree),
+    dataHash: invalidDataHash,
+    creatorHash: hashMetadataCreators(metadata.creators),
+    nonce: leafIndex,
+    index: leafIndex,
+    proof: [],
+  }).sendAndConfirm(umi);
+
+  // We expect a failure.
+  await t.throwsAsync(promise, { name: 'PublicKeyMismatch' });
+
+  // And the leaf was not deleted in the merkle tree.
+  const leaf = hashLeafV2(umi, {
+    merkleTree,
+    owner: leafOwner.publicKey,
+    leafIndex: 0,
+    metadata,
+  });
+  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(leaf));
+});
+
 test('delegated authority can burn a compressed NFT using V2 instructions', async (t) => {
   // Given a tree with a delegated compressed NFT.
   const umi = await createUmi();
   const merkleTree = await createTreeV2(umi);
-  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const leafOwner = generateSigner(umi);
   const delegateAuthority = generateSigner(umi);
   const { metadata, leafIndex } = await mintV2(umi, {
@@ -64,6 +144,7 @@ test('delegated authority can burn a compressed NFT using V2 instructions', asyn
     leafOwner: leafOwner.publicKey,
   });
 
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   await delegateV2(umi, {
     leafOwner,
     newLeafDelegate: delegateAuthority.publicKey,
@@ -77,6 +158,7 @@ test('delegated authority can burn a compressed NFT using V2 instructions', asyn
   }).sendAndConfirm(umi);
 
   // When the delegated authority burns the NFT.
+  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   await burnV2(umi, {
     authority: delegateAuthority,
     leafOwner: leafOwner.publicKey,
@@ -101,6 +183,7 @@ test('item set to non-transferrable can be burnt by owner', async (t) => {
   const merkleTree = await createTreeV2(umi);
   const leafOwner = generateSigner(umi);
   const leafOwnerKey = leafOwner.publicKey;
+
   let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.sequenceNumber, 0n);
 

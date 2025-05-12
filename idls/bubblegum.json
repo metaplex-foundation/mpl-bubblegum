@@ -658,12 +658,12 @@
       "accounts": [
         {
           "name": "treeAuthority",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
           "name": "payer",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true
         },
         {
@@ -784,12 +784,12 @@
       "accounts": [
         {
           "name": "treeAuthority",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
           "name": "payer",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true
         },
         {
@@ -910,12 +910,12 @@
       "accounts": [
         {
           "name": "treeAuthority",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
           "name": "payer",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true
         },
         {
@@ -1551,12 +1551,12 @@
       "accounts": [
         {
           "name": "treeAuthority",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
           "name": "payer",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true
         },
         {
@@ -1741,12 +1741,12 @@
       "accounts": [
         {
           "name": "treeAuthority",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
           "name": "payer",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true
         },
         {
@@ -1896,12 +1896,12 @@
       "accounts": [
         {
           "name": "treeAuthority",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
           "name": "payer",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true
         },
         {
@@ -2013,12 +2013,12 @@
       "accounts": [
         {
           "name": "treeAuthority",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
           "name": "payer",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true
         },
         {
@@ -2221,7 +2221,7 @@
         },
         {
           "name": "payer",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true
         },
         {
@@ -2579,12 +2579,12 @@
       "accounts": [
         {
           "name": "treeAuthority",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
           "name": "payer",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true
         },
         {
@@ -2682,12 +2682,12 @@
       "accounts": [
         {
           "name": "treeAuthority",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
           "name": "payer",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true
         },
         {
@@ -2932,16 +2932,13 @@
       "accounts": [
         {
           "name": "treeAuthority",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
           "name": "payer",
-          "isMut": false,
-          "isSigner": true,
-          "docs": [
-            "Optional payer, defaults to `authority`"
-          ]
+          "isMut": true,
+          "isSigner": true
         },
         {
           "name": "authority",
@@ -3287,12 +3284,12 @@
       "accounts": [
         {
           "name": "treeAuthority",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
           "name": "payer",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true
         },
         {

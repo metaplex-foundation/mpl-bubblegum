@@ -36,7 +36,6 @@ test('it can mint a compressed NFT with a separate payer', async (t) => {
   // Given a tree with a minted NFT owned by leafOwnerA.
   const umi = await createUmi();
   const merkleTree = await createTreeV2(umi);
-  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const leafOwnerA = generateSigner(umi);
   const payer = generateSigner(umi);
   await umi.rpc.airdrop(payer.publicKey, sol(1));
@@ -54,7 +53,7 @@ test('it can mint a compressed NFT with a separate payer', async (t) => {
     leafIndex,
     metadata,
   });
-  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  const merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(leaf));
 });
 

@@ -35,7 +35,7 @@ import {
 } from '../src';
 import { createTreeV2, createUmi, mintV2 } from './_setup';
 
-test('it can update the metadata of a minted compressed NFT using V2 instructions', async (t) => {
+test('tree owner can update the metadata of a minted compressed NFT using V2 instructions', async (t) => {
   // Given an empty Bubblegum tree.
   const umi = await createUmi();
   const merkleTree = await createTreeV2(umi);
@@ -106,6 +106,61 @@ test('it can update the metadata of a minted compressed NFT using V2 instruction
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(updatedLeaf));
 });
 
+test('asset owner cannot update the metadata of a minted compressed NFT using V2 instructions', async (t) => {
+  // Given an empty Bubblegum tree.
+  const umi = await createUmi();
+  const merkleTree = await createTreeV2(umi);
+  const leafOwner = generateSigner(umi);
+
+  // When we mint a new NFT from the tree using the following metadata.
+  const metadata: MetadataArgsV2Args = {
+    name: 'My NFT',
+    uri: 'https://example.com/my-nft.json',
+    sellerFeeBasisPoints: 500, // 5%
+    collection: none(),
+    creators: [],
+  };
+  await baseMintV2(umi, {
+    leafOwner: leafOwner.publicKey,
+    merkleTree,
+    metadata,
+  }).sendAndConfirm(umi);
+
+  // Then the hash of the metadata matches the new leaf.
+  const leaf = hashLeafV2(umi, {
+    merkleTree,
+    owner: leafOwner.publicKey,
+    leafIndex: 0,
+    metadata,
+  });
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(leaf));
+
+  // And when metadata is updated.
+  const updateArgs: UpdateArgsArgs = {
+    name: some('New name'),
+    uri: some('https://updated-example.com/my-nft.json'),
+  };
+  const promise = updateMetadataV2(umi, {
+    authority: leafOwner,
+    leafOwner: leafOwner.publicKey,
+    merkleTree,
+    root: getCurrentRoot(merkleTreeAccount.tree),
+    nonce: 0,
+    index: 0,
+    currentMetadata: metadata,
+    proof: [],
+    updateArgs,
+  }).sendAndConfirm(umi);
+
+  // We expect a failure.
+  await t.throwsAsync(promise, { name: 'TreeAuthorityIncorrect' });
+
+  // Then the leaf was not updated in the merkle tree.
+  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(leaf));
+});
+
 test('it can update metadata using the getAssetWithProof helper using V2 instructions', async (t) => {
   // Given we increase the timeout for this test.
   t.timeout(20000);
@@ -133,7 +188,6 @@ test('it can update metadata using the getAssetWithProof helper using V2 instruc
   });
 
   // And given we mock the RPC client to return the following asset and proof.
-  const merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const [assetId] = findLeafAssetIdPda(umi, { merkleTree, leafIndex });
   const rpcAsset = {
     ownership: { owner: leafOwner },
@@ -146,6 +200,8 @@ test('it can update metadata using the getAssetWithProof helper using V2 instruc
       flags: LeafSchemaV2Flags.None,
     },
   } as DasApiAsset;
+
+  const merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const rpcAssetProof = {
     proof: getMerkleProof([...preMints.map((m) => m.leaf), leaf], 5, leaf),
     root: publicKey(getCurrentRoot(merkleTreeAccount.tree)),
@@ -190,7 +246,6 @@ test('it can update metadata using collection update authority if NFT is in a co
   const umi = await createUmi();
   const merkleTree = await createTreeV2(umi);
   const leafOwner = generateSigner(umi).publicKey;
-  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
 
   // And a Collection NFT.
   const coreCollection = generateSigner(umi);
@@ -223,13 +278,13 @@ test('it can update metadata using collection update authority if NFT is in a co
     metadata,
   }).sendAndConfirm(umi);
 
-  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
-
   // And when metadata is updated.
   const updateArgs: UpdateArgsArgs = {
     name: some('New name'),
     uri: some('https://updated-example.com/my-nft.json'),
   };
+
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   await updateMetadataV2(umi, {
     authority: collectionUpdateAuthority,
     leafOwner,
@@ -263,7 +318,6 @@ test('it can update metadata using collection update delegate when NFT is in a c
   const umi = await createUmi();
   const merkleTree = await createTreeV2(umi);
   const leafOwner = generateSigner(umi).publicKey;
-  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
 
   // And a Collection NFT with update delegate.
   const coreCollection = generateSigner(umi);
@@ -305,13 +359,13 @@ test('it can update metadata using collection update delegate when NFT is in a c
     metadata,
   }).sendAndConfirm(umi);
 
-  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
-
   // And when metadata is updated by the collection's update delegate.
   const updateArgs: UpdateArgsArgs = {
     name: some('New name'),
     uri: some('https://updated-example.com/my-nft.json'),
   };
+
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   await updateMetadataV2(umi, {
     authority: updateDelegate,
     leafOwner,
@@ -345,7 +399,6 @@ test('it can update metadata using collection update delegate additional delegat
   const umi = await createUmi();
   const merkleTree = await createTreeV2(umi);
   const leafOwner = generateSigner(umi).publicKey;
-  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
 
   // And a Collection NFT with update delegate.
   const coreCollection = generateSigner(umi);
@@ -386,13 +439,13 @@ test('it can update metadata using collection update delegate additional delegat
     metadata,
   }).sendAndConfirm(umi);
 
-  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
-
   // And when metadata is updated by the collection's update delegate.
   const updateArgs: UpdateArgsArgs = {
     name: some('New name'),
     uri: some('https://updated-example.com/my-nft.json'),
   };
+
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   await updateMetadataV2(umi, {
     authority: updateDelegate,
     leafOwner,
@@ -482,7 +535,6 @@ test('it can update metadata using the getAssetWithProof helper with collection'
   );
 
   // And given we mock the RPC client to return the following asset and proof.
-  const merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const [assetId] = findLeafAssetIdPda(umi, { merkleTree, leafIndex });
   const rpcAsset = {
     ownership: { owner: leafOwner },
@@ -495,6 +547,8 @@ test('it can update metadata using the getAssetWithProof helper with collection'
       flags: LeafSchemaV2Flags.None,
     },
   } as DasApiAsset;
+
+  const merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const rpcAssetProof = {
     proof: getMerkleProof([...preMints.map((m) => m.leaf), leaf], 5, leaf),
     root: publicKey(getCurrentRoot(merkleTreeAccount.tree)),
@@ -544,7 +598,6 @@ test('it cannot update metadata using tree owner when NFT is in collection', asy
   const treeCreator = await generateSignerWithSol(umi);
   const merkleTree = await createTreeV2(umi, { treeCreator });
   const leafOwner = generateSigner(umi).publicKey;
-  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
 
   // And a Collection NFT.
   const coreCollection = generateSigner(umi);
@@ -578,13 +631,13 @@ test('it cannot update metadata using tree owner when NFT is in collection', asy
     metadata,
   }).sendAndConfirm(umi);
 
-  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
-
   // Then we attempt to update metadata using the tree owner.
   const updateArgs: UpdateArgsArgs = {
     name: some('New name'),
     uri: some('https://updated-example.com/my-nft.json'),
   };
+
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const promise = updateMetadataV2(umi, {
     authority: treeCreator,
     leafOwner,
@@ -617,7 +670,6 @@ test('it cannot update immutable metadata using V2 instructions', async (t) => {
   const umi = await createUmi();
   const merkleTree = await createTreeV2(umi);
   const leafOwner = generateSigner(umi).publicKey;
-  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
 
   // When we mint a new NFT from the tree.
   const { metadata, leafIndex } = await mintV2(umi, {
@@ -625,9 +677,8 @@ test('it cannot update immutable metadata using V2 instructions', async (t) => {
     merkleTree,
   });
 
-  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
-
   // And we set the NFT to immutable.
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   await updateMetadataV2(umi, {
     leafOwner,
     merkleTree,
@@ -682,7 +733,6 @@ test('it cannot verify currently unverified creator if not signer using V2 instr
   const creatorA = generateSigner(umi);
   const creatorB = generateSigner(umi);
   const merkleTree = await createTreeV2(umi);
-  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const leafOwner = generateSigner(umi).publicKey;
   const { metadata, leafIndex } = await mintV2(umi, {
     merkleTree,
@@ -695,8 +745,7 @@ test('it cannot verify currently unverified creator if not signer using V2 instr
     },
   });
 
-  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
-
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   await verifyCreatorV2(umi, {
     creator: creatorA,
     leafOwner,
@@ -709,7 +758,6 @@ test('it cannot verify currently unverified creator if not signer using V2 instr
   }).sendAndConfirm(umi);
 
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
-
   const promise = updateMetadataV2(umi, {
     leafOwner,
     merkleTree,
@@ -742,7 +790,6 @@ test('it can verify currently unverified creator if signer using V2 instructions
   const creatorA = umi.identity;
   const creatorB = generateSigner(umi);
   const merkleTree = await createTreeV2(umi);
-  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const leafOwner = generateSigner(umi).publicKey;
   const { metadata, leafIndex } = await mintV2(umi, {
     merkleTree,
@@ -755,8 +802,6 @@ test('it can verify currently unverified creator if signer using V2 instructions
     },
   });
 
-  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
-
   const updateArgs = {
     name: 'New name',
     creators: [
@@ -765,6 +810,7 @@ test('it can verify currently unverified creator if signer using V2 instructions
     ],
   };
 
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   await updateMetadataV2(umi, {
     leafOwner,
     merkleTree,
@@ -795,7 +841,6 @@ test('it cannot unverify currently verified creator if not signer using V2 instr
   const creatorA = generateSigner(umi);
   const creatorB = generateSigner(umi);
   const merkleTree = await createTreeV2(umi);
-  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const leafOwner = generateSigner(umi).publicKey;
   const { metadata, leafIndex } = await mintV2(umi, {
     merkleTree,
@@ -808,8 +853,7 @@ test('it cannot unverify currently verified creator if not signer using V2 instr
     },
   });
 
-  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
-
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   await verifyCreatorV2(umi, {
     creator: creatorA,
     leafOwner,
@@ -830,7 +874,6 @@ test('it cannot unverify currently verified creator if not signer using V2 instr
   };
 
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
-
   const promise = updateMetadataV2(umi, {
     leafOwner,
     merkleTree,
@@ -856,7 +899,6 @@ test('it can unverify currently verified creator if signer using V2 instructions
   const creatorA = umi.identity;
   const creatorB = generateSigner(umi);
   const merkleTree = await createTreeV2(umi);
-  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const leafOwner = generateSigner(umi).publicKey;
   const { metadata, leafIndex } = await mintV2(umi, {
     merkleTree,
@@ -869,8 +911,6 @@ test('it can unverify currently verified creator if signer using V2 instructions
     },
   });
 
-  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
-
   const updateArgs = {
     name: 'New name',
     creators: [
@@ -879,6 +919,7 @@ test('it can unverify currently verified creator if signer using V2 instructions
     ],
   };
 
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   await updateMetadataV2(umi, {
     leafOwner,
     merkleTree,
@@ -909,7 +950,6 @@ test('it can remove currently verified creator using empty creator array if sign
   const creatorA = umi.identity;
   const creatorB = generateSigner(umi);
   const merkleTree = await createTreeV2(umi);
-  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const leafOwner = generateSigner(umi).publicKey;
   const { metadata, leafIndex } = await mintV2(umi, {
     merkleTree,
@@ -922,13 +962,12 @@ test('it can remove currently verified creator using empty creator array if sign
     },
   });
 
-  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
-
   const updateArgs = {
     name: 'New name',
     creators: [],
   };
 
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   await updateMetadataV2(umi, {
     leafOwner,
     merkleTree,
@@ -959,7 +998,6 @@ test('it cannot unverify currently verified creator using empty creator array if
   const creatorA = generateSigner(umi);
   const creatorB = generateSigner(umi);
   const merkleTree = await createTreeV2(umi);
-  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const leafOwner = generateSigner(umi).publicKey;
   const { metadata, leafIndex } = await mintV2(umi, {
     merkleTree,
@@ -972,8 +1010,7 @@ test('it cannot unverify currently verified creator using empty creator array if
     },
   });
 
-  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
-
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   await verifyCreatorV2(umi, {
     creator: creatorA,
     leafOwner,
@@ -985,13 +1022,12 @@ test('it cannot unverify currently verified creator using empty creator array if
     proof: [],
   }).sendAndConfirm(umi);
 
-  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
-
   const updateArgs = {
     name: 'New name',
     creators: [],
   };
 
+  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const promise = updateMetadataV2(umi, {
     leafOwner,
     merkleTree,

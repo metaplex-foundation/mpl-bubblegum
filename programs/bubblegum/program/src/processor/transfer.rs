@@ -114,6 +114,7 @@ pub struct TransferV2<'info> {
         bump,
     )]
     pub tree_authority: Account<'info, TreeConfig>,
+    #[account(mut)]
     pub payer: Signer<'info>,
     /// Optional authority, defaults to `payer`.  Must be either
     /// the leaf owner or collection permanent transfer delegate.

@@ -16,10 +16,12 @@ use crate::{
 #[derive(Accounts)]
 pub struct ThawAndRevokeV2<'info> {
     #[account(
+        mut,
         seeds = [merkle_tree.key().as_ref()],
         bump,
     )]
     pub tree_authority: Account<'info, TreeConfig>,
+    #[account(mut)]
     pub payer: Signer<'info>,
     /// Optional leaf delegate, defaults to `payer`
     pub leaf_delegate: Option<Signer<'info>>,

@@ -16,7 +16,6 @@ test('it cannot update asset data using V2 instructions', async (t) => {
   // Given a tree with a minted NFT.
   const umi = await createUmi();
   const merkleTree = await createTreeV2(umi);
-  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const leafOwner = generateSigner(umi);
   const { metadata, leafIndex } = await mintV2(umi, {
     merkleTree,
@@ -24,6 +23,7 @@ test('it cannot update asset data using V2 instructions', async (t) => {
   });
 
   // When the authority of the NFT attempts to update the asset data.
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const promise = updateAssetDataV2(umi, {
     leafOwner: leafOwner.publicKey,
     merkleTree,
