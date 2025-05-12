@@ -90,16 +90,22 @@
       "accounts": [
         {
           "name": "treeAuthority",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
         },
         {
           "name": "authority",
           "isMut": false,
           "isSigner": true,
+          "isOptional": true,
           "docs": [
-            "Authority must be either the leaf owner or collection",
-            "permanent burn delegate."
+            "Optional authority, defaults to `payer`.  Must be either",
+            "the leaf owner or collection collection permanent burn delegate."
           ]
         },
         {

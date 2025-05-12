@@ -11,9 +11,11 @@ use borsh::BorshSerialize;
 /// Accounts.
 pub struct BurnV2 {
     pub tree_config: solana_program::pubkey::Pubkey,
-    /// Authority must be either the leaf owner or collection
-    /// permanent burn delegate.
-    pub authority: solana_program::pubkey::Pubkey,
+
+    pub payer: solana_program::pubkey::Pubkey,
+    /// Optional authority, defaults to `payer`.  Must be either
+    /// the leaf owner or collection collection permanent burn delegate.
+    pub authority: Option<solana_program::pubkey::Pubkey>,
 
     pub leaf_owner: solana_program::pubkey::Pubkey,
     /// Defaults to `leaf_owner`
@@ -47,15 +49,24 @@ impl BurnV2 {
         args: BurnV2InstructionArgs,
         remaining_accounts: &[solana_program::instruction::AccountMeta],
     ) -> solana_program::instruction::Instruction {
-        let mut accounts = Vec::with_capacity(11 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        let mut accounts = Vec::with_capacity(12 + remaining_accounts.len());
+        accounts.push(solana_program::instruction::AccountMeta::new(
             self.tree_config,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            self.authority,
-            true,
+        accounts.push(solana_program::instruction::AccountMeta::new(
+            self.payer, true,
         ));
+        if let Some(authority) = self.authority {
+            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+                authority, true,
+            ));
+        } else {
+            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+                crate::MPL_BUBBLEGUM_ID,
+                false,
+            ));
+        }
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.leaf_owner,
             false,
@@ -155,6 +166,7 @@ pub struct BurnV2InstructionArgs {
 #[derive(Default)]
 pub struct BurnV2Builder {
     tree_config: Option<solana_program::pubkey::Pubkey>,
+    payer: Option<solana_program::pubkey::Pubkey>,
     authority: Option<solana_program::pubkey::Pubkey>,
     leaf_owner: Option<solana_program::pubkey::Pubkey>,
     leaf_delegate: Option<solana_program::pubkey::Pubkey>,
@@ -184,11 +196,17 @@ impl BurnV2Builder {
         self.tree_config = Some(tree_config);
         self
     }
-    /// Authority must be either the leaf owner or collection
-    /// permanent burn delegate.
     #[inline(always)]
-    pub fn authority(&mut self, authority: solana_program::pubkey::Pubkey) -> &mut Self {
-        self.authority = Some(authority);
+    pub fn payer(&mut self, payer: solana_program::pubkey::Pubkey) -> &mut Self {
+        self.payer = Some(payer);
+        self
+    }
+    /// `[optional account]`
+    /// Optional authority, defaults to `payer`.  Must be either
+    /// the leaf owner or collection collection permanent burn delegate.
+    #[inline(always)]
+    pub fn authority(&mut self, authority: Option<solana_program::pubkey::Pubkey>) -> &mut Self {
+        self.authority = authority;
         self
     }
     #[inline(always)]
@@ -318,7 +336,8 @@ impl BurnV2Builder {
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         let accounts = BurnV2 {
             tree_config: self.tree_config.expect("tree_config is not set"),
-            authority: self.authority.expect("authority is not set"),
+            payer: self.payer.expect("payer is not set"),
+            authority: self.authority,
             leaf_owner: self.leaf_owner.expect("leaf_owner is not set"),
             leaf_delegate: self.leaf_delegate,
             merkle_tree: self.merkle_tree.expect("merkle_tree is not set"),
@@ -354,9 +373,11 @@ impl BurnV2Builder {
 /// `burn_v2` CPI accounts.
 pub struct BurnV2CpiAccounts<'a, 'b> {
     pub tree_config: &'b solana_program::account_info::AccountInfo<'a>,
-    /// Authority must be either the leaf owner or collection
-    /// permanent burn delegate.
-    pub authority: &'b solana_program::account_info::AccountInfo<'a>,
+
+    pub payer: &'b solana_program::account_info::AccountInfo<'a>,
+    /// Optional authority, defaults to `payer`.  Must be either
+    /// the leaf owner or collection collection permanent burn delegate.
+    pub authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
 
     pub leaf_owner: &'b solana_program::account_info::AccountInfo<'a>,
     /// Defaults to `leaf_owner`
@@ -383,9 +404,11 @@ pub struct BurnV2Cpi<'a, 'b> {
     pub __program: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub tree_config: &'b solana_program::account_info::AccountInfo<'a>,
-    /// Authority must be either the leaf owner or collection
-    /// permanent burn delegate.
-    pub authority: &'b solana_program::account_info::AccountInfo<'a>,
+
+    pub payer: &'b solana_program::account_info::AccountInfo<'a>,
+    /// Optional authority, defaults to `payer`.  Must be either
+    /// the leaf owner or collection collection permanent burn delegate.
+    pub authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
 
     pub leaf_owner: &'b solana_program::account_info::AccountInfo<'a>,
     /// Defaults to `leaf_owner`
@@ -417,6 +440,7 @@ impl<'a, 'b> BurnV2Cpi<'a, 'b> {
         Self {
             __program: program,
             tree_config: accounts.tree_config,
+            payer: accounts.payer,
             authority: accounts.authority,
             leaf_owner: accounts.leaf_owner,
             leaf_delegate: accounts.leaf_delegate,
@@ -463,15 +487,26 @@ impl<'a, 'b> BurnV2Cpi<'a, 'b> {
             bool,
         )],
     ) -> solana_program::entrypoint::ProgramResult {
-        let mut accounts = Vec::with_capacity(11 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        let mut accounts = Vec::with_capacity(12 + remaining_accounts.len());
+        accounts.push(solana_program::instruction::AccountMeta::new(
             *self.tree_config.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            *self.authority.key,
+        accounts.push(solana_program::instruction::AccountMeta::new(
+            *self.payer.key,
             true,
         ));
+        if let Some(authority) = self.authority {
+            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+                *authority.key,
+                true,
+            ));
+        } else {
+            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+                crate::MPL_BUBBLEGUM_ID,
+                false,
+            ));
+        }
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             *self.leaf_owner.key,
             false,
@@ -545,10 +580,13 @@ impl<'a, 'b> BurnV2Cpi<'a, 'b> {
             accounts,
             data,
         };
-        let mut account_infos = Vec::with_capacity(11 + 1 + remaining_accounts.len());
+        let mut account_infos = Vec::with_capacity(12 + 1 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
         account_infos.push(self.tree_config.clone());
-        account_infos.push(self.authority.clone());
+        account_infos.push(self.payer.clone());
+        if let Some(authority) = self.authority {
+            account_infos.push(authority.clone());
+        }
         account_infos.push(self.leaf_owner.clone());
         if let Some(leaf_delegate) = self.leaf_delegate {
             account_infos.push(leaf_delegate.clone());
@@ -586,6 +624,7 @@ impl<'a, 'b> BurnV2CpiBuilder<'a, 'b> {
         let instruction = Box::new(BurnV2CpiBuilderInstruction {
             __program: program,
             tree_config: None,
+            payer: None,
             authority: None,
             leaf_owner: None,
             leaf_delegate: None,
@@ -615,14 +654,20 @@ impl<'a, 'b> BurnV2CpiBuilder<'a, 'b> {
         self.instruction.tree_config = Some(tree_config);
         self
     }
-    /// Authority must be either the leaf owner or collection
-    /// permanent burn delegate.
+    #[inline(always)]
+    pub fn payer(&mut self, payer: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+        self.instruction.payer = Some(payer);
+        self
+    }
+    /// `[optional account]`
+    /// Optional authority, defaults to `payer`.  Must be either
+    /// the leaf owner or collection collection permanent burn delegate.
     #[inline(always)]
     pub fn authority(
         &mut self,
-        authority: &'b solana_program::account_info::AccountInfo<'a>,
+        authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     ) -> &mut Self {
-        self.instruction.authority = Some(authority);
+        self.instruction.authority = authority;
         self
     }
     #[inline(always)]
@@ -804,7 +849,9 @@ impl<'a, 'b> BurnV2CpiBuilder<'a, 'b> {
                 .tree_config
                 .expect("tree_config is not set"),
 
-            authority: self.instruction.authority.expect("authority is not set"),
+            payer: self.instruction.payer.expect("payer is not set"),
+
+            authority: self.instruction.authority,
 
             leaf_owner: self.instruction.leaf_owner.expect("leaf_owner is not set"),
 
@@ -850,6 +897,7 @@ impl<'a, 'b> BurnV2CpiBuilder<'a, 'b> {
 struct BurnV2CpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_program::account_info::AccountInfo<'a>,
     tree_config: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    payer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     leaf_owner: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     leaf_delegate: Option<&'b solana_program::account_info::AccountInfo<'a>>,

@@ -41,9 +41,10 @@ import {
 // Accounts.
 export type BurnV2InstructionAccounts = {
   treeConfig?: PublicKey | Pda;
+  payer?: Signer;
   /**
-   * Authority must be either the leaf owner or collection
-   * permanent burn delegate.
+   * Optional authority, defaults to `payer`.  Must be either
+   * the leaf owner or collection collection permanent burn delegate.
    */
 
   authority?: Signer;
@@ -117,7 +118,7 @@ export type BurnV2InstructionArgs = PickPartial<
 
 // Instruction.
 export function burnV2(
-  context: Pick<Context, 'eddsa' | 'identity' | 'programs'>,
+  context: Pick<Context, 'eddsa' | 'payer' | 'programs'>,
   input: BurnV2InstructionAccounts & BurnV2InstructionArgs
 ): TransactionBuilder {
   // Program ID.
@@ -128,46 +129,43 @@ export function burnV2(
 
   // Accounts.
   const resolvedAccounts: ResolvedAccountsWithIndices = {
-    treeConfig: {
-      index: 0,
-      isWritable: false,
-      value: input.treeConfig ?? null,
-    },
-    authority: { index: 1, isWritable: false, value: input.authority ?? null },
-    leafOwner: { index: 2, isWritable: false, value: input.leafOwner ?? null },
+    treeConfig: { index: 0, isWritable: true, value: input.treeConfig ?? null },
+    payer: { index: 1, isWritable: true, value: input.payer ?? null },
+    authority: { index: 2, isWritable: false, value: input.authority ?? null },
+    leafOwner: { index: 3, isWritable: false, value: input.leafOwner ?? null },
     leafDelegate: {
-      index: 3,
+      index: 4,
       isWritable: false,
       value: input.leafDelegate ?? null,
     },
-    merkleTree: { index: 4, isWritable: true, value: input.merkleTree ?? null },
+    merkleTree: { index: 5, isWritable: true, value: input.merkleTree ?? null },
     coreCollection: {
-      index: 5,
+      index: 6,
       isWritable: true,
       value: input.coreCollection ?? null,
     },
     mplCoreCpiSigner: {
-      index: 6,
+      index: 7,
       isWritable: false,
       value: input.mplCoreCpiSigner ?? null,
     },
     logWrapper: {
-      index: 7,
+      index: 8,
       isWritable: false,
       value: input.logWrapper ?? null,
     },
     compressionProgram: {
-      index: 8,
+      index: 9,
       isWritable: false,
       value: input.compressionProgram ?? null,
     },
     mplCoreProgram: {
-      index: 9,
+      index: 10,
       isWritable: false,
       value: input.mplCoreProgram ?? null,
     },
     systemProgram: {
-      index: 10,
+      index: 11,
       isWritable: false,
       value: input.systemProgram ?? null,
     },
@@ -182,8 +180,8 @@ export function burnV2(
       merkleTree: expectPublicKey(resolvedAccounts.merkleTree.value),
     });
   }
-  if (!resolvedAccounts.authority.value) {
-    resolvedAccounts.authority.value = context.identity;
+  if (!resolvedAccounts.payer.value) {
+    resolvedAccounts.payer.value = context.payer;
   }
   if (!resolvedAccounts.mplCoreCpiSigner.value) {
     if (resolvedAccounts.coreCollection.value) {
