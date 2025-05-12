@@ -4,6 +4,7 @@ import {
   publicKey,
   defaultPublicKey,
   sol,
+  publicKeyBytes,
 } from '@metaplex-foundation/umi';
 import { generateSignerWithSol } from '@metaplex-foundation/umi-bundle-tests';
 import test from 'ava';
@@ -108,6 +109,47 @@ test('owner can transfer a compressed NFT with a separate payer', async (t) => {
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(updatedLeaf));
+});
+
+test('owner cannot transfer a compressed NFT using invalid data hash with V2 instructions', async (t) => {
+  // Given a tree with a minted NFT owned by leafOwnerA.
+  const umi = await createUmi();
+  const merkleTree = await createTreeV2(umi);
+  const leafOwnerA = generateSigner(umi);
+  const { metadata, leafIndex } = await mintV2(umi, {
+    merkleTree,
+    leafOwner: leafOwnerA.publicKey,
+  });
+
+  // When leafOwnerA tries to transfer the NFT using an invalid data hash.
+  const leafOwnerB = generateSigner(umi);
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  const invalidDataHash = publicKeyBytes(defaultPublicKey());
+  const promise = transferV2(umi, {
+    authority: leafOwnerA,
+    leafOwner: leafOwnerA.publicKey,
+    newLeafOwner: leafOwnerB.publicKey,
+    merkleTree,
+    root: getCurrentRoot(merkleTreeAccount.tree),
+    dataHash: invalidDataHash,
+    creatorHash: hashMetadataCreators(metadata.creators),
+    nonce: leafIndex,
+    index: leafIndex,
+    proof: [],
+  }).sendAndConfirm(umi);
+
+  // We expect a failure.
+  await t.throwsAsync(promise, { name: 'PublicKeyMismatch' });
+
+  // And the leaf was not updated in the merkle tree.
+  const notUpdatedLeaf = hashLeafV2(umi, {
+    merkleTree,
+    owner: leafOwnerA.publicKey,
+    leafIndex,
+    metadata,
+  });
+  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(notUpdatedLeaf));
 });
 
 test('update authority cannot transfer a compressed NFT using V2 instructions', async (t) => {
