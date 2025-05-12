@@ -108,6 +108,7 @@ pub struct MintV2<'info> {
         bump,
     )]
     pub tree_authority: Account<'info, TreeConfig>,
+    #[account(mut)]
     pub payer: Signer<'info>,
     /// Optional tree delegate, defaults to `payer`
     pub tree_delegate: Option<Signer<'info>>,
