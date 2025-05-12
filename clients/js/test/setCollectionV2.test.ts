@@ -71,8 +71,6 @@ test('it can mint an NFT to a collection and then remove it from collection usin
   });
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(leaf));
 
-  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
-
   // When collection update authority removes it from the collection.
   await setCollectionV2(umi, {
     authority: collectionUpdateAuthority,
@@ -150,8 +148,6 @@ test('it can mint an NFT not in a collection then add it to collection using V2 
       },
     ],
   }).sendAndConfirm(umi);
-
-  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
 
   // Then add the leaf to the collection.
   await setCollectionV2(umi, {
@@ -247,8 +243,6 @@ test('it can mint an NFT to a collection and move it to a new collection using V
       },
     ],
   }).sendAndConfirm(umi);
-
-  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
 
   // Then add the leaf to the collection.
   await setCollectionV2(umi, {

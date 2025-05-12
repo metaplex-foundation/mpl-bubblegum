@@ -13,7 +13,6 @@ test('it can verify the creator of a minted compressed NFT using V2 instructions
   const creatorA = generateSigner(umi);
   const creatorB = generateSigner(umi);
   const merkleTree = await createTreeV2(umi);
-  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const leafOwner = generateSigner(umi).publicKey;
   const { metadata, leafIndex } = await mintV2(umi, {
     merkleTree,
@@ -27,6 +26,7 @@ test('it can verify the creator of a minted compressed NFT using V2 instructions
   });
 
   // When creator A verifies themselves.
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   await verifyCreatorV2(umi, {
     creator: creatorA,
     leafOwner,

@@ -18,7 +18,6 @@ test('owner can delegate and freeze a compressed NFT with V2 instructions', asyn
   // Given a tree with a minted NFT.
   const umi = await createUmi();
   const merkleTree = await createTreeV2(umi);
-  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const leafOwner = generateSigner(umi);
   const { metadata, leafIndex } = await mintV2(umi, {
     merkleTree,
@@ -27,6 +26,7 @@ test('owner can delegate and freeze a compressed NFT with V2 instructions', asyn
 
   // When the owner of the NFT delegates it to another account and freezes it.
   const newDelegate = generateSigner(umi);
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   await delegateAndFreezeV2(umi, {
     leafOwner,
     newLeafDelegate: newDelegate.publicKey,
@@ -56,7 +56,6 @@ test('owner cannot thaw a compressed NFT that was frozen using delegateAndFreeze
   // Given a tree with a minted NFT.
   const umi = await createUmi();
   const merkleTree = await createTreeV2(umi);
-  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const leafOwner = generateSigner(umi);
   const { metadata, leafIndex } = await mintV2(umi, {
     merkleTree,
@@ -65,6 +64,7 @@ test('owner cannot thaw a compressed NFT that was frozen using delegateAndFreeze
 
   // When the owner of the NFT delegates it to another account and freezes it.
   const newDelegate = generateSigner(umi);
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   await delegateAndFreezeV2(umi, {
     leafOwner,
     newLeafDelegate: newDelegate.publicKey,

@@ -34,7 +34,6 @@ test('delegate can thaw a compressed NFT using V2 instructions', async (t) => {
   // Given a tree with a minted NFT.
   const umi = await createUmi();
   const merkleTree = await createTreeV2(umi);
-  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const leafOwner = generateSigner(umi);
   const { metadata, leafIndex } = await mintV2(umi, {
     merkleTree,
@@ -43,6 +42,7 @@ test('delegate can thaw a compressed NFT using V2 instructions', async (t) => {
 
   // When the owner of the NFT delegates it to another account.
   const newDelegate = generateSigner(umi);
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   await delegateV2(umi, {
     leafOwner,
     newLeafDelegate: newDelegate.publicKey,
@@ -124,7 +124,6 @@ test('owner cannot thaw a compressed NFT using V2 instructions', async (t) => {
   // Given a tree with a minted NFT.
   const umi = await createUmi();
   const merkleTree = await createTreeV2(umi);
-  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const leafOwner = generateSigner(umi);
   const { metadata, leafIndex } = await mintV2(umi, {
     merkleTree,
@@ -133,6 +132,7 @@ test('owner cannot thaw a compressed NFT using V2 instructions', async (t) => {
 
   // When the owner of the NFT delegates it to another account.
   const newDelegate = generateSigner(umi);
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   await delegateV2(umi, {
     leafOwner,
     newLeafDelegate: newDelegate.publicKey,
@@ -208,7 +208,6 @@ test('owner as default leaf delegate can thaw a compressed NFT it previously fro
   // Given a tree with a minted NFT.
   const umi = await createUmi();
   const merkleTree = await createTreeV2(umi);
-  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const leafOwner = generateSigner(umi);
   const { metadata, leafIndex } = await mintV2(umi, {
     merkleTree,
@@ -216,6 +215,7 @@ test('owner as default leaf delegate can thaw a compressed NFT it previously fro
   });
 
   // When the owner of the NFT freezes it.
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   await freezeV2(umi, {
     authority: leafOwner,
     leafOwner: leafOwner.publicKey,
@@ -296,7 +296,6 @@ test('can thaw a compressed NFT using the getAssetWithProof helper using V2 inst
   });
 
   // And given we mock the RPC client to return the following asset and proof.
-  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const [assetId] = findLeafAssetIdPda(umi, { merkleTree, leafIndex });
   const rpcAsset = {
     ownership: {
@@ -313,6 +312,8 @@ test('can thaw a compressed NFT using the getAssetWithProof helper using V2 inst
       flags: LeafSchemaV2Flags.None,
     },
   } as DasApiAsset;
+
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const rpcAssetProof = {
     proof: getMerkleProof([...preMints.map((m) => m.leaf), leaf], 5, leaf),
     root: publicKey(getCurrentRoot(merkleTreeAccount.tree)),
@@ -359,6 +360,7 @@ test('can thaw a compressed NFT using the getAssetWithProof helper using V2 inst
   // When we get an updated value from the helper.
   rpcAsset.compression.flags = 1;
   rpcAsset.ownership.frozen = true;
+  rpcAssetProof.root = publicKey(getCurrentRoot(merkleTreeAccount.tree));
   assetWithProof = await getAssetWithProof(umi, assetId);
 
   // Check using the `canTransfer` helper.

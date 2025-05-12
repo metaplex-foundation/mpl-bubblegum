@@ -30,7 +30,6 @@ test('it can set and verify the collection of a minted compressed NFT', async (t
   // And a tree with a minted NFT that has no collection.
   const treeCreator = await generateSignerWithSol(umi);
   const merkleTree = await createTree(umi, { treeCreator });
-  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const leafOwner = generateSigner(umi).publicKey;
   const { metadata, leafIndex } = await mint(umi, {
     merkleTree,
@@ -39,6 +38,7 @@ test('it can set and verify the collection of a minted compressed NFT', async (t
   });
 
   // When the collection authority sets and verifies the collection.
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   await setAndVerifyCollection(umi, {
     leafOwner,
     treeCreatorOrDelegate: treeCreator,
@@ -86,7 +86,6 @@ test('it cannot set and verify the collection if the tree creator or delegate do
   // And a tree with a minted NFT that has no collection.
   const treeCreator = await generateSignerWithSol(umi);
   const merkleTree = await createTree(umi, { treeCreator });
-  const merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const leafOwner = generateSigner(umi).publicKey;
   const { metadata, leafIndex } = await mint(umi, {
     merkleTree,
@@ -96,6 +95,7 @@ test('it cannot set and verify the collection if the tree creator or delegate do
 
   // When the collection authority sets and verifies the collection
   // without the tree creator signing.
+  const merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const promise = setAndVerifyCollection(umi, {
     leafOwner,
     treeCreatorOrDelegate: treeCreator.publicKey, // <-- Here, we pass the tree creator as a public key.
@@ -130,13 +130,14 @@ test('it cannot set and verify the collection if there is already a verified col
   // And a tree with a minted NFT that has a verified collection of that first Collection NFT.
   const treeCreator = await generateSignerWithSol(umi);
   const merkleTree = await createTree(umi, { treeCreator });
-  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const leafOwner = generateSigner(umi).publicKey;
   const { metadata, leafIndex } = await mint(umi, {
     merkleTree,
     treeCreatorOrDelegate: treeCreator,
     leafOwner,
   });
+
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   await setAndVerifyCollection(umi, {
     leafOwner,
     treeCreatorOrDelegate: treeCreator,
@@ -169,6 +170,7 @@ test('it cannot set and verify the collection if there is already a verified col
   }).sendAndConfirm(umi);
 
   // When the second collection authority attempts to set and verify the second collection.
+  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const promise = setAndVerifyCollection(umi, {
     leafOwner,
     treeCreatorOrDelegate: treeCreator,

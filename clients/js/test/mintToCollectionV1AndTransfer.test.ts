@@ -73,7 +73,6 @@ test('it can mint an NFT from a collection and then transfer it', async (t) => {
   });
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(leaf));
 
-  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const updatedMetadata = {
     ...metadata,
     collection: some({ key: collectionMint.publicKey, verified: true }),

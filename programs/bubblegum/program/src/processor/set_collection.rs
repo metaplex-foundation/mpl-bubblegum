@@ -20,10 +20,12 @@ use crate::{
 #[derive(Accounts)]
 pub struct SetCollectionV2<'info> {
     #[account(
+        mut,
         seeds = [merkle_tree.key().as_ref()],
         bump,
     )]
     pub tree_authority: Account<'info, TreeConfig>,
+    #[account(mut)]
     pub payer: Signer<'info>,
     /// If item is not in a collection, then authority must be tree owner/delegate.  If item is
     /// getting removed from a collection, then this must be an authority for the existing

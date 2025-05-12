@@ -18,10 +18,12 @@ use crate::{
 #[derive(Accounts)]
 pub struct SetNonTransferableV2<'info> {
     #[account(
+        mut,
         seeds = [merkle_tree.key().as_ref()],
         bump,
     )]
     pub tree_authority: Account<'info, TreeConfig>,
+    #[account(mut)]
     pub payer: Signer<'info>,
     /// This authority must be a permanent freeze delegate on the collection
     /// Defaults to `payer`

@@ -13,7 +13,6 @@ test('it can unverify the creator of a minted compressed NFT', async (t) => {
   const creatorA = generateSigner(umi);
   const creatorB = generateSigner(umi);
   const merkleTree = await createTree(umi);
-  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const leafOwner = generateSigner(umi).publicKey;
   const { metadata, leafIndex } = await mint(umi, {
     merkleTree,
@@ -30,10 +29,10 @@ test('it can unverify the creator of a minted compressed NFT', async (t) => {
   const commonArgs = {
     leafOwner,
     merkleTree,
-    root: getCurrentRoot(merkleTreeAccount.tree),
     nonce: leafIndex,
     index: leafIndex,
   };
+
   const partiallyVerifiedMetadata = {
     ...metadata,
     creators: [
@@ -41,14 +40,18 @@ test('it can unverify the creator of a minted compressed NFT', async (t) => {
       { address: creatorB.publicKey, verified: false, share: 40 },
     ],
   };
+
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   await verifyCreator(umi, {
     ...commonArgs,
+    root: getCurrentRoot(merkleTreeAccount.tree),
     creator: creatorA,
     metadata,
   })
     .add(
       verifyCreator(umi, {
         ...commonArgs,
+        root: getCurrentRoot(merkleTreeAccount.tree),
         creator: creatorB,
         metadata: partiallyVerifiedMetadata,
       })
@@ -63,8 +66,11 @@ test('it can unverify the creator of a minted compressed NFT', async (t) => {
       { address: creatorB.publicKey, verified: true, share: 40 },
     ],
   };
+
+  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   await unverifyCreator(umi, {
     ...commonArgs,
+    root: getCurrentRoot(merkleTreeAccount.tree),
     creator: creatorA,
     metadata: verifiedMetadata,
     proof: [],

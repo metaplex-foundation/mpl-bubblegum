@@ -128,12 +128,8 @@ export function delegateV2(
 
   // Accounts.
   const resolvedAccounts: ResolvedAccountsWithIndices = {
-    treeConfig: {
-      index: 0,
-      isWritable: false,
-      value: input.treeConfig ?? null,
-    },
-    payer: { index: 1, isWritable: false, value: input.payer ?? null },
+    treeConfig: { index: 0, isWritable: true, value: input.treeConfig ?? null },
+    payer: { index: 1, isWritable: true, value: input.payer ?? null },
     leafOwner: { index: 2, isWritable: false, value: input.leafOwner ?? null },
     previousLeafDelegate: {
       index: 3,

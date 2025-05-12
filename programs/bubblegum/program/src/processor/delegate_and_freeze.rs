@@ -18,10 +18,12 @@ use crate::{
 #[derive(Accounts)]
 pub struct DelegateAndFreezeV2<'info> {
     #[account(
+        mut,
         seeds = [merkle_tree.key().as_ref()],
         bump,
     )]
     pub tree_authority: Account<'info, TreeConfig>,
+    #[account(mut)]
     pub payer: Signer<'info>,
     /// Optional leaf owner, defaults to `payer`
     pub leaf_owner: Option<Signer<'info>>,

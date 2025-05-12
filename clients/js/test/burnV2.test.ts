@@ -27,7 +27,6 @@ test('owner can burn a compressed NFT using V2 instructions', async (t) => {
   // Given a tree with a minted NFT.
   const umi = await createUmi();
   const merkleTree = await createTreeV2(umi);
-  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const leafOwner = generateSigner(umi);
   const { metadata, leafIndex } = await mintV2(umi, {
     merkleTree,
@@ -35,6 +34,7 @@ test('owner can burn a compressed NFT using V2 instructions', async (t) => {
   });
 
   // When the owner of the NFT burns it.
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   await burnV2(umi, {
     authority: leafOwner,
     leafOwner: leafOwner.publicKey,
@@ -56,7 +56,6 @@ test('delegated authority can burn a compressed NFT using V2 instructions', asyn
   // Given a tree with a delegated compressed NFT.
   const umi = await createUmi();
   const merkleTree = await createTreeV2(umi);
-  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const leafOwner = generateSigner(umi);
   const delegateAuthority = generateSigner(umi);
   const { metadata, leafIndex } = await mintV2(umi, {
@@ -64,6 +63,7 @@ test('delegated authority can burn a compressed NFT using V2 instructions', asyn
     leafOwner: leafOwner.publicKey,
   });
 
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   await delegateV2(umi, {
     leafOwner,
     newLeafDelegate: delegateAuthority.publicKey,
@@ -77,6 +77,7 @@ test('delegated authority can burn a compressed NFT using V2 instructions', asyn
   }).sendAndConfirm(umi);
 
   // When the delegated authority burns the NFT.
+  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   await burnV2(umi, {
     authority: delegateAuthority,
     leafOwner: leafOwner.publicKey,
@@ -101,6 +102,7 @@ test('item set to non-transferrable can be burnt by owner', async (t) => {
   const merkleTree = await createTreeV2(umi);
   const leafOwner = generateSigner(umi);
   const leafOwnerKey = leafOwner.publicKey;
+
   let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.sequenceNumber, 0n);
 

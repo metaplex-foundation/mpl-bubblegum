@@ -88,10 +88,12 @@ pub(crate) fn verify_creator<'info>(
 #[derive(Accounts)]
 pub struct CreatorVerificationV2<'info> {
     #[account(
+        mut,
         seeds = [merkle_tree.key().as_ref()],
         bump,
     )]
     pub tree_authority: Account<'info, TreeConfig>,
+    #[account(mut)]
     pub payer: Signer<'info>,
     /// Optional creator, defaults to `payer`
     pub creator: Option<Signer<'info>>,

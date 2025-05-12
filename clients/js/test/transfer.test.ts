@@ -26,7 +26,6 @@ test('it can transfer a compressed NFT', async (t) => {
   // Given a tree with a minted NFT owned by leafOwnerA.
   const umi = await createUmi();
   const merkleTree = await createTree(umi);
-  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const leafOwnerA = generateSigner(umi);
   const { metadata, leafIndex } = await mint(umi, {
     merkleTree,
@@ -35,6 +34,7 @@ test('it can transfer a compressed NFT', async (t) => {
 
   // When leafOwnerA transfers the NFT to leafOwnerB.
   const leafOwnerB = generateSigner(umi);
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   await transfer(umi, {
     leafOwner: leafOwnerA,
     newLeafOwner: leafOwnerB.publicKey,
@@ -62,13 +62,14 @@ test('it can transfer a compressed NFT as a delegated authority', async (t) => {
   // Given a tree with a delegated compressed NFT owned by leafOwnerA.
   const umi = await createUmi();
   const merkleTree = await createTree(umi);
-  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const leafOwnerA = generateSigner(umi);
   const delegateAuthority = generateSigner(umi);
   const { metadata, leafIndex } = await mint(umi, {
     merkleTree,
     leafOwner: leafOwnerA.publicKey,
   });
+
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   await delegate(umi, {
     leafOwner: leafOwnerA,
     previousLeafDelegate: leafOwnerA.publicKey,
@@ -83,6 +84,7 @@ test('it can transfer a compressed NFT as a delegated authority', async (t) => {
 
   // When the delegated authority transfers the NFT to leafOwnerB.
   const leafOwnerB = generateSigner(umi);
+  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   await transfer(umi, {
     leafDelegate: delegateAuthority, // <- The delegated authority signs the transaction.
     leafOwner: leafOwnerA.publicKey,
@@ -118,7 +120,6 @@ test('it can transfer a compressed NFT using a proof', async (t) => {
     maxDepth: 5,
     maxBufferSize: 8,
   });
-  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const preMints = [
     await mint(umi, { merkleTree, leafIndex: 0 }),
     await mint(umi, { merkleTree, leafIndex: 1 }),
@@ -143,6 +144,7 @@ test('it can transfer a compressed NFT using a proof', async (t) => {
 
   // When leafOwnerA transfers the NFT to leafOwnerB.
   const leafOwnerB = generateSigner(umi);
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   await transfer(umi, {
     leafOwner: leafOwnerA,
     newLeafOwner: leafOwnerB.publicKey,
@@ -162,11 +164,13 @@ test('it can transfer a compressed NFT using a proof', async (t) => {
     leafIndex,
     metadata,
   });
+
   const updatedProof = getMerkleProof(
     [...preMints.map((m) => m.leaf), publicKey(updatedLeaf)],
     5,
     publicKey(updatedLeaf)
   );
+
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   await verifyLeaf(umi, {
     merkleTree,
@@ -205,7 +209,6 @@ test('it can transfer a compressed NFT using the getAssetWithProof helper', asyn
   });
 
   // And given we mock the RPC client to return the following asset and proof.
-  const merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const [assetId] = findLeafAssetIdPda(umi, { merkleTree, leafIndex });
   const rpcAsset = {
     ownership: { owner: leafOwnerA.publicKey },
@@ -215,6 +218,8 @@ test('it can transfer a compressed NFT using the getAssetWithProof helper', asyn
       creator_hash: publicKey(hashMetadataCreators(metadata.creators)),
     },
   } as DasApiAsset;
+
+  const merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const rpcAssetProof = {
     proof: getMerkleProof([...preMints.map((m) => m.leaf), leaf], 5, leaf),
     root: publicKey(getCurrentRoot(merkleTreeAccount.tree)),

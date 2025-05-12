@@ -19,7 +19,6 @@ test('it can cancel the redemption of a compressed NFT', async (t) => {
   // Given a tree with a minted NFT.
   const umi = await createUmi();
   const merkleTree = await createTree(umi);
-  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const leafOwner = await generateSignerWithSol(umi);
   const { metadata, leafIndex } = await mint(umi, {
     merkleTree,
@@ -27,6 +26,7 @@ test('it can cancel the redemption of a compressed NFT', async (t) => {
   });
 
   // And given that NFT was redeemed.
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   await redeem(umi, {
     leafOwner,
     merkleTree,
@@ -36,8 +36,10 @@ test('it can cancel the redemption of a compressed NFT', async (t) => {
     nonce: leafIndex,
     index: leafIndex,
   }).sendAndConfirm(umi);
+
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, defaultPublicKey());
+
   const [voucher] = findVoucherPda(umi, { merkleTree, nonce: leafIndex });
   t.true(await umi.rpc.accountExists(voucher));
 
