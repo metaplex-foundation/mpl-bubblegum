@@ -82,7 +82,7 @@ export async function parseLeafFromMintV2Transaction(
 
   const programId = context.programs.getPublicKey(
     'mplBubblegum',
-    'BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'
+    MPL_BUBBLEGUM_PROGRAM_ID
   );
 
   const instructionIndex = collection === programId ? 0 : 1;
