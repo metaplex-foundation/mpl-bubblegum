@@ -64,7 +64,6 @@ test('it cannot mint a compressed NFT with asset data using V2 instructions', as
   // Given a tree with a minted NFT owned by leafOwnerA.
   const umi = await createUmi();
   const merkleTree = await createTreeV2(umi);
-  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const leafOwnerA = generateSigner(umi);
 
   const promise = mintV2(umi, {
@@ -77,7 +76,7 @@ test('it cannot mint a compressed NFT with asset data using V2 instructions', as
   await t.throwsAsync(promise, { name: 'NotAvailable' });
 
   // Then the rightmost leaf is still the default `Publickey`.
-  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  const merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.sequenceNumber, 0n);
   t.is(
     merkleTreeAccount.tree.rightMostPath.leaf,
