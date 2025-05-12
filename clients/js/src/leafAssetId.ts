@@ -77,7 +77,7 @@ export async function parseLeafFromMintV2Transaction(
   const collection = transaction.message.accounts[collectionIndex];
 
   if (!collection) {
-    throw new Error('Account at index 7 is missing');
+    throw new Error('Collection account at index 7 is missing');
   }
 
   const programId = context.programs.getPublicKey(
