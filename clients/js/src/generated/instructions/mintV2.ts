@@ -119,7 +119,7 @@ export function mintV2(
   // Accounts.
   const resolvedAccounts: ResolvedAccountsWithIndices = {
     treeConfig: { index: 0, isWritable: true, value: input.treeConfig ?? null },
-    payer: { index: 1, isWritable: false, value: input.payer ?? null },
+    payer: { index: 1, isWritable: true, value: input.payer ?? null },
     treeCreatorOrDelegate: {
       index: 2,
       isWritable: false,

@@ -57,7 +57,7 @@ impl MintV2 {
             self.tree_config,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_program::instruction::AccountMeta::new(
             self.payer, true,
         ));
         if let Some(tree_creator_or_delegate) = self.tree_creator_or_delegate {
@@ -491,7 +491,7 @@ impl<'a, 'b> MintV2Cpi<'a, 'b> {
             *self.tree_config.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_program::instruction::AccountMeta::new(
             *self.payer.key,
             true,
         ));

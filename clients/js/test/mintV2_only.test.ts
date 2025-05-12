@@ -2,6 +2,7 @@ import {
   defaultPublicKey,
   generateSigner,
   publicKey,
+  sol,
 } from '@metaplex-foundation/umi';
 import test from 'ava';
 
@@ -18,6 +19,32 @@ test('it can mint a compressed NFT using V2 instructions', async (t) => {
   const { metadata, leafIndex } = await mintV2(umi, {
     merkleTree,
     leafOwner: leafOwnerA.publicKey,
+  });
+
+  // Then the leaf is in the merkle tree.
+  const leaf = hashLeafV2(umi, {
+    merkleTree,
+    owner: leafOwnerA.publicKey,
+    leafIndex,
+    metadata,
+  });
+  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(leaf));
+});
+
+test('it can mint a compressed NFT with a separate payer', async (t) => {
+  // Given a tree with a minted NFT owned by leafOwnerA.
+  const umi = await createUmi();
+  const merkleTree = await createTreeV2(umi);
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  const leafOwnerA = generateSigner(umi);
+  const payer = generateSigner(umi);
+  await umi.rpc.airdrop(payer.publicKey, sol(1));
+  const { metadata, leafIndex } = await mintV2(umi, {
+    merkleTree,
+    leafOwner: leafOwnerA.publicKey,
+    payer,
+    treeCreatorOrDelegate: umi.identity,
   });
 
   // Then the leaf is in the merkle tree.
