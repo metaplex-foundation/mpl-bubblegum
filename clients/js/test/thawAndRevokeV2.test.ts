@@ -135,6 +135,7 @@ test('owner cannot thaw and revoke a compressed NFT using thawAndRevokeV2', asyn
 
   // Then the leaf was not updated in the merkle tree with revoked delegate and flags cleared.
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.sequenceNumber, 2n);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(leaf));
 });
 
@@ -193,6 +194,7 @@ test('delegate cannot thaw and revoke a compressed NFT when it is not frozen', a
 
   // And the leaf was not updated in the merkle tree.
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.sequenceNumber, 2n);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(leaf));
 
   // And when trying again with the frozen flag explicitly sent.
@@ -214,5 +216,6 @@ test('delegate cannot thaw and revoke a compressed NFT when it is not frozen', a
 
   // And the leaf was still not updated in the merkle tree.
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.sequenceNumber, 2n);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(leaf));
 });

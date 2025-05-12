@@ -108,5 +108,6 @@ test('owner cannot thaw a compressed NFT that was frozen using delegateAndFreeze
 
   // And the leaf was not updated in the merkle tree.
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.sequenceNumber, 2n);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(frozenLeaf));
 });

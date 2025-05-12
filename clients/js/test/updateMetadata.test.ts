@@ -247,6 +247,7 @@ test('it cannot update metadata using collection update authority when collectio
     metadata,
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.sequenceNumber, 1n);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(notUpdatedLeaf));
 });
 
@@ -583,6 +584,7 @@ test('it cannot update metadata using collection collection delegate when collec
     metadata,
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.sequenceNumber, 1n);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(notUpdatedLeaf));
 });
 
@@ -768,6 +770,7 @@ test('it cannot update metadata using tree owner when collection is verified', a
     metadata,
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.sequenceNumber, 1n);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(notUpdatedLeaf));
 });
 
@@ -837,6 +840,7 @@ test('it cannot update immutable metadata', async (t) => {
     metadata: immutableMetadata,
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.sequenceNumber, 2n);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(notUpdatedLeaf));
 });
 
@@ -1173,5 +1177,6 @@ test('it cannot unverify currently verified creator using empty creator array if
     },
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.sequenceNumber, 2n);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(notUpdatedLeaf));
 });

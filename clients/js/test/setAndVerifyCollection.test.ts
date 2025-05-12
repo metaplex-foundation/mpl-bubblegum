@@ -195,5 +195,6 @@ test('it cannot set and verify the collection if there is already a verified col
     metadata: firstCollectionVerifiedMetadata,
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.sequenceNumber, 2n);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(notUpdatedLeaf));
 });

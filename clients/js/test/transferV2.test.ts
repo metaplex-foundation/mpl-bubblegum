@@ -149,6 +149,7 @@ test('owner cannot transfer a compressed NFT using invalid data hash with V2 ins
     metadata,
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.sequenceNumber, 1n);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(notUpdatedLeaf));
 });
 
@@ -191,6 +192,7 @@ test('update authority cannot transfer a compressed NFT using V2 instructions', 
     metadata,
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.sequenceNumber, 1n);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(notUpdatedLeaf));
 });
 

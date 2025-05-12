@@ -46,5 +46,6 @@ test('it cannot update asset data using V2 instructions', async (t) => {
     assetData: new Uint8Array(0),
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.sequenceNumber, 1n);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(updatedLeaf));
 });

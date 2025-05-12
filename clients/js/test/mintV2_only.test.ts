@@ -14,7 +14,6 @@ test('it can mint a compressed NFT using V2 instructions', async (t) => {
   // Given a tree with a minted NFT owned by leafOwnerA.
   const umi = await createUmi();
   const merkleTree = await createTreeV2(umi);
-  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const leafOwnerA = generateSigner(umi);
   const { metadata, leafIndex } = await mintV2(umi, {
     merkleTree,
@@ -28,7 +27,7 @@ test('it can mint a compressed NFT using V2 instructions', async (t) => {
     leafIndex,
     metadata,
   });
-  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  const merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(leaf));
 });
 
@@ -79,6 +78,7 @@ test('it cannot mint a compressed NFT with asset data using V2 instructions', as
 
   // Then the rightmost leaf is still the default `Publickey`.
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.sequenceNumber, 0n);
   t.is(
     merkleTreeAccount.tree.rightMostPath.leaf,
     publicKey(defaultPublicKey())

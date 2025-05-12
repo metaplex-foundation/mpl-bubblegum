@@ -201,6 +201,7 @@ test('owner cannot thaw a compressed NFT using V2 instructions', async (t) => {
 
   // And the leaf was not updated in the merkle tree.
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.sequenceNumber, 3n);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(frozenLeaf));
 });
 

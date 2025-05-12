@@ -103,6 +103,7 @@ test('A core collection with Royalties plugin can block a transfer of a compress
 
   // And the leaf has not changed in the merkle tree.
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.sequenceNumber, 1n);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(leaf));
 });
 
@@ -194,6 +195,7 @@ test('A core collection with Royalties plugin can block a transfer of a compress
 
   // And the leaf has not changed in the merkle tree.
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.sequenceNumber, 1n);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(leaf));
 });
 

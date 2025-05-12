@@ -143,6 +143,7 @@ test('unauthorized user cannot can freeze a compressed NFT with V2 instructions'
     flags: LeafSchemaV2Flags.None,
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.sequenceNumber, 2n);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(nonFrozenLeaf));
 });
 
@@ -229,6 +230,7 @@ test('item frozen by leaf delegate cannot be transferred by owner', async (t) =>
 
   // And the leaf has not changed in the merkle tree.
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.sequenceNumber, 3n);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(frozenLeaf));
 });
 
@@ -313,6 +315,7 @@ test('item frozen by leaf delegate cannot be burned by owner', async (t) => {
 
   // And the leaf has not changed in the merkle tree.
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.sequenceNumber, 3n);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(frozenLeaf));
 });
 

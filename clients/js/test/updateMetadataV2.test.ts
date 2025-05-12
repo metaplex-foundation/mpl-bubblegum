@@ -158,6 +158,7 @@ test('asset owner cannot update the metadata of a minted compressed NFT using V2
 
   // Then the leaf was not updated in the merkle tree.
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.sequenceNumber, 1n);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(leaf));
 });
 
@@ -662,6 +663,7 @@ test('it cannot update metadata using tree owner when NFT is in collection', asy
     metadata,
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.sequenceNumber, 1n);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(notUpdatedLeaf));
 });
 
@@ -725,6 +727,7 @@ test('it cannot update immutable metadata using V2 instructions', async (t) => {
 
   // And the leaf was not updated in the merkle tree.
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.sequenceNumber, 2n);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(leaf));
 });
 
@@ -1061,5 +1064,6 @@ test('it cannot unverify currently verified creator using empty creator array if
     },
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.sequenceNumber, 2n);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(notUpdatedLeaf));
 });

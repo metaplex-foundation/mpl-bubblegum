@@ -184,6 +184,7 @@ test('owner as authority of Perm Freeze Delegate cannot set a compressed NFT to 
 
   // And the leaf has not changed in the merkle tree.
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.sequenceNumber, 1n);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(leaf));
 });
 
@@ -259,6 +260,7 @@ test('owner cannot set a compressed NFT to non-transferrable - no permanent free
 
   // And the leaf has not changed in the merkle tree.
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.sequenceNumber, 1n);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(leaf));
 });
 
@@ -371,6 +373,7 @@ test('asset set to non-transferrable cannot be transferred by owner', async (t) 
 
   // And the leaf has not changed in the merkle tree.
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.sequenceNumber, 2n);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(soulboundLeaf));
 });
 
@@ -491,5 +494,6 @@ test('asset set to non-transferrable cannot be transferred by permanent transfer
 
   // And the leaf has not changed in the merkle tree.
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.sequenceNumber, 2n);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(soulboundLeaf));
 });
