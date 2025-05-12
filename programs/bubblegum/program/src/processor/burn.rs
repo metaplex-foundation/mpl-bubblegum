@@ -94,13 +94,16 @@ pub(crate) fn burn_v1<'info>(
 #[derive(Accounts)]
 pub struct BurnV2<'info> {
     #[account(
+        mut,
         seeds = [merkle_tree.key().as_ref()],
         bump,
     )]
     pub tree_authority: Account<'info, TreeConfig>,
-    /// Authority must be either the leaf owner or collection
-    /// permanent burn delegate.
-    pub authority: Signer<'info>,
+    #[account(mut)]
+    pub payer: Signer<'info>,
+    /// Optional authority, defaults to `payer`.  Must be either
+    /// the leaf owner or collection collection permanent burn delegate.
+    pub authority: Option<Signer<'info>>,
     /// CHECK: This account is neither written to nor read from
     pub leaf_owner: UncheckedAccount<'info>,
     /// CHECK: This account is neither written to nor read from
@@ -139,7 +142,13 @@ pub(crate) fn burn_v2<'info>(
         BubblegumError::UnsupportedSchemaVersion
     );
 
-    let authority = ctx.accounts.authority.key();
+    let authority = ctx
+        .accounts
+        .authority
+        .as_ref()
+        .map(|account| account.key())
+        .unwrap_or(ctx.accounts.payer.key());
+
     let leaf_owner = ctx.accounts.leaf_owner.key();
     let leaf_delegate = ctx
         .accounts
