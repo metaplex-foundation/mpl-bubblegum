@@ -1,20 +1,16 @@
 import { defaultPublicKey, generateSigner } from '@metaplex-foundation/umi';
 import test from 'ava';
 import {
-  burn,
-  delegate,
   fetchMerkleTree,
   getCurrentRoot,
-  hashMetadataCreators,
-  hashMetadataData,
-} from '../src';
+} from '@metaplex-foundation/spl-account-compression';
+import { burn, delegate, hashMetadataCreators, hashMetadataData } from '../src';
 import { createTree, createUmi, mint } from './_setup';
 
 test('it can burn a compressed NFT', async (t) => {
   // Given a tree with a minted NFT.
   const umi = await createUmi();
   const merkleTree = await createTree(umi);
-  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const leafOwner = generateSigner(umi);
   const { metadata, leafIndex } = await mint(umi, {
     merkleTree,
@@ -22,6 +18,7 @@ test('it can burn a compressed NFT', async (t) => {
   });
 
   // When the owner of the NFT burns it.
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   await burn(umi, {
     leafOwner,
     merkleTree,
@@ -42,13 +39,14 @@ test('it can burn a compressed NFT as a delegated authority', async (t) => {
   // Given a tree with a delegated compressed NFT.
   const umi = await createUmi();
   const merkleTree = await createTree(umi);
-  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const leafOwner = generateSigner(umi);
   const delegateAuthority = generateSigner(umi);
   const { metadata, leafIndex } = await mint(umi, {
     merkleTree,
     leafOwner: leafOwner.publicKey,
   });
+
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   await delegate(umi, {
     leafOwner,
     previousLeafDelegate: leafOwner.publicKey,
@@ -62,6 +60,7 @@ test('it can burn a compressed NFT as a delegated authority', async (t) => {
   }).sendAndConfirm(umi);
 
   // When the delegated authority burns the NFT.
+  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   await burn(umi, {
     leafOwner: leafOwner.publicKey,
     leafDelegate: delegateAuthority, // <- The delegated authority signs the transaction.

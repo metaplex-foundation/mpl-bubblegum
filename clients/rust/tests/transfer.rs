@@ -2,7 +2,7 @@
 pub mod setup;
 pub use setup::*;
 
-use mpl_bubblegum::types::{Creator, LeafSchema, MetadataArgs, TokenProgramVersion, TokenStandard};
+use mpl_bubblegum::types::{Creator, MetadataArgs, TokenProgramVersion, TokenStandard};
 use solana_program_test::tokio;
 use solana_sdk::signature::Keypair;
 use solana_sdk::signature::Signer;
@@ -71,9 +71,7 @@ mod transfer {
 
         // Then the cNFT is transferred.
 
-        let LeafSchema::V1 { owner, .. } = leaf;
-
-        assert_eq!(owner, receiver);
+        assert_eq!(leaf.owner(), receiver);
 
         // And the merkle tree root is updated.
 

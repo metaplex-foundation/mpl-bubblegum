@@ -24,8 +24,6 @@ pub struct Voucher {
 }
 
 impl Voucher {
-    pub const LEN: usize = 213;
-
     pub fn create_pda(
         merkle_tree: Pubkey,
         nonce: u64,

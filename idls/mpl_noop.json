@@ -1,0 +1,19 @@
+{
+  "version": "0.2.1",
+  "name": "mpl_noop",
+  "instructions": [
+    {
+      "name": "noopInstruction",
+      "args": [
+        {
+          "name": "data",
+          "type": "bytes"
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "address": "mnoopTCrg4p8ry25e4bcWA9XZjbNjMTfgYVGGEdRsf3",
+    "origin": "shank"
+  }
+}

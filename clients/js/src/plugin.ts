@@ -1,16 +1,11 @@
 import { UmiPlugin } from '@metaplex-foundation/umi';
 import { dasApi } from '@metaplex-foundation/digital-asset-standard-api';
-import {
-  createMplBubblegumProgram,
-  createSplAccountCompressionProgram,
-  createSplNoopProgram,
-} from './generated';
+import { splAccountCompression } from '@metaplex-foundation/spl-account-compression';
+import { createMplBubblegumProgram } from './generated';
 
 export const mplBubblegum = (): UmiPlugin => ({
   install(umi) {
-    umi.use(dasApi());
+    umi.use(dasApi()).use(splAccountCompression());
     umi.programs.add(createMplBubblegumProgram(), false);
-    umi.programs.add(createSplAccountCompressionProgram(), false);
-    umi.programs.add(createSplNoopProgram(), false);
   },
 });
