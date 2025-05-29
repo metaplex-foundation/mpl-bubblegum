@@ -20,7 +20,7 @@ mod burn {
         // Given a new merkle tree.
 
         let mut tree_manager = TreeManager::<5, 8>::default();
-        tree_manager.create(&mut context).await.unwrap();
+        tree_manager.create_v2(&mut context).await.unwrap();
 
         // And minted cNFTs.
 
@@ -58,17 +58,17 @@ mod burn {
 
         // When transferring a cNFT.
 
-        let receiver = Keypair::new().pubkey();
+        let receiver = Keypair::new();
         let (owner, asset) = assets.pop().unwrap();
 
-        let leaf = tree_manager
-            .transfer_v2(&mut context, &owner, receiver, &asset)
+        let transferred_leaf = tree_manager
+            .transfer_v2(&mut context, &owner, receiver.pubkey(), &asset)
             .await
             .unwrap();
 
         // Then the cNFT is transferred.
 
-        assert_eq!(leaf.owner(), receiver);
+        assert_eq!(transferred_leaf.owner(), receiver.pubkey());
 
         // And the merkle tree root is updated.
 
@@ -77,7 +77,7 @@ mod burn {
         // When burning a cNFT.
 
         tree_manager
-            .burn_v2(&mut context, &owner, &asset)
+            .burn_v2(&mut context, &receiver, &transferred_leaf)
             .await
             .unwrap();
 

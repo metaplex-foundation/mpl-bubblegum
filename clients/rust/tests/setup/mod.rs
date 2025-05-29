@@ -40,6 +40,9 @@ pub fn create_program_test() -> ProgramTest {
     let mut program_test = ProgramTest::new("bubblegum", mpl_bubblegum::ID, None);
     program_test.add_program("spl_account_compression", spl_account_compression::ID, None);
     program_test.add_program("spl_noop", spl_noop::ID, None);
+    program_test.add_program("mpl_account_compression", mpl_account_compression::ID, None);
+    program_test.add_program("mpl_noop", mpl_noop::ID, None);
+    program_test.add_program("mpl_core_program", mpl_core::ID, None);
     program_test
 }
 

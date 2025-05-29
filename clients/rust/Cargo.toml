@@ -30,6 +30,7 @@ thiserror = "^1.0"
 assert_matches = "1.5.0"
 bytemuck = "1.14.0"
 mpl-account-compression = { version = "1.0.0", features = ["no-entrypoint", "cpi"]}
+mpl-core = "0.10.0"
 mpl-noop = { version = "1.0.0", features = ["no-entrypoint"] }
 solana-program-test = "~2.1.21"
 solana-sdk = "~2.1.21"

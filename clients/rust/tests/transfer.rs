@@ -89,7 +89,7 @@ mod transfer {
         // Given a new merkle tree.
 
         let mut tree_manager = TreeManager::<5, 8>::default();
-        tree_manager.create(&mut context).await.unwrap();
+        tree_manager.create_v2(&mut context).await.unwrap();
 
         // And minted cNFTs.
 

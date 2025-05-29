@@ -105,7 +105,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> TreeManager<MAX_DEPTH
             &self.tree.pubkey(),
             rent.minimum_balance(size),
             size as u64,
-            &spl_account_compression::ID,
+            &mpl_account_compression::ID,
         );
 
         // create tree config account
@@ -308,7 +308,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> TreeManager<MAX_DEPTH
         let transfer_ix = TransferV2Builder::new()
             .tree_config(tree_config)
             .payer(context.payer.pubkey())
-            .authority(Some(context.payer.pubkey()))
+            .authority(Some(owner.pubkey()))
             .leaf_owner(owner.pubkey())
             .leaf_delegate(Some(owner.pubkey()))
             .new_leaf_owner(receiver)
@@ -367,10 +367,10 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> TreeManager<MAX_DEPTH
             })
             .collect();
 
-        let transfer_ix = BurnV2Builder::new()
+        let burn_ix = BurnV2Builder::new()
             .tree_config(tree_config)
             .payer(context.payer.pubkey())
-            .authority(Some(context.payer.pubkey()))
+            .authority(Some(owner.pubkey()))
             .leaf_owner(owner.pubkey())
             .leaf_delegate(Some(owner.pubkey()))
             .merkle_tree(self.tree.pubkey())
@@ -383,7 +383,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> TreeManager<MAX_DEPTH
             .instruction();
 
         let tx = Transaction::new_signed_with_payer(
-            &[transfer_ix],
+            &[burn_ix],
             Some(&context.payer.pubkey()),
             &[owner, &context.payer],
             context.last_blockhash,

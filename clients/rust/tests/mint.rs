@@ -187,7 +187,7 @@ async fn mint_v2_asset() {
     // Given a new merkle tree.
 
     let mut tree_manager = TreeManager::<6, 16>::default();
-    tree_manager.create(&mut context).await.unwrap();
+    tree_manager.create_v2(&mut context).await.unwrap();
 
     assert!(find_account(&mut context, &tree_manager.tree.pubkey())
         .await
@@ -236,7 +236,7 @@ async fn mint_v2_multiple_asset() {
     // Given a new merkle tree.
 
     let mut tree_manager = TreeManager::<5, 8>::default();
-    tree_manager.create(&mut context).await.unwrap();
+    tree_manager.create_v2(&mut context).await.unwrap();
 
     assert!(find_account(&mut context, &tree_manager.tree.pubkey())
         .await
