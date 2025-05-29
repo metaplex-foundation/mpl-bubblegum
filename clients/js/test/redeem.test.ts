@@ -2,12 +2,14 @@ import { defaultPublicKey } from '@metaplex-foundation/umi';
 import { generateSignerWithSol } from '@metaplex-foundation/umi-bundle-tests';
 import test from 'ava';
 import {
+  fetchMerkleTree,
+  getCurrentRoot,
+} from '@metaplex-foundation/spl-account-compression';
+import {
   LeafSchema,
   Voucher,
-  fetchMerkleTree,
   fetchVoucherFromSeeds,
   findLeafAssetIdPda,
-  getCurrentRoot,
   hashMetadataCreators,
   hashMetadataData,
   redeem,
@@ -18,7 +20,6 @@ test('it can redeem a compressed NFT', async (t) => {
   // Given a tree with a minted NFT.
   const umi = await createUmi();
   const merkleTree = await createTree(umi);
-  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const leafOwner = await generateSignerWithSol(umi);
   const { metadata, leafIndex } = await mint(umi, {
     merkleTree,
@@ -26,6 +27,7 @@ test('it can redeem a compressed NFT', async (t) => {
   });
 
   // When leaf owner redeems the compressed NFT.
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const dataHash = hashMetadataData(metadata);
   const creatorHash = hashMetadataCreators(metadata.creators);
   await redeem(umi, {

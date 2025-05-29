@@ -92,6 +92,32 @@ pub enum BubblegumError {
     InvalidLogWrapper,
     #[msg("Invalid compression program")]
     InvalidCompressionProgram,
+    #[msg("Leaf must be delegated to someone other than the leaf owner")]
+    LeafMustBeDelegated,
+    #[msg("Asset is frozen")]
+    AssetIsFrozen,
+    #[msg("Asset is non-transferable")]
+    AssetIsNonTransferable,
+    #[msg("Invalid authority")]
+    InvalidAuthority,
+    #[msg("Collection is frozen")]
+    CollectionIsFrozen,
+    #[msg("Core collections must have the Bubblegum V2 plugin on them")]
+    CollectionMustHaveBubblegumPlugin,
+    #[msg("Feature not currently available")]
+    NotAvailable,
+    #[msg("Missing collection account")]
+    MissingCollectionAccount,
+    #[msg("Asset data length too long")]
+    AssetDataLengthTooLong,
+    #[msg("Item is already in the collection")]
+    AlreadyInCollection,
+    #[msg("Item is already not in a collection")]
+    AlreadyNotInCollection,
+    #[msg("Missing mpl-core CPI signer account")]
+    MissingMplCoreCpiSignerAccount,
+    #[msg("Asset is not frozen")]
+    AssetIsNotFrozen,
 }
 
 // Converts certain Token Metadata errors into Bubblegum equivalents

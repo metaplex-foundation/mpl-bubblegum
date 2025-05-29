@@ -1,11 +1,11 @@
 use anchor_lang::prelude::*;
-use spl_concurrent_merkle_tree::node::Node;
+use spl_account_compression::Node;
 
 use crate::{
     error::BubblegumError,
     state::{
-        leaf_schema::LeafSchema, DecompressibleState, TreeConfig, Voucher, VOUCHER_PREFIX,
-        VOUCHER_SIZE,
+        leaf_schema::{LeafSchema, Version},
+        DecompressibleState, TreeConfig, Voucher, VOUCHER_PREFIX, VOUCHER_SIZE,
     },
     utils::{get_asset_id, replace_leaf, validate_ownership_and_programs},
 };
@@ -23,14 +23,13 @@ pub struct Redeem<'info> {
         seeds = [merkle_tree.key().as_ref()],
         bump,
     )]
-    /// CHECK: This account is neither written to nor read from.
     pub tree_authority: Account<'info, TreeConfig>,
     #[account(mut)]
     pub leaf_owner: Signer<'info>,
     /// CHECK: This account is checked in the instruction
     pub leaf_delegate: UncheckedAccount<'info>,
+    /// CHECK: This account is modified in the downstream program
     #[account(mut)]
-    /// CHECK: checked in cpi
     pub merkle_tree: UncheckedAccount<'info>,
     #[account(
         init,
@@ -65,20 +64,33 @@ pub(crate) fn redeem<'info>(
         &ctx.accounts.compression_program,
     )?;
 
+    // V1 instructions only work with V1 trees.
+    require!(
+        ctx.accounts.tree_authority.version == Version::V1,
+        BubblegumError::UnsupportedSchemaVersion
+    );
+
     if ctx.accounts.tree_authority.is_decompressible == DecompressibleState::Disabled {
         return Err(BubblegumError::DecompressionDisabled.into());
     }
 
-    let owner = ctx.accounts.leaf_owner.key();
-    let delegate = ctx.accounts.leaf_delegate.key();
+    let leaf_owner = ctx.accounts.leaf_owner.key();
+    let leaf_delegate = ctx.accounts.leaf_delegate.key();
     let merkle_tree = ctx.accounts.merkle_tree.to_account_info();
     let asset_id = get_asset_id(&merkle_tree.key(), nonce);
-    let previous_leaf =
-        LeafSchema::new_v0(asset_id, owner, delegate, nonce, data_hash, creator_hash);
+    let previous_leaf = LeafSchema::new_v1(
+        asset_id,
+        leaf_owner,
+        leaf_delegate,
+        nonce,
+        data_hash,
+        creator_hash,
+    );
 
     let new_leaf = Node::default();
 
     replace_leaf(
+        Version::V1,
         &merkle_tree.key(),
         ctx.bumps.tree_authority,
         &ctx.accounts.compression_program.to_account_info(),

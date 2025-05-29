@@ -14,14 +14,18 @@ import {
   createTree,
   createTreeConfig,
   fetchTreeConfigFromSeeds,
+  getCompressionProgramsForV1Ixs,
   safeFetchTreeConfigFromSeeds,
-  getMerkleTreeSize,
-  SPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
-  getCompressionPrograms,
-  MPL_NOOP_PROGRAM_ID,
-  MPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
 } from '../src';
 import { createUmi } from './_setup';
+import {
+  SPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
+  getMerkleTreeSize,
+} from '@metaplex-foundation/spl-account-compression';
+import {
+  MPL_NOOP_PROGRAM_ID,
+  MPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
+} from '@metaplex-foundation/mpl-account-compression';
 
 const createTreeWithSpecificMerkleOwner = async (
   context: Parameters<typeof createAccount>[0] &
@@ -137,7 +141,8 @@ test('it can create a Bubblegum tree using mpl-account-compression and mpl-noop'
   const merkleTree = generateSigner(umi);
 
   // For these tests, make sure `getCompressionPrograms` doesn't return spl programs.
-  const { logWrapper, compressionProgram } = await getCompressionPrograms(umi);
+  const { logWrapper, compressionProgram } =
+    await getCompressionProgramsForV1Ixs(umi);
   t.is(logWrapper, MPL_NOOP_PROGRAM_ID);
   t.is(compressionProgram, MPL_ACCOUNT_COMPRESSION_PROGRAM_ID);
 
@@ -146,7 +151,7 @@ test('it can create a Bubblegum tree using mpl-account-compression and mpl-noop'
     merkleTree,
     maxDepth: 14,
     maxBufferSize: 64,
-    ...(await getCompressionPrograms(umi)),
+    ...(await getCompressionProgramsForV1Ixs(umi)),
   });
   await builder.sendAndConfirm(umi);
 

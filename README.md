@@ -93,4 +93,4 @@ under either the [MIT](https://www.mit.edu/~amini/LICENSE.md) or the [Apache](ht
 
 ## Contributing
 
-Check out the [Contributing Guide](./CONTRIBUTING.md) the learn more about how to contribute to this project.
+Check out the [Contributing Guide](./CONTRIBUTING.md) to learn more about how to contribute to this project.

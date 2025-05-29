@@ -1,0 +1,33 @@
+name: Create SVM release
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: Version bump
+        required: true
+        default: patch
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      git_ref:
+        description: Commit hash or branch to create release
+        required: false
+        type: string
+        default: svm
+
+env:
+  CACHE: true
+
+jobs:
+  create_release:
+    name: SVM
+    uses: ./.github/workflows/create-release.yml
+    secrets: inherit
+    with:
+      git_ref: ${{ inputs.git_ref }}
+      bump: ${{ inputs.bump }}
+      program: bubblegum
+      type: svm

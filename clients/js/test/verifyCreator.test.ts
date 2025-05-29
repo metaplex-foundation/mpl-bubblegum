@@ -3,9 +3,8 @@ import test from 'ava';
 import {
   fetchMerkleTree,
   getCurrentRoot,
-  hashLeaf,
-  verifyCreator,
-} from '../src';
+} from '@metaplex-foundation/spl-account-compression';
+import { hashLeaf, verifyCreator } from '../src';
 import { createTree, createUmi, mint } from './_setup';
 
 test('it can verify the creator of a minted compressed NFT', async (t) => {
@@ -14,7 +13,6 @@ test('it can verify the creator of a minted compressed NFT', async (t) => {
   const creatorA = generateSigner(umi);
   const creatorB = generateSigner(umi);
   const merkleTree = await createTree(umi);
-  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const leafOwner = generateSigner(umi).publicKey;
   const { metadata, leafIndex } = await mint(umi, {
     merkleTree,
@@ -28,6 +26,7 @@ test('it can verify the creator of a minted compressed NFT', async (t) => {
   });
 
   // When creator A verifies themselves.
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   await verifyCreator(umi, {
     leafOwner,
     creator: creatorA,

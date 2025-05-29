@@ -143,16 +143,8 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> TreeManager<MAX_DEPTH
         asset: &LeafSchema,
     ) -> Result<LeafSchema, BanksClientError> {
         let (tree_config, _) = TreeConfig::find_pda(&self.tree.pubkey());
-
-        let LeafSchema::V1 {
-            creator_hash,
-            data_hash,
-            nonce,
-            ..
-        } = asset;
-
         let proof: Vec<AccountMeta> = self
-            .get_proof(*nonce as u32)
+            .get_proof(asset.nonce() as u32)
             .iter()
             .map(|node| AccountMeta {
                 pubkey: Pubkey::new_from_array(*node),
@@ -168,10 +160,10 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> TreeManager<MAX_DEPTH
             .tree_config(tree_config)
             .new_leaf_owner(receiver)
             .root(self.proof_tree.root)
-            .nonce(*nonce)
-            .creator_hash(*creator_hash)
-            .data_hash(*data_hash)
-            .index(*nonce as u32)
+            .nonce(asset.nonce())
+            .creator_hash(asset.creator_hash())
+            .data_hash(asset.data_hash())
+            .index(asset.nonce() as u32)
             .add_remaining_accounts(&proof)
             .instruction();
 
@@ -186,24 +178,17 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> TreeManager<MAX_DEPTH
 
         // on success, we update the leaf in the proof tree
 
-        let LeafSchema::V1 {
-            id,
-            nonce,
-            data_hash,
-            creator_hash,
-            ..
-        } = *asset;
-
         let leaf = LeafSchema::V1 {
-            id,
+            id: asset.id(),
             owner: receiver,
             delegate: receiver,
-            nonce,
-            data_hash,
-            creator_hash,
+            nonce: asset.nonce(),
+            data_hash: asset.data_hash(),
+            creator_hash: asset.creator_hash(),
         };
 
-        self.proof_tree.add_leaf(leaf.hash(), nonce as usize);
+        self.proof_tree
+            .add_leaf(leaf.hash(), asset.nonce() as usize);
 
         Ok(leaf)
     }

@@ -50,7 +50,7 @@ jobs:
       contents: write
     steps:
       - name: Git checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.SVC_TOKEN }}
 
@@ -83,7 +83,7 @@ jobs:
           else
             pnpm version ${{ inputs.bump }} --no-git-tag-version
           fi
-          echo "new_version=$(pnpm pkg get version | sed 's/"//g')" >> $GITHUB_OUTPUT
+          echo "new_version=$(node -e "console.log(require('./package.json').version)")" >> $GITHUB_OUTPUT
 
       - name: Set publishing config
         run: pnpm config set '//registry.npmjs.org/:_authToken' "${NODE_AUTH_TOKEN}"
@@ -115,7 +115,7 @@ jobs:
       url: ${{ steps.deploy.outputs.url }}
     steps:
       - name: Git checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.ref }}
 

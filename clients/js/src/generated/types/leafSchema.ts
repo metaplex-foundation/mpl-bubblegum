@@ -16,27 +16,54 @@ import {
   publicKey as publicKeySerializer,
   struct,
   u64,
+  u8,
 } from '@metaplex-foundation/umi/serializers';
 
-export type LeafSchema = {
-  __kind: 'V1';
-  id: PublicKey;
-  owner: PublicKey;
-  delegate: PublicKey;
-  nonce: bigint;
-  dataHash: Uint8Array;
-  creatorHash: Uint8Array;
-};
+export type LeafSchema =
+  | {
+      __kind: 'V1';
+      id: PublicKey;
+      owner: PublicKey;
+      delegate: PublicKey;
+      nonce: bigint;
+      dataHash: Uint8Array;
+      creatorHash: Uint8Array;
+    }
+  | {
+      __kind: 'V2';
+      id: PublicKey;
+      owner: PublicKey;
+      delegate: PublicKey;
+      nonce: bigint;
+      dataHash: Uint8Array;
+      creatorHash: Uint8Array;
+      collectionHash: Uint8Array;
+      assetDataHash: Uint8Array;
+      flags: number;
+    };
 
-export type LeafSchemaArgs = {
-  __kind: 'V1';
-  id: PublicKey;
-  owner: PublicKey;
-  delegate: PublicKey;
-  nonce: number | bigint;
-  dataHash: Uint8Array;
-  creatorHash: Uint8Array;
-};
+export type LeafSchemaArgs =
+  | {
+      __kind: 'V1';
+      id: PublicKey;
+      owner: PublicKey;
+      delegate: PublicKey;
+      nonce: number | bigint;
+      dataHash: Uint8Array;
+      creatorHash: Uint8Array;
+    }
+  | {
+      __kind: 'V2';
+      id: PublicKey;
+      owner: PublicKey;
+      delegate: PublicKey;
+      nonce: number | bigint;
+      dataHash: Uint8Array;
+      creatorHash: Uint8Array;
+      collectionHash: Uint8Array;
+      assetDataHash: Uint8Array;
+      flags: number;
+    };
 
 export function getLeafSchemaSerializer(): Serializer<
   LeafSchemaArgs,
@@ -55,6 +82,20 @@ export function getLeafSchemaSerializer(): Serializer<
           ['creatorHash', bytes({ size: 32 })],
         ]),
       ],
+      [
+        'V2',
+        struct<GetDataEnumKindContent<LeafSchema, 'V2'>>([
+          ['id', publicKeySerializer()],
+          ['owner', publicKeySerializer()],
+          ['delegate', publicKeySerializer()],
+          ['nonce', u64()],
+          ['dataHash', bytes({ size: 32 })],
+          ['creatorHash', bytes({ size: 32 })],
+          ['collectionHash', bytes({ size: 32 })],
+          ['assetDataHash', bytes({ size: 32 })],
+          ['flags', u8()],
+        ]),
+      ],
     ],
     { description: 'LeafSchema' }
   ) as Serializer<LeafSchemaArgs, LeafSchema>;
@@ -65,6 +106,10 @@ export function leafSchema(
   kind: 'V1',
   data: GetDataEnumKindContent<LeafSchemaArgs, 'V1'>
 ): GetDataEnumKind<LeafSchemaArgs, 'V1'>;
+export function leafSchema(
+  kind: 'V2',
+  data: GetDataEnumKindContent<LeafSchemaArgs, 'V2'>
+): GetDataEnumKind<LeafSchemaArgs, 'V2'>;
 export function leafSchema<K extends LeafSchemaArgs['__kind']>(
   kind: K,
   data?: any

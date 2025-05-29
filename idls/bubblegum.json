@@ -83,6 +83,139 @@
       ]
     },
     {
+      "name": "burnV2",
+      "docs": [
+        "Burns a `LeafSchema` V2 leaf node from the tree."
+      ],
+      "accounts": [
+        {
+          "name": "treeAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "isOptional": true,
+          "docs": [
+            "Optional authority, defaults to `payer`.  Must be either",
+            "the leaf owner or collection collection permanent burn delegate."
+          ]
+        },
+        {
+          "name": "leafOwner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "leafDelegate",
+          "isMut": false,
+          "isSigner": false,
+          "isOptional": true,
+          "docs": [
+            "Defaults to `leaf_owner`"
+          ]
+        },
+        {
+          "name": "merkleTree",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "coreCollection",
+          "isMut": true,
+          "isSigner": false,
+          "isOptional": true
+        },
+        {
+          "name": "mplCoreCpiSigner",
+          "isMut": false,
+          "isSigner": false,
+          "isOptional": true
+        },
+        {
+          "name": "logWrapper",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "compressionProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "mplCoreProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "root",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "dataHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "creatorHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "assetDataHash",
+          "type": {
+            "option": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        },
+        {
+          "name": "flags",
+          "type": {
+            "option": "u8"
+          }
+        },
+        {
+          "name": "nonce",
+          "type": "u64"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        }
+      ]
+    },
+    {
       "name": "cancelRedeem",
       "docs": [
         "Cancels a redeem."
@@ -135,6 +268,25 @@
           }
         }
       ]
+    },
+    {
+      "name": "collectV2",
+      "docs": [
+        "Collect fees from a V2 tree."
+      ],
+      "accounts": [
+        {
+          "name": "treeAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "destination",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": []
     },
     {
       "name": "compress",
@@ -240,6 +392,70 @@
           "name": "treeCreator",
           "isMut": false,
           "isSigner": true
+        },
+        {
+          "name": "logWrapper",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "compressionProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "maxDepth",
+          "type": "u32"
+        },
+        {
+          "name": "maxBufferSize",
+          "type": "u32"
+        },
+        {
+          "name": "public",
+          "type": {
+            "option": "bool"
+          }
+        }
+      ]
+    },
+    {
+      "name": "createTreeV2",
+      "docs": [
+        "Creates a new tree for use with `LeafSchema` V2 leaf nodes.  See `mint_v2` for more details",
+        "on the new functionality."
+      ],
+      "accounts": [
+        {
+          "name": "treeAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "merkleTree",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "treeCreator",
+          "isMut": false,
+          "isSigner": true,
+          "isOptional": true,
+          "docs": [
+            "Optional tree creator, defaults to `payer`"
+          ]
         },
         {
           "name": "logWrapper",
@@ -441,9 +657,379 @@
       ]
     },
     {
+      "name": "delegateAndFreezeV2",
+      "docs": [
+        "Delegates and freezes a `LeafSchema` V2 leaf node, preventing transferring or burning."
+      ],
+      "accounts": [
+        {
+          "name": "treeAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "leafOwner",
+          "isMut": false,
+          "isSigner": true,
+          "isOptional": true,
+          "docs": [
+            "Optional leaf owner, defaults to `payer`"
+          ]
+        },
+        {
+          "name": "previousLeafDelegate",
+          "isMut": false,
+          "isSigner": false,
+          "isOptional": true,
+          "docs": [
+            "Defaults to `leaf_owner`"
+          ]
+        },
+        {
+          "name": "newLeafDelegate",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "merkleTree",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "logWrapper",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "compressionProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "root",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "dataHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "creatorHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "collectionHash",
+          "type": {
+            "option": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        },
+        {
+          "name": "assetDataHash",
+          "type": {
+            "option": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        },
+        {
+          "name": "flags",
+          "type": {
+            "option": "u8"
+          }
+        },
+        {
+          "name": "nonce",
+          "type": "u64"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "name": "delegateV2",
+      "docs": [
+        "Sets a delegate for a `LeafSchema` V2 leaf node."
+      ],
+      "accounts": [
+        {
+          "name": "treeAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "leafOwner",
+          "isMut": false,
+          "isSigner": true,
+          "isOptional": true,
+          "docs": [
+            "Optional leaf owner, defaults to `payer`"
+          ]
+        },
+        {
+          "name": "previousLeafDelegate",
+          "isMut": false,
+          "isSigner": false,
+          "isOptional": true,
+          "docs": [
+            "Defaults to `leaf_owner`"
+          ]
+        },
+        {
+          "name": "newLeafDelegate",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "merkleTree",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "logWrapper",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "compressionProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "root",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "dataHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "creatorHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "collectionHash",
+          "type": {
+            "option": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        },
+        {
+          "name": "assetDataHash",
+          "type": {
+            "option": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        },
+        {
+          "name": "flags",
+          "type": {
+            "option": "u8"
+          }
+        },
+        {
+          "name": "nonce",
+          "type": "u64"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "name": "freezeV2",
+      "docs": [
+        "Freezes a `LeafSchema` V2 leaf node, preventing transferring or burning."
+      ],
+      "accounts": [
+        {
+          "name": "treeAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "isOptional": true,
+          "docs": [
+            "Optional authority, defaults to `payer`.  Must be either",
+            "the leaf delegate or collection permanent freeze delegate."
+          ]
+        },
+        {
+          "name": "leafOwner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "leafDelegate",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "merkleTree",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "coreCollection",
+          "isMut": false,
+          "isSigner": false,
+          "isOptional": true
+        },
+        {
+          "name": "logWrapper",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "compressionProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "root",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "dataHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "creatorHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "assetDataHash",
+          "type": {
+            "option": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        },
+        {
+          "name": "flags",
+          "type": {
+            "option": "u8"
+          }
+        },
+        {
+          "name": "nonce",
+          "type": "u64"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        }
+      ]
+    },
+    {
       "name": "mintToCollectionV1",
       "docs": [
-        "Mints a new asset and adds it to a collection."
+        "Mints a new asset and adds it to a Token Metadata collection."
       ],
       "accounts": [
         {
@@ -600,6 +1186,131 @@
           "name": "message",
           "type": {
             "defined": "MetadataArgs"
+          }
+        }
+      ],
+      "returns": {
+        "defined": "LeafSchema"
+      }
+    },
+    {
+      "name": "mintV2",
+      "docs": [
+        "Mints a new asset using `LeafSchema` V2 and optionally adds it to an MPL Core collection.",
+        "Requires a tree created with `createTreeV2`.",
+        "",
+        "'LeafSchema' V2 enables new functionality:",
+        "1. Uses MPL Core collections instead of Token Metadata collections.",
+        "2. Uses the streamlined `MetadataV2` arguments, which eliminate the collection verified",
+        "flag.  In `MetadataV2`, any collection included is automatically considered verified.",
+        "3. Allows for use of plugins such as Royalties, Permanent Burn Delegate, etc. on the",
+        "MPL Core collection to authorize operations on the Bubblegum asset.  Note the",
+        "`BubblegumV2` plugin must also be present on the MPL Core collection for it to be",
+        "used for Bubblegum.  See MPL Core `BubblegumV2` plugin for list of compatible",
+        "collection-level plugins.",
+        "4. Allows for freezing/thawing of the asset, as well as setting an asset to be",
+        "permanently non-transferable (soulbound).  Non-transferable is similar to freezing",
+        "but allows the owner to burn the asset, while freezing does not.",
+        "5. Not available yet, but optionally specify data (and a schema) to be associated with",
+        "the asset."
+      ],
+      "accounts": [
+        {
+          "name": "treeAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "treeDelegate",
+          "isMut": false,
+          "isSigner": true,
+          "isOptional": true,
+          "docs": [
+            "Optional tree delegate, defaults to `payer`"
+          ]
+        },
+        {
+          "name": "collectionAuthority",
+          "isMut": false,
+          "isSigner": true,
+          "isOptional": true,
+          "docs": [
+            "Optional collection authority, defaults to `tree_delegate`"
+          ]
+        },
+        {
+          "name": "leafOwner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "leafDelegate",
+          "isMut": false,
+          "isSigner": false,
+          "isOptional": true
+        },
+        {
+          "name": "merkleTree",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "coreCollection",
+          "isMut": true,
+          "isSigner": false,
+          "isOptional": true
+        },
+        {
+          "name": "mplCoreCpiSigner",
+          "isMut": false,
+          "isSigner": false,
+          "isOptional": true
+        },
+        {
+          "name": "logWrapper",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "compressionProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "mplCoreProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "metadataArgs",
+          "type": {
+            "defined": "MetadataArgsV2"
+          }
+        },
+        {
+          "name": "assetData",
+          "type": {
+            "option": "bytes"
+          }
+        },
+        {
+          "name": "assetDataSchema",
+          "type": {
+            "option": {
+              "defined": "AssetDataSchema"
+            }
           }
         }
       ],
@@ -839,6 +1550,143 @@
       ]
     },
     {
+      "name": "setCollectionV2",
+      "docs": [
+        "Sets and collection to a `LeafSchema` V2 leaf node"
+      ],
+      "accounts": [
+        {
+          "name": "treeAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "isOptional": true,
+          "docs": [
+            "If item is not in a collection, then authority must be tree owner/delegate.  If item is",
+            "getting removed from a collection, then this must be an authority for the existing",
+            "collection.  Defaults to `payer`"
+          ]
+        },
+        {
+          "name": "newCollectionAuthority",
+          "isMut": false,
+          "isSigner": true,
+          "isOptional": true,
+          "docs": [
+            "If item is getting added to a new collection, then this must be the authority",
+            "for the new collection.  Defaults to `authority`"
+          ]
+        },
+        {
+          "name": "leafOwner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "leafDelegate",
+          "isMut": false,
+          "isSigner": false,
+          "isOptional": true,
+          "docs": [
+            "Defaults to `leaf_owner`"
+          ]
+        },
+        {
+          "name": "merkleTree",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "coreCollection",
+          "isMut": true,
+          "isSigner": false,
+          "isOptional": true
+        },
+        {
+          "name": "newCoreCollection",
+          "isMut": true,
+          "isSigner": false,
+          "isOptional": true
+        },
+        {
+          "name": "mplCoreCpiSigner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "logWrapper",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "compressionProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "mplCoreProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "root",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "assetDataHash",
+          "type": {
+            "option": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        },
+        {
+          "name": "flags",
+          "type": {
+            "option": "u8"
+          }
+        },
+        {
+          "name": "nonce",
+          "type": "u64"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        },
+        {
+          "name": "message",
+          "type": {
+            "defined": "MetadataArgsV2"
+          }
+        }
+      ]
+    },
+    {
       "name": "setDecompressableState",
       "docs": [
         "Sets the `decompressible_state` of a tree."
@@ -891,6 +1739,128 @@
       ]
     },
     {
+      "name": "setNonTransferableV2",
+      "docs": [
+        "Permanently sets the non-transferable flag on a `LeafSchema` V2 leaf node,",
+        "making it soulbound."
+      ],
+      "accounts": [
+        {
+          "name": "treeAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "isOptional": true,
+          "docs": [
+            "This authority must be a permanent freeze delegate on the collection",
+            "Defaults to `payer`"
+          ]
+        },
+        {
+          "name": "leafOwner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "leafDelegate",
+          "isMut": false,
+          "isSigner": false,
+          "isOptional": true,
+          "docs": [
+            "Defaults to `leaf_owner`"
+          ]
+        },
+        {
+          "name": "merkleTree",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "coreCollection",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "logWrapper",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "compressionProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "root",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "dataHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "creatorHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "assetDataHash",
+          "type": {
+            "option": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        },
+        {
+          "name": "flags",
+          "type": {
+            "option": "u8"
+          }
+        },
+        {
+          "name": "nonce",
+          "type": "u64"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        }
+      ]
+    },
+    {
       "name": "setTreeDelegate",
       "docs": [
         "Sets a delegate for a tree."
@@ -923,6 +1893,241 @@
         }
       ],
       "args": []
+    },
+    {
+      "name": "thawAndRevokeV2",
+      "docs": [
+        "Thaws a previously frozen `LeafSchema` V2 leaf node, and revoke the leaf delegate."
+      ],
+      "accounts": [
+        {
+          "name": "treeAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "leafDelegate",
+          "isMut": false,
+          "isSigner": true,
+          "isOptional": true,
+          "docs": [
+            "Optional leaf delegate, defaults to `payer`"
+          ]
+        },
+        {
+          "name": "leafOwner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "merkleTree",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "logWrapper",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "compressionProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "root",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "dataHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "creatorHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "collectionHash",
+          "type": {
+            "option": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        },
+        {
+          "name": "assetDataHash",
+          "type": {
+            "option": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        },
+        {
+          "name": "flags",
+          "type": {
+            "option": "u8"
+          }
+        },
+        {
+          "name": "nonce",
+          "type": "u64"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "name": "thawV2",
+      "docs": [
+        "Thaws a previously frozen `LeafSchema` V2 leaf node."
+      ],
+      "accounts": [
+        {
+          "name": "treeAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "isOptional": true,
+          "docs": [
+            "Optional authority, defaults to `payer`.  Must be either",
+            "the leaf delegate or collection permanent freeze delegate."
+          ]
+        },
+        {
+          "name": "leafOwner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "leafDelegate",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "merkleTree",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "coreCollection",
+          "isMut": false,
+          "isSigner": false,
+          "isOptional": true
+        },
+        {
+          "name": "logWrapper",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "compressionProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "root",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "dataHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "creatorHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "assetDataHash",
+          "type": {
+            "option": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        },
+        {
+          "name": "flags",
+          "type": {
+            "option": "u8"
+          }
+        },
+        {
+          "name": "nonce",
+          "type": "u64"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        }
+      ]
     },
     {
       "name": "transfer",
@@ -997,6 +2202,133 @@
               "u8",
               32
             ]
+          }
+        },
+        {
+          "name": "nonce",
+          "type": "u64"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "name": "transferV2",
+      "docs": [
+        "Transfers a `LeafSchema` V2 leaf node from one account to another."
+      ],
+      "accounts": [
+        {
+          "name": "treeAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "isOptional": true,
+          "docs": [
+            "Optional authority, defaults to `payer`.  Must be either",
+            "the leaf owner or collection permanent transfer delegate."
+          ]
+        },
+        {
+          "name": "leafOwner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "leafDelegate",
+          "isMut": false,
+          "isSigner": false,
+          "isOptional": true,
+          "docs": [
+            "Defaults to `leaf_owner`"
+          ]
+        },
+        {
+          "name": "newLeafOwner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "merkleTree",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "coreCollection",
+          "isMut": false,
+          "isSigner": false,
+          "isOptional": true
+        },
+        {
+          "name": "logWrapper",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "compressionProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "root",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "dataHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "creatorHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "assetDataHash",
+          "type": {
+            "option": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        },
+        {
+          "name": "flags",
+          "type": {
+            "option": "u8"
           }
         },
         {
@@ -1246,6 +2578,475 @@
       ]
     },
     {
+      "name": "unverifyCreatorV2",
+      "docs": [
+        "Unverifies a creator from a `LeafSchema` V2 leaf node."
+      ],
+      "accounts": [
+        {
+          "name": "treeAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "creator",
+          "isMut": false,
+          "isSigner": true,
+          "isOptional": true,
+          "docs": [
+            "Optional creator, defaults to `payer`"
+          ]
+        },
+        {
+          "name": "leafOwner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "leafDelegate",
+          "isMut": false,
+          "isSigner": false,
+          "isOptional": true,
+          "docs": [
+            "Defaults to `leaf_owner`"
+          ]
+        },
+        {
+          "name": "merkleTree",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "logWrapper",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "compressionProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "root",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "assetDataHash",
+          "type": {
+            "option": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        },
+        {
+          "name": "flags",
+          "type": {
+            "option": "u8"
+          }
+        },
+        {
+          "name": "nonce",
+          "type": "u64"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        },
+        {
+          "name": "message",
+          "type": {
+            "defined": "MetadataArgsV2"
+          }
+        }
+      ]
+    },
+    {
+      "name": "updateAssetDataV2",
+      "docs": [
+        "Updates asset data for a `LeafSchema` V2 leaf node."
+      ],
+      "accounts": [
+        {
+          "name": "treeAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "isOptional": true,
+          "docs": [
+            "Either collection authority or tree owner/delegate, depending on",
+            "whether the item is in a verified collection.  Defaults to `payer`"
+          ]
+        },
+        {
+          "name": "leafOwner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "leafDelegate",
+          "isMut": false,
+          "isSigner": false,
+          "isOptional": true
+        },
+        {
+          "name": "merkleTree",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "coreCollection",
+          "isMut": false,
+          "isSigner": false,
+          "isOptional": true
+        },
+        {
+          "name": "logWrapper",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "compressionProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "root",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "dataHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "creatorHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "previousAssetDataHash",
+          "type": {
+            "option": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        },
+        {
+          "name": "flags",
+          "type": {
+            "option": "u8"
+          }
+        },
+        {
+          "name": "nonce",
+          "type": "u64"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        },
+        {
+          "name": "newAssetData",
+          "type": {
+            "option": "bytes"
+          }
+        },
+        {
+          "name": "newAssetDataSchema",
+          "type": {
+            "option": {
+              "defined": "AssetDataSchema"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "updateMetadata",
+      "docs": [
+        "Updates metadata for a leaf node."
+      ],
+      "accounts": [
+        {
+          "name": "treeAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "Either collection authority or tree owner/delegate, depending",
+            "on whether the item is in a verified collection"
+          ]
+        },
+        {
+          "name": "collectionMint",
+          "isMut": false,
+          "isSigner": false,
+          "isOptional": true,
+          "docs": [
+            "Used when item is in a verified collection"
+          ]
+        },
+        {
+          "name": "collectionMetadata",
+          "isMut": false,
+          "isSigner": false,
+          "isOptional": true,
+          "docs": [
+            "Used when item is in a verified collection"
+          ]
+        },
+        {
+          "name": "collectionAuthorityRecordPda",
+          "isMut": false,
+          "isSigner": false,
+          "isOptional": true
+        },
+        {
+          "name": "leafOwner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "leafDelegate",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "merkleTree",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "logWrapper",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "compressionProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMetadataProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "root",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "nonce",
+          "type": "u64"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        },
+        {
+          "name": "currentMetadata",
+          "type": {
+            "defined": "MetadataArgs"
+          }
+        },
+        {
+          "name": "updateArgs",
+          "type": {
+            "defined": "UpdateArgs"
+          }
+        }
+      ]
+    },
+    {
+      "name": "updateMetadataV2",
+      "docs": [
+        "Updates metadata for a `LeafSchema` V2 leaf node."
+      ],
+      "accounts": [
+        {
+          "name": "treeAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "isOptional": true,
+          "docs": [
+            "Either collection authority or tree owner/delegate, depending",
+            "on whether the item is in a verified collection.  Defaults to `payer`"
+          ]
+        },
+        {
+          "name": "leafOwner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "leafDelegate",
+          "isMut": false,
+          "isSigner": false,
+          "isOptional": true,
+          "docs": [
+            "Defaults to `leaf_owner`"
+          ]
+        },
+        {
+          "name": "merkleTree",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "coreCollection",
+          "isMut": false,
+          "isSigner": false,
+          "isOptional": true
+        },
+        {
+          "name": "logWrapper",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "compressionProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "root",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "assetDataHash",
+          "type": {
+            "option": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        },
+        {
+          "name": "flags",
+          "type": {
+            "option": "u8"
+          }
+        },
+        {
+          "name": "nonce",
+          "type": "u64"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        },
+        {
+          "name": "currentMetadata",
+          "type": {
+            "defined": "MetadataArgsV2"
+          }
+        },
+        {
+          "name": "updateArgs",
+          "type": {
+            "defined": "UpdateArgs"
+          }
+        }
+      ]
+    },
+    {
       "name": "verifyCollection",
       "docs": [
         "Verifies a collection for a leaf node."
@@ -1482,48 +3283,29 @@
       ]
     },
     {
-      "name": "updateMetadata",
+      "name": "verifyCreatorV2",
       "docs": [
-        "Updates metadata for a leaf node that is not part of a verified collection."
+        "Verifies a creator for a `LeafSchema` V2 leaf node."
       ],
       "accounts": [
         {
           "name": "treeAuthority",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
-          "name": "authority",
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "creator",
           "isMut": false,
           "isSigner": true,
-          "docs": [
-            "Either collection authority or tree owner/delegate, depending",
-            "on whether the item is in a verified collection"
-          ]
-        },
-        {
-          "name": "collectionMint",
-          "isMut": false,
-          "isSigner": false,
           "isOptional": true,
           "docs": [
-            "Used when item is in a verified collection"
+            "Optional creator, defaults to `payer`"
           ]
-        },
-        {
-          "name": "collectionMetadata",
-          "isMut": false,
-          "isSigner": false,
-          "isOptional": true,
-          "docs": [
-            "Used when item is in a verified collection"
-          ]
-        },
-        {
-          "name": "collectionAuthorityRecordPda",
-          "isMut": false,
-          "isSigner": false,
-          "isOptional": true
         },
         {
           "name": "leafOwner",
@@ -1533,12 +3315,11 @@
         {
           "name": "leafDelegate",
           "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "payer",
-          "isMut": false,
-          "isSigner": true
+          "isSigner": false,
+          "isOptional": true,
+          "docs": [
+            "Defaults to `leaf_owner`"
+          ]
         },
         {
           "name": "merkleTree",
@@ -1552,11 +3333,6 @@
         },
         {
           "name": "compressionProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenMetadataProgram",
           "isMut": false,
           "isSigner": false
         },
@@ -1577,6 +3353,23 @@
           }
         },
         {
+          "name": "assetDataHash",
+          "type": {
+            "option": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        },
+        {
+          "name": "flags",
+          "type": {
+            "option": "u8"
+          }
+        },
+        {
           "name": "nonce",
           "type": "u64"
         },
@@ -1585,15 +3378,9 @@
           "type": "u32"
         },
         {
-          "name": "currentMetadata",
+          "name": "message",
           "type": {
-            "defined": "MetadataArgs"
-          }
-        },
-        {
-          "name": "updateArgs",
-          "type": {
-            "defined": "UpdateArgs"
+            "defined": "MetadataArgsV2"
           }
         }
       ]
@@ -1629,6 +3416,12 @@
             "name": "isDecompressible",
             "type": {
               "defined": "DecompressibleState"
+            }
+          },
+          {
+            "name": "version",
+            "type": {
+              "defined": "Version"
             }
           }
         ]
@@ -1756,10 +3549,16 @@
           },
           {
             "name": "primarySaleHappened",
+            "docs": [
+              "Immutable, once flipped, all sales of this metadata are considered secondary."
+            ],
             "type": "bool"
           },
           {
             "name": "isMutable",
+            "docs": [
+              "Whether or not the data struct is mutable, default is not"
+            ],
             "type": "bool"
           },
           {
@@ -1774,7 +3573,7 @@
           {
             "name": "tokenStandard",
             "docs": [
-              "Since we cannot easily change Metadata, we add the new DataV2 fields here at the end."
+              "Token standard.  Currently only `NonFungible` is allowed."
             ],
             "type": {
               "option": {
@@ -1816,6 +3615,87 @@
               "vec": {
                 "defined": "Creator"
               }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "MetadataArgsV2",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "name",
+            "docs": [
+              "The name of the asset"
+            ],
+            "type": "string"
+          },
+          {
+            "name": "symbol",
+            "docs": [
+              "The symbol for the asset"
+            ],
+            "type": "string"
+          },
+          {
+            "name": "uri",
+            "docs": [
+              "URI pointing to JSON representing the asset"
+            ],
+            "type": "string"
+          },
+          {
+            "name": "sellerFeeBasisPoints",
+            "docs": [
+              "Royalty basis points that goes to creators in secondary sales (0-10000)"
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "primarySaleHappened",
+            "docs": [
+              "Immutable, once flipped, all sales of this metadata are considered secondary."
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "isMutable",
+            "docs": [
+              "Whether or not the data struct is mutable, default is not"
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "tokenStandard",
+            "docs": [
+              "Token standard.  Currently only `NonFungible` is allowed."
+            ],
+            "type": {
+              "option": {
+                "defined": "TokenStandard"
+              }
+            }
+          },
+          {
+            "name": "creators",
+            "docs": [
+              "Creator array"
+            ],
+            "type": {
+              "vec": {
+                "defined": "Creator"
+              }
+            }
+          },
+          {
+            "name": "collection",
+            "docs": [
+              "Collection.  Note in V2 its just a `Pubkey` and is always considered verified."
+            ],
+            "type": {
+              "option": "publicKey"
             }
           }
         ]
@@ -1882,6 +3762,9 @@
         "variants": [
           {
             "name": "V1"
+          },
+          {
+            "name": "V2"
           }
         ]
       }
@@ -1927,6 +3810,67 @@
                     32
                   ]
                 }
+              }
+            ]
+          },
+          {
+            "name": "V2",
+            "fields": [
+              {
+                "name": "id",
+                "type": "publicKey"
+              },
+              {
+                "name": "owner",
+                "type": "publicKey"
+              },
+              {
+                "name": "delegate",
+                "type": "publicKey"
+              },
+              {
+                "name": "nonce",
+                "type": "u64"
+              },
+              {
+                "name": "dataHash",
+                "type": {
+                  "array": [
+                    "u8",
+                    32
+                  ]
+                }
+              },
+              {
+                "name": "creatorHash",
+                "type": {
+                  "array": [
+                    "u8",
+                    32
+                  ]
+                }
+              },
+              {
+                "name": "collectionHash",
+                "type": {
+                  "array": [
+                    "u8",
+                    32
+                  ]
+                }
+              },
+              {
+                "name": "assetDataHash",
+                "type": {
+                  "array": [
+                    "u8",
+                    32
+                  ]
+                }
+              },
+              {
+                "name": "flags",
+                "type": "u8"
               }
             ]
           }
@@ -2013,6 +3957,23 @@
       }
     },
     {
+      "name": "AssetDataSchema",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Binary"
+          },
+          {
+            "name": "Json"
+          },
+          {
+            "name": "MsgPack"
+          }
+        ]
+      }
+    },
+    {
       "name": "InstructionName",
       "type": {
         "kind": "enum",
@@ -2070,6 +4031,54 @@
           },
           {
             "name": "UpdateMetadata"
+          },
+          {
+            "name": "BurnV2"
+          },
+          {
+            "name": "CollectV2"
+          },
+          {
+            "name": "CreateTreeV2"
+          },
+          {
+            "name": "DelegateAndFreezeV2"
+          },
+          {
+            "name": "DelegateV2"
+          },
+          {
+            "name": "FreezeV2"
+          },
+          {
+            "name": "MintV2"
+          },
+          {
+            "name": "SetCollectionV2"
+          },
+          {
+            "name": "SetNonTransferableV2"
+          },
+          {
+            "name": "ThawAndRevokeV2"
+          },
+          {
+            "name": "ThawV2"
+          },
+          {
+            "name": "TransferV2"
+          },
+          {
+            "name": "UnverifyCreatorV2"
+          },
+          {
+            "name": "UpdateAssetDataV2"
+          },
+          {
+            "name": "UpdateMetadataV2"
+          },
+          {
+            "name": "VerifyCreatorV2"
           }
         ]
       }
@@ -2295,6 +4304,71 @@
       "code": 6043,
       "name": "InvalidCompressionProgram",
       "msg": "Invalid compression program"
+    },
+    {
+      "code": 6044,
+      "name": "LeafMustBeDelegated",
+      "msg": "Leaf must be delegated to someone other than the leaf owner"
+    },
+    {
+      "code": 6045,
+      "name": "AssetIsFrozen",
+      "msg": "Asset is frozen"
+    },
+    {
+      "code": 6046,
+      "name": "AssetIsNonTransferable",
+      "msg": "Asset is non-transferable"
+    },
+    {
+      "code": 6047,
+      "name": "InvalidAuthority",
+      "msg": "Invalid authority"
+    },
+    {
+      "code": 6048,
+      "name": "CollectionIsFrozen",
+      "msg": "Collection is frozen"
+    },
+    {
+      "code": 6049,
+      "name": "CollectionMustHaveBubblegumPlugin",
+      "msg": "Core collections must have the Bubblegum V2 plugin on them"
+    },
+    {
+      "code": 6050,
+      "name": "NotAvailable",
+      "msg": "Feature not currently available"
+    },
+    {
+      "code": 6051,
+      "name": "MissingCollectionAccount",
+      "msg": "Missing collection account"
+    },
+    {
+      "code": 6052,
+      "name": "AssetDataLengthTooLong",
+      "msg": "Asset data length too long"
+    },
+    {
+      "code": 6053,
+      "name": "AlreadyInCollection",
+      "msg": "Item is already in the collection"
+    },
+    {
+      "code": 6054,
+      "name": "AlreadyNotInCollection",
+      "msg": "Item is already not in a collection"
+    },
+    {
+      "code": 6055,
+      "name": "MissingMplCoreCpiSignerAccount",
+      "msg": "Missing mpl-core CPI signer account"
+    },
+    {
+      "code": 6056,
+      "name": "AssetIsNotFrozen",
+      "msg": "Asset is not frozen"
     }
   ],
   "metadata": {

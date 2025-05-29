@@ -1,4 +1,5 @@
 use borsh::{BorshDeserialize, BorshSerialize};
+use modular_bitfield::{bitfield, specifiers::B5};
 use types::{BubblegumEventType, LeafSchema, Version};
 
 mod generated;
@@ -28,6 +29,24 @@ pub enum InstructionName {
     MintToCollectionV1,
     SetDecompressibleState,
     UpdateMetadata,
+    /// V2 instructions have been added that use `LeafSchema` V2.
+    /// See `mint_v2` below for more details on the new functionality.
+    BurnV2,
+    CollectV2,
+    CreateTreeV2,
+    DelegateAndFreezeV2,
+    DelegateV2,
+    FreezeV2,
+    MintV2,
+    SetCollectionV2,
+    SetNonTransferableV2,
+    ThawAndRevokeV2,
+    ThawV2,
+    TransferV2,
+    UnverifyCreatorV2,
+    UpdateAssetDataV2,
+    UpdateMetadataV2,
+    VerifyCreatorV2,
 }
 
 pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
@@ -56,6 +75,22 @@ pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
         // `SetDecompressableState` instruction mapped to `SetDecompressibleState` instruction
         [18, 135, 238, 168, 246, 195, 61, 115] => InstructionName::SetDecompressibleState,
         [170, 182, 43, 239, 97, 78, 225, 186] => InstructionName::UpdateMetadata,
+        [115, 210, 34, 240, 232, 143, 183, 16] => InstructionName::BurnV2,
+        [21, 11, 159, 47, 4, 195, 106, 56] => InstructionName::CollectV2,
+        [55, 99, 95, 215, 142, 203, 227, 205] => InstructionName::CreateTreeV2,
+        [17, 229, 35, 218, 190, 241, 250, 123] => InstructionName::DelegateAndFreezeV2,
+        [95, 87, 125, 140, 181, 131, 128, 227] => InstructionName::DelegateV2,
+        [200, 151, 244, 102, 16, 195, 255, 3] => InstructionName::FreezeV2,
+        [120, 121, 23, 146, 173, 110, 199, 205] => InstructionName::MintV2,
+        [229, 35, 61, 91, 15, 14, 99, 160] => InstructionName::SetCollectionV2,
+        [181, 141, 206, 58, 242, 199, 152, 168] => InstructionName::SetNonTransferableV2,
+        [86, 214, 190, 37, 167, 4, 28, 116] => InstructionName::ThawAndRevokeV2,
+        [96, 133, 101, 93, 82, 220, 146, 191] => InstructionName::ThawV2,
+        [119, 40, 6, 235, 234, 221, 248, 49] => InstructionName::TransferV2,
+        [174, 112, 29, 142, 230, 100, 239, 7] => InstructionName::UnverifyCreatorV2,
+        [59, 56, 111, 43, 95, 14, 11, 61] => InstructionName::UpdateAssetDataV2,
+        [43, 103, 89, 42, 121, 242, 62, 72] => InstructionName::UpdateMetadataV2,
+        [85, 138, 140, 42, 22, 241, 118, 102] => InstructionName::VerifyCreatorV2,
         _ => InstructionName::Unknown,
     }
 }
@@ -77,4 +112,18 @@ impl LeafSchemaEvent {
             leaf_hash,
         }
     }
+}
+
+/// Bitfield representation of asset flags.
+#[bitfield(bits = 8)]
+#[derive(Eq, PartialEq, Copy, Clone, Debug, Default)]
+pub struct Flags {
+    /// Frozen at the asset level by the leaf delegate.
+    pub asset_lvl_frozen: bool,
+    /// Frozen by the mpl-core collection permanent freeze delegate.
+    pub permanent_lvl_frozen: bool,
+    /// Set to permanently non-transferable (soulbound).
+    pub non_transferable: bool,
+    /// Unused flags for future asset-level usage.
+    pub empty_bits: B5,
 }

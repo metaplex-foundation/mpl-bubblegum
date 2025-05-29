@@ -211,7 +211,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f4e2e5be518ec6053d90a2a7f26843dbee607583c779e6c8395951b9739bdfbe"
 dependencies = [
  "anchor-syn",
- "borsh-derive-internal 0.10.3",
+ "borsh-derive-internal 0.9.3",
  "proc-macro2",
  "quote",
  "syn 1.0.109",
@@ -246,7 +246,7 @@ dependencies = [
  "arrayref",
  "base64 0.13.1",
  "bincode",
- "borsh 0.10.3",
+ "borsh 0.9.3",
  "bytemuck",
  "getrandom 0.2.15",
  "solana-program 1.18.23",
@@ -691,7 +691,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4114279215a005bc675e386011e594e1d9b800918cea18fcadadcce864a2046b"
 dependencies = [
  "borsh-derive 0.10.3",
- "hashbrown 0.13.2",
+ "hashbrown 0.11.2",
 ]
 
 [[package]]
@@ -2125,11 +2125,11 @@ dependencies = [
 
 [[package]]
 name = "kaigan"
-version = "0.2.5"
+version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b6dd100976df9dd59d0c3fecf6f9ad3f161a087374d1b2a77ebb4ad8920f11bb"
+checksum = "8581d1a7da300496f29de32a8ed4276c28cb908100e836afc5719882ccb43a1c"
 dependencies = [
- "borsh 0.10.3",
+ "borsh 0.9.3",
  "serde",
 ]
 
@@ -2413,12 +2413,13 @@ dependencies = [
 
 [[package]]
 name = "mpl-bubblegum"
-version = "1.4.0"
+version = "2.0.1"
 dependencies = [
  "assert_matches",
- "borsh 0.10.3",
+ "borsh 0.9.3",
  "bytemuck",
  "kaigan",
+ "modular-bitfield",
  "num-derive 0.3.3",
  "num-traits",
  "serde",

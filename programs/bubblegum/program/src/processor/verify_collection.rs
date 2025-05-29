@@ -1,11 +1,10 @@
 use anchor_lang::prelude::*;
 
 use crate::{
+    processor::process_collection_verification,
     state::{metaplex_adapter::MetadataArgs, metaplex_anchor::TokenMetadata, TreeConfig},
     utils::validate_ownership_and_programs,
 };
-
-use super::process_collection_verification;
 
 #[derive(Accounts)]
 pub struct CollectionVerification<'info> {
@@ -18,8 +17,8 @@ pub struct CollectionVerification<'info> {
     pub leaf_owner: UncheckedAccount<'info>,
     /// CHECK: This account is checked in the instruction
     pub leaf_delegate: UncheckedAccount<'info>,
-    #[account(mut)]
     /// CHECK: This account is modified in the downstream program
+    #[account(mut)]
     pub merkle_tree: UncheckedAccount<'info>,
     pub payer: Signer<'info>,
     /// CHECK: This account is checked in the instruction

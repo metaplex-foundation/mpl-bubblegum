@@ -6,6 +6,7 @@
 //!
 
 use crate::generated::types::DecompressibleState;
+use crate::generated::types::Version;
 use borsh::BorshDeserialize;
 use borsh::BorshSerialize;
 use solana_program::pubkey::Pubkey;
@@ -28,6 +29,7 @@ pub struct TreeConfig {
     pub num_minted: u64,
     pub is_public: bool,
     pub is_decompressible: DecompressibleState,
+    pub version: Version,
 }
 
 impl TreeConfig {

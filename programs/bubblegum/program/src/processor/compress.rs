@@ -16,7 +16,6 @@ pub struct Compress<'info> {
     pub leaf_delegate: UncheckedAccount<'info>,
     /// CHECK: This account is not read
     pub merkle_tree: UncheckedAccount<'info>,
-
     /// CHECK: versioning is handled in the instruction
     #[account(mut)]
     pub token_account: AccountInfo<'info>,

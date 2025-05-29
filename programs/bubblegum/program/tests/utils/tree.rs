@@ -929,7 +929,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         let (data_hash, creator_hash) = compute_metadata_hashes(&args.metadata)?;
         let asset_id = get_asset_id(&self.tree_pubkey(), args.nonce);
 
-        let leaf = LeafSchema::new_v0(
+        let leaf = LeafSchema::new_v1(
             asset_id,
             args.owner.pubkey(),
             args.delegate.pubkey(),
@@ -953,7 +953,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
     pub fn leaf_schema(&self, leaf: &LeafArgs) -> LeafSchema {
         let id = get_asset_id(&self.tree_pubkey(), leaf.nonce);
         let (data_hash, creator_hash) = compute_metadata_hashes(&leaf.metadata).unwrap();
-        LeafSchema::new_v0(
+        LeafSchema::new_v1(
             id,
             leaf.owner.pubkey(),
             leaf.delegate.pubkey(),

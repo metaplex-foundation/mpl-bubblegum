@@ -7,12 +7,14 @@ import {
 } from '@metaplex-foundation/umi';
 import test from 'ava';
 import {
-  MetadataArgsArgs,
   fetchMerkleTree,
+  getCurrentRoot,
+} from '@metaplex-foundation/spl-account-compression';
+import {
+  MetadataArgsArgs,
   hashLeaf,
   mintToCollectionV1,
   transfer,
-  getCurrentRoot,
   hashMetadataCreators,
   hashMetadataData,
 } from '../src';
@@ -22,8 +24,8 @@ test('it can mint an NFT from a collection and then transfer it', async (t) => {
   // Given an empty Bubblegum tree.
   const umi = await createUmi();
   const merkleTree = await createTree(umi);
-  let leafOwner = generateSigner(umi);
-  let leafOwnerKey = leafOwner.publicKey;
+  const leafOwner = generateSigner(umi);
+  const leafOwnerKey = leafOwner.publicKey;
   let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.sequenceNumber, 0n);
 
@@ -71,8 +73,7 @@ test('it can mint an NFT from a collection and then transfer it', async (t) => {
   });
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(leaf));
 
-  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
-  let updatedMetadata = {
+  const updatedMetadata = {
     ...metadata,
     collection: some({ key: collectionMint.publicKey, verified: true }),
   };
@@ -80,7 +81,7 @@ test('it can mint an NFT from a collection and then transfer it', async (t) => {
   // When leafOwnerA transfers the NFT to leafOwnerB.
   const leafOwnerB = generateSigner(umi);
   await transfer(umi, {
-    leafOwner: leafOwner,
+    leafOwner,
     newLeafOwner: leafOwnerB.publicKey,
     merkleTree,
     root: getCurrentRoot(merkleTreeAccount.tree),

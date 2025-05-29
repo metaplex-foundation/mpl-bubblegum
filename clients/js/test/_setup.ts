@@ -1,4 +1,5 @@
 /* eslint-disable import/no-extraneous-dependencies */
+import { fetchMerkleTree as fetchMerkleTreeV2 } from '@metaplex-foundation/mpl-account-compression';
 import { mplTokenMetadata } from '@metaplex-foundation/mpl-token-metadata';
 import {
   Context,
@@ -11,15 +12,19 @@ import {
   publicKey,
 } from '@metaplex-foundation/umi';
 import { createUmi as baseCreateUmi } from '@metaplex-foundation/umi-bundle-tests';
+import { fetchMerkleTree as fetchMerkleTreeV1 } from '@metaplex-foundation/spl-account-compression';
 import {
   DecompressibleState,
   MetadataArgsArgs,
+  MetadataArgsV2Args,
   createTree as baseCreateTree,
+  createTreeV2 as baseCreateTreeV2,
   mintV1 as baseMintV1,
-  fetchMerkleTree,
+  mintV2 as baseMintV2,
   findLeafAssetIdPda,
   findTreeConfigPda,
   hashLeaf,
+  hashLeafV2,
   mplBubblegum,
   setDecompressibleState,
 } from '../src';
@@ -53,6 +58,22 @@ export const createTree = async (
   return merkleTree.publicKey;
 };
 
+export const createTreeV2 = async (
+  context: Context,
+  input: Partial<Parameters<typeof baseCreateTreeV2>[1]> = {}
+): Promise<PublicKey> => {
+  const merkleTree = generateSigner(context);
+  const builder = await baseCreateTreeV2(context, {
+    merkleTree,
+    maxDepth: 14,
+    maxBufferSize: 64,
+    ...input,
+  });
+
+  await builder.sendAndConfirm(context);
+  return merkleTree.publicKey;
+};
+
 export const mint = async (
   context: Context,
   input: Omit<Parameters<typeof baseMintV1>[1], 'metadata' | 'leafOwner'> & {
@@ -70,7 +91,7 @@ export const mint = async (
   const leafOwner = input.leafOwner ?? context.identity.publicKey;
   const leafIndex = Number(
     input.leafIndex ??
-      (await fetchMerkleTree(context, merkleTree)).tree.activeIndex
+      (await fetchMerkleTreeV1(context, merkleTree)).tree.activeIndex
   );
   const metadata: MetadataArgsArgs = {
     name: 'My NFT',
@@ -103,7 +124,61 @@ export const mint = async (
   };
 };
 
-// TransactionWithMeta doesn't have ReturnData field that is discribed in
+export const mintV2 = async (
+  context: Context,
+  input: Omit<
+    Parameters<typeof baseMintV2>[1],
+    'metadata' | 'leafOwner' | 'leafDelegate'
+  > & {
+    leafIndex?: number | bigint;
+    metadata?: Partial<Parameters<typeof baseMintV2>[1]['metadata']>;
+    leafOwner?: PublicKey;
+    leafDelegate?: PublicKey;
+  }
+): Promise<{
+  metadata: MetadataArgsV2Args;
+  assetId: Pda;
+  leaf: PublicKey;
+  leafIndex: number;
+}> => {
+  const merkleTree = publicKey(input.merkleTree, false);
+  const leafOwner = input.leafOwner ?? context.identity.publicKey;
+  const leafIndex = Number(
+    input.leafIndex ??
+      (await fetchMerkleTreeV2(context, merkleTree)).tree.activeIndex
+  );
+  const metadata: MetadataArgsV2Args = {
+    name: 'My NFT',
+    uri: 'https://example.com/my-nft.json',
+    sellerFeeBasisPoints: 500, // 5%
+    collection: none(),
+    creators: [],
+    ...input.metadata,
+  };
+
+  await baseMintV2(context, {
+    ...input,
+    metadata,
+    leafOwner,
+  }).sendAndConfirm(context);
+
+  return {
+    metadata,
+    assetId: findLeafAssetIdPda(context, { merkleTree, leafIndex }),
+    leafIndex,
+    leaf: publicKey(
+      hashLeafV2(context, {
+        merkleTree,
+        owner: publicKey(leafOwner, false),
+        delegate: publicKey(input.leafDelegate ?? leafOwner, false),
+        leafIndex,
+        metadata,
+      })
+    ),
+  };
+};
+
+// TransactionWithMeta doesn't have ReturnData field that is described in
 // https://solana.com/docs/rpc/http/gettransaction#result
 // so ugly log parsing is provided
 export function getReturnLog(

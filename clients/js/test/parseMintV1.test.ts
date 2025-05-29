@@ -7,9 +7,9 @@ import {
 } from '@metaplex-foundation/umi';
 import { createNft } from '@metaplex-foundation/mpl-token-metadata';
 import test from 'ava';
+import { fetchMerkleTree } from '@metaplex-foundation/spl-account-compression';
 import {
   MetadataArgsArgs,
-  fetchMerkleTree,
   findLeafAssetIdPda,
   mintToCollectionV1,
   mintV1,
@@ -55,7 +55,7 @@ test('it can parse the leaf from mint instructions', async (t) => {
   }
 });
 
-test('it can parse the leaf from mintToCollection instructions)', async (t) => {
+test('it can parse the leaf from mintToCollection instructions', async (t) => {
   // Given an empty Bubblegum tree.
   const umi = await createUmi();
   const merkleTree = await createTree(umi);
