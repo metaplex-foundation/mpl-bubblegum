@@ -4,7 +4,7 @@ pub use setup::*;
 
 use mpl_bubblegum::{
     hash::{hash_creators, hash_metadata},
-    types::{Creator, MetadataArgs, TokenProgramVersion, TokenStandard},
+    types::{Creator, MetadataArgs, MetadataArgsV2, TokenProgramVersion, TokenStandard},
     utils::get_asset_id,
 };
 use solana_program_test::tokio;
@@ -176,4 +176,105 @@ mod mint {
         assert_eq!(leaf.data_hash(), hash_metadata(&metadata).unwrap());
         assert_eq!(leaf.creator_hash(), hash_creators(&metadata.creators));
     }
+}
+
+#[tokio::test]
+async fn mint_v2_asset() {
+    let mut program_test = create_program_test();
+    program_test.set_compute_max_units(400_000);
+    let mut context = program_test.start_with_context().await;
+
+    // Given a new merkle tree.
+
+    let mut tree_manager = TreeManager::<6, 16>::default();
+    tree_manager.create(&mut context).await.unwrap();
+
+    assert!(find_account(&mut context, &tree_manager.tree.pubkey())
+        .await
+        .is_some());
+
+    // When minting a new cNFT.
+
+    let owner = Keypair::new();
+
+    let metadata = MetadataArgsV2 {
+        name: String::from("cNFT"),
+        symbol: String::from("cNFT"),
+        uri: String::from("https://c.nft"),
+        seller_fee_basis_points: 500,
+        primary_sale_happened: true,
+        is_mutable: true,
+        token_standard: Some(TokenStandard::NonFungible),
+        creators: vec![Creator {
+            address: context.payer.pubkey(),
+            share: 100,
+            verified: false,
+        }],
+        collection: None,
+    };
+
+    tree_manager
+        .mint_v2(&mut context, owner.pubkey(), metadata)
+        .await
+        .unwrap();
+
+    // Then one cNFT is minted.
+
+    assert_eq!(tree_manager.minted(), 1);
+
+    // And the merkle tree root is updated.
+
+    tree_manager.assert_root(&mut context).await;
+}
+
+#[tokio::test]
+async fn mint_v2_multiple_asset() {
+    let mut program_test = create_program_test();
+    program_test.set_compute_max_units(400_000);
+    let mut context = program_test.start_with_context().await;
+
+    // Given a new merkle tree.
+
+    let mut tree_manager = TreeManager::<5, 8>::default();
+    tree_manager.create(&mut context).await.unwrap();
+
+    assert!(find_account(&mut context, &tree_manager.tree.pubkey())
+        .await
+        .is_some());
+
+    // When minting mutiple cNFTs.
+
+    for _ in 0..10 {
+        let owner = Keypair::new();
+
+        let metadata = MetadataArgsV2 {
+            name: String::from("cNFT"),
+            symbol: String::from("cNFT"),
+            uri: String::from("https://c.nft"),
+            seller_fee_basis_points: 500,
+            primary_sale_happened: true,
+            is_mutable: true,
+            token_standard: Some(TokenStandard::NonFungible),
+            creators: vec![Creator {
+                address: context.payer.pubkey(),
+                share: 100,
+                verified: false,
+            }],
+            collection: None,
+        };
+
+        tree_manager
+            .mint_v2(&mut context, owner.pubkey(), metadata)
+            .await
+            .unwrap();
+    }
+
+    // Then all cNFTs are minted.
+
+    assert_eq!(tree_manager.minted(), 10);
+    assert!(!tree_manager.get_proof(9).is_empty());
+
+    // And the merkle tree root is updated.
+
+    tree_manager.assert_root(&mut context).await;
 }
