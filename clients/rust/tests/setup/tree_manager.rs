@@ -237,15 +237,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> TreeManager<MAX_DEPTH
         asset: &LeafSchema,
     ) -> Result<LeafSchema, BanksClientError> {
         let (tree_config, _) = TreeConfig::find_pda(&self.tree.pubkey());
-        let proof: Vec<AccountMeta> = self
-            .get_proof(asset.nonce() as u32)
-            .iter()
-            .map(|node| AccountMeta {
-                pubkey: Pubkey::new_from_array(*node),
-                is_signer: false,
-                is_writable: false,
-            })
-            .collect();
+        let proof = self.build_proof(asset.nonce() as u32);
 
         let transfer_ix = TransferBuilder::new()
             .leaf_delegate(owner.pubkey(), false)
@@ -295,15 +287,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> TreeManager<MAX_DEPTH
         asset: &LeafSchema,
     ) -> Result<LeafSchema, BanksClientError> {
         let (tree_config, _) = TreeConfig::find_pda(&self.tree.pubkey());
-        let proof: Vec<AccountMeta> = self
-            .get_proof(asset.nonce() as u32)
-            .iter()
-            .map(|node| AccountMeta {
-                pubkey: Pubkey::new_from_array(*node),
-                is_signer: false,
-                is_writable: false,
-            })
-            .collect();
+        let proof = self.build_proof(asset.nonce() as u32);
 
         let transfer_ix = TransferV2Builder::new()
             .tree_config(tree_config)
@@ -357,15 +341,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> TreeManager<MAX_DEPTH
         asset: &LeafSchema,
     ) -> Result<(), BanksClientError> {
         let (tree_config, _) = TreeConfig::find_pda(&self.tree.pubkey());
-        let proof: Vec<AccountMeta> = self
-            .get_proof(asset.nonce() as u32)
-            .iter()
-            .map(|node| AccountMeta {
-                pubkey: Pubkey::new_from_array(*node),
-                is_signer: false,
-                is_writable: false,
-            })
-            .collect();
+        let proof = self.build_proof(asset.nonce() as u32);
 
         let burn_ix = BurnV2Builder::new()
             .tree_config(tree_config)
@@ -413,5 +389,19 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> TreeManager<MAX_DEPTH
         let root = tree.change_logs[tree.active_index as usize].root;
 
         assert_eq!(root, self.proof_tree.root);
+    }
+
+    fn build_proof(&self, nonce: u32) -> Vec<AccountMeta> {
+        let proof: Vec<AccountMeta> = self
+            .get_proof(nonce)
+            .iter()
+            .map(|node| AccountMeta {
+                pubkey: Pubkey::new_from_array(*node),
+                is_signer: false,
+                is_writable: false,
+            })
+            .collect();
+
+        proof
     }
 }

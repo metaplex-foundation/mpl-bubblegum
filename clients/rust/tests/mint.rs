@@ -82,7 +82,7 @@ mod mint {
             .await
             .is_some());
 
-        // When minting mutiple cNFTs.
+        // When minting multiple cNFTs.
 
         for _ in 0..10 {
             let owner = Keypair::new();
@@ -242,7 +242,7 @@ async fn mint_v2_multiple_asset() {
         .await
         .is_some());
 
-    // When minting mutiple cNFTs.
+    // When minting multiple cNFTs.
 
     for _ in 0..10 {
         let owner = Keypair::new();
