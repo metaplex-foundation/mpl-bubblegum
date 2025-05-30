@@ -2,17 +2,17 @@ use anchor_lang::{prelude::*, system_program::System};
 use bytemuck::cast_slice;
 use mpl_account_compression::{program::MplAccountCompression, Noop as MplNoop};
 use spl_account_compression::{
-    program::SplAccountCompression,
     state::{
         merkle_tree_get_size, ConcurrentMerkleTreeHeader, CONCURRENT_MERKLE_TREE_HEADER_SIZE_V1,
     },
-    Node, Noop as SplNoop,
+    Node,
 };
 use std::cell::Ref;
 
 use crate::{
     error::BubblegumError,
     state::{DecompressibleState, TreeConfig, TREE_AUTHORITY_SIZE},
+    utils::validate_ownership_and_programs,
 };
 
 pub const MAX_ACC_PROOFS_SIZE: u32 = 17;
@@ -33,8 +33,10 @@ pub struct CreateTree<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
     pub tree_creator: Signer<'info>,
-    pub log_wrapper: Program<'info, SplNoop>,
-    pub compression_program: Program<'info, SplAccountCompression>,
+    /// CHECK: Program is verified in the instruction
+    pub log_wrapper: UncheckedAccount<'info>,
+    /// CHECK: Program is verified in the instruction
+    pub compression_program: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
 }
 
@@ -44,8 +46,16 @@ pub(crate) fn create_tree(
     max_buffer_size: u32,
     public: Option<bool>,
 ) -> Result<()> {
+    validate_ownership_and_programs(
+        &ctx.accounts.merkle_tree,
+        &ctx.accounts.log_wrapper,
+        &ctx.accounts.compression_program,
+    )?;
+
     let merkle_tree = ctx.accounts.merkle_tree.to_account_info();
 
+    // Note this uses spl-account-compression to check the canopy size, and is assumed
+    // to be a valid check for mpl-account-compression.
     check_canopy_size(
         ctx.accounts.merkle_tree.data.borrow(),
         ctx.accounts.tree_authority.key(),
@@ -68,16 +78,30 @@ pub(crate) fn create_tree(
     });
 
     let authority_pda_signer = &[&seeds[..]];
-    let cpi_ctx = CpiContext::new_with_signer(
-        ctx.accounts.compression_program.to_account_info(),
-        spl_account_compression::cpi::accounts::Initialize {
-            authority: ctx.accounts.tree_authority.to_account_info(),
-            merkle_tree,
-            noop: ctx.accounts.log_wrapper.to_account_info(),
-        },
-        authority_pda_signer,
-    );
-    spl_account_compression::cpi::init_empty_merkle_tree(cpi_ctx, max_depth, max_buffer_size)
+
+    if ctx.accounts.compression_program.key == &spl_account_compression::id() {
+        let cpi_ctx = CpiContext::new_with_signer(
+            ctx.accounts.compression_program.to_account_info(),
+            spl_account_compression::cpi::accounts::Initialize {
+                authority: ctx.accounts.tree_authority.to_account_info(),
+                merkle_tree: ctx.accounts.merkle_tree.to_account_info(),
+                noop: ctx.accounts.log_wrapper.to_account_info(),
+            },
+            authority_pda_signer,
+        );
+        spl_account_compression::cpi::init_empty_merkle_tree(cpi_ctx, max_depth, max_buffer_size)
+    } else {
+        let cpi_ctx = CpiContext::new_with_signer(
+            ctx.accounts.compression_program.to_account_info(),
+            mpl_account_compression::cpi::accounts::Initialize {
+                authority: ctx.accounts.tree_authority.to_account_info(),
+                merkle_tree: ctx.accounts.merkle_tree.to_account_info(),
+                noop: ctx.accounts.log_wrapper.to_account_info(),
+            },
+            authority_pda_signer,
+        );
+        mpl_account_compression::cpi::init_empty_merkle_tree(cpi_ctx, max_depth, max_buffer_size)
+    }
 }
 
 #[derive(Accounts)]

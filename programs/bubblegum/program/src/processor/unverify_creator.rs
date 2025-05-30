@@ -10,7 +10,10 @@ use crate::{
         leaf_schema::Version,
         metaplex_adapter::{MetadataArgs, MetadataArgsV2},
     },
-    utils::{hash_collection_option, hash_creators, hash_metadata, replace_leaf},
+    utils::{
+        hash_collection_option, hash_creators, hash_metadata, replace_leaf,
+        validate_ownership_and_programs,
+    },
 };
 
 pub(crate) fn unverify_creator<'info>(
@@ -22,6 +25,12 @@ pub(crate) fn unverify_creator<'info>(
     index: u32,
     message: MetadataArgs,
 ) -> Result<()> {
+    validate_ownership_and_programs(
+        &ctx.accounts.merkle_tree,
+        &ctx.accounts.log_wrapper,
+        &ctx.accounts.compression_program,
+    )?;
+
     // V1 instructions only work with V1 trees.
     require!(
         ctx.accounts.tree_authority.version == Version::V1,
