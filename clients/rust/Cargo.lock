@@ -2590,7 +2590,7 @@ name = "mpl-bubblegum"
 version = "2.1.0"
 dependencies = [
  "assert_matches",
- "borsh 0.9.3",
+ "borsh 0.10.3",
  "bytemuck",
  "kaigan 0.1.4",
  "modular-bitfield",
