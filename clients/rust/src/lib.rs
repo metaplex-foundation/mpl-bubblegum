@@ -127,3 +127,6 @@ pub struct Flags {
     /// Unused flags for future asset-level usage.
     pub empty_bits: B5,
 }
+
+/// Default flags for `LeafSchemaV2`.
+pub const DEFAULT_FLAGS: u8 = 0;

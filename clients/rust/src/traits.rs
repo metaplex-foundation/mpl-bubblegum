@@ -1,8 +1,10 @@
 #![allow(clippy::derivable_impls)]
+use borsh::{BorshDeserialize, BorshSerialize};
 use solana_program::{keccak, pubkey::Pubkey};
 
 use crate::types::{
-    Collection, LeafSchema, MetadataArgs, MetadataArgsV2, TokenProgramVersion, UpdateArgs, Version,
+    Collection, Creator, LeafSchema, MetadataArgs, MetadataArgsV2, TokenProgramVersion,
+    TokenStandard, UpdateArgs, Version,
 };
 
 // LeafSchema
@@ -201,5 +203,176 @@ impl Default for UpdateArgs {
             symbol: None,
             uri: None,
         }
+    }
+}
+
+pub trait MetadataArgsCommon: BorshSerialize + BorshDeserialize {
+    fn version(&self) -> Version;
+
+    fn name(&self) -> &str;
+    fn set_name(&mut self, name: String);
+
+    fn symbol(&self) -> &str;
+    fn set_symbol(&mut self, symbol: String);
+
+    fn uri(&self) -> &str;
+    fn set_uri(&mut self, uri: String);
+
+    fn seller_fee_basis_points(&self) -> u16;
+    fn set_seller_fee_basis_points(&mut self, fee: u16);
+
+    fn primary_sale_happened(&self) -> bool;
+    fn set_primary_sale_happened(&mut self, primary_sale_happened: bool);
+
+    fn is_mutable(&self) -> bool;
+    fn set_is_mutable(&mut self, is_mutable: bool);
+
+    fn token_standard(&self) -> Option<&TokenStandard>;
+    fn set_token_standard(&mut self, standard: Option<TokenStandard>);
+
+    fn creators(&self) -> &Vec<Creator>;
+    fn set_creators(&mut self, creators: Vec<Creator>);
+
+    fn collection_key(&self) -> Option<Pubkey>;
+    fn collection_verified(&self) -> bool;
+}
+
+impl MetadataArgsCommon for MetadataArgs {
+    fn version(&self) -> Version {
+        Version::V1
+    }
+
+    fn name(&self) -> &str {
+        &self.name
+    }
+    fn set_name(&mut self, name: String) {
+        self.name = name;
+    }
+
+    fn symbol(&self) -> &str {
+        &self.symbol
+    }
+    fn set_symbol(&mut self, symbol: String) {
+        self.symbol = symbol;
+    }
+
+    fn uri(&self) -> &str {
+        &self.uri
+    }
+    fn set_uri(&mut self, uri: String) {
+        self.uri = uri;
+    }
+
+    fn seller_fee_basis_points(&self) -> u16 {
+        self.seller_fee_basis_points
+    }
+    fn set_seller_fee_basis_points(&mut self, fee: u16) {
+        self.seller_fee_basis_points = fee;
+    }
+
+    fn primary_sale_happened(&self) -> bool {
+        self.primary_sale_happened
+    }
+    fn set_primary_sale_happened(&mut self, primary_sale_happened: bool) {
+        self.primary_sale_happened = primary_sale_happened;
+    }
+
+    fn is_mutable(&self) -> bool {
+        self.is_mutable
+    }
+    fn set_is_mutable(&mut self, is_mutable: bool) {
+        self.is_mutable = is_mutable;
+    }
+
+    fn token_standard(&self) -> Option<&TokenStandard> {
+        self.token_standard.as_ref()
+    }
+    fn set_token_standard(&mut self, standard: Option<TokenStandard>) {
+        self.token_standard = standard;
+    }
+
+    fn creators(&self) -> &Vec<Creator> {
+        &self.creators
+    }
+    fn set_creators(&mut self, creators: Vec<Creator>) {
+        self.creators = creators;
+    }
+
+    fn collection_key(&self) -> Option<Pubkey> {
+        self.collection.as_ref().map(|collection| collection.key)
+    }
+    fn collection_verified(&self) -> bool {
+        self.collection
+            .as_ref()
+            .map_or(false, |collection| collection.verified)
+    }
+}
+
+impl MetadataArgsCommon for MetadataArgsV2 {
+    fn version(&self) -> Version {
+        Version::V2
+    }
+
+    fn name(&self) -> &str {
+        &self.name
+    }
+    fn set_name(&mut self, name: String) {
+        self.name = name;
+    }
+
+    fn symbol(&self) -> &str {
+        &self.symbol
+    }
+    fn set_symbol(&mut self, symbol: String) {
+        self.symbol = symbol;
+    }
+
+    fn uri(&self) -> &str {
+        &self.uri
+    }
+    fn set_uri(&mut self, uri: String) {
+        self.uri = uri;
+    }
+
+    fn seller_fee_basis_points(&self) -> u16 {
+        self.seller_fee_basis_points
+    }
+    fn set_seller_fee_basis_points(&mut self, fee: u16) {
+        self.seller_fee_basis_points = fee;
+    }
+
+    fn primary_sale_happened(&self) -> bool {
+        self.primary_sale_happened
+    }
+    fn set_primary_sale_happened(&mut self, primary_sale_happened: bool) {
+        self.primary_sale_happened = primary_sale_happened;
+    }
+
+    fn is_mutable(&self) -> bool {
+        self.is_mutable
+    }
+    fn set_is_mutable(&mut self, is_mutable: bool) {
+        self.is_mutable = is_mutable;
+    }
+
+    fn token_standard(&self) -> Option<&TokenStandard> {
+        self.token_standard.as_ref()
+    }
+    fn set_token_standard(&mut self, standard: Option<TokenStandard>) {
+        self.token_standard = standard;
+    }
+
+    fn creators(&self) -> &Vec<Creator> {
+        &self.creators
+    }
+    fn set_creators(&mut self, creators: Vec<Creator>) {
+        self.creators = creators;
+    }
+
+    fn collection_key(&self) -> Option<Pubkey> {
+        self.collection
+    }
+    fn collection_verified(&self) -> bool {
+        self.collection.is_some()
     }
 }
