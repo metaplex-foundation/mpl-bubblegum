@@ -667,3 +667,16 @@ test('it can fetch the truncated proof of a compressed asset with nonzero canopy
     },
   });
 });
+
+test('it can fetch a compressed asset with grouping verified set to false', async (t) => {
+  // Given a minted NFT on devnet with grouping verification set to false.
+  const { umi } = t.context;
+  const assetId = publicKey('AuEcXoQ3eZtwkxywbX7PVLSCwK3EUNsmsh7ox38Qcngi');
+
+  // When we fetch the asset with proof using its ID.
+  const asset = await getAssetWithProof(umi, assetId);
+
+  // Then we expect the asset to have grouping with verified set to false.
+  t.true(asset.rpcAsset.grouping.length > 0, 'Asset should have grouping');
+  t.is(asset.rpcAsset.grouping[0].verified, false, 'First grouping should have verified set to false');
+});
