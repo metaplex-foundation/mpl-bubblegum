@@ -45,7 +45,10 @@ export const getAssetWithProof = async (
   options?: GetAssetWithProofOptions
 ): Promise<AssetWithProof> => {
   const [rpcAsset, rpcAssetProof] = await Promise.all([
-    context.rpc.getAsset(assetId),
+    context.rpc.getAsset({
+      assetId,
+      displayOptions: { showUnverifiedCollections: true },
+    }),
     context.rpc.getAssetProof(assetId),
   ]);
 
