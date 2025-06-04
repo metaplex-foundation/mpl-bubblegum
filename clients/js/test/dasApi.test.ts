@@ -678,5 +678,9 @@ test('it can fetch a compressed asset with grouping verified set to false', asyn
 
   // Then we expect the asset to have grouping with verified set to false.
   t.true(asset.rpcAsset.grouping.length > 0, 'Asset should have grouping');
-  t.is(asset.rpcAsset.grouping[0].verified, false, 'First grouping should have verified set to false');
+  t.is(
+    asset.rpcAsset.grouping[0].verified,
+    false,
+    'First grouping should have verified set to false'
+  );
 });
