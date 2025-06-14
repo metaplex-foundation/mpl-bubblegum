@@ -461,6 +461,7 @@ test('it can fetch the proof of a compressed asset with nonzero canopy depth', a
         {
           group_key: 'collection',
           group_value: '5141VSFjgYFEKTy45aT1tUEeApwQ1eXPEfzRdRVt7xTL',
+          verified: true,
         },
       ] as DasApiAssetGrouping[],
       royalty: {
@@ -606,6 +607,7 @@ test('it can fetch the truncated proof of a compressed asset with nonzero canopy
         {
           group_key: 'collection',
           group_value: '5141VSFjgYFEKTy45aT1tUEeApwQ1eXPEfzRdRVt7xTL',
+          verified: true,
         },
       ] as DasApiAssetGrouping[],
       royalty: {
