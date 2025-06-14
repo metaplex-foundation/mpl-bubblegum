@@ -158,11 +158,16 @@ test('it can update metadata using the getAssetWithProof helper', async (t) => {
   } as GetAssetProofRpcResponse;
   umi.rpc = {
     ...umi.rpc,
-    getAsset: async (params: {
+    getAsset: async ({
+      assetId: requestedAssetId,
+      displayOptions,
+    }: {
       assetId: PublicKey;
       displayOptions?: { showUnverifiedCollections?: boolean };
     }) => {
-      t.is(params.assetId, assetId);
+      t.is(requestedAssetId, assetId);
+      // Ensure the fix stays covered.
+      t.deepEqual(displayOptions, { showUnverifiedCollections: true });
       return rpcAsset;
     },
     getAssetProof: async (givenAssetId: PublicKey) => {
