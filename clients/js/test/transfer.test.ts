@@ -228,8 +228,11 @@ test('it can transfer a compressed NFT using the getAssetWithProof helper', asyn
   } as GetAssetProofRpcResponse;
   umi.rpc = {
     ...umi.rpc,
-    getAsset: async (givenAssetId: PublicKey) => {
-      t.is(givenAssetId, assetId);
+    getAsset: async (params: {
+      assetId: PublicKey;
+      displayOptions?: { showUnverifiedCollections?: boolean };
+    }) => {
+      t.is(params.assetId, assetId);
       return rpcAsset;
     },
     getAssetProof: async (givenAssetId: PublicKey) => {
