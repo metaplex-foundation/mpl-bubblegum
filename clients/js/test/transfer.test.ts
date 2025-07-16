@@ -233,6 +233,7 @@ test('it can transfer a compressed NFT using the getAssetWithProof helper', asyn
       displayOptions?: { showUnverifiedCollections?: boolean };
     }) => {
       t.is(params.assetId, assetId);
+      t.deepEqual(params.displayOptions, { showUnverifiedCollections: true });
       return rpcAsset;
     },
     getAssetProof: async (givenAssetId: PublicKey) => {

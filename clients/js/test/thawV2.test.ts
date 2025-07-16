@@ -328,6 +328,7 @@ test('can thaw a compressed NFT using the getAssetWithProof helper using V2 inst
       displayOptions?: { showUnverifiedCollections?: boolean };
     }) => {
       t.is(params.assetId, assetId);
+      t.deepEqual(params.displayOptions, { showUnverifiedCollections: true });
       return rpcAsset;
     },
     getAssetProof: async (givenAssetId: PublicKey) => {

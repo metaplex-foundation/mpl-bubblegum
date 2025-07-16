@@ -216,6 +216,7 @@ test('it can update metadata using the getAssetWithProof helper using V2 instruc
       displayOptions?: { showUnverifiedCollections?: boolean };
     }) => {
       t.is(params.assetId, assetId);
+      t.deepEqual(params.displayOptions, { showUnverifiedCollections: true });
       return rpcAsset;
     },
     getAssetProof: async (givenAssetId: PublicKey) => {
@@ -566,6 +567,7 @@ test('it can update metadata using the getAssetWithProof helper with collection'
       displayOptions?: { showUnverifiedCollections?: boolean };
     }) => {
       t.is(params.assetId, assetId);
+      t.deepEqual(params.displayOptions, { showUnverifiedCollections: true });
       return rpcAsset;
     },
     getAssetProof: async (givenAssetId: PublicKey) => {

@@ -680,6 +680,7 @@ test('it can update metadata using the getAssetWithProof helper with verified co
       displayOptions?: { showUnverifiedCollections?: boolean };
     }) => {
       t.is(params.assetId, assetId);
+      t.deepEqual(params.displayOptions, { showUnverifiedCollections: true });
       return rpcAsset;
     },
     getAssetProof: async (givenAssetId: PublicKey) => {
