@@ -15,6 +15,7 @@ import {
   parseLeafFromMintV2Transaction,
 } from '../src';
 import { createTreeV2, createUmi } from './_setup';
+import { setComputeUnitLimit } from '@metaplex-foundation/mpl-toolbox';
 
 test('it can parse the leaf from mintV2 instructions', async (t) => {
   // Given an empty Bubblegum tree.
@@ -106,4 +107,53 @@ test('it can parse the leaf from mintV2 to collection instructions', async (t) =
     t.is(Number(leaf.nonce), nonce);
     t.is(leaf.id, assetId[0]);
   }
+});
+
+test('it can parse the leaf schema from mintV2 when Bubblegum instruction is not the only instruction', async (t) => {
+  const umi = await createUmi();
+  const merkleTree = await createTreeV2(umi);
+  const leafOwner = generateSigner(umi).publicKey;
+
+  const coreCollection = generateSigner(umi);
+  const collectionUpdateAuthority = generateSigner(umi);
+  await createCollection(umi, {
+    collection: coreCollection,
+    updateAuthority: collectionUpdateAuthority.publicKey,
+    name: 'Test Collection',
+    uri: 'https://example.com/collection.json',
+    plugins: [
+      {
+        type: 'BubblegumV2',
+      },
+    ],
+  }).sendAndConfirm(umi);
+
+  const metadata: MetadataArgsV2Args = {
+    name: 'My NFT',
+    uri: 'https://example.com/my-nft.json',
+    sellerFeeBasisPoints: 550, // 5.5%
+    collection: some(coreCollection.publicKey),
+    creators: [],
+  };
+
+  const computeIxBuilder = setComputeUnitLimit(umi, { units: 1_000_000 });
+
+  const mintBuilder = await mintV2(umi, {
+    collectionAuthority: collectionUpdateAuthority,
+    leafOwner,
+    merkleTree,
+    coreCollection: coreCollection.publicKey,
+    metadata,
+  });
+
+  const { signature } = await computeIxBuilder
+    .add(mintBuilder)
+    .sendAndConfirm(umi);
+
+  const leaf = await parseLeafFromMintV2Transaction(umi, signature);
+  const assetId = findLeafAssetIdPda(umi, { merkleTree, leafIndex: 0 });
+
+  t.is(leafOwner, leaf.owner);
+  t.is(Number(leaf.nonce), 0);
+  t.is(leaf.id, assetId[0]);
 });
