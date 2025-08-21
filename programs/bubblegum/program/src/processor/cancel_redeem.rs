@@ -1,11 +1,10 @@
 use anchor_lang::prelude::*;
-use spl_account_compression::{program::SplAccountCompression, Noop};
 
 use crate::{
     asserts::assert_pubkey_equal,
     error::BubblegumError,
     state::{leaf_schema::Version, TreeConfig, Voucher, VOUCHER_PREFIX},
-    utils::replace_leaf,
+    utils::{replace_leaf, validate_ownership_and_programs},
 };
 
 #[derive(Accounts)]
@@ -32,8 +31,10 @@ pub struct CancelRedeem<'info> {
     bump
     )]
     pub voucher: Account<'info, Voucher>,
-    pub log_wrapper: Program<'info, Noop>,
-    pub compression_program: Program<'info, SplAccountCompression>,
+    /// CHECK: Program is verified in the instruction
+    pub log_wrapper: UncheckedAccount<'info>,
+    /// CHECK: Program is verified in the instruction
+    pub compression_program: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
 }
 
@@ -41,6 +42,12 @@ pub(crate) fn cancel_redeem<'info>(
     ctx: Context<'_, '_, '_, 'info, CancelRedeem<'info>>,
     root: [u8; 32],
 ) -> Result<()> {
+    validate_ownership_and_programs(
+        &ctx.accounts.merkle_tree,
+        &ctx.accounts.log_wrapper,
+        &ctx.accounts.compression_program,
+    )?;
+
     // V1 instructions only work with V1 trees.
     require!(
         ctx.accounts.tree_authority.version == Version::V1,
