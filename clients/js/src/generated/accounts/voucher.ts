@@ -142,15 +142,11 @@ export function getVoucherGpaBuilder(
     }>({
       discriminator: [0, array(u8(), { size: 8 })],
       leafSchema: [8, getLeafSchemaSerializer()],
-      index: [177, u32()],
-      merkleTree: [181, publicKeySerializer()],
+      index: [null, u32()],
+      merkleTree: [null, publicKeySerializer()],
     })
     .deserializeUsing<Voucher>((account) => deserializeVoucher(account))
     .whereField('discriminator', [191, 204, 149, 234, 213, 165, 13, 65]);
-}
-
-export function getVoucherSize(): number {
-  return 213;
 }
 
 export function findVoucherPda(

@@ -32,4 +32,27 @@ pub enum LeafSchema {
         data_hash: [u8; 32],
         creator_hash: [u8; 32],
     },
+    V2 {
+        #[cfg_attr(
+            feature = "serde",
+            serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
+        )]
+        id: Pubkey,
+        #[cfg_attr(
+            feature = "serde",
+            serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
+        )]
+        owner: Pubkey,
+        #[cfg_attr(
+            feature = "serde",
+            serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
+        )]
+        delegate: Pubkey,
+        nonce: u64,
+        data_hash: [u8; 32],
+        creator_hash: [u8; 32],
+        collection_hash: [u8; 32],
+        asset_data_hash: [u8; 32],
+        flags: u8,
+    },
 }

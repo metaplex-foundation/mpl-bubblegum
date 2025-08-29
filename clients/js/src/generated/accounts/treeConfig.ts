@@ -32,7 +32,10 @@ import {
 import {
   DecompressibleState,
   DecompressibleStateArgs,
+  Version,
+  VersionArgs,
   getDecompressibleStateSerializer,
+  getVersionSerializer,
 } from '../types';
 
 export type TreeConfig = Account<TreeConfigAccountData>;
@@ -45,6 +48,7 @@ export type TreeConfigAccountData = {
   numMinted: bigint;
   isPublic: boolean;
   isDecompressible: DecompressibleState;
+  version: Version;
 };
 
 export type TreeConfigAccountDataArgs = {
@@ -54,6 +58,7 @@ export type TreeConfigAccountDataArgs = {
   numMinted: number | bigint;
   isPublic: boolean;
   isDecompressible: DecompressibleStateArgs;
+  version: VersionArgs;
 };
 
 export function getTreeConfigAccountDataSerializer(): Serializer<
@@ -70,6 +75,7 @@ export function getTreeConfigAccountDataSerializer(): Serializer<
         ['numMinted', u64()],
         ['isPublic', bool()],
         ['isDecompressible', getDecompressibleStateSerializer()],
+        ['version', getVersionSerializer()],
       ],
       { description: 'TreeConfigAccountData' }
     ),
@@ -154,6 +160,7 @@ export function getTreeConfigGpaBuilder(
       numMinted: number | bigint;
       isPublic: boolean;
       isDecompressible: DecompressibleStateArgs;
+      version: VersionArgs;
     }>({
       discriminator: [0, array(u8(), { size: 8 })],
       treeCreator: [8, publicKeySerializer()],
@@ -162,6 +169,7 @@ export function getTreeConfigGpaBuilder(
       numMinted: [80, u64()],
       isPublic: [88, bool()],
       isDecompressible: [89, getDecompressibleStateSerializer()],
+      version: [90, getVersionSerializer()],
     })
     .deserializeUsing<TreeConfig>((account) => deserializeTreeConfig(account))
     .whereField('discriminator', [122, 245, 175, 248, 171, 34, 0, 207]);

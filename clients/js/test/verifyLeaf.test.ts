@@ -1,6 +1,10 @@
 import { generateSigner, publicKeyBytes } from '@metaplex-foundation/umi';
 import test from 'ava';
-import { fetchMerkleTree, getCurrentRoot, verifyLeaf } from '../src';
+import {
+  fetchMerkleTree,
+  getCurrentRoot,
+  verifyLeaf,
+} from '@metaplex-foundation/spl-account-compression';
 import { createTree, createUmi, mint } from './_setup';
 
 test('it can verify a leaf on the merkle tree', async (t) => {

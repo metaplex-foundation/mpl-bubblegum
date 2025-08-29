@@ -7,5 +7,3 @@
  */
 
 export * from './mplBubblegum';
-export * from './splAccountCompression';
-export * from './splNoop';

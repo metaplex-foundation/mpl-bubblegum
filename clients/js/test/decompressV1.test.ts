@@ -8,12 +8,14 @@ import { defaultPublicKey, none, some } from '@metaplex-foundation/umi';
 import { generateSignerWithSol } from '@metaplex-foundation/umi-bundle-tests';
 import test from 'ava';
 import {
-  decompressV1,
   fetchMerkleTree,
+  getCurrentRoot,
+} from '@metaplex-foundation/spl-account-compression';
+import {
+  decompressV1,
   findLeafAssetIdPda,
   findMintAuthorityPda,
   findVoucherPda,
-  getCurrentRoot,
   hashMetadataCreators,
   hashMetadataData,
   redeem,
@@ -24,7 +26,6 @@ test('it can decompress a redeemed compressed NFT', async (t) => {
   // Given a tree with a minted NFT.
   const umi = await createUmi();
   const merkleTree = await createTree(umi);
-  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const leafOwner = await generateSignerWithSol(umi);
   const { metadata, leafIndex } = await mint(umi, {
     merkleTree,
@@ -32,6 +33,7 @@ test('it can decompress a redeemed compressed NFT', async (t) => {
   });
 
   // And given that NFT was redeemed.
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const dataHash = hashMetadataData(metadata);
   const creatorHash = hashMetadataCreators(metadata.creators);
   await redeem(umi, {
@@ -43,8 +45,10 @@ test('it can decompress a redeemed compressed NFT', async (t) => {
     nonce: leafIndex,
     index: leafIndex,
   }).sendAndConfirm(umi);
+
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, defaultPublicKey());
+
   const [voucher] = findVoucherPda(umi, { merkleTree, nonce: leafIndex });
   t.true(await umi.rpc.accountExists(voucher));
 

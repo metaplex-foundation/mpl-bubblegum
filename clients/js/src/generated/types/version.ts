@@ -10,6 +10,7 @@ import { Serializer, scalarEnum } from '@metaplex-foundation/umi/serializers';
 
 export enum Version {
   V1,
+  V2,
 }
 
 export type VersionArgs = Version;

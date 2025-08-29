@@ -9,13 +9,12 @@ use solana_program::{
     program_pack::Pack,
     system_instruction,
 };
-use spl_account_compression::Noop;
+use spl_account_compression::Noop as SplNoop;
 use spl_token::state::Mint;
 
 use crate::{
     error::BubblegumError,
     state::{
-        leaf_schema::LeafSchema,
         metaplex_adapter::{MetadataArgs, TokenProgramVersion},
         metaplex_anchor::MplTokenMetadata,
         Voucher, ASSET_PREFIX, VOUCHER_PREFIX,
@@ -71,25 +70,24 @@ pub struct DecompressV1<'info> {
     pub token_metadata_program: Program<'info, MplTokenMetadata>,
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
-    pub log_wrapper: Program<'info, Noop>,
+    pub log_wrapper: Program<'info, SplNoop>,
 }
 
 pub(crate) fn decompress_v1(ctx: Context<DecompressV1>, metadata: MetadataArgs) -> Result<()> {
     // Validate the incoming metadata
-
-    match ctx.accounts.voucher.leaf_schema {
-        LeafSchema::V1 {
-            owner, data_hash, ..
-        } => {
-            let incoming_data_hash = hash_metadata(&metadata)?;
-
-            if !cmp_bytes(&data_hash, &incoming_data_hash, 32) {
-                return Err(BubblegumError::HashingMismatch.into());
-            }
-            if !cmp_pubkeys(&owner, ctx.accounts.leaf_owner.key) {
-                return Err(BubblegumError::AssetOwnerMismatch.into());
-            }
-        }
+    let incoming_data_hash = hash_metadata(&metadata)?;
+    if !cmp_bytes(
+        &ctx.accounts.voucher.leaf_schema.data_hash(),
+        &incoming_data_hash,
+        32,
+    ) {
+        return Err(BubblegumError::HashingMismatch.into());
+    }
+    if !cmp_pubkeys(
+        &ctx.accounts.voucher.leaf_schema.owner(),
+        ctx.accounts.leaf_owner.key,
+    ) {
+        return Err(BubblegumError::AssetOwnerMismatch.into());
     }
 
     let voucher = &ctx.accounts.voucher;

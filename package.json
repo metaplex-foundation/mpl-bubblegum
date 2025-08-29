@@ -9,7 +9,7 @@
     "clients:js:test": "./configs/scripts/client/test-js.sh",
     "generate": "pnpm generate:idls && pnpm generate:clients",
     "generate:idls": "node ./configs/shank.cjs",
-    "generate:clients": "node ./configs/kinobi.cjs",
+    "generate:clients": "node ./configs/kinobi.cjs && node ./configs/spl-ac-kinobi.cjs && node ./configs/mpl-ac-kinobi.cjs",
     "validator": "CI=1 amman start --config ./configs/validator.cjs",
     "validator:debug": "amman start --config ./configs/validator.cjs",
     "validator:logs": "CI=1 amman logs",

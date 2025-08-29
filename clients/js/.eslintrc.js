@@ -1,7 +1,14 @@
 module.exports = {
   extends: ['airbnb-base', 'airbnb-typescript/base', 'prettier'],
   plugins: ['prettier'],
-  overrides: [],
+  overrides: [
+    {
+      files: ['src/flags.ts'],
+      rules: {
+        'no-bitwise': 'off',
+      },
+    },
+  ],
   parserOptions: {
     ecmaVersion: 'latest',
     sourceType: 'module',

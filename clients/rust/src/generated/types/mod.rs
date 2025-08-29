@@ -5,15 +5,14 @@
 //! [https://github.com/metaplex-foundation/kinobi]
 //!
 
+pub(crate) mod asset_data_schema;
 pub(crate) mod bubblegum_event_type;
 pub(crate) mod collection;
-pub(crate) mod compression_account_type;
-pub(crate) mod concurrent_merkle_tree_header;
-pub(crate) mod concurrent_merkle_tree_header_data;
 pub(crate) mod creator;
 pub(crate) mod decompressible_state;
 pub(crate) mod leaf_schema;
 pub(crate) mod metadata_args;
+pub(crate) mod metadata_args_v2;
 pub(crate) mod token_program_version;
 pub(crate) mod token_standard;
 pub(crate) mod update_args;
@@ -21,15 +20,14 @@ pub(crate) mod use_method;
 pub(crate) mod uses;
 pub(crate) mod version;
 
+pub use self::asset_data_schema::*;
 pub use self::bubblegum_event_type::*;
 pub use self::collection::*;
-pub use self::compression_account_type::*;
-pub use self::concurrent_merkle_tree_header::*;
-pub use self::concurrent_merkle_tree_header_data::*;
 pub use self::creator::*;
 pub use self::decompressible_state::*;
 pub use self::leaf_schema::*;
 pub use self::metadata_args::*;
+pub use self::metadata_args_v2::*;
 pub use self::token_program_version::*;
 pub use self::token_standard::*;
 pub use self::update_args::*;

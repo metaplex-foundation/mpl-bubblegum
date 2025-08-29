@@ -604,6 +604,215 @@ export class InvalidCanopySizeError extends ProgramError {
 codeToErrorMap.set(0x1799, InvalidCanopySizeError);
 nameToErrorMap.set('InvalidCanopySize', InvalidCanopySizeError);
 
+/** InvalidLogWrapper: Invalid log wrapper program */
+export class InvalidLogWrapperError extends ProgramError {
+  readonly name: string = 'InvalidLogWrapper';
+
+  readonly code: number = 0x179a; // 6042
+
+  constructor(program: Program, cause?: Error) {
+    super('Invalid log wrapper program', program, cause);
+  }
+}
+codeToErrorMap.set(0x179a, InvalidLogWrapperError);
+nameToErrorMap.set('InvalidLogWrapper', InvalidLogWrapperError);
+
+/** InvalidCompressionProgram: Invalid compression program */
+export class InvalidCompressionProgramError extends ProgramError {
+  readonly name: string = 'InvalidCompressionProgram';
+
+  readonly code: number = 0x179b; // 6043
+
+  constructor(program: Program, cause?: Error) {
+    super('Invalid compression program', program, cause);
+  }
+}
+codeToErrorMap.set(0x179b, InvalidCompressionProgramError);
+nameToErrorMap.set('InvalidCompressionProgram', InvalidCompressionProgramError);
+
+/** LeafMustBeDelegated: Leaf must be delegated to someone other than the leaf owner */
+export class LeafMustBeDelegatedError extends ProgramError {
+  readonly name: string = 'LeafMustBeDelegated';
+
+  readonly code: number = 0x179c; // 6044
+
+  constructor(program: Program, cause?: Error) {
+    super(
+      'Leaf must be delegated to someone other than the leaf owner',
+      program,
+      cause
+    );
+  }
+}
+codeToErrorMap.set(0x179c, LeafMustBeDelegatedError);
+nameToErrorMap.set('LeafMustBeDelegated', LeafMustBeDelegatedError);
+
+/** AssetIsFrozen: Asset is frozen */
+export class AssetIsFrozenError extends ProgramError {
+  readonly name: string = 'AssetIsFrozen';
+
+  readonly code: number = 0x179d; // 6045
+
+  constructor(program: Program, cause?: Error) {
+    super('Asset is frozen', program, cause);
+  }
+}
+codeToErrorMap.set(0x179d, AssetIsFrozenError);
+nameToErrorMap.set('AssetIsFrozen', AssetIsFrozenError);
+
+/** AssetIsNonTransferable: Asset is non-transferable */
+export class AssetIsNonTransferableError extends ProgramError {
+  readonly name: string = 'AssetIsNonTransferable';
+
+  readonly code: number = 0x179e; // 6046
+
+  constructor(program: Program, cause?: Error) {
+    super('Asset is non-transferable', program, cause);
+  }
+}
+codeToErrorMap.set(0x179e, AssetIsNonTransferableError);
+nameToErrorMap.set('AssetIsNonTransferable', AssetIsNonTransferableError);
+
+/** InvalidAuthority: Invalid authority */
+export class InvalidAuthorityError extends ProgramError {
+  readonly name: string = 'InvalidAuthority';
+
+  readonly code: number = 0x179f; // 6047
+
+  constructor(program: Program, cause?: Error) {
+    super('Invalid authority', program, cause);
+  }
+}
+codeToErrorMap.set(0x179f, InvalidAuthorityError);
+nameToErrorMap.set('InvalidAuthority', InvalidAuthorityError);
+
+/** CollectionIsFrozen: Collection is frozen */
+export class CollectionIsFrozenError extends ProgramError {
+  readonly name: string = 'CollectionIsFrozen';
+
+  readonly code: number = 0x17a0; // 6048
+
+  constructor(program: Program, cause?: Error) {
+    super('Collection is frozen', program, cause);
+  }
+}
+codeToErrorMap.set(0x17a0, CollectionIsFrozenError);
+nameToErrorMap.set('CollectionIsFrozen', CollectionIsFrozenError);
+
+/** CollectionMustHaveBubblegumPlugin: Core collections must have the Bubblegum V2 plugin on them */
+export class CollectionMustHaveBubblegumPluginError extends ProgramError {
+  readonly name: string = 'CollectionMustHaveBubblegumPlugin';
+
+  readonly code: number = 0x17a1; // 6049
+
+  constructor(program: Program, cause?: Error) {
+    super(
+      'Core collections must have the Bubblegum V2 plugin on them',
+      program,
+      cause
+    );
+  }
+}
+codeToErrorMap.set(0x17a1, CollectionMustHaveBubblegumPluginError);
+nameToErrorMap.set(
+  'CollectionMustHaveBubblegumPlugin',
+  CollectionMustHaveBubblegumPluginError
+);
+
+/** NotAvailable: Feature not currently available */
+export class NotAvailableError extends ProgramError {
+  readonly name: string = 'NotAvailable';
+
+  readonly code: number = 0x17a2; // 6050
+
+  constructor(program: Program, cause?: Error) {
+    super('Feature not currently available', program, cause);
+  }
+}
+codeToErrorMap.set(0x17a2, NotAvailableError);
+nameToErrorMap.set('NotAvailable', NotAvailableError);
+
+/** MissingCollectionAccount: Missing collection account */
+export class MissingCollectionAccountError extends ProgramError {
+  readonly name: string = 'MissingCollectionAccount';
+
+  readonly code: number = 0x17a3; // 6051
+
+  constructor(program: Program, cause?: Error) {
+    super('Missing collection account', program, cause);
+  }
+}
+codeToErrorMap.set(0x17a3, MissingCollectionAccountError);
+nameToErrorMap.set('MissingCollectionAccount', MissingCollectionAccountError);
+
+/** AssetDataLengthTooLong: Asset data length too long */
+export class AssetDataLengthTooLongError extends ProgramError {
+  readonly name: string = 'AssetDataLengthTooLong';
+
+  readonly code: number = 0x17a4; // 6052
+
+  constructor(program: Program, cause?: Error) {
+    super('Asset data length too long', program, cause);
+  }
+}
+codeToErrorMap.set(0x17a4, AssetDataLengthTooLongError);
+nameToErrorMap.set('AssetDataLengthTooLong', AssetDataLengthTooLongError);
+
+/** AlreadyInCollection: Item is already in the collection */
+export class AlreadyInCollectionError extends ProgramError {
+  readonly name: string = 'AlreadyInCollection';
+
+  readonly code: number = 0x17a5; // 6053
+
+  constructor(program: Program, cause?: Error) {
+    super('Item is already in the collection', program, cause);
+  }
+}
+codeToErrorMap.set(0x17a5, AlreadyInCollectionError);
+nameToErrorMap.set('AlreadyInCollection', AlreadyInCollectionError);
+
+/** AlreadyNotInCollection: Item is already not in a collection */
+export class AlreadyNotInCollectionError extends ProgramError {
+  readonly name: string = 'AlreadyNotInCollection';
+
+  readonly code: number = 0x17a6; // 6054
+
+  constructor(program: Program, cause?: Error) {
+    super('Item is already not in a collection', program, cause);
+  }
+}
+codeToErrorMap.set(0x17a6, AlreadyNotInCollectionError);
+nameToErrorMap.set('AlreadyNotInCollection', AlreadyNotInCollectionError);
+
+/** MissingMplCoreCpiSignerAccount: Missing mpl-core CPI signer account */
+export class MissingMplCoreCpiSignerAccountError extends ProgramError {
+  readonly name: string = 'MissingMplCoreCpiSignerAccount';
+
+  readonly code: number = 0x17a7; // 6055
+
+  constructor(program: Program, cause?: Error) {
+    super('Missing mpl-core CPI signer account', program, cause);
+  }
+}
+codeToErrorMap.set(0x17a7, MissingMplCoreCpiSignerAccountError);
+nameToErrorMap.set(
+  'MissingMplCoreCpiSignerAccount',
+  MissingMplCoreCpiSignerAccountError
+);
+
+/** AssetIsNotFrozen: Asset is not frozen */
+export class AssetIsNotFrozenError extends ProgramError {
+  readonly name: string = 'AssetIsNotFrozen';
+
+  readonly code: number = 0x17a8; // 6056
+
+  constructor(program: Program, cause?: Error) {
+    super('Asset is not frozen', program, cause);
+  }
+}
+codeToErrorMap.set(0x17a8, AssetIsNotFrozenError);
+nameToErrorMap.set('AssetIsNotFrozen', AssetIsNotFrozenError);
+
 /**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors

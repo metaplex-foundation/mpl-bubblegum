@@ -1,0 +1,836 @@
+{
+  "version": "0.4.2",
+  "name": "mpl_account_compression",
+  "instructions": [
+    {
+      "name": "initEmptyMerkleTree",
+      "docs": [
+        "Creates a new merkle tree with maximum leaf capacity of `power(2, max_depth)`",
+        "and a minimum concurrency limit of `max_buffer_size`.",
+        "",
+        "Concurrency limit represents the # of replace instructions that can be successfully",
+        "executed with proofs dated for the same root. For example, a maximum buffer size of 1024",
+        "means that a minimum of 1024 replaces can be executed before a new proof must be",
+        "generated for the next replace instruction.",
+        "",
+        "Concurrency limit should be determined by empirically testing the demand for",
+        "state built on top of SPL Compression.",
+        "",
+        "For instructions on enabling the canopy, see [canopy]."
+      ],
+      "accounts": [
+        {
+          "name": "merkleTree",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "Authority that controls write-access to the tree",
+            "Typically a program, e.g., the Bubblegum contract validates that leaves are valid NFTs."
+          ]
+        },
+        {
+          "name": "noop",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Program used to emit changelogs as cpi instruction data."
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "maxDepth",
+          "type": "u32"
+        },
+        {
+          "name": "maxBufferSize",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "name": "prepareBatchMerkleTree",
+      "docs": [
+        "(Devnet only) In order to initialize a tree with a root, we need to create the tree on-chain first with",
+        "the proper authority. The tree might contain a canopy, which is a cache of the uppermost",
+        "nodes. The canopy is used to decrease the size of the proof required to update the tree.",
+        "If the tree is expected to have a canopy, it needs to be prefilled with the necessary nodes.",
+        "There are 2 ways to initialize a merkle tree:",
+        "1. Initialize an empty tree",
+        "2. Initialize a tree with a root and leaf",
+        "For the former case, the canopy will be empty which is expected for an empty tree. The",
+        "expected flow is `init_empty_merkle_tree`. For the latter case, the canopy should be",
+        "filled with the necessary nodes to render the tree usable. Thus we need to prefill the",
+        "canopy with the necessary nodes. The expected flow for a tree without canopy is",
+        "`prepare_batch_merkle_tree` -> `init_prepared_tree_with_root`. The expected flow for a tree",
+        "with canopy is `prepare_batch_merkle_tree` -> `append_canopy_nodes` (multiple times",
+        "until all of the canopy is filled) -> `init_prepared_tree_with_root`. This instruction",
+        "initializes the tree header while leaving the tree itself uninitialized. This allows",
+        "distinguishing between an empty tree and a tree prepare to be initialized with a root."
+      ],
+      "accounts": [
+        {
+          "name": "merkleTree",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "Authority that controls write-access to the tree",
+            "Typically a program, e.g., the Bubblegum contract validates that leaves are valid NFTs."
+          ]
+        },
+        {
+          "name": "noop",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Program used to emit changelogs as cpi instruction data."
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "maxDepth",
+          "type": "u32"
+        },
+        {
+          "name": "maxBufferSize",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "name": "appendCanopyNodes",
+      "docs": [
+        "(Devnet only) This instruction pre-initializes the canopy with the specified leaf nodes of the canopy.",
+        "This is intended to be used after `prepare_batch_merkle_tree` and in conjunction with the",
+        "`init_prepared_tree_with_root` instruction that'll finalize the tree initialization.",
+        "The canopy is used to cache the uppermost nodes of the tree, which allows for a smaller",
+        "proof size when updating the tree. The canopy should be filled with the necessary nodes",
+        "before calling `init_prepared_tree_with_root`. You may call this instruction multiple",
+        "times to fill the canopy with the necessary nodes. The canopy may be filled with the",
+        "nodes in any order. The already filled nodes may be replaced with new nodes before calling",
+        "`init_prepared_tree_with_root` if the step was done in error.",
+        "The canopy should be filled with all the nodes that are to the left of the rightmost",
+        "leaf of the tree before calling `init_prepared_tree_with_root`. The canopy should not",
+        "contain any nodes to the right of the rightmost leaf of the tree.",
+        "This instruction calculates and filles in all the canopy nodes \"above\" the provided ones.",
+        "The validation of the canopy is done in the `init_prepared_tree_with_root` instruction."
+      ],
+      "accounts": [
+        {
+          "name": "merkleTree",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "Authority that controls write-access to the tree",
+            "Typically a program, e.g., the Bubblegum contract validates that leaves are valid NFTs."
+          ]
+        },
+        {
+          "name": "noop",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Program used to emit changelogs as cpi instruction data."
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "startIndex",
+          "type": "u32"
+        },
+        {
+          "name": "canopyNodes",
+          "type": {
+            "vec": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "initPreparedTreeWithRoot",
+      "docs": [
+        "(Devnet only) Initializes a prepared tree with a root and a rightmost leaf. The rightmost leaf is used to",
+        "verify the canopy if the tree has it. Before calling this instruction, the tree should be",
+        "prepared with `prepare_batch_merkle_tree` and the canopy should be filled with the necessary",
+        "nodes with `append_canopy_nodes` (if the canopy is used). This method should be used for",
+        "batch creation of trees. The indexing of such batches should be done off-chain. The",
+        "programs calling this instruction should take care of ensuring the indexing is possible.",
+        "For example, staking may be required to ensure the tree creator has some responsibility",
+        "for what is being indexed. If indexing is not possible, there should be a mechanism to",
+        "penalize the tree creator."
+      ],
+      "accounts": [
+        {
+          "name": "merkleTree",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "Authority that controls write-access to the tree",
+            "Typically a program, e.g., the Bubblegum contract validates that leaves are valid NFTs."
+          ]
+        },
+        {
+          "name": "noop",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Program used to emit changelogs as cpi instruction data."
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "root",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "rightmostLeaf",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "rightmostIndex",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "name": "replaceLeaf",
+      "docs": [
+        "Executes an instruction that overwrites a leaf node.",
+        "Composing programs should check that the data hashed into previous_leaf",
+        "matches the authority information necessary to execute this instruction."
+      ],
+      "accounts": [
+        {
+          "name": "merkleTree",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "Authority that controls write-access to the tree",
+            "Typically a program, e.g., the Bubblegum contract validates that leaves are valid NFTs."
+          ]
+        },
+        {
+          "name": "noop",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Program used to emit changelogs as cpi instruction data."
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "root",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "previousLeaf",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "newLeaf",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "name": "transferAuthority",
+      "docs": [
+        "Transfers `authority`.",
+        "Requires `authority` to sign"
+      ],
+      "accounts": [
+        {
+          "name": "merkleTree",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "Authority that controls write-access to the tree",
+            "Typically a program, e.g., the Bubblegum contract validates that leaves are valid NFTs."
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "newAuthority",
+          "type": "publicKey"
+        }
+      ]
+    },
+    {
+      "name": "verifyLeaf",
+      "docs": [
+        "Verifies a provided proof and leaf.",
+        "If invalid, throws an error."
+      ],
+      "accounts": [
+        {
+          "name": "merkleTree",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "root",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "leaf",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "name": "append",
+      "docs": [
+        "This instruction allows the tree's `authority` to append a new leaf to the tree",
+        "without having to supply a proof.",
+        "",
+        "Learn more about SPL",
+        "ConcurrentMerkleTree",
+        "[here](https://github.com/solana-labs/solana-program-library/tree/master/libraries/concurrent-merkle-tree)"
+      ],
+      "accounts": [
+        {
+          "name": "merkleTree",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "Authority that controls write-access to the tree",
+            "Typically a program, e.g., the Bubblegum contract validates that leaves are valid NFTs."
+          ]
+        },
+        {
+          "name": "noop",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Program used to emit changelogs as cpi instruction data."
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "leaf",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "insertOrAppend",
+      "docs": [
+        "This instruction takes a proof, and will attempt to write the given leaf",
+        "to the specified index in the tree. If the insert operation fails, the leaf will be `append`-ed",
+        "to the tree.",
+        "It is up to the indexer to parse the final location of the leaf from the emitted changelog."
+      ],
+      "accounts": [
+        {
+          "name": "merkleTree",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "Authority that controls write-access to the tree",
+            "Typically a program, e.g., the Bubblegum contract validates that leaves are valid NFTs."
+          ]
+        },
+        {
+          "name": "noop",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Program used to emit changelogs as cpi instruction data."
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "root",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "leaf",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "name": "closeEmptyTree",
+      "accounts": [
+        {
+          "name": "merkleTree",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "Authority that controls write-access to the tree"
+          ]
+        },
+        {
+          "name": "recipient",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    }
+  ],
+  "types": [
+    {
+      "name": "ApplicationDataEventV1",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "applicationData",
+            "type": "bytes"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ChangeLogEventV1",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "id",
+            "docs": [
+              "Public key of the ConcurrentMerkleTree"
+            ],
+            "type": "publicKey"
+          },
+          {
+            "name": "path",
+            "docs": [
+              "Nodes of off-chain merkle tree needed by indexer"
+            ],
+            "type": {
+              "vec": {
+                "defined": "PathNode"
+              }
+            }
+          },
+          {
+            "name": "seq",
+            "docs": [
+              "Index corresponding to the number of successful operations on this tree.",
+              "Used by the off-chain indexer to figure out when there are gaps to be backfilled."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "index",
+            "docs": [
+              "Bitmap of node parity (used when hashing)"
+            ],
+            "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ConcurrentMerkleTreeHeader",
+      "docs": [
+        "Initialization parameters for an SPL ConcurrentMerkleTree.",
+        "",
+        "Only the following permutations are valid:",
+        "",
+        "| max_depth | max_buffer_size       |",
+        "| --------- | --------------------- |",
+        "| 14        | (64, 256, 1024, 2048) |",
+        "| 20        | (64, 256, 1024, 2048) |",
+        "| 24        | (64, 256, 512, 1024, 2048) |",
+        "| 26        | (64, 256, 512, 1024, 2048) |",
+        "| 30        | (512, 1024, 2048) |",
+        ""
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "accountType",
+            "docs": [
+              "Account type"
+            ],
+            "type": {
+              "defined": "CompressionAccountType"
+            }
+          },
+          {
+            "name": "header",
+            "docs": [
+              "Versioned header"
+            ],
+            "type": {
+              "defined": "ConcurrentMerkleTreeHeaderData"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "ConcurrentMerkleTreeHeaderDataV1",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "maxBufferSize",
+            "docs": [
+              "Buffer of changelogs stored on-chain.",
+              "Must be a power of 2; see above table for valid combinations."
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "maxDepth",
+            "docs": [
+              "Depth of the SPL ConcurrentMerkleTree to store.",
+              "Tree capacity can be calculated as power(2, max_depth).",
+              "See above table for valid options."
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "authority",
+            "docs": [
+              "Authority that validates the content of the trees.",
+              "Typically a program, e.g., the Bubblegum contract validates that leaves are valid NFTs."
+            ],
+            "type": "publicKey"
+          },
+          {
+            "name": "creationSlot",
+            "docs": [
+              "Slot corresponding to when the Merkle tree was created.",
+              "Provides a lower-bound on what slot to start (re-)building a tree from."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "isBatchInitialized",
+            "docs": [
+              "A flag indicating whether the tree has been initialized with a root.",
+              "This field was added together with the `finalize_tree_with_root` instruction.",
+              "It takes 1 byte of space taken from the previous padding for existing accounts."
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "padding",
+            "docs": [
+              "Needs padding for the account to be 8-byte aligned",
+              "8-byte alignment is necessary to zero-copy the SPL ConcurrentMerkleTree"
+            ],
+            "type": {
+              "array": [
+                "u8",
+                5
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "PathNode",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "node",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "index",
+            "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ApplicationDataEvent",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "V1",
+            "fields": [
+              {
+                "defined": "ApplicationDataEventV1"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "ChangeLogEvent",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "V1",
+            "fields": [
+              {
+                "defined": "ChangeLogEventV1"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "AccountCompressionEvent",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "ChangeLog",
+            "fields": [
+              {
+                "defined": "ChangeLogEvent"
+              }
+            ]
+          },
+          {
+            "name": "ApplicationData",
+            "fields": [
+              {
+                "defined": "ApplicationDataEvent"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "CompressionAccountType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Uninitialized"
+          },
+          {
+            "name": "ConcurrentMerkleTree"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ConcurrentMerkleTreeHeaderData",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "V1",
+            "fields": [
+              {
+                "defined": "ConcurrentMerkleTreeHeaderDataV1"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "IncorrectLeafLength",
+      "msg": "Incorrect leaf length. Expected vec of 32 bytes"
+    },
+    {
+      "code": 6001,
+      "name": "ConcurrentMerkleTreeError",
+      "msg": "Concurrent merkle tree error"
+    },
+    {
+      "code": 6002,
+      "name": "ZeroCopyError",
+      "msg": "Issue zero copying concurrent merkle tree data"
+    },
+    {
+      "code": 6003,
+      "name": "ConcurrentMerkleTreeConstantsError",
+      "msg": "An unsupported max depth or max buffer size constant was provided"
+    },
+    {
+      "code": 6004,
+      "name": "CanopyLengthMismatch",
+      "msg": "Expected a different byte length for the merkle tree canopy"
+    },
+    {
+      "code": 6005,
+      "name": "IncorrectAuthority",
+      "msg": "Provided authority does not match expected tree authority"
+    },
+    {
+      "code": 6006,
+      "name": "IncorrectAccountOwner",
+      "msg": "Account is owned by a different program, expected it to be owned by this program"
+    },
+    {
+      "code": 6007,
+      "name": "IncorrectAccountType",
+      "msg": "Account provided has incorrect account type"
+    },
+    {
+      "code": 6008,
+      "name": "LeafIndexOutOfBounds",
+      "msg": "Leaf index of concurrent merkle tree is out of bounds"
+    },
+    {
+      "code": 6009,
+      "name": "CanopyNotAllocated",
+      "msg": "Tree was initialized without allocating space for the canopy"
+    },
+    {
+      "code": 6010,
+      "name": "TreeAlreadyInitialized",
+      "msg": "Tree was already initialized"
+    },
+    {
+      "code": 6011,
+      "name": "BatchNotInitialized",
+      "msg": "Tree header was not initialized for batch processing"
+    },
+    {
+      "code": 6012,
+      "name": "CanopyRootMismatch",
+      "msg": "Canopy root does not match the root of the tree"
+    },
+    {
+      "code": 6013,
+      "name": "CanopyRightmostLeafMismatch",
+      "msg": "Canopy contains nodes to the right of the rightmost leaf of the tree"
+    }
+  ],
+  "metadata": {
+    "address": "mcmt6YrQEMKw8Mw43FmpRLmf7BqRnFMKmAcbxE3xkAW",
+    "origin": "anchor",
+    "binaryVersion": "0.29.0",
+    "libVersion": "0.29.0"
+  }
+}

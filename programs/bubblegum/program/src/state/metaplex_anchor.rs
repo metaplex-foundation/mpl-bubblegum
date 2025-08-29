@@ -63,3 +63,12 @@ impl anchor_lang::Id for MplTokenMetadata {
         mpl_token_metadata::ID
     }
 }
+
+#[derive(Clone)]
+pub struct MplCore;
+
+impl anchor_lang::Id for MplCore {
+    fn id() -> Pubkey {
+        mpl_core::ID
+    }
+}

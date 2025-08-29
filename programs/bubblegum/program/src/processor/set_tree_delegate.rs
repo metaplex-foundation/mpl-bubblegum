@@ -14,7 +14,7 @@ pub struct SetTreeDelegate<'info> {
     pub tree_creator: Signer<'info>,
     /// CHECK: this account is neither read from or written to
     pub new_tree_delegate: UncheckedAccount<'info>,
-    /// CHECK: this account is neither read from or written to
+    /// CHECK: Used to derive `tree_authority`
     pub merkle_tree: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
 }

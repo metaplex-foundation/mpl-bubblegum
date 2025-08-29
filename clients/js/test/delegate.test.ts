@@ -1,9 +1,11 @@
 import { generateSigner, publicKey } from '@metaplex-foundation/umi';
 import test from 'ava';
 import {
-  delegate,
   fetchMerkleTree,
   getCurrentRoot,
+} from '@metaplex-foundation/spl-account-compression';
+import {
+  delegate,
   hashLeaf,
   hashMetadataCreators,
   hashMetadataData,
@@ -14,7 +16,6 @@ test('it can delegate a compressed NFT', async (t) => {
   // Given a tree with a minted NFT.
   const umi = await createUmi();
   const merkleTree = await createTree(umi);
-  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   const leafOwner = generateSigner(umi);
   const { metadata, leafIndex } = await mint(umi, {
     merkleTree,
@@ -23,6 +24,7 @@ test('it can delegate a compressed NFT', async (t) => {
 
   // When the owner of the NFT delegates it to another account.
   const newDelegate = generateSigner(umi).publicKey;
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   await delegate(umi, {
     leafOwner,
     previousLeafDelegate: leafOwner.publicKey,

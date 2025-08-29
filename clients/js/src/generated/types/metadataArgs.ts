@@ -45,11 +45,13 @@ export type MetadataArgs = {
   uri: string;
   /** Royalty basis points that goes to creators in secondary sales (0-10000) */
   sellerFeeBasisPoints: number;
+  /** Immutable, once flipped, all sales of this metadata are considered secondary. */
   primarySaleHappened: boolean;
+  /** Whether or not the data struct is mutable, default is not */
   isMutable: boolean;
   /** nonce for easy calculation of editions, if present */
   editionNonce: Option<number>;
-  /** Since we cannot easily change Metadata, we add the new DataV2 fields here at the end. */
+  /** Token standard.  Currently only `NonFungible` is allowed. */
   tokenStandard: Option<TokenStandard>;
   /** Collection */
   collection: Option<Collection>;
@@ -68,11 +70,13 @@ export type MetadataArgsArgs = {
   uri: string;
   /** Royalty basis points that goes to creators in secondary sales (0-10000) */
   sellerFeeBasisPoints: number;
+  /** Immutable, once flipped, all sales of this metadata are considered secondary. */
   primarySaleHappened?: boolean;
+  /** Whether or not the data struct is mutable, default is not */
   isMutable?: boolean;
   /** nonce for easy calculation of editions, if present */
   editionNonce?: OptionOrNullable<number>;
-  /** Since we cannot easily change Metadata, we add the new DataV2 fields here at the end. */
+  /** Token standard.  Currently only `NonFungible` is allowed. */
   tokenStandard?: OptionOrNullable<TokenStandardArgs>;
   /** Collection */
   collection: OptionOrNullable<CollectionArgs>;

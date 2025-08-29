@@ -4,6 +4,10 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 OUTPUT="./programs/.bin"
 # saves external programs binaries to the output directory
 source ${SCRIPT_DIR}/dump.sh ${OUTPUT}
+
+# Dump programs currently on devnet only
+source ${SCRIPT_DIR}/dump_devnet.sh ${OUTPUT}
+
 # go to parent folder
 cd $(dirname $(dirname $(dirname ${SCRIPT_DIR})))
 
