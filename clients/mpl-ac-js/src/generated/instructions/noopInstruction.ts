@@ -56,7 +56,7 @@ export function noopInstruction(
   );
 
   // Accounts.
-  const resolvedAccounts: ResolvedAccountsWithIndices = {};
+  const resolvedAccounts = {} satisfies ResolvedAccountsWithIndices;
 
   // Arguments.
   const resolvedArgs: NoopInstructionInstructionArgs = { ...input };

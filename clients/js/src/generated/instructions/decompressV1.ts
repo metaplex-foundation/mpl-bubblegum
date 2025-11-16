@@ -103,61 +103,69 @@ export function decompressV1(
   );
 
   // Accounts.
-  const resolvedAccounts: ResolvedAccountsWithIndices = {
-    voucher: { index: 0, isWritable: true, value: input.voucher ?? null },
-    leafOwner: { index: 1, isWritable: true, value: input.leafOwner ?? null },
+  const resolvedAccounts = {
+    voucher: {
+      index: 0,
+      isWritable: true as boolean,
+      value: input.voucher ?? null,
+    },
+    leafOwner: {
+      index: 1,
+      isWritable: true as boolean,
+      value: input.leafOwner ?? null,
+    },
     tokenAccount: {
       index: 2,
-      isWritable: true,
+      isWritable: true as boolean,
       value: input.tokenAccount ?? null,
     },
-    mint: { index: 3, isWritable: true, value: input.mint ?? null },
+    mint: { index: 3, isWritable: true as boolean, value: input.mint ?? null },
     mintAuthority: {
       index: 4,
-      isWritable: true,
+      isWritable: true as boolean,
       value: input.mintAuthority ?? null,
     },
     metadataAccount: {
       index: 5,
-      isWritable: true,
+      isWritable: true as boolean,
       value: input.metadataAccount ?? null,
     },
     masterEdition: {
       index: 6,
-      isWritable: true,
+      isWritable: true as boolean,
       value: input.masterEdition ?? null,
     },
     systemProgram: {
       index: 7,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.systemProgram ?? null,
     },
     sysvarRent: {
       index: 8,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.sysvarRent ?? null,
     },
     tokenMetadataProgram: {
       index: 9,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.tokenMetadataProgram ?? null,
     },
     tokenProgram: {
       index: 10,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.tokenProgram ?? null,
     },
     associatedTokenProgram: {
       index: 11,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.associatedTokenProgram ?? null,
     },
     logWrapper: {
       index: 12,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.logWrapper ?? null,
     },
-  };
+  } satisfies ResolvedAccountsWithIndices;
 
   // Arguments.
   const resolvedArgs: DecompressV1InstructionArgs = { ...input };

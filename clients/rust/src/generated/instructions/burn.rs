@@ -103,7 +103,17 @@ pub struct BurnInstructionArgs {
     pub index: u32,
 }
 
-/// Instruction builder.
+/// Instruction builder for `Burn`.
+///
+/// ### Accounts:
+///
+///   0. `[]` tree_config
+///   1. `[signer]` leaf_owner
+///   2. `[signer]` leaf_delegate
+///   3. `[writable]` merkle_tree
+///   4. `[optional]` log_wrapper (default to `noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV`)
+///   5. `[optional]` compression_program (default to `cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK`)
+///   6. `[optional]` system_program (default to `11111111111111111111111111111111`)
 #[derive(Default)]
 pub struct BurnBuilder {
     tree_config: Option<solana_program::pubkey::Pubkey>,
@@ -402,7 +412,17 @@ impl<'a, 'b> BurnCpi<'a, 'b> {
     }
 }
 
-/// `burn` CPI instruction builder.
+/// Instruction builder for `Burn` via CPI.
+///
+/// ### Accounts:
+///
+///   0. `[]` tree_config
+///   1. `[signer]` leaf_owner
+///   2. `[signer]` leaf_delegate
+///   3. `[writable]` merkle_tree
+///   4. `[]` log_wrapper
+///   5. `[]` compression_program
+///   6. `[]` system_program
 pub struct BurnCpiBuilder<'a, 'b> {
     instruction: Box<BurnCpiBuilderInstruction<'a, 'b>>,
 }

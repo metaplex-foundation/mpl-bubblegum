@@ -89,10 +89,18 @@ export function transferAuthority(
   );
 
   // Accounts.
-  const resolvedAccounts: ResolvedAccountsWithIndices = {
-    merkleTree: { index: 0, isWritable: true, value: input.merkleTree ?? null },
-    authority: { index: 1, isWritable: false, value: input.authority ?? null },
-  };
+  const resolvedAccounts = {
+    merkleTree: {
+      index: 0,
+      isWritable: true as boolean,
+      value: input.merkleTree ?? null,
+    },
+    authority: {
+      index: 1,
+      isWritable: false as boolean,
+      value: input.authority ?? null,
+    },
+  } satisfies ResolvedAccountsWithIndices;
 
   // Arguments.
   const resolvedArgs: TransferAuthorityInstructionArgs = { ...input };

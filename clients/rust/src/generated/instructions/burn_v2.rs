@@ -162,7 +162,22 @@ pub struct BurnV2InstructionArgs {
     pub index: u32,
 }
 
-/// Instruction builder.
+/// Instruction builder for `BurnV2`.
+///
+/// ### Accounts:
+///
+///   0. `[writable]` tree_config
+///   1. `[writable, signer]` payer
+///   2. `[signer, optional]` authority
+///   3. `[]` leaf_owner
+///   4. `[optional]` leaf_delegate
+///   5. `[writable]` merkle_tree
+///   6. `[writable, optional]` core_collection
+///   7. `[optional]` mpl_core_cpi_signer
+///   8. `[optional]` log_wrapper (default to `mnoopTCrg4p8ry25e4bcWA9XZjbNjMTfgYVGGEdRsf3`)
+///   9. `[optional]` compression_program (default to `mcmt6YrQEMKw8Mw43FmpRLmf7BqRnFMKmAcbxE3xkAW`)
+///   10. `[optional]` mpl_core_program (default to `CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d`)
+///   11. `[optional]` system_program (default to `11111111111111111111111111111111`)
 #[derive(Default)]
 pub struct BurnV2Builder {
     tree_config: Option<solana_program::pubkey::Pubkey>,
@@ -614,7 +629,22 @@ impl<'a, 'b> BurnV2Cpi<'a, 'b> {
     }
 }
 
-/// `burn_v2` CPI instruction builder.
+/// Instruction builder for `BurnV2` via CPI.
+///
+/// ### Accounts:
+///
+///   0. `[writable]` tree_config
+///   1. `[writable, signer]` payer
+///   2. `[signer, optional]` authority
+///   3. `[]` leaf_owner
+///   4. `[optional]` leaf_delegate
+///   5. `[writable]` merkle_tree
+///   6. `[writable, optional]` core_collection
+///   7. `[optional]` mpl_core_cpi_signer
+///   8. `[]` log_wrapper
+///   9. `[]` compression_program
+///   10. `[]` mpl_core_program
+///   11. `[]` system_program
 pub struct BurnV2CpiBuilder<'a, 'b> {
     instruction: Box<BurnV2CpiBuilderInstruction<'a, 'b>>,
 }

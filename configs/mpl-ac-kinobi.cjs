@@ -16,48 +16,43 @@ const kinobi = k.createFromIdls(
 
 // Update programs.
 kinobi.update(
-  new k.UpdateProgramsVisitor({
+  k.updateProgramsVisitor({
     mplAccountCompression: { name: "mplAccountCompression" },
   })
 );
 
 // Apply the DefaultVisitor.
-kinobi.update(new k.DefaultVisitor());
+kinobi.update(k.defaultVisitor());
 
 // Custom tree updates.
 kinobi.update(
-  new k.TransformNodesVisitor([
+  k.bottomUpTransformerVisitor([
     {
       // Add nodes to the mplAccountCompression program.
-      selector: { kind: "programNode", name: "mplAccountCompression" },
-      transformer: (node) => {
-        k.assertProgramNode(node);
+      select: "[programNode]mplAccountCompression",
+      transform: (node) => {
+        k.assertIsNode(node, "programNode");
         return k.programNode({
           ...node,
           accounts: [
             ...node.accounts,
             k.accountNode({
               name: "merkleTree",
-              data: k.accountDataNode({
-                name: "merkleTreeAccountData",
-                link: k.linkTypeNode("merkleTreeAccountData", {
-                  importFrom: "hooked",
+              size: null,
+              data: k.structTypeNode([
+                k.structFieldTypeNode({
+                  name: "discriminator",
+                  type: k.definedTypeLinkNode("compressionAccountType"),
                 }),
-                struct: k.structTypeNode([
-                  k.structFieldTypeNode({
-                    name: "discriminator",
-                    child: k.linkTypeNode("compressionAccountType"),
-                  }),
-                  k.structFieldTypeNode({
-                    name: "treeHeader",
-                    child: k.linkTypeNode("concurrentMerkleTreeHeaderData"),
-                  }),
-                  k.structFieldTypeNode({
-                    name: "serializedTree",
-                    child: k.bytesTypeNode(k.remainderSize()),
-                  }),
-                ]),
-              }),
+                k.structFieldTypeNode({
+                  name: "treeHeader",
+                  type: k.definedTypeLinkNode("concurrentMerkleTreeHeaderData"),
+                }),
+                k.structFieldTypeNode({
+                  name: "serializedTree",
+                  type: k.bytesTypeNode(k.remainderSizeNode()),
+                }),
+              ]),
             }),
           ],
         });
@@ -65,39 +60,38 @@ kinobi.update(
     },
     {
       // Use extra "proof" arg as remaining accounts.
-      selector: (node) =>
-        k.isInstructionNode(node) &&
+      select: (node) =>
+        k.isNode(node, "instructionNode") &&
         [
           "verifyLeaf",
         ].includes(node.name),
-      transformer: (node) => {
-        k.assertInstructionNode(node);
+      transform: (node) => {
+        k.assertIsNode(node, "instructionNode");
         return k.instructionNode({
           ...node,
-          remainingAccounts: k.remainingAccountsFromArg("proof"),
-          argDefaults: {
-            ...node.argDefaults,
-            proof: k.valueDefault(k.vList([])),
-          },
-          extraArgs: k.instructionExtraArgsNode({
-            ...node.extraArgs,
-            struct: k.structTypeNode([
-              ...node.extraArgs.struct.fields,
-              k.structFieldTypeNode({
-                name: "proof",
-                child: k.arrayTypeNode(k.publicKeyTypeNode()),
-              }),
-            ]),
-          }),
+          remainingAccounts: [
+            k.instructionRemainingAccountsNode(
+              k.argumentValueNode("proof")
+            ),
+          ],
+          extraArguments: [
+            ...(node.extraArguments ?? []),
+            k.instructionArgumentNode({
+              name: "proof",
+              type: k.arrayTypeNode(k.publicKeyTypeNode()),
+              defaultValue: k.arrayValueNode([]),
+            }),
+          ],
         });
       },
     },
   ])
 );
 
-// Transform tuple enum variants to structs.
+// Extract ConcurrentMerkleTreeHeaderDataV1 to a separate type.
+// Note: This creates a tuple wrapper, but the hooked code provides custom types.
 kinobi.update(
-  new k.UnwrapTupleEnumWithSingleStructVisitor([
+  k.unwrapTupleEnumWithSingleStructVisitor([
     "ConcurrentMerkleTreeHeaderData",
   ])
 );
@@ -106,7 +100,13 @@ kinobi.update(
 const jsDir = path.join(clientDir, "mpl-ac-js", "src", "generated");
 const prettier = require(path.join(clientDir, "mpl-ac-js", ".prettierrc.json"));
 kinobi.accept(
-  new k.RenderJavaScriptVisitor(jsDir, {
+  k.renderJavaScriptVisitor(jsDir, {
     prettier,
+    customAccountData: [
+      {
+        name: "merkleTree",
+        extract: false,
+      },
+    ],
   })
 );

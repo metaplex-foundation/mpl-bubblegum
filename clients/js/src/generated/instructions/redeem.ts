@@ -88,7 +88,7 @@ export function getRedeemInstructionDataSerializer(): Serializer<
 }
 
 // Extra Args.
-export type RedeemInstructionExtraArgs = { proof: Array<PublicKey> };
+export type RedeemInstructionExtraArgs = { proof?: Array<PublicKey> };
 
 // Args.
 export type RedeemInstructionArgs = PickPartial<
@@ -108,36 +108,48 @@ export function redeem(
   );
 
   // Accounts.
-  const resolvedAccounts: ResolvedAccountsWithIndices = {
+  const resolvedAccounts = {
     treeConfig: {
       index: 0,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.treeConfig ?? null,
     },
-    leafOwner: { index: 1, isWritable: true, value: input.leafOwner ?? null },
+    leafOwner: {
+      index: 1,
+      isWritable: true as boolean,
+      value: input.leafOwner ?? null,
+    },
     leafDelegate: {
       index: 2,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.leafDelegate ?? null,
     },
-    merkleTree: { index: 3, isWritable: true, value: input.merkleTree ?? null },
-    voucher: { index: 4, isWritable: true, value: input.voucher ?? null },
+    merkleTree: {
+      index: 3,
+      isWritable: true as boolean,
+      value: input.merkleTree ?? null,
+    },
+    voucher: {
+      index: 4,
+      isWritable: true as boolean,
+      value: input.voucher ?? null,
+    },
     logWrapper: {
       index: 5,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.logWrapper ?? null,
     },
     compressionProgram: {
       index: 6,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.compressionProgram ?? null,
     },
     systemProgram: {
       index: 7,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.systemProgram ?? null,
     },
-  };
+  } satisfies ResolvedAccountsWithIndices;
 
   // Arguments.
   const resolvedArgs: RedeemInstructionArgs = { ...input };
@@ -151,7 +163,7 @@ export function redeem(
   if (!resolvedAccounts.leafDelegate.value) {
     resolvedAccounts.leafDelegate.value = expectSome(
       resolvedAccounts.leafOwner.value
-    );
+    ).publicKey;
   }
   if (!resolvedAccounts.voucher.value) {
     resolvedAccounts.voucher.value = findVoucherPda(context, {

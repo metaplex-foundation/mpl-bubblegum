@@ -117,7 +117,7 @@ export function getUpdateMetadataInstructionDataSerializer(): Serializer<
 }
 
 // Extra Args.
-export type UpdateMetadataInstructionExtraArgs = { proof: Array<PublicKey> };
+export type UpdateMetadataInstructionExtraArgs = { proof?: Array<PublicKey> };
 
 // Args.
 export type UpdateMetadataInstructionArgs = PickPartial<
@@ -137,57 +137,73 @@ export function updateMetadata(
   );
 
   // Accounts.
-  const resolvedAccounts: ResolvedAccountsWithIndices = {
+  const resolvedAccounts = {
     treeConfig: {
       index: 0,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.treeConfig ?? null,
     },
-    authority: { index: 1, isWritable: false, value: input.authority ?? null },
+    authority: {
+      index: 1,
+      isWritable: false as boolean,
+      value: input.authority ?? null,
+    },
     collectionMint: {
       index: 2,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.collectionMint ?? null,
     },
     collectionMetadata: {
       index: 3,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.collectionMetadata ?? null,
     },
     collectionAuthorityRecordPda: {
       index: 4,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.collectionAuthorityRecordPda ?? null,
     },
-    leafOwner: { index: 5, isWritable: false, value: input.leafOwner ?? null },
+    leafOwner: {
+      index: 5,
+      isWritable: false as boolean,
+      value: input.leafOwner ?? null,
+    },
     leafDelegate: {
       index: 6,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.leafDelegate ?? null,
     },
-    payer: { index: 7, isWritable: false, value: input.payer ?? null },
-    merkleTree: { index: 8, isWritable: true, value: input.merkleTree ?? null },
+    payer: {
+      index: 7,
+      isWritable: false as boolean,
+      value: input.payer ?? null,
+    },
+    merkleTree: {
+      index: 8,
+      isWritable: true as boolean,
+      value: input.merkleTree ?? null,
+    },
     logWrapper: {
       index: 9,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.logWrapper ?? null,
     },
     compressionProgram: {
       index: 10,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.compressionProgram ?? null,
     },
     tokenMetadataProgram: {
       index: 11,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.tokenMetadataProgram ?? null,
     },
     systemProgram: {
       index: 12,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.systemProgram ?? null,
     },
-  };
+  } satisfies ResolvedAccountsWithIndices;
 
   // Arguments.
   const resolvedArgs: UpdateMetadataInstructionArgs = { ...input };

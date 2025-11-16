@@ -183,7 +183,24 @@ pub struct SetCollectionV2InstructionArgs {
     pub metadata: MetadataArgsV2,
 }
 
-/// Instruction builder.
+/// Instruction builder for `SetCollectionV2`.
+///
+/// ### Accounts:
+///
+///   0. `[writable]` tree_config
+///   1. `[writable, signer]` payer
+///   2. `[signer, optional]` authority
+///   3. `[signer, optional]` new_collection_authority
+///   4. `[]` leaf_owner
+///   5. `[optional]` leaf_delegate
+///   6. `[writable]` merkle_tree
+///   7. `[writable, optional]` core_collection
+///   8. `[writable, optional]` new_core_collection
+///   9. `[optional]` mpl_core_cpi_signer (default to `CbNY3JiXdXNE9tPNEk1aRZVEkWdj2v7kfJLNQwZZgpXk`)
+///   10. `[optional]` log_wrapper (default to `mnoopTCrg4p8ry25e4bcWA9XZjbNjMTfgYVGGEdRsf3`)
+///   11. `[optional]` compression_program (default to `mcmt6YrQEMKw8Mw43FmpRLmf7BqRnFMKmAcbxE3xkAW`)
+///   12. `[optional]` mpl_core_program (default to `CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d`)
+///   13. `[optional]` system_program (default to `11111111111111111111111111111111`)
 #[derive(Default)]
 pub struct SetCollectionV2Builder {
     tree_config: Option<solana_program::pubkey::Pubkey>,
@@ -688,7 +705,24 @@ impl<'a, 'b> SetCollectionV2Cpi<'a, 'b> {
     }
 }
 
-/// `set_collection_v2` CPI instruction builder.
+/// Instruction builder for `SetCollectionV2` via CPI.
+///
+/// ### Accounts:
+///
+///   0. `[writable]` tree_config
+///   1. `[writable, signer]` payer
+///   2. `[signer, optional]` authority
+///   3. `[signer, optional]` new_collection_authority
+///   4. `[]` leaf_owner
+///   5. `[optional]` leaf_delegate
+///   6. `[writable]` merkle_tree
+///   7. `[writable, optional]` core_collection
+///   8. `[writable, optional]` new_core_collection
+///   9. `[]` mpl_core_cpi_signer
+///   10. `[]` log_wrapper
+///   11. `[]` compression_program
+///   12. `[]` mpl_core_program
+///   13. `[]` system_program
 pub struct SetCollectionV2CpiBuilder<'a, 'b> {
     instruction: Box<SetCollectionV2CpiBuilderInstruction<'a, 'b>>,
 }

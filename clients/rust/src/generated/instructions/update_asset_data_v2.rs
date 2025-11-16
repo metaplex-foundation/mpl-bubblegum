@@ -148,7 +148,20 @@ pub struct UpdateAssetDataV2InstructionArgs {
     pub new_asset_data_schema: Option<AssetDataSchema>,
 }
 
-/// Instruction builder.
+/// Instruction builder for `UpdateAssetDataV2`.
+///
+/// ### Accounts:
+///
+///   0. `[writable]` tree_config
+///   1. `[writable, signer]` payer
+///   2. `[signer, optional]` authority
+///   3. `[]` leaf_owner
+///   4. `[optional]` leaf_delegate
+///   5. `[writable]` merkle_tree
+///   6. `[optional]` core_collection
+///   7. `[optional]` log_wrapper (default to `mnoopTCrg4p8ry25e4bcWA9XZjbNjMTfgYVGGEdRsf3`)
+///   8. `[optional]` compression_program (default to `mcmt6YrQEMKw8Mw43FmpRLmf7BqRnFMKmAcbxE3xkAW`)
+///   9. `[optional]` system_program (default to `11111111111111111111111111111111`)
 #[derive(Default)]
 pub struct UpdateAssetDataV2Builder {
     tree_config: Option<solana_program::pubkey::Pubkey>,
@@ -564,7 +577,20 @@ impl<'a, 'b> UpdateAssetDataV2Cpi<'a, 'b> {
     }
 }
 
-/// `update_asset_data_v2` CPI instruction builder.
+/// Instruction builder for `UpdateAssetDataV2` via CPI.
+///
+/// ### Accounts:
+///
+///   0. `[writable]` tree_config
+///   1. `[writable, signer]` payer
+///   2. `[signer, optional]` authority
+///   3. `[]` leaf_owner
+///   4. `[optional]` leaf_delegate
+///   5. `[writable]` merkle_tree
+///   6. `[optional]` core_collection
+///   7. `[]` log_wrapper
+///   8. `[]` compression_program
+///   9. `[]` system_program
 pub struct UpdateAssetDataV2CpiBuilder<'a, 'b> {
     instruction: Box<UpdateAssetDataV2CpiBuilderInstruction<'a, 'b>>,
 }

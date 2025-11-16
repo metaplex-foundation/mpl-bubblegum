@@ -99,7 +99,17 @@ pub struct CancelRedeemInstructionArgs {
     pub root: [u8; 32],
 }
 
-/// Instruction builder.
+/// Instruction builder for `CancelRedeem`.
+///
+/// ### Accounts:
+///
+///   0. `[]` tree_config
+///   1. `[writable, signer]` leaf_owner
+///   2. `[writable]` merkle_tree
+///   3. `[writable]` voucher
+///   4. `[optional]` log_wrapper (default to `noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV`)
+///   5. `[optional]` compression_program (default to `cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK`)
+///   6. `[optional]` system_program (default to `11111111111111111111111111111111`)
 #[derive(Default)]
 pub struct CancelRedeemBuilder {
     tree_config: Option<solana_program::pubkey::Pubkey>,
@@ -362,7 +372,17 @@ impl<'a, 'b> CancelRedeemCpi<'a, 'b> {
     }
 }
 
-/// `cancel_redeem` CPI instruction builder.
+/// Instruction builder for `CancelRedeem` via CPI.
+///
+/// ### Accounts:
+///
+///   0. `[]` tree_config
+///   1. `[writable, signer]` leaf_owner
+///   2. `[writable]` merkle_tree
+///   3. `[writable]` voucher
+///   4. `[]` log_wrapper
+///   5. `[]` compression_program
+///   6. `[]` system_program
 pub struct CancelRedeemCpiBuilder<'a, 'b> {
     instruction: Box<CancelRedeemCpiBuilderInstruction<'a, 'b>>,
 }

@@ -109,7 +109,18 @@ pub struct DelegateInstructionArgs {
     pub index: u32,
 }
 
-/// Instruction builder.
+/// Instruction builder for `Delegate`.
+///
+/// ### Accounts:
+///
+///   0. `[]` tree_config
+///   1. `[signer]` leaf_owner
+///   2. `[]` previous_leaf_delegate
+///   3. `[]` new_leaf_delegate
+///   4. `[writable]` merkle_tree
+///   5. `[optional]` log_wrapper (default to `noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV`)
+///   6. `[optional]` compression_program (default to `cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK`)
+///   7. `[optional]` system_program (default to `11111111111111111111111111111111`)
 #[derive(Default)]
 pub struct DelegateBuilder {
     tree_config: Option<solana_program::pubkey::Pubkey>,
@@ -427,7 +438,18 @@ impl<'a, 'b> DelegateCpi<'a, 'b> {
     }
 }
 
-/// `delegate` CPI instruction builder.
+/// Instruction builder for `Delegate` via CPI.
+///
+/// ### Accounts:
+///
+///   0. `[]` tree_config
+///   1. `[signer]` leaf_owner
+///   2. `[]` previous_leaf_delegate
+///   3. `[]` new_leaf_delegate
+///   4. `[writable]` merkle_tree
+///   5. `[]` log_wrapper
+///   6. `[]` compression_program
+///   7. `[]` system_program
 pub struct DelegateCpiBuilder<'a, 'b> {
     instruction: Box<DelegateCpiBuilderInstruction<'a, 'b>>,
 }

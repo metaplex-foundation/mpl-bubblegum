@@ -14,4 +14,5 @@ export * from './changeLogEventV1';
 export * from './compressionAccountType';
 export * from './concurrentMerkleTreeHeader';
 export * from './concurrentMerkleTreeHeaderData';
+export * from './concurrentMerkleTreeHeaderDataV1';
 export * from './pathNode';

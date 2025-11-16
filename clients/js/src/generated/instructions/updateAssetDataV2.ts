@@ -79,12 +79,12 @@ export type UpdateAssetDataV2InstructionDataArgs = {
   root: Uint8Array;
   dataHash: Uint8Array;
   creatorHash: Uint8Array;
-  previousAssetDataHash: OptionOrNullable<Uint8Array>;
-  flags: OptionOrNullable<number>;
+  previousAssetDataHash?: OptionOrNullable<Uint8Array>;
+  flags?: OptionOrNullable<number>;
   nonce: number | bigint;
   index: number;
-  newAssetData: OptionOrNullable<Uint8Array>;
-  newAssetDataSchema: OptionOrNullable<AssetDataSchemaArgs>;
+  newAssetData?: OptionOrNullable<Uint8Array>;
+  newAssetDataSchema?: OptionOrNullable<AssetDataSchemaArgs>;
 };
 
 export function getUpdateAssetDataV2InstructionDataSerializer(): Serializer<
@@ -111,7 +111,14 @@ export function getUpdateAssetDataV2InstructionDataSerializer(): Serializer<
       ],
       { description: 'UpdateAssetDataV2InstructionData' }
     ),
-    (value) => ({ ...value, discriminator: [59, 56, 111, 43, 95, 14, 11, 61] })
+    (value) => ({
+      ...value,
+      discriminator: [59, 56, 111, 43, 95, 14, 11, 61],
+      previousAssetDataHash: value.previousAssetDataHash ?? none(),
+      flags: value.flags ?? none(),
+      newAssetData: value.newAssetData ?? none(),
+      newAssetDataSchema: value.newAssetDataSchema ?? none(),
+    })
   ) as Serializer<
     UpdateAssetDataV2InstructionDataArgs,
     UpdateAssetDataV2InstructionData
@@ -119,16 +126,14 @@ export function getUpdateAssetDataV2InstructionDataSerializer(): Serializer<
 }
 
 // Extra Args.
-export type UpdateAssetDataV2InstructionExtraArgs = { proof: Array<PublicKey> };
+export type UpdateAssetDataV2InstructionExtraArgs = {
+  proof?: Array<PublicKey>;
+};
 
 // Args.
 export type UpdateAssetDataV2InstructionArgs = PickPartial<
   UpdateAssetDataV2InstructionDataArgs & UpdateAssetDataV2InstructionExtraArgs,
-  | 'previousAssetDataHash'
-  | 'flags'
-  | 'newAssetData'
-  | 'newAssetDataSchema'
-  | 'proof'
+  'proof'
 >;
 
 // Instruction.
@@ -143,38 +148,58 @@ export function updateAssetDataV2(
   );
 
   // Accounts.
-  const resolvedAccounts: ResolvedAccountsWithIndices = {
-    treeConfig: { index: 0, isWritable: true, value: input.treeConfig ?? null },
-    payer: { index: 1, isWritable: true, value: input.payer ?? null },
-    authority: { index: 2, isWritable: false, value: input.authority ?? null },
-    leafOwner: { index: 3, isWritable: false, value: input.leafOwner ?? null },
+  const resolvedAccounts = {
+    treeConfig: {
+      index: 0,
+      isWritable: true as boolean,
+      value: input.treeConfig ?? null,
+    },
+    payer: {
+      index: 1,
+      isWritable: true as boolean,
+      value: input.payer ?? null,
+    },
+    authority: {
+      index: 2,
+      isWritable: false as boolean,
+      value: input.authority ?? null,
+    },
+    leafOwner: {
+      index: 3,
+      isWritable: false as boolean,
+      value: input.leafOwner ?? null,
+    },
     leafDelegate: {
       index: 4,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.leafDelegate ?? null,
     },
-    merkleTree: { index: 5, isWritable: true, value: input.merkleTree ?? null },
+    merkleTree: {
+      index: 5,
+      isWritable: true as boolean,
+      value: input.merkleTree ?? null,
+    },
     coreCollection: {
       index: 6,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.coreCollection ?? null,
     },
     logWrapper: {
       index: 7,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.logWrapper ?? null,
     },
     compressionProgram: {
       index: 8,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.compressionProgram ?? null,
     },
     systemProgram: {
       index: 9,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.systemProgram ?? null,
     },
-  };
+  } satisfies ResolvedAccountsWithIndices;
 
   // Arguments.
   const resolvedArgs: UpdateAssetDataV2InstructionArgs = { ...input };
@@ -208,18 +233,6 @@ export function updateAssetDataV2(
       '11111111111111111111111111111111'
     );
     resolvedAccounts.systemProgram.isWritable = false;
-  }
-  if (!resolvedArgs.previousAssetDataHash) {
-    resolvedArgs.previousAssetDataHash = none();
-  }
-  if (!resolvedArgs.flags) {
-    resolvedArgs.flags = none();
-  }
-  if (!resolvedArgs.newAssetData) {
-    resolvedArgs.newAssetData = none();
-  }
-  if (!resolvedArgs.newAssetDataSchema) {
-    resolvedArgs.newAssetDataSchema = none();
   }
   if (!resolvedArgs.proof) {
     resolvedArgs.proof = [];
