@@ -8,6 +8,7 @@
 pub(crate) mod burn;
 pub(crate) mod burn_v2;
 pub(crate) mod cancel_redeem;
+pub(crate) mod close_tree;
 pub(crate) mod collect_v2;
 pub(crate) mod create_tree_config;
 pub(crate) mod create_tree_config_v2;
@@ -42,6 +43,7 @@ pub(crate) mod verify_creator_v2;
 pub use self::burn::*;
 pub use self::burn_v2::*;
 pub use self::cancel_redeem::*;
+pub use self::close_tree::*;
 pub use self::collect_v2::*;
 pub use self::create_tree_config::*;
 pub use self::create_tree_config_v2::*;

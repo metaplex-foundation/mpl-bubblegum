@@ -56,6 +56,7 @@ pub enum InstructionName {
     UpdateAssetDataV2,
     UpdateMetadataV2,
     VerifyCreatorV2,
+    CloseTree,
 }
 
 pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
@@ -100,6 +101,7 @@ pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
         [59, 56, 111, 43, 95, 14, 11, 61] => InstructionName::UpdateAssetDataV2,
         [43, 103, 89, 42, 121, 242, 62, 72] => InstructionName::UpdateMetadataV2,
         [85, 138, 140, 42, 22, 241, 118, 102] => InstructionName::VerifyCreatorV2,
+        [9, 124, 164, 131, 238, 218, 148, 212] => InstructionName::CloseTree,
         _ => InstructionName::Unknown,
     }
 }
@@ -632,5 +634,10 @@ pub mod bubblegum {
         message: MetadataArgsV2,
     ) -> Result<()> {
         processor::verify_creator_v2(ctx, root, asset_data_hash, flags, nonce, index, message)
+    }
+
+    /// Closes an empty tree and its config PDA to reclaim rent.
+    pub fn close_tree(ctx: Context<CloseTree>) -> Result<()> {
+        processor::close_tree(ctx)
     }
 }
