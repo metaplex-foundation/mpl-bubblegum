@@ -1,0 +1,70 @@
+import { defaultPublicKey, publicKey } from '@metaplex-foundation/umi';
+import test from 'ava';
+import {
+  fetchMerkleTree,
+  MPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
+  MPL_NOOP_PROGRAM_ID,
+} from '@metaplex-foundation/mpl-account-compression';
+import { closeTree, findTreeConfigPda } from '../src';
+import { createTreeV2, createUmi, mintV2 } from './_setup';
+
+test('it can close an empty Bubblegum tree', async (t) => {
+  // Given a V2 Bubblegum tree with no leaves.
+  const umi = await createUmi();
+  const merkleTree = await createTreeV2(umi);
+  const [treeConfig] = findTreeConfigPda(umi, { merkleTree });
+
+  const merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(
+    merkleTreeAccount.tree.rightMostPath.leaf,
+    publicKey(defaultPublicKey())
+  );
+  t.true(await umi.rpc.accountExists(treeConfig));
+
+  // When we close the tree.
+  await closeTree(umi, {
+    merkleTree,
+    recipient: umi.identity.publicKey,
+    compressionProgram: MPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
+    logWrapper: MPL_NOOP_PROGRAM_ID,
+  }).sendAndConfirm(umi);
+
+  // Then the tree and config accounts are closed.
+  t.false(await umi.rpc.accountExists(merkleTree));
+  t.false(await umi.rpc.accountExists(treeConfig));
+});
+
+test('it cannot close a non-empty Bubblegum tree', async (t) => {
+  // Given a V2 Bubblegum tree with a minted leaf.
+  const umi = await createUmi();
+  const merkleTree = await createTreeV2(umi);
+  const [treeConfig] = findTreeConfigPda(umi, { merkleTree });
+  await mintV2(umi, { merkleTree });
+
+  const merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.not(
+    merkleTreeAccount.tree.rightMostPath.leaf,
+    publicKey(defaultPublicKey())
+  );
+
+  // When we try to close the non-empty tree.
+  const promise = closeTree(umi, {
+    merkleTree,
+    recipient: umi.identity.publicKey,
+    compressionProgram: MPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
+    logWrapper: MPL_NOOP_PROGRAM_ID,
+  }).sendAndConfirm(umi);
+
+  // Then we expect a program error with logs indicating the tree is not empty.
+  const error = await t.throwsAsync(promise);
+  const logs =
+    (error as { logs?: string[]; cause?: { logs?: string[] } })?.logs ??
+    (error as { logs?: string[]; cause?: { logs?: string[] } })?.cause?.logs ??
+    [];
+  t.true(
+    logs.some((log) => log.includes('Tree is not empty')),
+    `Unexpected logs: ${logs.join('\n')}`
+  );
+  t.true(await umi.rpc.accountExists(merkleTree));
+  t.true(await umi.rpc.accountExists(treeConfig));
+});
