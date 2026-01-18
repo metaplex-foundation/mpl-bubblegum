@@ -1,4 +1,8 @@
-import { defaultPublicKey, publicKey } from '@metaplex-foundation/umi';
+import {
+  defaultPublicKey,
+  generateSigner,
+  publicKey,
+} from '@metaplex-foundation/umi';
 import test from 'ava';
 import {
   fetchMerkleTree,
@@ -63,6 +67,38 @@ test('it cannot close a non-empty Bubblegum tree', async (t) => {
     [];
   t.true(
     logs.some((log) => log.includes('Tree is not empty')),
+    `Unexpected logs: ${logs.join('\n')}`
+  );
+  t.true(await umi.rpc.accountExists(merkleTree));
+  t.true(await umi.rpc.accountExists(treeConfig));
+});
+
+test('it cannot close a Bubblegum tree as a non-authority', async (t) => {
+  // Given a V2 Bubblegum tree with no leaves.
+  const umi = await createUmi();
+  const merkleTree = await createTreeV2(umi);
+  const [treeConfig] = findTreeConfigPda(umi, { merkleTree });
+  const nonAuthority = generateSigner(umi);
+  t.true(await umi.rpc.accountExists(merkleTree));
+  t.true(await umi.rpc.accountExists(treeConfig));
+
+  // When a non-authority tries to close the tree.
+  const promise = closeTree(umi, {
+    authority: nonAuthority,
+    merkleTree,
+    recipient: umi.identity.publicKey,
+    compressionProgram: MPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
+    logWrapper: MPL_NOOP_PROGRAM_ID,
+  }).sendAndConfirm(umi);
+
+  // Then we expect a program error with logs indicating invalid authority.
+  const error = await t.throwsAsync(promise);
+  const logs =
+    (error as { logs?: string[]; cause?: { logs?: string[] } })?.logs ??
+    (error as { logs?: string[]; cause?: { logs?: string[] } })?.cause?.logs ??
+    [];
+  t.true(
+    logs.some((log) => log.includes('InvalidAuthority')),
     `Unexpected logs: ${logs.join('\n')}`
   );
   t.true(await umi.rpc.accountExists(merkleTree));
