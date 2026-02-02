@@ -118,6 +118,8 @@ pub enum BubblegumError {
     MissingMplCoreCpiSignerAccount,
     #[msg("Asset is not frozen")]
     AssetIsNotFrozen,
+    #[msg("Unsupported update operation")]
+    UnsupportedUpdateOperation,
 }
 
 // Converts certain Token Metadata errors into Bubblegum equivalents
