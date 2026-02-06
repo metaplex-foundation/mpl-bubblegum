@@ -47,15 +47,6 @@ pub fn update_tree_config<'info>(
     } = update_args;
 
     // Validate update args.
-    // `tree_creator` must equal `tree_delegate`
-    if tree_creator != tree_delegate {
-        msg!(
-            "Tree creator must equal tree delegate, got {:?} != {:?}",
-            tree_creator,
-            tree_delegate
-        );
-        return Err(BubblegumError::UnsupportedUpdateOperation.into());
-    }
     // `is_decompressible` must be `None` or `Disabled`
     if !matches!(
         is_decompressible,
