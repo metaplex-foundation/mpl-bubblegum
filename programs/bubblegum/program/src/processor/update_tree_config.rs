@@ -27,16 +27,13 @@ pub fn update_tree_config<'info>(
     ctx: Context<'_, '_, '_, 'info, UpdateTreeConfig<'info>>,
     update_args: UpdateTreeConfigArgs,
 ) -> Result<()> {
+    let tree_authority = &mut ctx.accounts.tree_authority;
+
     // Support V1 and V2 trees.
     require!(
-        matches!(
-            ctx.accounts.tree_authority.version,
-            Version::V1 | Version::V2
-        ),
+        matches!(tree_authority.version, Version::V1 | Version::V2),
         BubblegumError::UnsupportedSchemaVersion
     );
-
-    let tree_authority = &mut ctx.accounts.tree_authority;
 
     // Update tree config.
     let UpdateTreeConfigArgs {
@@ -47,13 +44,18 @@ pub fn update_tree_config<'info>(
     } = update_args;
 
     // Validate update args.
-    // `is_decompressible` must be `None` or `Disabled`
-    if !matches!(
-        is_decompressible,
-        None | Some(DecompressibleState::Disabled)
-    ) {
-        msg!("Tree cannot be set to decompressible, is_decompressed must be None or Disabled, got {:?}", is_decompressible);
-        return Err(BubblegumError::UnsupportedUpdateOperation.into());
+    match tree_authority.version {
+        // v1 trees can be set as decompressible
+        Version::V1 => {}
+
+        // v2 trees: `is_decompressible` must be `None` or `Disabled`
+        Version::V2 => match is_decompressible {
+            None | Some(DecompressibleState::Disabled) => {}
+            Some(DecompressibleState::Enabled) => {
+                msg!("v2 tree cannot be set to decompressible: is_decompressed must be None or Disabled, got {:?}", is_decompressible);
+                return Err(BubblegumError::UnsupportedUpdateOperation.into());
+            }
+        },
     }
 
     if let Some(tree_creator) = tree_creator {
