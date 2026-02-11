@@ -6,7 +6,7 @@ use crate::{
 };
 
 #[derive(Accounts)]
-pub struct CloseTree<'info> {
+pub struct CloseTreeV2<'info> {
     #[account(
         mut,
         seeds = [merkle_tree.key().as_ref()],
@@ -28,8 +28,8 @@ pub struct CloseTree<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub(crate) fn close_tree(
-    ctx: Context<CloseTree>
+pub(crate) fn close_tree_v2(
+    ctx: Context<CloseTreeV2>
 ) -> Result<()> {
 
     // Only V2 trees (created via `create_tree_v2`) are supported.

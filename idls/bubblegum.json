@@ -3386,7 +3386,7 @@
       ]
     },
     {
-      "name": "closeTree",
+      "name": "closeTreeV2",
       "docs": [
         "Closes an empty tree and its config PDA to reclaim rent."
       ],

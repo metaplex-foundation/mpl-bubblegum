@@ -9,7 +9,7 @@ use borsh::BorshDeserialize;
 use borsh::BorshSerialize;
 
 /// Accounts.
-pub struct CloseTree {
+pub struct CloseTreeV2 {
     pub tree_config: solana_program::pubkey::Pubkey,
     /// Tree creator or delegate.
     pub authority: solana_program::pubkey::Pubkey,
@@ -26,7 +26,7 @@ pub struct CloseTree {
     pub system_program: solana_program::pubkey::Pubkey,
 }
 
-impl CloseTree {
+impl CloseTreeV2 {
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         self.instruction_with_remaining_accounts(&[])
     }
@@ -65,7 +65,7 @@ impl CloseTree {
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let data = CloseTreeInstructionData::new().try_to_vec().unwrap();
+        let data = CloseTreeV2InstructionData::new().try_to_vec().unwrap();
 
         solana_program::instruction::Instruction {
             program_id: crate::MPL_BUBBLEGUM_ID,
@@ -76,21 +76,21 @@ impl CloseTree {
 }
 
 #[derive(BorshDeserialize, BorshSerialize)]
-struct CloseTreeInstructionData {
+struct CloseTreeV2InstructionData {
     discriminator: [u8; 8],
 }
 
-impl CloseTreeInstructionData {
+impl CloseTreeV2InstructionData {
     fn new() -> Self {
         Self {
-            discriminator: [9, 124, 164, 131, 238, 218, 148, 212],
+            discriminator: [45, 172, 6, 94, 28, 90, 157, 70],
         }
     }
 }
 
 /// Instruction builder.
 #[derive(Default)]
-pub struct CloseTreeBuilder {
+pub struct CloseTreeV2Builder {
     tree_config: Option<solana_program::pubkey::Pubkey>,
     authority: Option<solana_program::pubkey::Pubkey>,
     merkle_tree: Option<solana_program::pubkey::Pubkey>,
@@ -101,7 +101,7 @@ pub struct CloseTreeBuilder {
     __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
 
-impl CloseTreeBuilder {
+impl CloseTreeV2Builder {
     pub fn new() -> Self {
         Self::default()
     }
@@ -167,7 +167,7 @@ impl CloseTreeBuilder {
     }
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
-        let accounts = CloseTree {
+        let accounts = CloseTreeV2 {
             tree_config: self.tree_config.expect("tree_config is not set"),
             authority: self.authority.expect("authority is not set"),
             merkle_tree: self.merkle_tree.expect("merkle_tree is not set"),
@@ -185,8 +185,8 @@ impl CloseTreeBuilder {
     }
 }
 
-/// `close_tree` CPI accounts.
-pub struct CloseTreeCpiAccounts<'a, 'b> {
+/// `close_tree_v2` CPI accounts.
+pub struct CloseTreeV2CpiAccounts<'a, 'b> {
     pub tree_config: &'b solana_program::account_info::AccountInfo<'a>,
     /// Tree creator or delegate.
     pub authority: &'b solana_program::account_info::AccountInfo<'a>,
@@ -203,8 +203,8 @@ pub struct CloseTreeCpiAccounts<'a, 'b> {
     pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
 }
 
-/// `close_tree` CPI instruction.
-pub struct CloseTreeCpi<'a, 'b> {
+/// `close_tree_v2` CPI instruction.
+pub struct CloseTreeV2Cpi<'a, 'b> {
     /// The program to invoke.
     pub __program: &'b solana_program::account_info::AccountInfo<'a>,
 
@@ -224,10 +224,10 @@ pub struct CloseTreeCpi<'a, 'b> {
     pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
 }
 
-impl<'a, 'b> CloseTreeCpi<'a, 'b> {
+impl<'a, 'b> CloseTreeV2Cpi<'a, 'b> {
     pub fn new(
         program: &'b solana_program::account_info::AccountInfo<'a>,
-        accounts: CloseTreeCpiAccounts<'a, 'b>,
+        accounts: CloseTreeV2CpiAccounts<'a, 'b>,
     ) -> Self {
         Self {
             __program: program,
@@ -309,7 +309,7 @@ impl<'a, 'b> CloseTreeCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let data = CloseTreeInstructionData::new().try_to_vec().unwrap();
+        let data = CloseTreeV2InstructionData::new().try_to_vec().unwrap();
 
         let instruction = solana_program::instruction::Instruction {
             program_id: crate::MPL_BUBBLEGUM_ID,
@@ -337,14 +337,14 @@ impl<'a, 'b> CloseTreeCpi<'a, 'b> {
     }
 }
 
-/// `close_tree` CPI instruction builder.
-pub struct CloseTreeCpiBuilder<'a, 'b> {
-    instruction: Box<CloseTreeCpiBuilderInstruction<'a, 'b>>,
+/// `close_tree_v2` CPI instruction builder.
+pub struct CloseTreeV2CpiBuilder<'a, 'b> {
+    instruction: Box<CloseTreeV2CpiBuilderInstruction<'a, 'b>>,
 }
 
-impl<'a, 'b> CloseTreeCpiBuilder<'a, 'b> {
+impl<'a, 'b> CloseTreeV2CpiBuilder<'a, 'b> {
     pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
-        let instruction = Box::new(CloseTreeCpiBuilderInstruction {
+        let instruction = Box::new(CloseTreeV2CpiBuilderInstruction {
             __program: program,
             tree_config: None,
             authority: None,
@@ -457,7 +457,7 @@ impl<'a, 'b> CloseTreeCpiBuilder<'a, 'b> {
         &self,
         signers_seeds: &[&[&[u8]]],
     ) -> solana_program::entrypoint::ProgramResult {
-        let instruction = CloseTreeCpi {
+        let instruction = CloseTreeV2Cpi {
             __program: self.instruction.__program,
 
             tree_config: self
@@ -496,7 +496,7 @@ impl<'a, 'b> CloseTreeCpiBuilder<'a, 'b> {
     }
 }
 
-struct CloseTreeCpiBuilderInstruction<'a, 'b> {
+struct CloseTreeV2CpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_program::account_info::AccountInfo<'a>,
     tree_config: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,

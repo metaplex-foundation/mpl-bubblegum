@@ -637,7 +637,7 @@ pub mod bubblegum {
     }
 
     /// Closes an empty tree and its config PDA to reclaim rent.
-    pub fn close_tree(ctx: Context<CloseTree>) -> Result<()> {
-        processor::close_tree(ctx)
+    pub fn close_tree_v2(ctx: Context<CloseTreeV2>) -> Result<()> {
+        processor::close_tree_v2(ctx)
     }
 }

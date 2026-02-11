@@ -30,7 +30,7 @@ import {
 } from '../shared';
 
 // Accounts.
-export type CloseTreeInstructionAccounts = {
+export type CloseTreeV2InstructionAccounts = {
   treeConfig?: PublicKey | Pda;
   /** Tree creator or delegate. */
   authority?: Signer;
@@ -47,34 +47,31 @@ export type CloseTreeInstructionAccounts = {
 };
 
 // Data.
-export type CloseTreeInstructionData = { discriminator: Array<number> };
+export type CloseTreeV2InstructionData = { discriminator: Array<number> };
 
-export type CloseTreeInstructionDataArgs = {};
+export type CloseTreeV2InstructionDataArgs = {};
 
-export function getCloseTreeInstructionDataSerializer(): Serializer<
-  CloseTreeInstructionDataArgs,
-  CloseTreeInstructionData
+export function getCloseTreeV2InstructionDataSerializer(): Serializer<
+  CloseTreeV2InstructionDataArgs,
+  CloseTreeV2InstructionData
 > {
   return mapSerializer<
-    CloseTreeInstructionDataArgs,
+    CloseTreeV2InstructionDataArgs,
     any,
-    CloseTreeInstructionData
+    CloseTreeV2InstructionData
   >(
-    struct<CloseTreeInstructionData>(
+    struct<CloseTreeV2InstructionData>(
       [['discriminator', array(u8(), { size: 8 })]],
-      { description: 'CloseTreeInstructionData' }
+      { description: 'CloseTreeV2InstructionData' }
     ),
-    (value) => ({
-      ...value,
-      discriminator: [9, 124, 164, 131, 238, 218, 148, 212],
-    })
-  ) as Serializer<CloseTreeInstructionDataArgs, CloseTreeInstructionData>;
+    (value) => ({ ...value, discriminator: [45, 172, 6, 94, 28, 90, 157, 70] })
+  ) as Serializer<CloseTreeV2InstructionDataArgs, CloseTreeV2InstructionData>;
 }
 
 // Instruction.
-export function closeTree(
+export function closeTreeV2(
   context: Pick<Context, 'eddsa' | 'identity' | 'programs'>,
-  input: CloseTreeInstructionAccounts
+  input: CloseTreeV2InstructionAccounts
 ): TransactionBuilder {
   // Program ID.
   const programId = context.programs.getPublicKey(
@@ -135,7 +132,7 @@ export function closeTree(
   );
 
   // Data.
-  const data = getCloseTreeInstructionDataSerializer().serialize({});
+  const data = getCloseTreeV2InstructionDataSerializer().serialize({});
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 0;

@@ -9,7 +9,7 @@ import {
   MPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
   MPL_NOOP_PROGRAM_ID,
 } from '@metaplex-foundation/mpl-account-compression';
-import { closeTree, findTreeConfigPda } from '../src';
+import { closeTreeV2, findTreeConfigPda } from '../src';
 import { createTreeV2, createUmi, mintV2 } from './_setup';
 
 test('it can close an empty Bubblegum tree', async (t) => {
@@ -26,7 +26,7 @@ test('it can close an empty Bubblegum tree', async (t) => {
   t.true(await umi.rpc.accountExists(treeConfig));
 
   // When we close the tree.
-  await closeTree(umi, {
+  await closeTreeV2(umi, {
     merkleTree,
     recipient: umi.identity.publicKey,
     compressionProgram: MPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
@@ -52,7 +52,7 @@ test('it cannot close a non-empty Bubblegum tree', async (t) => {
   );
 
   // When we try to close the non-empty tree.
-  const promise = closeTree(umi, {
+  const promise = closeTreeV2(umi, {
     merkleTree,
     recipient: umi.identity.publicKey,
     compressionProgram: MPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
@@ -83,7 +83,7 @@ test('it cannot close a Bubblegum tree as a non-authority', async (t) => {
   t.true(await umi.rpc.accountExists(treeConfig));
 
   // When a non-authority tries to close the tree.
-  const promise = closeTree(umi, {
+  const promise = closeTreeV2(umi, {
     authority: nonAuthority,
     merkleTree,
     recipient: umi.identity.publicKey,
