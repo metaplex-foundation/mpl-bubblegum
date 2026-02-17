@@ -27,8 +27,8 @@ use crate::{
 
 mod burn;
 mod cancel_redeem;
-mod collect;
 mod close_tree;
+mod collect;
 mod compress;
 mod create_tree;
 mod decompress;
@@ -55,8 +55,8 @@ mod verify_creator;
 
 pub(crate) use burn::*;
 pub(crate) use cancel_redeem::*;
-pub(crate) use collect::*;
 pub(crate) use close_tree::*;
+pub(crate) use collect::*;
 pub(crate) use compress::*;
 pub(crate) use create_tree::*;
 pub(crate) use decompress::*;
