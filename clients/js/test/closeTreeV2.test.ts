@@ -91,16 +91,8 @@ test('it cannot close a Bubblegum tree as a non-authority', async (t) => {
     logWrapper: MPL_NOOP_PROGRAM_ID,
   }).sendAndConfirm(umi);
 
-  // Then we expect a program error with logs indicating invalid authority.
-  const error = await t.throwsAsync(promise);
-  const logs =
-    (error as { logs?: string[]; cause?: { logs?: string[] } })?.logs ??
-    (error as { logs?: string[]; cause?: { logs?: string[] } })?.cause?.logs ??
-    [];
-  t.true(
-    logs.some((log) => log.includes('InvalidAuthority')),
-    `Unexpected logs: ${logs.join('\n')}`
-  );
+  // Then we expect an InvalidAuthority error.
+  await t.throwsAsync(promise, { name: 'InvalidAuthority' });
   t.true(await umi.rpc.accountExists(merkleTree));
   t.true(await umi.rpc.accountExists(treeConfig));
 });
