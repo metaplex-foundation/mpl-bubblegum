@@ -41,8 +41,8 @@ export type CloseTreeV2InstructionAccounts = {
    */
 
   recipient: PublicKey | Pda;
-  compressionProgram: PublicKey | Pda;
-  logWrapper: PublicKey | Pda;
+  compressionProgram?: PublicKey | Pda;
+  logWrapper?: PublicKey | Pda;
   systemProgram?: PublicKey | Pda;
 };
 
@@ -110,6 +110,20 @@ export function closeTreeV2(
   }
   if (!resolvedAccounts.authority.value) {
     resolvedAccounts.authority.value = context.identity;
+  }
+  if (!resolvedAccounts.compressionProgram.value) {
+    resolvedAccounts.compressionProgram.value = context.programs.getPublicKey(
+      'mplAccountCompression',
+      'mcmt6YrQEMKw8Mw43FmpRLmf7BqRnFMKmAcbxE3xkAW'
+    );
+    resolvedAccounts.compressionProgram.isWritable = false;
+  }
+  if (!resolvedAccounts.logWrapper.value) {
+    resolvedAccounts.logWrapper.value = context.programs.getPublicKey(
+      'mplNoop',
+      'mnoopTCrg4p8ry25e4bcWA9XZjbNjMTfgYVGGEdRsf3'
+    );
+    resolvedAccounts.logWrapper.isWritable = false;
   }
   if (!resolvedAccounts.systemProgram.value) {
     resolvedAccounts.systemProgram.value = context.programs.getPublicKey(

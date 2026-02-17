@@ -128,6 +128,7 @@ impl CloseTreeV2Builder {
         self.recipient = Some(recipient);
         self
     }
+    /// `[optional account, default to 'mcmt6YrQEMKw8Mw43FmpRLmf7BqRnFMKmAcbxE3xkAW']`
     #[inline(always)]
     pub fn compression_program(
         &mut self,
@@ -136,6 +137,7 @@ impl CloseTreeV2Builder {
         self.compression_program = Some(compression_program);
         self
     }
+    /// `[optional account, default to 'mnoopTCrg4p8ry25e4bcWA9XZjbNjMTfgYVGGEdRsf3']`
     #[inline(always)]
     pub fn log_wrapper(&mut self, log_wrapper: solana_program::pubkey::Pubkey) -> &mut Self {
         self.log_wrapper = Some(log_wrapper);
@@ -172,10 +174,12 @@ impl CloseTreeV2Builder {
             authority: self.authority.expect("authority is not set"),
             merkle_tree: self.merkle_tree.expect("merkle_tree is not set"),
             recipient: self.recipient.expect("recipient is not set"),
-            compression_program: self
-                .compression_program
-                .expect("compression_program is not set"),
-            log_wrapper: self.log_wrapper.expect("log_wrapper is not set"),
+            compression_program: self.compression_program.unwrap_or(solana_program::pubkey!(
+                "mcmt6YrQEMKw8Mw43FmpRLmf7BqRnFMKmAcbxE3xkAW"
+            )),
+            log_wrapper: self.log_wrapper.unwrap_or(solana_program::pubkey!(
+                "mnoopTCrg4p8ry25e4bcWA9XZjbNjMTfgYVGGEdRsf3"
+            )),
             system_program: self
                 .system_program
                 .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),

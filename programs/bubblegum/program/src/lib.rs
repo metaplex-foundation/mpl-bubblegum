@@ -153,6 +153,11 @@ pub mod bubblegum {
         processor::cancel_redeem(ctx, root)
     }
 
+    /// Closes an empty tree and its config PDA to reclaim rent.
+    pub fn close_tree_v2(ctx: Context<CloseTreeV2>) -> Result<()> {
+        processor::close_tree_v2(ctx)
+    }
+
     /// Collect fees from a V2 tree.
     pub fn collect_v2<'info>(ctx: Context<'_, '_, '_, 'info, CollectV2<'info>>) -> Result<()> {
         processor::collect_v2(ctx)
@@ -634,10 +639,5 @@ pub mod bubblegum {
         message: MetadataArgsV2,
     ) -> Result<()> {
         processor::verify_creator_v2(ctx, root, asset_data_hash, flags, nonce, index, message)
-    }
-
-    /// Closes an empty tree and its config PDA to reclaim rent.
-    pub fn close_tree_v2(ctx: Context<CloseTreeV2>) -> Result<()> {
-        processor::close_tree_v2(ctx)
     }
 }

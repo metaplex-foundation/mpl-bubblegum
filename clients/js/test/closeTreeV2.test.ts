@@ -4,11 +4,7 @@ import {
   publicKey,
 } from '@metaplex-foundation/umi';
 import test from 'ava';
-import {
-  fetchMerkleTree,
-  MPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
-  MPL_NOOP_PROGRAM_ID,
-} from '@metaplex-foundation/mpl-account-compression';
+import { fetchMerkleTree } from '@metaplex-foundation/mpl-account-compression';
 import { closeTreeV2, findTreeConfigPda } from '../src';
 import { createTreeV2, createUmi, mintV2 } from './_setup';
 
@@ -35,8 +31,6 @@ test('it can close an empty Bubblegum tree', async (t) => {
   await closeTreeV2(umi, {
     merkleTree,
     recipient,
-    compressionProgram: MPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
-    logWrapper: MPL_NOOP_PROGRAM_ID,
   }).sendAndConfirm(umi);
 
   // Then the tree and config accounts are closed.
@@ -69,8 +63,6 @@ test('it cannot close a non-empty Bubblegum tree', async (t) => {
   const promise = closeTreeV2(umi, {
     merkleTree,
     recipient: umi.identity.publicKey,
-    compressionProgram: MPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
-    logWrapper: MPL_NOOP_PROGRAM_ID,
   }).sendAndConfirm(umi);
 
   // Then we expect a program error with logs indicating the tree is not empty.
@@ -101,8 +93,6 @@ test('it cannot close a Bubblegum tree as a non-authority', async (t) => {
     authority: nonAuthority,
     merkleTree,
     recipient: umi.identity.publicKey,
-    compressionProgram: MPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
-    logWrapper: MPL_NOOP_PROGRAM_ID,
   }).sendAndConfirm(umi);
 
   // Then we expect an InvalidAuthority error.

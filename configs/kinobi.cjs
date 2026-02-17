@@ -213,6 +213,7 @@ for (let ix of v1Ixs) {
 // V2 instructions.
 const v2Ixs = [
   "burnV2",
+  "closeTreeV2",
   "createTreeV2",
   "delegateAndFreezeV2",
   "delegateV2",
