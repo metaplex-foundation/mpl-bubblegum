@@ -25,10 +25,16 @@ test('it can close an empty Bubblegum tree', async (t) => {
   );
   t.true(await umi.rpc.accountExists(treeConfig));
 
+  // And we record the balances before closing.
+  const recipient = umi.identity.publicKey;
+  const merkleTreeBalance = await umi.rpc.getBalance(merkleTree);
+  const treeConfigBalance = await umi.rpc.getBalance(treeConfig);
+  const recipientBalanceBefore = await umi.rpc.getBalance(recipient);
+
   // When we close the tree.
   await closeTreeV2(umi, {
     merkleTree,
-    recipient: umi.identity.publicKey,
+    recipient,
     compressionProgram: MPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
     logWrapper: MPL_NOOP_PROGRAM_ID,
   }).sendAndConfirm(umi);
@@ -36,6 +42,14 @@ test('it can close an empty Bubblegum tree', async (t) => {
   // Then the tree and config accounts are closed.
   t.false(await umi.rpc.accountExists(merkleTree));
   t.false(await umi.rpc.accountExists(treeConfig));
+
+  // And the recipient reclaimed the rent minus the 5000 lamport tx fee.
+  const recipientBalanceAfter = await umi.rpc.getBalance(recipient);
+  const reclaimedLamports =
+    merkleTreeBalance.basisPoints + treeConfigBalance.basisPoints;
+  const balanceDiff =
+    recipientBalanceAfter.basisPoints - recipientBalanceBefore.basisPoints;
+  t.is(balanceDiff, reclaimedLamports - 5000n);
 });
 
 test('it cannot close a non-empty Bubblegum tree', async (t) => {

@@ -1,9 +1,9 @@
-use anchor_lang::prelude::*;
-use mpl_account_compression::{program::MplAccountCompression, Noop as MplNoop};
 use crate::{
     error::BubblegumError,
     state::{leaf_schema::Version, TreeConfig},
 };
+use anchor_lang::prelude::*;
+use mpl_account_compression::{program::MplAccountCompression, Noop as MplNoop};
 
 #[derive(Accounts)]
 pub struct CloseTreeV2<'info> {
@@ -28,10 +28,7 @@ pub struct CloseTreeV2<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub(crate) fn close_tree_v2(
-    ctx: Context<CloseTreeV2>
-) -> Result<()> {
-
+pub(crate) fn close_tree_v2(ctx: Context<CloseTreeV2>) -> Result<()> {
     // Only V2 trees (created via `create_tree_v2`) are supported.
     require!(
         ctx.accounts.tree_authority.version == Version::V2,
@@ -50,7 +47,7 @@ pub(crate) fn close_tree_v2(
     require!(
         ctx.accounts.recipient.key() == ctx.accounts.tree_authority.tree_creator
             || ctx.accounts.recipient.key() == ctx.accounts.tree_authority.tree_delegate,
-        BubblegumError::InvalidAuthority
+        BubblegumError::PublicKeyMismatch
     );
 
     // Close the empty tree via CPI using the tree authority PDA as the signer.
@@ -58,7 +55,7 @@ pub(crate) fn close_tree_v2(
     let seed = merkle_tree.key();
     let seeds = &[seed.as_ref(), &[ctx.bumps.tree_authority]];
     let authority_pda_signer = &[&seeds[..]];
-    
+
     let cpi_ctx = CpiContext::new_with_signer(
         ctx.accounts.compression_program.to_account_info(),
         mpl_account_compression::cpi::accounts::CloseTree {
