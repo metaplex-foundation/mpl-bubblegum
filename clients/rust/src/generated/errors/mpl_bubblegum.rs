@@ -181,6 +181,9 @@ pub enum MplBubblegumError {
     /// 6056 (0x17A8) - Asset is not frozen
     #[error("Asset is not frozen")]
     AssetIsNotFrozen,
+    /// 6057 (0x17A9) - Unsupported update operation
+    #[error("Unsupported update operation")]
+    UnsupportedUpdateOperation,
 }
 
 impl solana_program::program_error::PrintProgramError for MplBubblegumError {

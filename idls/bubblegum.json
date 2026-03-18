@@ -3047,6 +3047,37 @@
       ]
     },
     {
+      "name": "updateTreeConfig",
+      "docs": [
+        "Updates tree parameters for a `TreeConfig` account."
+      ],
+      "accounts": [
+        {
+          "name": "treeAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "merkleTree",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "treeUpdateArgs",
+          "type": {
+            "defined": "UpdateTreeConfigArgs"
+          }
+        }
+      ]
+    },
+    {
       "name": "verifyCollection",
       "docs": [
         "Verifies a collection for a leaf node."
@@ -3756,6 +3787,40 @@
       }
     },
     {
+      "name": "UpdateTreeConfigArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "treeCreator",
+            "type": {
+              "option": "publicKey"
+            }
+          },
+          {
+            "name": "treeDelegate",
+            "type": {
+              "option": "publicKey"
+            }
+          },
+          {
+            "name": "isPublic",
+            "type": {
+              "option": "bool"
+            }
+          },
+          {
+            "name": "isDecompressible",
+            "type": {
+              "option": {
+                "defined": "DecompressibleState"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
       "name": "Version",
       "type": {
         "kind": "enum",
@@ -4031,6 +4096,9 @@
           },
           {
             "name": "UpdateMetadata"
+          },
+          {
+            "name": "UpdateTreeConfig"
           },
           {
             "name": "BurnV2"
@@ -4369,6 +4437,11 @@
       "code": 6056,
       "name": "AssetIsNotFrozen",
       "msg": "Asset is not frozen"
+    },
+    {
+      "code": 6057,
+      "name": "UnsupportedUpdateOperation",
+      "msg": "Unsupported update operation"
     }
   ],
   "metadata": {
