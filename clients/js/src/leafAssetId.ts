@@ -120,7 +120,9 @@ export async function parseLeafFromMintV2Transaction(
 
       if (collection) {
         const innerInstructionIndex = collection === bubblegumProgramId ? 0 : 1;
-        const inner = innerInstructions.find((ix) => ix.index === instructionIndex);
+        const inner = innerInstructions.find(
+          (ix) => ix.index === instructionIndex
+        );
 
         if (inner?.instructions[innerInstructionIndex]) {
           const leaf = getLeafSchemaSerializer().deserialize(
@@ -135,7 +137,9 @@ export async function parseLeafFromMintV2Transaction(
   // Fallback: bubblegum was called via CPI (e.g., mpl-core execute).
   // Scan all inner instructions for leaf schema data.
   if (innerInstructions) {
-    const allInnerIxs = innerInstructions.flatMap((group) => group.instructions);
+    const allInnerIxs = innerInstructions.flatMap(
+      (group) => group.instructions
+    );
     const leafIx = allInnerIxs.find((ix) => {
       try {
         if (ix.data.length >= 9) {
@@ -149,7 +153,9 @@ export async function parseLeafFromMintV2Transaction(
     });
 
     if (leafIx) {
-      const [leaf] = getLeafSchemaSerializer().deserialize(leafIx.data.slice(8));
+      const [leaf] = getLeafSchemaSerializer().deserialize(
+        leafIx.data.slice(8)
+      );
       return leaf;
     }
   }
