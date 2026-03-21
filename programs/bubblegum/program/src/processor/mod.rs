@@ -50,6 +50,7 @@ mod unverify_collection;
 mod unverify_creator;
 mod update_asset_data;
 mod update_metadata;
+mod update_tree_config;
 mod verify_collection;
 mod verify_creator;
 
@@ -78,6 +79,7 @@ pub(crate) use unverify_collection::*;
 pub(crate) use unverify_creator::*;
 pub(crate) use update_asset_data::*;
 pub(crate) use update_metadata::*;
+pub(crate) use update_tree_config::*;
 pub(crate) use verify_collection::*;
 pub(crate) use verify_creator::*;
 

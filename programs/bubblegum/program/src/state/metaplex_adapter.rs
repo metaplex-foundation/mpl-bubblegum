@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::state::leaf_schema::Version;
+use crate::state::{leaf_schema::Version, DecompressibleState};
 
 #[derive(AnchorSerialize, AnchorDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum TokenProgramVersion {
@@ -309,4 +309,12 @@ pub struct UpdateArgs {
     pub seller_fee_basis_points: Option<u16>,
     pub primary_sale_happened: Option<bool>,
     pub is_mutable: Option<bool>,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, PartialEq, Eq, Debug, Clone, Default)]
+pub struct UpdateTreeConfigArgs {
+    pub tree_creator: Option<Pubkey>,
+    pub tree_delegate: Option<Pubkey>,
+    pub is_public: Option<bool>,
+    pub is_decompressible: Option<DecompressibleState>,
 }

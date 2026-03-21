@@ -13,7 +13,7 @@ pub mod utils;
 use processor::*;
 use state::{
     leaf_schema::LeafSchema,
-    metaplex_adapter::{MetadataArgs, MetadataArgsV2, UpdateArgs},
+    metaplex_adapter::{MetadataArgs, MetadataArgsV2, UpdateArgs, UpdateTreeConfigArgs},
     AssetDataSchema, DecompressibleState,
 };
 
@@ -38,6 +38,7 @@ pub enum InstructionName {
     MintToCollectionV1,
     SetDecompressibleState,
     UpdateMetadata,
+    UpdateTreeConfig,
     /// V2 instructions have been added that use `LeafSchema` V2.
     /// See `mint_v2` below for more details on the new functionality.
     BurnV2,
@@ -85,6 +86,7 @@ pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
         // `SetDecompressableState` instruction mapped to `SetDecompressibleState` instruction
         [18, 135, 238, 168, 246, 195, 61, 115] => InstructionName::SetDecompressibleState,
         [170, 182, 43, 239, 97, 78, 225, 186] => InstructionName::UpdateMetadata,
+        [75, 1, 47, 108, 102, 26, 239, 207] => InstructionName::UpdateTreeConfig,
         [115, 210, 34, 240, 232, 143, 183, 16] => InstructionName::BurnV2,
         [21, 11, 159, 47, 4, 195, 106, 56] => InstructionName::CollectV2,
         [55, 99, 95, 215, 142, 203, 227, 205] => InstructionName::CreateTreeV2,
@@ -600,6 +602,14 @@ pub mod bubblegum {
             current_metadata,
             update_args,
         )
+    }
+
+    /// Updates tree parameters for a `TreeConfig` account.
+    pub fn update_tree_config<'info>(
+        ctx: Context<'_, '_, '_, 'info, UpdateTreeConfig<'info>>,
+        tree_update_args: UpdateTreeConfigArgs,
+    ) -> Result<()> {
+        processor::update_tree_config(ctx, tree_update_args)
     }
 
     /// Verifies a collection for a leaf node.

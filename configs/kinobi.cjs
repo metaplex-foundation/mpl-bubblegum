@@ -166,7 +166,7 @@ for (let ix of deprecatedTmIxes) {
 }
 
 // Use spl-noop and spl-account-compression as defaults for all
-// V2 instructions.
+// V1 instructions.
 const v1Ixs = [
   "burn",
   "cancel_redeem",
@@ -182,6 +182,7 @@ const v1Ixs = [
   "unverifyCollection",
   "unverifyCreator",
   "updateMetadata",
+  "updateTreeConfig",
   "verifyCollection",
   "verifyCreator",
 ];

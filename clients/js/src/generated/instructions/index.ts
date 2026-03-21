@@ -37,6 +37,7 @@ export * from './unverifyCreatorV2';
 export * from './updateAssetDataV2';
 export * from './updateMetadata';
 export * from './updateMetadataV2';
+export * from './updateTreeConfig';
 export * from './verifyCollection';
 export * from './verifyCreator';
 export * from './verifyCreatorV2';

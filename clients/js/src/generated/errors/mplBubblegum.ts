@@ -813,6 +813,22 @@ export class AssetIsNotFrozenError extends ProgramError {
 codeToErrorMap.set(0x17a8, AssetIsNotFrozenError);
 nameToErrorMap.set('AssetIsNotFrozen', AssetIsNotFrozenError);
 
+/** UnsupportedUpdateOperation: Unsupported update operation */
+export class UnsupportedUpdateOperationError extends ProgramError {
+  readonly name: string = 'UnsupportedUpdateOperation';
+
+  readonly code: number = 0x17a9; // 6057
+
+  constructor(program: Program, cause?: Error) {
+    super('Unsupported update operation', program, cause);
+  }
+}
+codeToErrorMap.set(0x17a9, UnsupportedUpdateOperationError);
+nameToErrorMap.set(
+  'UnsupportedUpdateOperation',
+  UnsupportedUpdateOperationError
+);
+
 /**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
