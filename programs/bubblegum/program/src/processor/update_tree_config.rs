@@ -18,8 +18,7 @@ pub struct UpdateTreeConfig<'info> {
     pub tree_authority: Account<'info, TreeConfig>,
     #[account(address = tree_authority.tree_creator @ BubblegumError::TreeAuthorityIncorrect)]
     pub authority: Signer<'info>,
-    /// CHECK: This account is modified in the downstream program
-    #[account(mut)]
+    /// CHECK: Only used to derive `tree_authority`
     pub merkle_tree: UncheckedAccount<'info>,
 }
 
