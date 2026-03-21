@@ -51,7 +51,7 @@ pub fn update_tree_config<'info>(
         Version::V2 => match is_decompressible {
             None | Some(DecompressibleState::Disabled) => {}
             Some(DecompressibleState::Enabled) => {
-                msg!("v2 tree cannot be set to decompressible: is_decompressed must be None or Disabled, got {:?}", is_decompressible);
+                msg!("v2 tree cannot be set to decompressible: is_decompressible must be None or Disabled, got {:?}", is_decompressible);
                 return Err(BubblegumError::UnsupportedUpdateOperation.into());
             }
         },
