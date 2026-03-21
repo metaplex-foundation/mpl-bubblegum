@@ -127,8 +127,7 @@ test('it can update is decompressible on a Bubblegum tree', async (t) => {
   const merkleTree = await createTree(umi);
   let treeConfig = await fetchTreeConfigFromSeeds(umi, { merkleTree });
   t.like(treeConfig, <TreeConfig>{
-    treeCreator: umi.identity.publicKey,
-    treeDelegate: umi.identity.publicKey,
+    isDecompressible: DecompressibleState.Enabled,
   });
 
   // When we set the tree to allow decompression.
@@ -136,25 +135,24 @@ test('it can update is decompressible on a Bubblegum tree', async (t) => {
     merkleTree,
     treeCreator: null,
     treeDelegate: null,
-    isDecompressible: DecompressibleState.Enabled,
+    isDecompressible: DecompressibleState.Disabled,
     isPublic: null,
   }).sendAndConfirm(umi);
 
   // Then the tree config account is updated accordingly.
   treeConfig = await fetchTreeConfigFromSeeds(umi, { merkleTree });
   t.like(treeConfig, <TreeConfig>{
-    isDecompressible: DecompressibleState.Enabled,
+    isDecompressible: DecompressibleState.Disabled,
   });
 });
 
 test('it cannot update is decompressible on a V2 Bubblegum tree', async (t) => {
   // Given a Bubblegum tree.
   const umi = await createUmi();
-  const merkleTree = await createTree(umi);
+  const merkleTree = await createTreeV2(umi);
   let treeConfig = await fetchTreeConfigFromSeeds(umi, { merkleTree });
   t.like(treeConfig, <TreeConfig>{
-    treeCreator: umi.identity.publicKey,
-    treeDelegate: umi.identity.publicKey,
+    isDecompressible: DecompressibleState.Disabled,
   });
 
   // When we try to set the tree to allow decompression.
@@ -177,8 +175,7 @@ test('it can update is public on a Bubblegum tree', async (t) => {
   const merkleTree = await createTree(umi);
   let treeConfig = await fetchTreeConfigFromSeeds(umi, { merkleTree });
   t.like(treeConfig, <TreeConfig>{
-    treeCreator: umi.identity.publicKey,
-    treeDelegate: umi.identity.publicKey,
+    isPublic: false,
   });
 
   // When we set the tree to allow decompression.
@@ -200,11 +197,10 @@ test('it can update is public on a Bubblegum tree', async (t) => {
 test('it can update is public on a V2 Bubblegum tree', async (t) => {
   // Given a Bubblegum tree.
   const umi = await createUmi();
-  const merkleTree = await createTree(umi);
+  const merkleTree = await createTreeV2(umi);
   let treeConfig = await fetchTreeConfigFromSeeds(umi, { merkleTree });
   t.like(treeConfig, <TreeConfig>{
-    treeCreator: umi.identity.publicKey,
-    treeDelegate: umi.identity.publicKey,
+    isPublic: false,
   });
 
   // When we set the tree to allow decompression.
