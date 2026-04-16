@@ -56,6 +56,7 @@ pub enum InstructionName {
     UpdateAssetDataV2,
     UpdateMetadataV2,
     VerifyCreatorV2,
+    CloseTreeV2,
 }
 
 pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
@@ -100,6 +101,7 @@ pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
         [59, 56, 111, 43, 95, 14, 11, 61] => InstructionName::UpdateAssetDataV2,
         [43, 103, 89, 42, 121, 242, 62, 72] => InstructionName::UpdateMetadataV2,
         [85, 138, 140, 42, 22, 241, 118, 102] => InstructionName::VerifyCreatorV2,
+        [45, 172, 6, 94, 28, 90, 157, 70] => InstructionName::CloseTreeV2,
         _ => InstructionName::Unknown,
     }
 }
@@ -149,6 +151,11 @@ pub mod bubblegum {
         root: [u8; 32],
     ) -> Result<()> {
         processor::cancel_redeem(ctx, root)
+    }
+
+    /// Closes an empty tree and its config PDA to reclaim rent.
+    pub fn close_tree_v2(ctx: Context<CloseTreeV2>) -> Result<()> {
+        processor::close_tree_v2(ctx)
     }
 
     /// Collect fees from a V2 tree.
