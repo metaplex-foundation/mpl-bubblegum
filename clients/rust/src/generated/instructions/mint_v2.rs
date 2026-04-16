@@ -173,7 +173,23 @@ pub struct MintV2InstructionArgs {
     pub asset_data_schema: Option<AssetDataSchema>,
 }
 
-/// Instruction builder.
+/// Instruction builder for `MintV2`.
+///
+/// ### Accounts:
+///
+///   0. `[writable]` tree_config
+///   1. `[writable, signer]` payer
+///   2. `[signer, optional]` tree_creator_or_delegate
+///   3. `[signer, optional]` collection_authority
+///   4. `[]` leaf_owner
+///   5. `[optional]` leaf_delegate
+///   6. `[writable]` merkle_tree
+///   7. `[writable, optional]` core_collection
+///   8. `[optional]` mpl_core_cpi_signer
+///   9. `[optional]` log_wrapper (default to `mnoopTCrg4p8ry25e4bcWA9XZjbNjMTfgYVGGEdRsf3`)
+///   10. `[optional]` compression_program (default to `mcmt6YrQEMKw8Mw43FmpRLmf7BqRnFMKmAcbxE3xkAW`)
+///   11. `[optional]` mpl_core_program (default to `CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d`)
+///   12. `[optional]` system_program (default to `11111111111111111111111111111111`)
 #[derive(Default)]
 pub struct MintV2Builder {
     tree_config: Option<solana_program::pubkey::Pubkey>,
@@ -627,7 +643,23 @@ impl<'a, 'b> MintV2Cpi<'a, 'b> {
     }
 }
 
-/// `mint_v2` CPI instruction builder.
+/// Instruction builder for `MintV2` via CPI.
+///
+/// ### Accounts:
+///
+///   0. `[writable]` tree_config
+///   1. `[writable, signer]` payer
+///   2. `[signer, optional]` tree_creator_or_delegate
+///   3. `[signer, optional]` collection_authority
+///   4. `[]` leaf_owner
+///   5. `[optional]` leaf_delegate
+///   6. `[writable]` merkle_tree
+///   7. `[writable, optional]` core_collection
+///   8. `[optional]` mpl_core_cpi_signer
+///   9. `[]` log_wrapper
+///   10. `[]` compression_program
+///   11. `[]` mpl_core_program
+///   12. `[]` system_program
 pub struct MintV2CpiBuilder<'a, 'b> {
     instruction: Box<MintV2CpiBuilderInstruction<'a, 'b>>,
 }

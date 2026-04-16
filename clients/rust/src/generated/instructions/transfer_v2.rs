@@ -149,7 +149,21 @@ pub struct TransferV2InstructionArgs {
     pub index: u32,
 }
 
-/// Instruction builder.
+/// Instruction builder for `TransferV2`.
+///
+/// ### Accounts:
+///
+///   0. `[writable]` tree_config
+///   1. `[writable, signer]` payer
+///   2. `[signer, optional]` authority
+///   3. `[]` leaf_owner
+///   4. `[optional]` leaf_delegate
+///   5. `[]` new_leaf_owner
+///   6. `[writable]` merkle_tree
+///   7. `[optional]` core_collection
+///   8. `[optional]` log_wrapper (default to `mnoopTCrg4p8ry25e4bcWA9XZjbNjMTfgYVGGEdRsf3`)
+///   9. `[optional]` compression_program (default to `mcmt6YrQEMKw8Mw43FmpRLmf7BqRnFMKmAcbxE3xkAW`)
+///   10. `[optional]` system_program (default to `11111111111111111111111111111111`)
 #[derive(Default)]
 pub struct TransferV2Builder {
     tree_config: Option<solana_program::pubkey::Pubkey>,
@@ -565,7 +579,21 @@ impl<'a, 'b> TransferV2Cpi<'a, 'b> {
     }
 }
 
-/// `transfer_v2` CPI instruction builder.
+/// Instruction builder for `TransferV2` via CPI.
+///
+/// ### Accounts:
+///
+///   0. `[writable]` tree_config
+///   1. `[writable, signer]` payer
+///   2. `[signer, optional]` authority
+///   3. `[]` leaf_owner
+///   4. `[optional]` leaf_delegate
+///   5. `[]` new_leaf_owner
+///   6. `[writable]` merkle_tree
+///   7. `[optional]` core_collection
+///   8. `[]` log_wrapper
+///   9. `[]` compression_program
+///   10. `[]` system_program
 pub struct TransferV2CpiBuilder<'a, 'b> {
     instruction: Box<TransferV2CpiBuilderInstruction<'a, 'b>>,
 }

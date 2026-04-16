@@ -28,7 +28,7 @@ import {
   u32,
   u8,
 } from '@metaplex-foundation/umi/serializers';
-import { findTreeConfigPda, getTreeConfigSize } from '../accounts';
+import { findTreeConfigPda } from '../accounts';
 import {
   ResolvedAccount,
   ResolvedAccountsWithIndices,
@@ -108,31 +108,43 @@ export function createTreeConfigV2(
   );
 
   // Accounts.
-  const resolvedAccounts: ResolvedAccountsWithIndices = {
-    treeConfig: { index: 0, isWritable: true, value: input.treeConfig ?? null },
-    merkleTree: { index: 1, isWritable: true, value: input.merkleTree ?? null },
-    payer: { index: 2, isWritable: true, value: input.payer ?? null },
+  const resolvedAccounts = {
+    treeConfig: {
+      index: 0,
+      isWritable: true as boolean,
+      value: input.treeConfig ?? null,
+    },
+    merkleTree: {
+      index: 1,
+      isWritable: true as boolean,
+      value: input.merkleTree ?? null,
+    },
+    payer: {
+      index: 2,
+      isWritable: true as boolean,
+      value: input.payer ?? null,
+    },
     treeCreator: {
       index: 3,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.treeCreator ?? null,
     },
     logWrapper: {
       index: 4,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.logWrapper ?? null,
     },
     compressionProgram: {
       index: 5,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.compressionProgram ?? null,
     },
     systemProgram: {
       index: 6,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.systemProgram ?? null,
     },
-  };
+  } satisfies ResolvedAccountsWithIndices;
 
   // Arguments.
   const resolvedArgs: CreateTreeConfigV2InstructionArgs = { ...input };
@@ -186,7 +198,7 @@ export function createTreeConfigV2(
   );
 
   // Bytes Created On Chain.
-  const bytesCreatedOnChain = getTreeConfigSize() + ACCOUNT_HEADER_SIZE;
+  const bytesCreatedOnChain = 96 + ACCOUNT_HEADER_SIZE;
 
   return transactionBuilder([
     { instruction: { keys, programId, data }, signers, bytesCreatedOnChain },

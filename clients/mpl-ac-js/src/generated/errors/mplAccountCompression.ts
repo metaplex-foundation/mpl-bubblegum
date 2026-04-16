@@ -17,7 +17,7 @@ const nameToErrorMap: Map<string, ProgramErrorConstructor> = new Map();
 
 /** IncorrectLeafLength: Incorrect leaf length. Expected vec of 32 bytes */
 export class IncorrectLeafLengthError extends ProgramError {
-  readonly name: string = 'IncorrectLeafLength';
+  override readonly name: string = 'IncorrectLeafLength';
 
   readonly code: number = 0x1770; // 6000
 
@@ -30,7 +30,7 @@ nameToErrorMap.set('IncorrectLeafLength', IncorrectLeafLengthError);
 
 /** ConcurrentMerkleTreeError: Concurrent merkle tree error */
 export class ConcurrentMerkleTreeErrorError extends ProgramError {
-  readonly name: string = 'ConcurrentMerkleTreeError';
+  override readonly name: string = 'ConcurrentMerkleTreeError';
 
   readonly code: number = 0x1771; // 6001
 
@@ -43,7 +43,7 @@ nameToErrorMap.set('ConcurrentMerkleTreeError', ConcurrentMerkleTreeErrorError);
 
 /** ZeroCopyError: Issue zero copying concurrent merkle tree data */
 export class ZeroCopyErrorError extends ProgramError {
-  readonly name: string = 'ZeroCopyError';
+  override readonly name: string = 'ZeroCopyError';
 
   readonly code: number = 0x1772; // 6002
 
@@ -56,7 +56,7 @@ nameToErrorMap.set('ZeroCopyError', ZeroCopyErrorError);
 
 /** ConcurrentMerkleTreeConstantsError: An unsupported max depth or max buffer size constant was provided */
 export class ConcurrentMerkleTreeConstantsErrorError extends ProgramError {
-  readonly name: string = 'ConcurrentMerkleTreeConstantsError';
+  override readonly name: string = 'ConcurrentMerkleTreeConstantsError';
 
   readonly code: number = 0x1773; // 6003
 
@@ -76,7 +76,7 @@ nameToErrorMap.set(
 
 /** CanopyLengthMismatch: Expected a different byte length for the merkle tree canopy */
 export class CanopyLengthMismatchError extends ProgramError {
-  readonly name: string = 'CanopyLengthMismatch';
+  override readonly name: string = 'CanopyLengthMismatch';
 
   readonly code: number = 0x1774; // 6004
 
@@ -93,7 +93,7 @@ nameToErrorMap.set('CanopyLengthMismatch', CanopyLengthMismatchError);
 
 /** IncorrectAuthority: Provided authority does not match expected tree authority */
 export class IncorrectAuthorityError extends ProgramError {
-  readonly name: string = 'IncorrectAuthority';
+  override readonly name: string = 'IncorrectAuthority';
 
   readonly code: number = 0x1775; // 6005
 
@@ -110,7 +110,7 @@ nameToErrorMap.set('IncorrectAuthority', IncorrectAuthorityError);
 
 /** IncorrectAccountOwner: Account is owned by a different program, expected it to be owned by this program */
 export class IncorrectAccountOwnerError extends ProgramError {
-  readonly name: string = 'IncorrectAccountOwner';
+  override readonly name: string = 'IncorrectAccountOwner';
 
   readonly code: number = 0x1776; // 6006
 
@@ -127,7 +127,7 @@ nameToErrorMap.set('IncorrectAccountOwner', IncorrectAccountOwnerError);
 
 /** IncorrectAccountType: Account provided has incorrect account type */
 export class IncorrectAccountTypeError extends ProgramError {
-  readonly name: string = 'IncorrectAccountType';
+  override readonly name: string = 'IncorrectAccountType';
 
   readonly code: number = 0x1777; // 6007
 
@@ -140,7 +140,7 @@ nameToErrorMap.set('IncorrectAccountType', IncorrectAccountTypeError);
 
 /** LeafIndexOutOfBounds: Leaf index of concurrent merkle tree is out of bounds */
 export class LeafIndexOutOfBoundsError extends ProgramError {
-  readonly name: string = 'LeafIndexOutOfBounds';
+  override readonly name: string = 'LeafIndexOutOfBounds';
 
   readonly code: number = 0x1778; // 6008
 
@@ -157,7 +157,7 @@ nameToErrorMap.set('LeafIndexOutOfBounds', LeafIndexOutOfBoundsError);
 
 /** CanopyNotAllocated: Tree was initialized without allocating space for the canopy */
 export class CanopyNotAllocatedError extends ProgramError {
-  readonly name: string = 'CanopyNotAllocated';
+  override readonly name: string = 'CanopyNotAllocated';
 
   readonly code: number = 0x1779; // 6009
 
@@ -174,7 +174,7 @@ nameToErrorMap.set('CanopyNotAllocated', CanopyNotAllocatedError);
 
 /** TreeAlreadyInitialized: Tree was already initialized */
 export class TreeAlreadyInitializedError extends ProgramError {
-  readonly name: string = 'TreeAlreadyInitialized';
+  override readonly name: string = 'TreeAlreadyInitialized';
 
   readonly code: number = 0x177a; // 6010
 
@@ -187,7 +187,7 @@ nameToErrorMap.set('TreeAlreadyInitialized', TreeAlreadyInitializedError);
 
 /** BatchNotInitialized: Tree header was not initialized for batch processing */
 export class BatchNotInitializedError extends ProgramError {
-  readonly name: string = 'BatchNotInitialized';
+  override readonly name: string = 'BatchNotInitialized';
 
   readonly code: number = 0x177b; // 6011
 
@@ -204,7 +204,7 @@ nameToErrorMap.set('BatchNotInitialized', BatchNotInitializedError);
 
 /** CanopyRootMismatch: Canopy root does not match the root of the tree */
 export class CanopyRootMismatchError extends ProgramError {
-  readonly name: string = 'CanopyRootMismatch';
+  override readonly name: string = 'CanopyRootMismatch';
 
   readonly code: number = 0x177c; // 6012
 
@@ -217,7 +217,7 @@ nameToErrorMap.set('CanopyRootMismatch', CanopyRootMismatchError);
 
 /** CanopyRightmostLeafMismatch: Canopy contains nodes to the right of the rightmost leaf of the tree */
 export class CanopyRightmostLeafMismatchError extends ProgramError {
-  readonly name: string = 'CanopyRightmostLeafMismatch';
+  override readonly name: string = 'CanopyRightmostLeafMismatch';
 
   readonly code: number = 0x177d; // 6013
 

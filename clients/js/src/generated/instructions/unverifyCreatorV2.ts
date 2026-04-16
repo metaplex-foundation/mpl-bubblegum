@@ -70,8 +70,8 @@ export type UnverifyCreatorV2InstructionData = {
 
 export type UnverifyCreatorV2InstructionDataArgs = {
   root: Uint8Array;
-  assetDataHash: OptionOrNullable<Uint8Array>;
-  flags: OptionOrNullable<number>;
+  assetDataHash?: OptionOrNullable<Uint8Array>;
+  flags?: OptionOrNullable<number>;
   nonce: number | bigint;
   index: number;
   metadata: MetadataArgsV2Args;
@@ -101,6 +101,8 @@ export function getUnverifyCreatorV2InstructionDataSerializer(): Serializer<
     (value) => ({
       ...value,
       discriminator: [174, 112, 29, 142, 230, 100, 239, 7],
+      assetDataHash: value.assetDataHash ?? none(),
+      flags: value.flags ?? none(),
     })
   ) as Serializer<
     UnverifyCreatorV2InstructionDataArgs,
@@ -109,12 +111,14 @@ export function getUnverifyCreatorV2InstructionDataSerializer(): Serializer<
 }
 
 // Extra Args.
-export type UnverifyCreatorV2InstructionExtraArgs = { proof: Array<PublicKey> };
+export type UnverifyCreatorV2InstructionExtraArgs = {
+  proof?: Array<PublicKey>;
+};
 
 // Args.
 export type UnverifyCreatorV2InstructionArgs = PickPartial<
   UnverifyCreatorV2InstructionDataArgs & UnverifyCreatorV2InstructionExtraArgs,
-  'assetDataHash' | 'flags' | 'proof'
+  'proof'
 >;
 
 // Instruction.
@@ -129,33 +133,53 @@ export function unverifyCreatorV2(
   );
 
   // Accounts.
-  const resolvedAccounts: ResolvedAccountsWithIndices = {
-    treeConfig: { index: 0, isWritable: true, value: input.treeConfig ?? null },
-    payer: { index: 1, isWritable: true, value: input.payer ?? null },
-    creator: { index: 2, isWritable: false, value: input.creator ?? null },
-    leafOwner: { index: 3, isWritable: false, value: input.leafOwner ?? null },
+  const resolvedAccounts = {
+    treeConfig: {
+      index: 0,
+      isWritable: true as boolean,
+      value: input.treeConfig ?? null,
+    },
+    payer: {
+      index: 1,
+      isWritable: true as boolean,
+      value: input.payer ?? null,
+    },
+    creator: {
+      index: 2,
+      isWritable: false as boolean,
+      value: input.creator ?? null,
+    },
+    leafOwner: {
+      index: 3,
+      isWritable: false as boolean,
+      value: input.leafOwner ?? null,
+    },
     leafDelegate: {
       index: 4,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.leafDelegate ?? null,
     },
-    merkleTree: { index: 5, isWritable: true, value: input.merkleTree ?? null },
+    merkleTree: {
+      index: 5,
+      isWritable: true as boolean,
+      value: input.merkleTree ?? null,
+    },
     logWrapper: {
       index: 6,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.logWrapper ?? null,
     },
     compressionProgram: {
       index: 7,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.compressionProgram ?? null,
     },
     systemProgram: {
       index: 8,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.systemProgram ?? null,
     },
-  };
+  } satisfies ResolvedAccountsWithIndices;
 
   // Arguments.
   const resolvedArgs: UnverifyCreatorV2InstructionArgs = { ...input };
@@ -189,12 +213,6 @@ export function unverifyCreatorV2(
       '11111111111111111111111111111111'
     );
     resolvedAccounts.systemProgram.isWritable = false;
-  }
-  if (!resolvedArgs.assetDataHash) {
-    resolvedArgs.assetDataHash = none();
-  }
-  if (!resolvedArgs.flags) {
-    resolvedArgs.flags = none();
   }
   if (!resolvedArgs.proof) {
     resolvedArgs.proof = [];

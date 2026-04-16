@@ -80,27 +80,43 @@ export function closeTreeV2(
   );
 
   // Accounts.
-  const resolvedAccounts: ResolvedAccountsWithIndices = {
-    treeConfig: { index: 0, isWritable: true, value: input.treeConfig ?? null },
-    authority: { index: 1, isWritable: false, value: input.authority ?? null },
-    merkleTree: { index: 2, isWritable: true, value: input.merkleTree ?? null },
-    recipient: { index: 3, isWritable: true, value: input.recipient ?? null },
+  const resolvedAccounts = {
+    treeConfig: {
+      index: 0,
+      isWritable: true as boolean,
+      value: input.treeConfig ?? null,
+    },
+    authority: {
+      index: 1,
+      isWritable: false as boolean,
+      value: input.authority ?? null,
+    },
+    merkleTree: {
+      index: 2,
+      isWritable: true as boolean,
+      value: input.merkleTree ?? null,
+    },
+    recipient: {
+      index: 3,
+      isWritable: true as boolean,
+      value: input.recipient ?? null,
+    },
     compressionProgram: {
       index: 4,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.compressionProgram ?? null,
     },
     logWrapper: {
       index: 5,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.logWrapper ?? null,
     },
     systemProgram: {
       index: 6,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.systemProgram ?? null,
     },
-  };
+  } satisfies ResolvedAccountsWithIndices;
 
   // Default values.
   if (!resolvedAccounts.treeConfig.value) {

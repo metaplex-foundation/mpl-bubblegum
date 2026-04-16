@@ -67,9 +67,9 @@ export type ThawAndRevokeV2InstructionDataArgs = {
   root: Uint8Array;
   dataHash: Uint8Array;
   creatorHash: Uint8Array;
-  collectionHash: OptionOrNullable<Uint8Array>;
-  assetDataHash: OptionOrNullable<Uint8Array>;
-  flags: OptionOrNullable<number>;
+  collectionHash?: OptionOrNullable<Uint8Array>;
+  assetDataHash?: OptionOrNullable<Uint8Array>;
+  flags?: OptionOrNullable<number>;
   nonce: number | bigint;
   index: number;
 };
@@ -100,6 +100,9 @@ export function getThawAndRevokeV2InstructionDataSerializer(): Serializer<
     (value) => ({
       ...value,
       discriminator: [86, 214, 190, 37, 167, 4, 28, 116],
+      collectionHash: value.collectionHash ?? none(),
+      assetDataHash: value.assetDataHash ?? none(),
+      flags: value.flags ?? none(),
     })
   ) as Serializer<
     ThawAndRevokeV2InstructionDataArgs,
@@ -108,12 +111,12 @@ export function getThawAndRevokeV2InstructionDataSerializer(): Serializer<
 }
 
 // Extra Args.
-export type ThawAndRevokeV2InstructionExtraArgs = { proof: Array<PublicKey> };
+export type ThawAndRevokeV2InstructionExtraArgs = { proof?: Array<PublicKey> };
 
 // Args.
 export type ThawAndRevokeV2InstructionArgs = PickPartial<
   ThawAndRevokeV2InstructionDataArgs & ThawAndRevokeV2InstructionExtraArgs,
-  'collectionHash' | 'assetDataHash' | 'flags' | 'proof'
+  'proof'
 >;
 
 // Instruction.
@@ -128,32 +131,48 @@ export function thawAndRevokeV2(
   );
 
   // Accounts.
-  const resolvedAccounts: ResolvedAccountsWithIndices = {
-    treeConfig: { index: 0, isWritable: true, value: input.treeConfig ?? null },
-    payer: { index: 1, isWritable: true, value: input.payer ?? null },
+  const resolvedAccounts = {
+    treeConfig: {
+      index: 0,
+      isWritable: true as boolean,
+      value: input.treeConfig ?? null,
+    },
+    payer: {
+      index: 1,
+      isWritable: true as boolean,
+      value: input.payer ?? null,
+    },
     leafDelegate: {
       index: 2,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.leafDelegate ?? null,
     },
-    leafOwner: { index: 3, isWritable: false, value: input.leafOwner ?? null },
-    merkleTree: { index: 4, isWritable: true, value: input.merkleTree ?? null },
+    leafOwner: {
+      index: 3,
+      isWritable: false as boolean,
+      value: input.leafOwner ?? null,
+    },
+    merkleTree: {
+      index: 4,
+      isWritable: true as boolean,
+      value: input.merkleTree ?? null,
+    },
     logWrapper: {
       index: 5,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.logWrapper ?? null,
     },
     compressionProgram: {
       index: 6,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.compressionProgram ?? null,
     },
     systemProgram: {
       index: 7,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.systemProgram ?? null,
     },
-  };
+  } satisfies ResolvedAccountsWithIndices;
 
   // Arguments.
   const resolvedArgs: ThawAndRevokeV2InstructionArgs = { ...input };
@@ -187,15 +206,6 @@ export function thawAndRevokeV2(
       '11111111111111111111111111111111'
     );
     resolvedAccounts.systemProgram.isWritable = false;
-  }
-  if (!resolvedArgs.collectionHash) {
-    resolvedArgs.collectionHash = none();
-  }
-  if (!resolvedArgs.assetDataHash) {
-    resolvedArgs.assetDataHash = none();
-  }
-  if (!resolvedArgs.flags) {
-    resolvedArgs.flags = none();
   }
   if (!resolvedArgs.proof) {
     resolvedArgs.proof = [];

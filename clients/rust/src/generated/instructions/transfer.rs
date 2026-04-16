@@ -109,7 +109,18 @@ pub struct TransferInstructionArgs {
     pub index: u32,
 }
 
-/// Instruction builder.
+/// Instruction builder for `Transfer`.
+///
+/// ### Accounts:
+///
+///   0. `[]` tree_config
+///   1. `[signer]` leaf_owner
+///   2. `[signer]` leaf_delegate
+///   3. `[]` new_leaf_owner
+///   4. `[writable]` merkle_tree
+///   5. `[optional]` log_wrapper (default to `noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV`)
+///   6. `[optional]` compression_program (default to `cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK`)
+///   7. `[optional]` system_program (default to `11111111111111111111111111111111`)
 #[derive(Default)]
 pub struct TransferBuilder {
     tree_config: Option<solana_program::pubkey::Pubkey>,
@@ -425,7 +436,18 @@ impl<'a, 'b> TransferCpi<'a, 'b> {
     }
 }
 
-/// `transfer` CPI instruction builder.
+/// Instruction builder for `Transfer` via CPI.
+///
+/// ### Accounts:
+///
+///   0. `[]` tree_config
+///   1. `[signer]` leaf_owner
+///   2. `[signer]` leaf_delegate
+///   3. `[]` new_leaf_owner
+///   4. `[writable]` merkle_tree
+///   5. `[]` log_wrapper
+///   6. `[]` compression_program
+///   7. `[]` system_program
 pub struct TransferCpiBuilder<'a, 'b> {
     instruction: Box<TransferCpiBuilderInstruction<'a, 'b>>,
 }

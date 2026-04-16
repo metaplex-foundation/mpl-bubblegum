@@ -15,7 +15,7 @@ const kinobi = k.createFromIdls(
 
 // Update programs.
 kinobi.update(
-  new k.UpdateProgramsVisitor({
+  k.updateProgramsVisitor({
     bubblegum: { name: "mplBubblegum" },
   })
 );
@@ -23,11 +23,11 @@ kinobi.update(
 // Add wrapper defined type with a link to UpdateArgs. This is to avoid the
 // type being inlined in the instruction.
 kinobi.update(
-  new k.TransformNodesVisitor([
+  k.bottomUpTransformerVisitor([
     {
-      selector: { kind: "programNode", name: "mplBubblegum" },
-      transformer: (node) => {
-        k.assertProgramNode(node);
+      select: "[programNode]mplBubblegum",
+      transform: (node) => {
+        k.assertIsNode(node, "programNode");
         return k.programNode({
           ...node,
           definedTypes: [
@@ -35,10 +35,10 @@ kinobi.update(
             // wrapper type
             k.definedTypeNode({
               name: "UpdateArgsWrapper",
-              data: k.structTypeNode([
+              type: k.structTypeNode([
                 k.structFieldTypeNode({
                   name: "wrapped",
-                  child: k.linkTypeNode("UpdateArgs"),
+                  type: k.definedTypeLinkNode("UpdateArgs"),
                 }),
               ]),
             }),
@@ -50,27 +50,29 @@ kinobi.update(
 );
 
 // Apply the DefaultVisitor.
-kinobi.update(new k.DefaultVisitor());
+kinobi.update(k.defaultVisitor());
 
 // Delete the unnecessary UpdateArgsWrapper type.
 kinobi.update(
-  new k.UpdateDefinedTypesVisitor({
+  k.updateDefinedTypesVisitor({
     UpdateArgsWrapper: { delete: true },
   })
 );
 
 // Update accounts.
 kinobi.update(
-  new k.UpdateAccountsVisitor({
+  k.updateAccountsVisitor({
     treeConfig: {
-      seeds: [k.publicKeySeed("merkleTree")],
+      seeds: [
+        k.variablePdaSeedNode("merkleTree", k.publicKeyTypeNode(), "The merkle tree account"),
+      ],
       size: 96,
     },
     voucher: {
       seeds: [
-        k.stringConstantSeed("voucher"),
-        k.publicKeySeed("merkleTree"),
-        k.variableSeed("nonce", k.numberTypeNode("u64")),
+        k.constantPdaSeedNodeFromString("voucher"),
+        k.variablePdaSeedNode("merkleTree", k.publicKeyTypeNode()),
+        k.variablePdaSeedNode("nonce", k.numberTypeNode("u64")),
       ],
     },
   })
@@ -78,7 +80,7 @@ kinobi.update(
 
 // Update types.
 kinobi.update(
-  new k.UpdateDefinedTypesVisitor({
+  k.updateDefinedTypesVisitor({
     // Remove unnecessary types.
     InstructionName: { delete: true },
     // Remove unnecessary spl_account_compression type.
@@ -93,20 +95,20 @@ kinobi.update(
 
 // Custom tree updates.
 kinobi.update(
-  new k.TransformNodesVisitor([
+  k.bottomUpTransformerVisitor([
     {
       // Rename `treeAuthority` instruction account to `treeConfig`.
-      selector: { kind: "instructionAccountNode", name: "treeAuthority" },
-      transformer: (node) => {
-        k.assertInstructionAccountNode(node);
+      select: "[instructionAccountNode]treeAuthority",
+      transform: (node) => {
+        k.assertIsNode(node, "instructionAccountNode");
         return k.instructionAccountNode({ ...node, name: "treeConfig" });
       },
     },
     {
       // Rename `treeDelegate` instruction account to `treeCreatorOrDelegate`.
-      selector: { kind: "instructionAccountNode", name: "treeDelegate" },
-      transformer: (node) => {
-        k.assertInstructionAccountNode(node);
+      select: "[instructionAccountNode]treeDelegate",
+      transform: (node) => {
+        k.assertIsNode(node, "instructionAccountNode");
         return k.instructionAccountNode({
           ...node,
           name: "treeCreatorOrDelegate",
@@ -115,28 +117,32 @@ kinobi.update(
     },
     {
       // Rename `editionAccount` instruction account to `collectionEdition`.
-      selector: { kind: "instructionAccountNode", name: "editionAccount" },
-      transformer: (node) => {
-        k.assertInstructionAccountNode(node);
+      select: "[instructionAccountNode]editionAccount",
+      transform: (node) => {
+        k.assertIsNode(node, "instructionAccountNode");
         return k.instructionAccountNode({ ...node, name: "collectionEdition" });
       },
     },
     {
       // Rename `message` arg to `metadata`.
-      selector: { kind: "structFieldTypeNode", name: "message" },
-      transformer: (node) => {
-        k.assertStructFieldTypeNode(node);
-        return k.structFieldTypeNode({ ...node, name: "metadata" });
+      select: (node) =>
+        (k.isNode(node, "structFieldTypeNode") || k.isNode(node, "instructionArgumentNode")) &&
+        node.name === "message",
+      transform: (node) => {
+        if (k.isNode(node, "structFieldTypeNode")) {
+          return k.structFieldTypeNode({ ...node, name: "metadata" });
+        }
+        if (k.isNode(node, "instructionArgumentNode")) {
+          return k.instructionArgumentNode({ ...node, name: "metadata" });
+        }
+        return node;
       },
     },
     {
       // Update `collectionAuthorityRecordPda` account as `optional`.
-      selector: {
-        kind: "instructionAccountNode",
-        name: "collectionAuthorityRecordPda",
-      },
-      transformer: (node) => {
-        k.assertInstructionAccountNode(node);
+      select: "[instructionAccountNode]collectionAuthorityRecordPda",
+      transform: (node) => {
+        k.assertIsNode(node, "instructionAccountNode");
         return k.instructionAccountNode({
           ...node,
           isOptional: true,
@@ -161,7 +167,7 @@ for (let ix of deprecatedTmIxes) {
     {
       account: "tokenMetadataProgram",
       instruction: ix,
-      ...k.publicKeyDefault("BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY"),
+      defaultValue: k.publicKeyValueNode("BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY"),
     })
 }
 
@@ -192,9 +198,9 @@ for (let ix of v1Ixs) {
       account: "logWrapper",
       ignoreIfOptional: true,
       instruction: ix,
-      ...k.programDefault(
-        "splNoop",
-        "noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV"
+      defaultValue: k.publicKeyValueNode(
+        "noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV",
+        "splNoop"
       ),
     })
   v1IxUpdaters.push(
@@ -202,9 +208,9 @@ for (let ix of v1Ixs) {
       account: "compressionProgram",
       ignoreIfOptional: true,
       instruction: ix,
-      ...k.programDefault(
-        "splAccountCompression",
-        "cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK"
+      defaultValue: k.publicKeyValueNode(
+        "cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK",
+        "splAccountCompression"
       ),
     })
 }
@@ -236,9 +242,9 @@ for (let ix of v2Ixs) {
       account: "logWrapper",
       ignoreIfOptional: true,
       instruction: ix,
-      ...k.programDefault(
-        "mplNoop",
-        "mnoopTCrg4p8ry25e4bcWA9XZjbNjMTfgYVGGEdRsf3"
+      defaultValue: k.publicKeyValueNode(
+        "mnoopTCrg4p8ry25e4bcWA9XZjbNjMTfgYVGGEdRsf3",
+        "mplNoop"
       ),
     })
   v2IxUpdaters.push(
@@ -246,9 +252,9 @@ for (let ix of v2Ixs) {
       account: "compressionProgram",
       ignoreIfOptional: true,
       instruction: ix,
-      ...k.programDefault(
-        "mplAccountCompression",
-        "mcmt6YrQEMKw8Mw43FmpRLmf7BqRnFMKmAcbxE3xkAW"
+      defaultValue: k.publicKeyValueNode(
+        "mcmt6YrQEMKw8Mw43FmpRLmf7BqRnFMKmAcbxE3xkAW",
+        "mplAccountCompression"
       ),
     })
 }
@@ -267,78 +273,83 @@ const leafDelegateUpdaters = allLeafDelegateIxs
     instruction: ix,
     account: "leafDelegate",
     ignoreIfOptional: true,
-    ...k.accountDefault("leafOwner"),
+    defaultValue: k.accountValueNode("leafOwner"),
   }));
 
 // Set default account values across multiple instructions.
 kinobi.update(
-  new k.SetInstructionAccountDefaultValuesVisitor([
+  k.setInstructionAccountDefaultValuesVisitor([
     {
       account: "associatedTokenProgram",
       ignoreIfOptional: true,
-      ...k.programDefault(
-        "splAssociatedToken",
-        "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+      defaultValue: k.publicKeyValueNode(
+        "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+        "splAssociatedToken"
       ),
     },
     {
       account: "mplCoreProgram",
       ignoreIfOptional: true,
-      ...k.programDefault(
-        "mplCore",
-        "CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d"
+      defaultValue: k.publicKeyValueNode(
+        "CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d",
+        "mplCore"
       ),
     },
     {
       account: "treeCreator",
       ignoreIfOptional: true,
-      ...k.identityDefault(),
+      defaultValue: k.identityValueNode(),
     },
     {
       account: "treeCreatorOrDelegate",
       ignoreIfOptional: true,
-      ...k.identityDefault(),
+      defaultValue: k.identityValueNode(),
     },
     {
       account: "treeConfig",
       ignoreIfOptional: true,
-      ...k.pdaDefault("treeConfig"),
+      defaultValue: k.pdaValueNode("treeConfig"),
     },
     {
       account: "bubblegumSigner",
       ignoreIfOptional: true,
-      ...k.publicKeyDefault("BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY"),
+      defaultValue: k.publicKeyValueNode("BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY"),
     },
     {
       account: "collectionMetadata",
       ignoreIfOptional: true,
-      ...k.pdaDefault("metadata", {
-        importFrom: "mplTokenMetadata",
-        seeds: { mint: k.accountDefault("collectionMint") },
-      }),
+      defaultValue: k.pdaValueNode(
+        k.pdaLinkNode("metadata", "mplTokenMetadata"),
+        [
+          k.pdaSeedValueNode("mint", k.accountValueNode("collectionMint")),
+        ]
+      ),
     },
     {
       account: "collectionEdition",
       ignoreIfOptional: true,
-      ...k.pdaDefault("masterEdition", {
-        importFrom: "mplTokenMetadata",
-        seeds: { mint: k.accountDefault("collectionMint") },
-      }),
+      defaultValue: k.pdaValueNode(
+        k.pdaLinkNode("masterEdition", "mplTokenMetadata"),
+        [
+          k.pdaSeedValueNode("mint", k.accountValueNode("collectionMint")),
+        ]
+      ),
     },
     {
       account: "collectionAuthorityRecordPda",
       ignoreIfOptional: true,
-      ...k.programIdDefault(),
+      defaultValue: k.programIdValueNode(),
     },
     {
       account: "collectionAuthority",
       ignoreIfOptional: true,
-      ...k.identityDefault(),
+      defaultValue: k.identityValueNode(),
     },
     {
       account: "mplCoreCpiSigner",
-      ...k.conditionalDefault("account", "coreCollection", {
-        ifTrue: k.publicKeyDefault("CbNY3JiXdXNE9tPNEk1aRZVEkWdj2v7kfJLNQwZZgpXk"),
+      defaultValue: k.conditionalValueNode({
+        condition: k.accountValueNode("coreCollection"),
+        ifTrue: k.publicKeyValueNode("CbNY3JiXdXNE9tPNEk1aRZVEkWdj2v7kfJLNQwZZgpXk"),
       }),
     },
     // `setCollectionV2` always requires the MPL Core signer so it's not a conditional
@@ -346,7 +357,7 @@ kinobi.update(
     {
       account: "mplCoreCpiSigner",
       instruction: "setCollectionV2",
-      ...k.publicKeyDefault("CbNY3JiXdXNE9tPNEk1aRZVEkWdj2v7kfJLNQwZZgpXk"),
+      defaultValue: k.publicKeyValueNode("CbNY3JiXdXNE9tPNEk1aRZVEkWdj2v7kfJLNQwZZgpXk"),
     },
     ...deprecatedIxUpdaters,
     ...v1IxUpdaters,
@@ -358,25 +369,29 @@ kinobi.update(
 // Update instructions.
 const hashDefaults = {
   dataHash: {
-    defaultsTo: k.resolverDefault("resolveDataHash", [
-      k.dependsOnArg("metadata"),
-    ]),
+    defaultValue: k.resolverValueNode("resolveDataHash", {
+      dependsOn: [k.argumentValueNode("metadata")],
+    }),
   },
   creatorHash: {
-    defaultsTo: k.resolverDefault("resolveCreatorHash", [
-      k.dependsOnArg("metadata"),
-    ]),
+    defaultValue: k.resolverValueNode("resolveCreatorHash", {
+      dependsOn: [k.argumentValueNode("metadata")],
+    }),
   },
 };
 
 kinobi.update(
-  new k.UpdateInstructionsVisitor({
+  k.updateInstructionsVisitor({
     createTree: {
       name: "createTreeConfig",
-      bytesCreatedOnChain: k.bytesFromAccount("treeConfig"),
+      byteDeltas: [
+        k.instructionByteDeltaNode(
+          k.numberValueNode(96) // TreeConfig account size
+        ),
+      ],
     },
     mintToCollectionV1: {
-      args: {
+      arguments: {
         metadataArgs: { name: "metadata" },
       },
     },
@@ -395,12 +410,10 @@ kinobi.update(
     redeem: {
       accounts: {
         voucher: {
-          defaultsTo: k.pdaDefault("voucher", {
-            seeds: {
-              merkleTree: k.accountDefault("merkleTree"),
-              nonce: k.argDefault("nonce"),
-            },
-          }),
+          defaultValue: k.pdaValueNode("voucher", [
+            k.pdaSeedValueNode("merkleTree", k.accountValueNode("merkleTree")),
+            k.pdaSeedValueNode("nonce", k.argumentValueNode("nonce")),
+          ]),
         },
       },
     },
@@ -408,31 +421,37 @@ kinobi.update(
       accounts: {
         metadata: {
           name: "metadataAccount",
-          defaultsTo: k.pdaDefault("metadata", {
-            importFrom: "mplTokenMetadata",
-            seeds: { mint: k.accountDefault("mint") },
-          }),
+          defaultValue: k.pdaValueNode(
+            k.pdaLinkNode("metadata", "mplTokenMetadata"),
+            [
+              k.pdaSeedValueNode("mint", k.accountValueNode("mint")),
+            ]
+          ),
         },
         masterEdition: {
-          defaultsTo: k.pdaDefault("masterEdition", {
-            importFrom: "mplTokenMetadata",
-            seeds: { mint: k.accountDefault("mint") },
-          }),
+          defaultValue: k.pdaValueNode(
+            k.pdaLinkNode("masterEdition", "mplTokenMetadata"),
+            [
+              k.pdaSeedValueNode("mint", k.accountValueNode("mint")),
+            ]
+          ),
         },
         tokenAccount: {
-          defaultsTo: k.pdaDefault("associatedToken", {
-            importFrom: "mplToolbox",
-            seeds: {
-              mint: k.accountDefault("mint"),
-              owner: k.accountDefault("leafOwner"),
-            },
-          }),
+          defaultValue: k.pdaValueNode(
+            k.pdaLinkNode("associatedToken", "mplToolbox"),
+            [
+              k.pdaSeedValueNode("mint", k.accountValueNode("mint")),
+              k.pdaSeedValueNode("owner", k.accountValueNode("leafOwner")),
+            ]
+          ),
         },
         mintAuthority: {
-          defaultsTo: k.pdaDefault("mintAuthority", {
-            importFrom: "hooked",
-            seeds: { mint: k.accountDefault("mint") },
-          }),
+          defaultValue: k.pdaValueNode(
+            k.pdaLinkNode("mintAuthority", "hooked"),
+            [
+              k.pdaSeedValueNode("mint", k.accountValueNode("mint")),
+            ]
+          ),
         },
       },
     },
@@ -440,17 +459,17 @@ kinobi.update(
       accounts: {
         treeCreatorOrDelegate: { isSigner: "either" },
       },
-      args: {
+      arguments: {
         ...hashDefaults,
         collection: {
-          defaultsTo: k.accountDefault("collectionMint"),
+          defaultValue: k.accountValueNode("collectionMint"),
         },
       },
     },
-    verifyCollection: { args: { ...hashDefaults } },
-    unverifyCollection: { args: { ...hashDefaults } },
-    verifyCreator: { args: { ...hashDefaults } },
-    unverifyCreator: { args: { ...hashDefaults } },
+    verifyCollection: { arguments: { ...hashDefaults } },
+    unverifyCollection: { arguments: { ...hashDefaults } },
+    verifyCreator: { arguments: { ...hashDefaults } },
+    unverifyCreator: { arguments: { ...hashDefaults } },
     // Remove deprecated instructions.
     setDecompressableState: { delete: true },
     // Remove unnecessary spl_account_compression instructions.
@@ -463,104 +482,108 @@ kinobi.update(
     replaceLeaf: { delete: true },
     transferAuthority: { delete: true },
     burnV2: {
-      args: {
-        assetDataHash: { defaultsTo: k.valueDefault(k.vNone()) },
-        flags: { defaultsTo: k.valueDefault(k.vNone()) },
+      arguments: {
+        assetDataHash: { defaultValue: k.noneValueNode() },
+        flags: { defaultValue: k.noneValueNode() },
       }
     },
     collectV2: {
       accounts: {
         destination: {
-          defaultsTo: k.publicKeyDefault("2dgJVPC5fjLTBTmMvKDRig9JJUGK2Fgwr3EHShFxckhv")
+          defaultValue: k.publicKeyValueNode("2dgJVPC5fjLTBTmMvKDRig9JJUGK2Fgwr3EHShFxckhv")
         }
       }
     },
     createTreeV2: {
       name: "createTreeConfigV2",
-      bytesCreatedOnChain: k.bytesFromAccount("treeConfig"),
+      byteDeltas: [
+        k.instructionByteDeltaNode(
+          k.numberValueNode(96) // TreeConfig account size
+        ),
+      ],
     },
     delegateAndFreezeV2: {
-      args: {
-        collectionHash: { defaultsTo: k.valueDefault(k.vNone()) },
-        assetDataHash: { defaultsTo: k.valueDefault(k.vNone()) },
-        flags: { defaultsTo: k.valueDefault(k.vNone()) }
+      arguments: {
+        collectionHash: { defaultValue: k.noneValueNode() },
+        assetDataHash: { defaultValue: k.noneValueNode() },
+        flags: { defaultValue: k.noneValueNode() }
       }
     },
     delegateV2: {
-      args: {
-        collectionHash: { defaultsTo: k.valueDefault(k.vNone()) },
-        assetDataHash: { defaultsTo: k.valueDefault(k.vNone()) },
-        flags: { defaultsTo: k.valueDefault(k.vNone()) }
+      arguments: {
+        collectionHash: { defaultValue: k.noneValueNode() },
+        assetDataHash: { defaultValue: k.noneValueNode() },
+        flags: { defaultValue: k.noneValueNode() }
       }
     },
     freezeV2: {
-      args: {
-        assetDataHash: { defaultsTo: k.valueDefault(k.vNone()) },
-        flags: { defaultsTo: k.valueDefault(k.vNone()) }
+      arguments: {
+        assetDataHash: { defaultValue: k.noneValueNode() },
+        flags: { defaultValue: k.noneValueNode() }
       }
     },
     mintV2: {
-      args: {
+      arguments: {
         metadataArgs: { name: "metadata" },
-        assetData: { defaultsTo: k.valueDefault(k.vNone()) },
-        assetDataSchema: { defaultsTo: k.valueDefault(k.vNone()) }
+        assetData: { defaultValue: k.noneValueNode() },
+        assetDataSchema: { defaultValue: k.noneValueNode() }
       },
     },
     setCollectionV2: {
-      args: {
-        assetDataHash: { defaultsTo: k.valueDefault(k.vNone()) },
-        flags: { defaultsTo: k.valueDefault(k.vNone()) },
+      arguments: {
+        assetDataHash: { defaultValue: k.noneValueNode() },
+        flags: { defaultValue: k.noneValueNode() },
       }
     },
     setNonTransferableV2: {
-      args: {
-        assetDataHash: { defaultsTo: k.valueDefault(k.vNone()) },
-        flags: { defaultsTo: k.valueDefault(k.vNone()) },
+      arguments: {
+        assetDataHash: { defaultValue: k.noneValueNode() },
+        flags: { defaultValue: k.noneValueNode() },
       }
     },
     thawAndRevokeV2: {
-      args: {
-        collectionHash: { defaultsTo: k.valueDefault(k.vNone()) },
-        assetDataHash: { defaultsTo: k.valueDefault(k.vNone()) },
-        flags: { defaultsTo: k.valueDefault(k.vNone()) }
+      arguments: {
+        collectionHash: { defaultValue: k.noneValueNode() },
+        assetDataHash: { defaultValue: k.noneValueNode() },
+        flags: { defaultValue: k.noneValueNode() }
       }
     },
     thawV2: {
-      args: {
-        assetDataHash: { defaultsTo: k.valueDefault(k.vNone()) },
-        flags: { defaultsTo: k.valueDefault(k.vNone()) }
+      arguments: {
+        assetDataHash: { defaultValue: k.noneValueNode() },
+        flags: { defaultValue: k.noneValueNode() }
       }
     },
     transferV2: {
-      args: {
-        assetDataHash: { defaultsTo: k.valueDefault(k.vNone()) },
-        flags: { defaultsTo: k.valueDefault(k.vNone()) },
+      arguments: {
+        assetDataHash: { defaultValue: k.noneValueNode() },
+        flags: { defaultValue: k.noneValueNode() },
       }
     },
     unverifyCreatorV2: {
-      args: {
-        assetDataHash: { defaultsTo: k.valueDefault(k.vNone()) },
-        flags: { defaultsTo: k.valueDefault(k.vNone()) },
+      arguments: {
+        assetDataHash: { defaultValue: k.noneValueNode() },
+        flags: { defaultValue: k.noneValueNode() },
       }
     },
     updateAssetDataV2: {
-      args: {
-        previousAssetDataHash: { defaultsTo: k.valueDefault(k.vNone()) },
-        flags: { defaultsTo: k.valueDefault(k.vNone()) },
-        newAssetData: { defaultsTo: k.valueDefault(k.vNone()) },
-        newAssetDataSchema: { defaultsTo: k.valueDefault(k.vNone()) }
+      arguments: {
+        previousAssetDataHash: { defaultValue: k.noneValueNode() },
+        flags: { defaultValue: k.noneValueNode() },
+        newAssetData: { defaultValue: k.noneValueNode() },
+        newAssetDataSchema: { defaultValue: k.noneValueNode() }
       }
     },
     updateMetadataV2: {
-      args: {
-        assetDataHash: { defaultsTo: k.valueDefault(k.vNone()) },
-        flags: { defaultsTo: k.valueDefault(k.vNone()) },
+      arguments: {
+        assetDataHash: { defaultValue: k.noneValueNode() },
+        flags: { defaultValue: k.noneValueNode() },
       }
     },
     verifyCreatorV2: {
-      args: {
-        assetDataHash: { defaultsTo: k.valueDefault(k.vNone()) },
-        flags: { defaultsTo: k.valueDefault(k.vNone()) },
+      arguments: {
+        assetDataHash: { defaultValue: k.noneValueNode() },
+        flags: { defaultValue: k.noneValueNode() },
       }
     }
   })
@@ -568,74 +591,86 @@ kinobi.update(
 
 // Set default values for structs.
 kinobi.update(
-  new k.SetStructDefaultValuesVisitor({
-    createTreeConfigInstructionData: {
-      public: k.vNone(),
-    },
-    createTreeConfigV2InstructionData: {
-      public: k.vNone(),
-    },
+  k.setStructDefaultValuesVisitor({
     metadataArgs: {
-      symbol: k.vScalar(""),
-      primarySaleHappened: k.vScalar(false),
-      isMutable: k.vScalar(true),
-      editionNonce: k.vNone(),
-      tokenStandard: k.vSome(k.vEnum("TokenStandard", "NonFungible")),
-      uses: k.vNone(),
-      tokenProgramVersion: k.vEnum("TokenProgramVersion", "Original"),
+      symbol: k.stringValueNode(""),
+      primarySaleHappened: k.booleanValueNode(false),
+      isMutable: k.booleanValueNode(true),
+      editionNonce: k.noneValueNode(),
+      tokenStandard: k.someValueNode(k.enumValueNode("TokenStandard", "NonFungible")),
+      uses: k.noneValueNode(),
+      tokenProgramVersion: k.enumValueNode("TokenProgramVersion", "Original"),
     },
     metadataArgsV2: {
-      symbol: k.vScalar(""),
-      primarySaleHappened: k.vScalar(false),
-      isMutable: k.vScalar(true),
-      tokenStandard: k.vSome(k.vEnum("TokenStandard", "NonFungible")),
+      symbol: k.stringValueNode(""),
+      primarySaleHappened: k.booleanValueNode(false),
+      isMutable: k.booleanValueNode(true),
+      tokenStandard: k.someValueNode(k.enumValueNode("TokenStandard", "NonFungible")),
     },
     updateArgs: {
-      name: k.vNone(),
-      symbol: k.vNone(),
-      uri: k.vNone(),
-      creators: k.vNone(),
-      sellerFeeBasisPoints: k.vNone(),
-      primarySaleHappened: k.vNone(),
-      isMutable: k.vNone(),
+      name: k.noneValueNode(),
+      symbol: k.noneValueNode(),
+      uri: k.noneValueNode(),
+      creators: k.noneValueNode(),
+      sellerFeeBasisPoints: k.noneValueNode(),
+      primarySaleHappened: k.noneValueNode(),
+      isMutable: k.noneValueNode(),
     },
   })
 );
 
+// Set optional fields with defaults.
+kinobi.update(
+  k.bottomUpTransformerVisitor([
+    {
+      // Make 'public' field optional with none() default
+      select: (node) => {
+        return (
+          k.isNode(node, ["structFieldTypeNode", "instructionArgumentNode"]) &&
+          node.name === "public"
+        );
+      },
+      transform: (node) => {
+        k.assertIsNode(node, ["structFieldTypeNode", "instructionArgumentNode"]);
+        return {
+          ...node,
+          defaultValueStrategy: "optional",
+          defaultValue: k.noneValueNode(),
+        };
+      },
+    },
+  ])
+);
+
 // Custom tree updates.
 kinobi.update(
-  new k.TransformNodesVisitor([
+  k.bottomUpTransformerVisitor([
     {
       // Add nodes to the splAccountCompression program.
-      selector: { kind: "programNode", name: "splAccountCompression" },
-      transformer: (node) => {
-        k.assertProgramNode(node);
+      select: "[programNode]splAccountCompression",
+      transform: (node) => {
+        k.assertIsNode(node, "programNode");
         return k.programNode({
           ...node,
           accounts: [
             ...node.accounts,
             k.accountNode({
               name: "merkleTree",
-              data: k.accountDataNode({
-                name: "merkleTreeAccountData",
-                link: k.linkTypeNode("merkleTreeAccountData", {
-                  importFrom: "hooked",
+              size: null,
+              data: k.structTypeNode([
+                k.structFieldTypeNode({
+                  name: "discriminator",
+                  type: k.definedTypeLinkNode("compressionAccountType"),
                 }),
-                struct: k.structTypeNode([
-                  k.structFieldTypeNode({
-                    name: "discriminator",
-                    child: k.linkTypeNode("compressionAccountType"),
-                  }),
-                  k.structFieldTypeNode({
-                    name: "treeHeader",
-                    child: k.linkTypeNode("concurrentMerkleTreeHeaderData"),
-                  }),
-                  k.structFieldTypeNode({
-                    name: "serializedTree",
-                    child: k.bytesTypeNode(k.remainderSize()),
-                  }),
-                ]),
-              }),
+                k.structFieldTypeNode({
+                  name: "treeHeader",
+                  type: k.definedTypeLinkNode("concurrentMerkleTreeHeaderData"),
+                }),
+                k.structFieldTypeNode({
+                  name: "serializedTree",
+                  type: k.bytesTypeNode(k.remainderSizeNode()),
+                }),
+              ]),
             }),
           ],
         });
@@ -643,8 +678,8 @@ kinobi.update(
     },
     {
       // Use extra "proof" arg as remaining accounts.
-      selector: (node) =>
-        k.isInstructionNode(node) &&
+      select: (node) =>
+        k.isNode(node, "instructionNode") &&
         [
           "burn",
           "transfer",
@@ -671,25 +706,23 @@ kinobi.update(
           "updateMetadataV2",
           "verifyCreatorV2"
         ].includes(node.name),
-      transformer: (node) => {
-        k.assertInstructionNode(node);
+      transform: (node) => {
+        k.assertIsNode(node, "instructionNode");
         return k.instructionNode({
           ...node,
-          remainingAccounts: k.remainingAccountsFromArg("proof"),
-          argDefaults: {
-            ...node.argDefaults,
-            proof: k.valueDefault(k.vList([])),
-          },
-          extraArgs: k.instructionExtraArgsNode({
-            ...node.extraArgs,
-            struct: k.structTypeNode([
-              ...node.extraArgs.struct.fields,
-              k.structFieldTypeNode({
-                name: "proof",
-                child: k.arrayTypeNode(k.publicKeyTypeNode()),
-              }),
-            ]),
-          }),
+          remainingAccounts: [
+            k.instructionRemainingAccountsNode(
+              k.argumentValueNode("proof")
+            ),
+          ],
+          extraArguments: [
+            ...(node.extraArguments ?? []),
+            k.instructionArgumentNode({
+              name: "proof",
+              type: k.arrayTypeNode(k.publicKeyTypeNode()),
+              defaultValue: k.arrayValueNode([]),
+            }),
+          ],
         });
       },
     },
@@ -698,21 +731,24 @@ kinobi.update(
 
 // Transform tuple enum variants to structs.
 kinobi.update(
-  new k.UnwrapTupleEnumWithSingleStructVisitor([
+  k.unwrapTupleEnumWithSingleStructVisitor([
     "ConcurrentMerkleTreeHeaderData",
   ])
 );
 
 kinobi.update(
-  new k.UpdateInstructionsVisitor({
+  k.updateInstructionsVisitor({
     updateMetadata: {
       accounts: {
         collectionMetadata: {
-          defaultsTo: k.conditionalDefault("account", "collectionMint", {
-            ifTrue: k.pdaDefault("metadata", {
-              importFrom: "mplTokenMetadata",
-              seeds: { mint: k.accountDefault("collectionMint") },
-            }),
+          defaultValue: k.conditionalValueNode({
+            condition: k.accountValueNode("collectionMint"),
+            ifTrue: k.pdaValueNode(
+              k.pdaLinkNode("metadata", "mplTokenMetadata"),
+              [
+                k.pdaSeedValueNode("mint", k.accountValueNode("collectionMint")),
+              ]
+            ),
           }),
         },
       },
@@ -724,7 +760,7 @@ kinobi.update(
 const jsDir = path.join(clientDir, "js", "src", "generated");
 const prettier = require(path.join(clientDir, "js", ".prettierrc.json"));
 kinobi.accept(
-  new k.RenderJavaScriptVisitor(jsDir, {
+  k.renderJavaScriptVisitor(jsDir, {
     prettier,
     dependencyMap: {
       mplTokenMetadata: "@metaplex-foundation/mpl-token-metadata",
@@ -736,7 +772,7 @@ kinobi.accept(
 const crateDir = path.join(clientDir, "rust");
 const rustDir = path.join(clientDir, "rust", "src", "generated");
 kinobi.accept(
-  new k.RenderRustVisitor(rustDir, {
+  k.renderRustVisitor(rustDir, {
     formatCode: true,
     crateFolder: crateDir,
   })

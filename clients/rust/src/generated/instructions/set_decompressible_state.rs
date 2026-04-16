@@ -72,7 +72,12 @@ pub struct SetDecompressibleStateInstructionArgs {
     pub decompressable_state: DecompressibleState,
 }
 
-/// Instruction builder.
+/// Instruction builder for `SetDecompressibleState`.
+///
+/// ### Accounts:
+///
+///   0. `[writable]` tree_config
+///   1. `[signer]` tree_creator
 #[derive(Default)]
 pub struct SetDecompressibleStateBuilder {
     tree_config: Option<solana_program::pubkey::Pubkey>,
@@ -243,7 +248,12 @@ impl<'a, 'b> SetDecompressibleStateCpi<'a, 'b> {
     }
 }
 
-/// `set_decompressible_state` CPI instruction builder.
+/// Instruction builder for `SetDecompressibleState` via CPI.
+///
+/// ### Accounts:
+///
+///   0. `[writable]` tree_config
+///   1. `[signer]` tree_creator
 pub struct SetDecompressibleStateCpiBuilder<'a, 'b> {
     instruction: Box<SetDecompressibleStateCpiBuilderInstruction<'a, 'b>>,
 }

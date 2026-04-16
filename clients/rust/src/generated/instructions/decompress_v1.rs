@@ -135,7 +135,23 @@ pub struct DecompressV1InstructionArgs {
     pub metadata: MetadataArgs,
 }
 
-/// Instruction builder.
+/// Instruction builder for `DecompressV1`.
+///
+/// ### Accounts:
+///
+///   0. `[writable]` voucher
+///   1. `[writable, signer]` leaf_owner
+///   2. `[writable]` token_account
+///   3. `[writable]` mint
+///   4. `[writable]` mint_authority
+///   5. `[writable]` metadata_account
+///   6. `[writable]` master_edition
+///   7. `[optional]` system_program (default to `11111111111111111111111111111111`)
+///   8. `[optional]` sysvar_rent (default to `SysvarRent111111111111111111111111111111111`)
+///   9. `[optional]` token_metadata_program (default to `metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s`)
+///   10. `[optional]` token_program (default to `TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA`)
+///   11. `[optional]` associated_token_program (default to `ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL`)
+///   12. `[optional]` log_wrapper (default to `noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV`)
 #[derive(Default)]
 pub struct DecompressV1Builder {
     voucher: Option<solana_program::pubkey::Pubkey>,
@@ -516,7 +532,23 @@ impl<'a, 'b> DecompressV1Cpi<'a, 'b> {
     }
 }
 
-/// `decompress_v1` CPI instruction builder.
+/// Instruction builder for `DecompressV1` via CPI.
+///
+/// ### Accounts:
+///
+///   0. `[writable]` voucher
+///   1. `[writable, signer]` leaf_owner
+///   2. `[writable]` token_account
+///   3. `[writable]` mint
+///   4. `[writable]` mint_authority
+///   5. `[writable]` metadata_account
+///   6. `[writable]` master_edition
+///   7. `[]` system_program
+///   8. `[]` sysvar_rent
+///   9. `[]` token_metadata_program
+///   10. `[]` token_program
+///   11. `[]` associated_token_program
+///   12. `[]` log_wrapper
 pub struct DecompressV1CpiBuilder<'a, 'b> {
     instruction: Box<DecompressV1CpiBuilderInstruction<'a, 'b>>,
 }

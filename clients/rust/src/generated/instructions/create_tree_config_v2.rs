@@ -109,7 +109,17 @@ pub struct CreateTreeConfigV2InstructionArgs {
     pub public: Option<bool>,
 }
 
-/// Instruction builder.
+/// Instruction builder for `CreateTreeConfigV2`.
+///
+/// ### Accounts:
+///
+///   0. `[writable]` tree_config
+///   1. `[writable]` merkle_tree
+///   2. `[writable, signer]` payer
+///   3. `[signer, optional]` tree_creator
+///   4. `[optional]` log_wrapper (default to `mnoopTCrg4p8ry25e4bcWA9XZjbNjMTfgYVGGEdRsf3`)
+///   5. `[optional]` compression_program (default to `mcmt6YrQEMKw8Mw43FmpRLmf7BqRnFMKmAcbxE3xkAW`)
+///   6. `[optional]` system_program (default to `11111111111111111111111111111111`)
 #[derive(Default)]
 pub struct CreateTreeConfigV2Builder {
     tree_config: Option<solana_program::pubkey::Pubkey>,
@@ -406,7 +416,17 @@ impl<'a, 'b> CreateTreeConfigV2Cpi<'a, 'b> {
     }
 }
 
-/// `create_tree_config_v2` CPI instruction builder.
+/// Instruction builder for `CreateTreeConfigV2` via CPI.
+///
+/// ### Accounts:
+///
+///   0. `[writable]` tree_config
+///   1. `[writable]` merkle_tree
+///   2. `[writable, signer]` payer
+///   3. `[signer, optional]` tree_creator
+///   4. `[]` log_wrapper
+///   5. `[]` compression_program
+///   6. `[]` system_program
 pub struct CreateTreeConfigV2CpiBuilder<'a, 'b> {
     instruction: Box<CreateTreeConfigV2CpiBuilderInstruction<'a, 'b>>,
 }

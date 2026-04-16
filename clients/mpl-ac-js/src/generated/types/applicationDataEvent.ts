@@ -53,14 +53,14 @@ export function applicationDataEvent(
   data: GetDataEnumKindContent<ApplicationDataEventArgs, 'V1'>['fields']
 ): GetDataEnumKind<ApplicationDataEventArgs, 'V1'>;
 export function applicationDataEvent<
-  K extends ApplicationDataEventArgs['__kind']
+  K extends ApplicationDataEventArgs['__kind'],
 >(kind: K, data?: any): Extract<ApplicationDataEventArgs, { __kind: K }> {
   return Array.isArray(data)
     ? { __kind: kind, fields: data }
     : { __kind: kind, ...(data ?? {}) };
 }
 export function isApplicationDataEvent<
-  K extends ApplicationDataEvent['__kind']
+  K extends ApplicationDataEvent['__kind'],
 >(
   kind: K,
   value: ApplicationDataEvent

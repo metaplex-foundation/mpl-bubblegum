@@ -128,7 +128,7 @@ export function getVerifyCollectionInstructionDataSerializer(): Serializer<
 }
 
 // Extra Args.
-export type VerifyCollectionInstructionExtraArgs = { proof: Array<PublicKey> };
+export type VerifyCollectionInstructionExtraArgs = { proof?: Array<PublicKey> };
 
 // Args.
 export type VerifyCollectionInstructionArgs = PickPartial<
@@ -148,76 +148,88 @@ export function verifyCollection(
   );
 
   // Accounts.
-  const resolvedAccounts: ResolvedAccountsWithIndices = {
+  const resolvedAccounts = {
     treeConfig: {
       index: 0,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.treeConfig ?? null,
     },
-    leafOwner: { index: 1, isWritable: false, value: input.leafOwner ?? null },
+    leafOwner: {
+      index: 1,
+      isWritable: false as boolean,
+      value: input.leafOwner ?? null,
+    },
     leafDelegate: {
       index: 2,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.leafDelegate ?? null,
     },
-    merkleTree: { index: 3, isWritable: true, value: input.merkleTree ?? null },
-    payer: { index: 4, isWritable: false, value: input.payer ?? null },
+    merkleTree: {
+      index: 3,
+      isWritable: true as boolean,
+      value: input.merkleTree ?? null,
+    },
+    payer: {
+      index: 4,
+      isWritable: false as boolean,
+      value: input.payer ?? null,
+    },
     treeCreatorOrDelegate: {
       index: 5,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.treeCreatorOrDelegate ?? null,
     },
     collectionAuthority: {
       index: 6,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.collectionAuthority ?? null,
     },
     collectionAuthorityRecordPda: {
       index: 7,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.collectionAuthorityRecordPda ?? null,
     },
     collectionMint: {
       index: 8,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.collectionMint ?? null,
     },
     collectionMetadata: {
       index: 9,
-      isWritable: true,
+      isWritable: true as boolean,
       value: input.collectionMetadata ?? null,
     },
     collectionEdition: {
       index: 10,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.collectionEdition ?? null,
     },
     bubblegumSigner: {
       index: 11,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.bubblegumSigner ?? null,
     },
     logWrapper: {
       index: 12,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.logWrapper ?? null,
     },
     compressionProgram: {
       index: 13,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.compressionProgram ?? null,
     },
     tokenMetadataProgram: {
       index: 14,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.tokenMetadataProgram ?? null,
     },
     systemProgram: {
       index: 15,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.systemProgram ?? null,
     },
-  };
+  } satisfies ResolvedAccountsWithIndices;
 
   // Arguments.
   const resolvedArgs: VerifyCollectionInstructionArgs = { ...input };

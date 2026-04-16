@@ -67,14 +67,18 @@ export function collectV2(
   );
 
   // Accounts.
-  const resolvedAccounts: ResolvedAccountsWithIndices = {
-    treeConfig: { index: 0, isWritable: true, value: input.treeConfig ?? null },
+  const resolvedAccounts = {
+    treeConfig: {
+      index: 0,
+      isWritable: true as boolean,
+      value: input.treeConfig ?? null,
+    },
     destination: {
       index: 1,
-      isWritable: true,
+      isWritable: true as boolean,
       value: input.destination ?? null,
     },
-  };
+  } satisfies ResolvedAccountsWithIndices;
 
   // Default values.
   if (!resolvedAccounts.destination.value) {

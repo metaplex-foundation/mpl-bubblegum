@@ -79,8 +79,8 @@ export type UpdateMetadataV2InstructionData = {
 
 export type UpdateMetadataV2InstructionDataArgs = {
   root: Uint8Array;
-  assetDataHash: OptionOrNullable<Uint8Array>;
-  flags: OptionOrNullable<number>;
+  assetDataHash?: OptionOrNullable<Uint8Array>;
+  flags?: OptionOrNullable<number>;
   nonce: number | bigint;
   index: number;
   currentMetadata: MetadataArgsV2Args;
@@ -112,6 +112,8 @@ export function getUpdateMetadataV2InstructionDataSerializer(): Serializer<
     (value) => ({
       ...value,
       discriminator: [43, 103, 89, 42, 121, 242, 62, 72],
+      assetDataHash: value.assetDataHash ?? none(),
+      flags: value.flags ?? none(),
     })
   ) as Serializer<
     UpdateMetadataV2InstructionDataArgs,
@@ -120,12 +122,12 @@ export function getUpdateMetadataV2InstructionDataSerializer(): Serializer<
 }
 
 // Extra Args.
-export type UpdateMetadataV2InstructionExtraArgs = { proof: Array<PublicKey> };
+export type UpdateMetadataV2InstructionExtraArgs = { proof?: Array<PublicKey> };
 
 // Args.
 export type UpdateMetadataV2InstructionArgs = PickPartial<
   UpdateMetadataV2InstructionDataArgs & UpdateMetadataV2InstructionExtraArgs,
-  'assetDataHash' | 'flags' | 'proof'
+  'proof'
 >;
 
 // Instruction.
@@ -140,38 +142,58 @@ export function updateMetadataV2(
   );
 
   // Accounts.
-  const resolvedAccounts: ResolvedAccountsWithIndices = {
-    treeConfig: { index: 0, isWritable: true, value: input.treeConfig ?? null },
-    payer: { index: 1, isWritable: true, value: input.payer ?? null },
-    authority: { index: 2, isWritable: false, value: input.authority ?? null },
-    leafOwner: { index: 3, isWritable: false, value: input.leafOwner ?? null },
+  const resolvedAccounts = {
+    treeConfig: {
+      index: 0,
+      isWritable: true as boolean,
+      value: input.treeConfig ?? null,
+    },
+    payer: {
+      index: 1,
+      isWritable: true as boolean,
+      value: input.payer ?? null,
+    },
+    authority: {
+      index: 2,
+      isWritable: false as boolean,
+      value: input.authority ?? null,
+    },
+    leafOwner: {
+      index: 3,
+      isWritable: false as boolean,
+      value: input.leafOwner ?? null,
+    },
     leafDelegate: {
       index: 4,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.leafDelegate ?? null,
     },
-    merkleTree: { index: 5, isWritable: true, value: input.merkleTree ?? null },
+    merkleTree: {
+      index: 5,
+      isWritable: true as boolean,
+      value: input.merkleTree ?? null,
+    },
     coreCollection: {
       index: 6,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.coreCollection ?? null,
     },
     logWrapper: {
       index: 7,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.logWrapper ?? null,
     },
     compressionProgram: {
       index: 8,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.compressionProgram ?? null,
     },
     systemProgram: {
       index: 9,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.systemProgram ?? null,
     },
-  };
+  } satisfies ResolvedAccountsWithIndices;
 
   // Arguments.
   const resolvedArgs: UpdateMetadataV2InstructionArgs = { ...input };
@@ -205,12 +227,6 @@ export function updateMetadataV2(
       '11111111111111111111111111111111'
     );
     resolvedAccounts.systemProgram.isWritable = false;
-  }
-  if (!resolvedArgs.assetDataHash) {
-    resolvedArgs.assetDataHash = none();
-  }
-  if (!resolvedArgs.flags) {
-    resolvedArgs.flags = none();
   }
   if (!resolvedArgs.proof) {
     resolvedArgs.proof = [];

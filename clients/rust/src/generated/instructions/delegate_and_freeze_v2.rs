@@ -132,7 +132,19 @@ pub struct DelegateAndFreezeV2InstructionArgs {
     pub index: u32,
 }
 
-/// Instruction builder.
+/// Instruction builder for `DelegateAndFreezeV2`.
+///
+/// ### Accounts:
+///
+///   0. `[writable]` tree_config
+///   1. `[writable, signer]` payer
+///   2. `[signer, optional]` leaf_owner
+///   3. `[optional]` previous_leaf_delegate
+///   4. `[]` new_leaf_delegate
+///   5. `[writable]` merkle_tree
+///   6. `[optional]` log_wrapper (default to `mnoopTCrg4p8ry25e4bcWA9XZjbNjMTfgYVGGEdRsf3`)
+///   7. `[optional]` compression_program (default to `mcmt6YrQEMKw8Mw43FmpRLmf7BqRnFMKmAcbxE3xkAW`)
+///   8. `[optional]` system_program (default to `11111111111111111111111111111111`)
 #[derive(Default)]
 pub struct DelegateAndFreezeV2Builder {
     tree_config: Option<solana_program::pubkey::Pubkey>,
@@ -513,7 +525,19 @@ impl<'a, 'b> DelegateAndFreezeV2Cpi<'a, 'b> {
     }
 }
 
-/// `delegate_and_freeze_v2` CPI instruction builder.
+/// Instruction builder for `DelegateAndFreezeV2` via CPI.
+///
+/// ### Accounts:
+///
+///   0. `[writable]` tree_config
+///   1. `[writable, signer]` payer
+///   2. `[signer, optional]` leaf_owner
+///   3. `[optional]` previous_leaf_delegate
+///   4. `[]` new_leaf_delegate
+///   5. `[writable]` merkle_tree
+///   6. `[]` log_wrapper
+///   7. `[]` compression_program
+///   8. `[]` system_program
 pub struct DelegateAndFreezeV2CpiBuilder<'a, 'b> {
     instruction: Box<DelegateAndFreezeV2CpiBuilderInstruction<'a, 'b>>,
 }

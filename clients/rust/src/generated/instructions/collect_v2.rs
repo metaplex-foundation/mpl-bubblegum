@@ -57,7 +57,12 @@ impl CollectV2InstructionData {
     }
 }
 
-/// Instruction builder.
+/// Instruction builder for `CollectV2`.
+///
+/// ### Accounts:
+///
+///   0. `[writable]` tree_config
+///   1. `[writable, optional]` destination (default to `2dgJVPC5fjLTBTmMvKDRig9JJUGK2Fgwr3EHShFxckhv`)
 #[derive(Default)]
 pub struct CollectV2Builder {
     tree_config: Option<solana_program::pubkey::Pubkey>,
@@ -211,7 +216,12 @@ impl<'a, 'b> CollectV2Cpi<'a, 'b> {
     }
 }
 
-/// `collect_v2` CPI instruction builder.
+/// Instruction builder for `CollectV2` via CPI.
+///
+/// ### Accounts:
+///
+///   0. `[writable]` tree_config
+///   1. `[writable]` destination
 pub struct CollectV2CpiBuilder<'a, 'b> {
     instruction: Box<CollectV2CpiBuilderInstruction<'a, 'b>>,
 }

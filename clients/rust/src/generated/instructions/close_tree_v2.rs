@@ -88,7 +88,17 @@ impl CloseTreeV2InstructionData {
     }
 }
 
-/// Instruction builder.
+/// Instruction builder for `CloseTreeV2`.
+///
+/// ### Accounts:
+///
+///   0. `[writable]` tree_config
+///   1. `[signer]` authority
+///   2. `[writable]` merkle_tree
+///   3. `[writable]` recipient
+///   4. `[optional]` compression_program (default to `mcmt6YrQEMKw8Mw43FmpRLmf7BqRnFMKmAcbxE3xkAW`)
+///   5. `[optional]` log_wrapper (default to `mnoopTCrg4p8ry25e4bcWA9XZjbNjMTfgYVGGEdRsf3`)
+///   6. `[optional]` system_program (default to `11111111111111111111111111111111`)
 #[derive(Default)]
 pub struct CloseTreeV2Builder {
     tree_config: Option<solana_program::pubkey::Pubkey>,
@@ -341,7 +351,17 @@ impl<'a, 'b> CloseTreeV2Cpi<'a, 'b> {
     }
 }
 
-/// `close_tree_v2` CPI instruction builder.
+/// Instruction builder for `CloseTreeV2` via CPI.
+///
+/// ### Accounts:
+///
+///   0. `[writable]` tree_config
+///   1. `[signer]` authority
+///   2. `[writable]` merkle_tree
+///   3. `[writable]` recipient
+///   4. `[]` compression_program
+///   5. `[]` log_wrapper
+///   6. `[]` system_program
 pub struct CloseTreeV2CpiBuilder<'a, 'b> {
     instruction: Box<CloseTreeV2CpiBuilderInstruction<'a, 'b>>,
 }

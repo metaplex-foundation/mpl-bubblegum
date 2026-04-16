@@ -129,7 +129,19 @@ pub struct VerifyCreatorV2InstructionArgs {
     pub metadata: MetadataArgsV2,
 }
 
-/// Instruction builder.
+/// Instruction builder for `VerifyCreatorV2`.
+///
+/// ### Accounts:
+///
+///   0. `[writable]` tree_config
+///   1. `[writable, signer]` payer
+///   2. `[signer, optional]` creator
+///   3. `[]` leaf_owner
+///   4. `[optional]` leaf_delegate
+///   5. `[writable]` merkle_tree
+///   6. `[optional]` log_wrapper (default to `mnoopTCrg4p8ry25e4bcWA9XZjbNjMTfgYVGGEdRsf3`)
+///   7. `[optional]` compression_program (default to `mcmt6YrQEMKw8Mw43FmpRLmf7BqRnFMKmAcbxE3xkAW`)
+///   8. `[optional]` system_program (default to `11111111111111111111111111111111`)
 #[derive(Default)]
 pub struct VerifyCreatorV2Builder {
     tree_config: Option<solana_program::pubkey::Pubkey>,
@@ -488,7 +500,19 @@ impl<'a, 'b> VerifyCreatorV2Cpi<'a, 'b> {
     }
 }
 
-/// `verify_creator_v2` CPI instruction builder.
+/// Instruction builder for `VerifyCreatorV2` via CPI.
+///
+/// ### Accounts:
+///
+///   0. `[writable]` tree_config
+///   1. `[writable, signer]` payer
+///   2. `[signer, optional]` creator
+///   3. `[]` leaf_owner
+///   4. `[optional]` leaf_delegate
+///   5. `[writable]` merkle_tree
+///   6. `[]` log_wrapper
+///   7. `[]` compression_program
+///   8. `[]` system_program
 pub struct VerifyCreatorV2CpiBuilder<'a, 'b> {
     instruction: Box<VerifyCreatorV2CpiBuilderInstruction<'a, 'b>>,
 }

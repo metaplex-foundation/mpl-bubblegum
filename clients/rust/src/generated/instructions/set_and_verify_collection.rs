@@ -172,7 +172,26 @@ pub struct SetAndVerifyCollectionInstructionArgs {
     pub collection: Pubkey,
 }
 
-/// Instruction builder.
+/// Instruction builder for `SetAndVerifyCollection`.
+///
+/// ### Accounts:
+///
+///   0. `[]` tree_config
+///   1. `[]` leaf_owner
+///   2. `[]` leaf_delegate
+///   3. `[writable]` merkle_tree
+///   4. `[signer]` payer
+///   5. `[signer]` tree_creator_or_delegate
+///   6. `[signer]` collection_authority
+///   7. `[optional]` collection_authority_record_pda
+///   8. `[]` collection_mint
+///   9. `[writable]` collection_metadata
+///   10. `[]` collection_edition
+///   11. `[optional]` bubblegum_signer (default to `BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY`)
+///   12. `[optional]` log_wrapper (default to `noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV`)
+///   13. `[optional]` compression_program (default to `cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK`)
+///   14. `[optional]` token_metadata_program (default to `BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY`)
+///   15. `[optional]` system_program (default to `11111111111111111111111111111111`)
 #[derive(Default)]
 pub struct SetAndVerifyCollectionBuilder {
     tree_config: Option<solana_program::pubkey::Pubkey>,
@@ -693,7 +712,26 @@ impl<'a, 'b> SetAndVerifyCollectionCpi<'a, 'b> {
     }
 }
 
-/// `set_and_verify_collection` CPI instruction builder.
+/// Instruction builder for `SetAndVerifyCollection` via CPI.
+///
+/// ### Accounts:
+///
+///   0. `[]` tree_config
+///   1. `[]` leaf_owner
+///   2. `[]` leaf_delegate
+///   3. `[writable]` merkle_tree
+///   4. `[signer]` payer
+///   5. `[signer]` tree_creator_or_delegate
+///   6. `[signer]` collection_authority
+///   7. `[optional]` collection_authority_record_pda
+///   8. `[]` collection_mint
+///   9. `[writable]` collection_metadata
+///   10. `[]` collection_edition
+///   11. `[]` bubblegum_signer
+///   12. `[]` log_wrapper
+///   13. `[]` compression_program
+///   14. `[]` token_metadata_program
+///   15. `[]` system_program
 pub struct SetAndVerifyCollectionCpiBuilder<'a, 'b> {
     instruction: Box<SetAndVerifyCollectionCpiBuilderInstruction<'a, 'b>>,
 }
