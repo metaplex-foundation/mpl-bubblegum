@@ -9,11 +9,15 @@ use mpl_bubblegum::{
     utils::get_asset_id,
     DEFAULT_FLAGS,
 };
+// These types are identical to spl_account_compression's since mpl-account-compression is a fork.
+// We import from mpl-account-compression to avoid pulling in the spl-account-compression crate
+// which may not be updated to the same Solana SDK version.
+use mpl_account_compression::{state::CONCURRENT_MERKLE_TREE_HEADER_SIZE_V1, ConcurrentMerkleTree};
 use solana_program::{instruction::AccountMeta, pubkey::Pubkey, system_instruction};
 use solana_program_test::{BanksClientError, ProgramTestContext};
 use solana_sdk::{signature::Keypair, signer::Signer, transaction::Transaction};
-use spl_account_compression::{state::CONCURRENT_MERKLE_TREE_HEADER_SIZE_V1, ConcurrentMerkleTree};
 use spl_merkle_tree_reference::{MerkleTree, Node};
+use std::str::FromStr;
 
 use crate::get_account;
 
@@ -56,6 +60,8 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> TreeManager<MAX_DEPTH
         &mut self,
         context: &mut ProgramTestContext,
     ) -> Result<(), BanksClientError> {
+        let spl_account_compression_id =
+            Pubkey::from_str("cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK").unwrap();
         let size = CONCURRENT_MERKLE_TREE_HEADER_SIZE_V1
             + std::mem::size_of::<ConcurrentMerkleTree<MAX_DEPTH, MAX_BUFFER_SIZE>>();
         let rent = context.banks_client.get_rent().await.unwrap();
@@ -67,7 +73,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> TreeManager<MAX_DEPTH
             &self.tree.pubkey(),
             rent.minimum_balance(size),
             size as u64,
-            &spl_account_compression::ID,
+            &spl_account_compression_id,
         );
 
         // create tree config account
