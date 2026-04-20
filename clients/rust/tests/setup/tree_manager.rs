@@ -13,9 +13,10 @@ use mpl_bubblegum::{
 // We import from mpl-account-compression to avoid pulling in the spl-account-compression crate
 // which may not be updated to the same Solana SDK version.
 use mpl_account_compression::{state::CONCURRENT_MERKLE_TREE_HEADER_SIZE_V1, ConcurrentMerkleTree};
-use solana_program::{instruction::AccountMeta, pubkey::Pubkey, system_instruction};
+use solana_program::{instruction::AccountMeta, pubkey::Pubkey};
 use solana_program_test::{BanksClientError, ProgramTestContext};
 use solana_sdk::{signature::Keypair, signer::Signer, transaction::Transaction};
+use solana_system_interface::instruction as system_instruction;
 use spl_merkle_tree_reference::{MerkleTree, Node};
 use std::str::FromStr;
 

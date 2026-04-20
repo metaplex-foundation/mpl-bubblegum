@@ -9,8 +9,8 @@ devDependencies:
     specifier: ^0.12.1
     version: 0.12.1(typescript@4.9.5)
   '@metaplex-foundation/kinobi':
-    specifier: ^0.17.0
-    version: 0.17.10(fastestsmallesttextencoderdecoder@1.0.22)
+    specifier: 1.0.0-alpha.0
+    version: 1.0.0-alpha.0(fastestsmallesttextencoderdecoder@1.0.22)
   '@metaplex-foundation/shank-js':
     specifier: ^0.1.5
     version: 0.1.5
@@ -89,8 +89,8 @@ packages:
     resolution: {integrity: sha512-S9RulC2fFCFOQraz61bij+5YCHhSO9llJegK8c8Y6731fSi6snUSQJdCUqYS8AIgR0TKbQvdvgSyIIdbDFZbBA==}
     dev: true
 
-  /@metaplex-foundation/kinobi@0.17.10(fastestsmallesttextencoderdecoder@1.0.22):
-    resolution: {integrity: sha512-gp0Amyv84pqJS/whHQNyNm1ef0wva0x6uC+2ca+N/6kUgXFGevaP0pJrX/a9E9ekV026mF5XbjMJJ91Eceevrg==}
+  /@metaplex-foundation/kinobi@1.0.0-alpha.0(fastestsmallesttextencoderdecoder@1.0.22):
+    resolution: {integrity: sha512-sEof4nvqjkEMENLoFnkb3yvJ5/K29zbiUhB5X0T8x+8605+++aDgiE8vCF3Ur9PRHo7A13EzfjBhrkoR/Jg5xA==}
     dependencies:
       '@noble/hashes': 1.8.0
       '@prettier/sync': 0.5.5(prettier@3.6.2)

@@ -5,8 +5,10 @@
 //! [https://github.com/metaplex-foundation/kinobi]
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+#[cfg(feature = "anchor")]
+use anchor_lang::prelude::{AnchorDeserialize, AnchorSerialize};
+#[cfg(not(feature = "anchor"))]
+use borsh::{BorshDeserialize, BorshSerialize};
 
 /// Accounts.
 pub struct CloseTreeV2 {
@@ -65,7 +67,7 @@ impl CloseTreeV2 {
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let data = CloseTreeV2InstructionData::new().try_to_vec().unwrap();
+        let data = borsh::to_vec(&(CloseTreeV2InstructionData::new())).unwrap();
 
         solana_program::instruction::Instruction {
             program_id: crate::MPL_BUBBLEGUM_ID,
@@ -75,13 +77,14 @@ impl CloseTreeV2 {
     }
 }
 
-#[derive(BorshDeserialize, BorshSerialize)]
-struct CloseTreeV2InstructionData {
+#[cfg_attr(not(feature = "anchor"), derive(BorshSerialize, BorshDeserialize))]
+#[cfg_attr(feature = "anchor", derive(AnchorSerialize, AnchorDeserialize))]
+pub struct CloseTreeV2InstructionData {
     discriminator: [u8; 8],
 }
 
 impl CloseTreeV2InstructionData {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             discriminator: [45, 172, 6, 94, 28, 90, 157, 70],
         }
@@ -319,11 +322,11 @@ impl<'a, 'b> CloseTreeV2Cpi<'a, 'b> {
         remaining_accounts.iter().for_each(|remaining_account| {
             accounts.push(solana_program::instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
-                is_signer: remaining_account.1,
-                is_writable: remaining_account.2,
+                is_writable: remaining_account.1,
+                is_signer: remaining_account.2,
             })
         });
-        let data = CloseTreeV2InstructionData::new().try_to_vec().unwrap();
+        let data = borsh::to_vec(&(CloseTreeV2InstructionData::new())).unwrap();
 
         let instruction = solana_program::instruction::Instruction {
             program_id: crate::MPL_BUBBLEGUM_ID,
