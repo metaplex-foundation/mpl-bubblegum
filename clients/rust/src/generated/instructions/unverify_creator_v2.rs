@@ -6,8 +6,10 @@
 //!
 
 use crate::generated::types::MetadataArgsV2;
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+#[cfg(feature = "anchor")]
+use anchor_lang::prelude::{AnchorDeserialize, AnchorSerialize};
+#[cfg(not(feature = "anchor"))]
+use borsh::{BorshDeserialize, BorshSerialize};
 
 /// Accounts.
 pub struct UnverifyCreatorV2 {
@@ -93,10 +95,8 @@ impl UnverifyCreatorV2 {
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let mut data = UnverifyCreatorV2InstructionData::new()
-            .try_to_vec()
-            .unwrap();
-        let mut args = args.try_to_vec().unwrap();
+        let mut data = borsh::to_vec(&(UnverifyCreatorV2InstructionData::new())).unwrap();
+        let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
         solana_program::instruction::Instruction {
@@ -107,21 +107,24 @@ impl UnverifyCreatorV2 {
     }
 }
 
-#[derive(BorshDeserialize, BorshSerialize)]
-struct UnverifyCreatorV2InstructionData {
+#[cfg_attr(not(feature = "anchor"), derive(BorshSerialize, BorshDeserialize))]
+#[cfg_attr(feature = "anchor", derive(AnchorSerialize, AnchorDeserialize))]
+pub struct UnverifyCreatorV2InstructionData {
     discriminator: [u8; 8],
 }
 
 impl UnverifyCreatorV2InstructionData {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             discriminator: [174, 112, 29, 142, 230, 100, 239, 7],
         }
     }
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(not(feature = "anchor"), derive(BorshSerialize, BorshDeserialize))]
+#[cfg_attr(feature = "anchor", derive(AnchorSerialize, AnchorDeserialize))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct UnverifyCreatorV2InstructionArgs {
     pub root: [u8; 32],
     pub asset_data_hash: Option<[u8; 32]>,
@@ -462,14 +465,12 @@ impl<'a, 'b> UnverifyCreatorV2Cpi<'a, 'b> {
         remaining_accounts.iter().for_each(|remaining_account| {
             accounts.push(solana_program::instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
-                is_signer: remaining_account.1,
-                is_writable: remaining_account.2,
+                is_writable: remaining_account.1,
+                is_signer: remaining_account.2,
             })
         });
-        let mut data = UnverifyCreatorV2InstructionData::new()
-            .try_to_vec()
-            .unwrap();
-        let mut args = self.__args.try_to_vec().unwrap();
+        let mut data = borsh::to_vec(&(UnverifyCreatorV2InstructionData::new())).unwrap();
+        let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
         let instruction = solana_program::instruction::Instruction {

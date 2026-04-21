@@ -5,8 +5,10 @@
 //! [https://github.com/metaplex-foundation/kinobi]
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+#[cfg(feature = "anchor")]
+use anchor_lang::prelude::{AnchorDeserialize, AnchorSerialize};
+#[cfg(not(feature = "anchor"))]
+use borsh::{BorshDeserialize, BorshSerialize};
 
 /// Accounts.
 pub struct SetTreeDelegate {
@@ -52,7 +54,7 @@ impl SetTreeDelegate {
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let data = SetTreeDelegateInstructionData::new().try_to_vec().unwrap();
+        let data = borsh::to_vec(&(SetTreeDelegateInstructionData::new())).unwrap();
 
         solana_program::instruction::Instruction {
             program_id: crate::MPL_BUBBLEGUM_ID,
@@ -62,13 +64,14 @@ impl SetTreeDelegate {
     }
 }
 
-#[derive(BorshDeserialize, BorshSerialize)]
-struct SetTreeDelegateInstructionData {
+#[cfg_attr(not(feature = "anchor"), derive(BorshSerialize, BorshDeserialize))]
+#[cfg_attr(feature = "anchor", derive(AnchorSerialize, AnchorDeserialize))]
+pub struct SetTreeDelegateInstructionData {
     discriminator: [u8; 8],
 }
 
 impl SetTreeDelegateInstructionData {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             discriminator: [253, 118, 66, 37, 190, 49, 154, 102],
         }
@@ -263,11 +266,11 @@ impl<'a, 'b> SetTreeDelegateCpi<'a, 'b> {
         remaining_accounts.iter().for_each(|remaining_account| {
             accounts.push(solana_program::instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
-                is_signer: remaining_account.1,
-                is_writable: remaining_account.2,
+                is_writable: remaining_account.1,
+                is_signer: remaining_account.2,
             })
         });
-        let data = SetTreeDelegateInstructionData::new().try_to_vec().unwrap();
+        let data = borsh::to_vec(&(SetTreeDelegateInstructionData::new())).unwrap();
 
         let instruction = solana_program::instruction::Instruction {
             program_id: crate::MPL_BUBBLEGUM_ID,

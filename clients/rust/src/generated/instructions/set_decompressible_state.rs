@@ -6,8 +6,10 @@
 //!
 
 use crate::generated::types::DecompressibleState;
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+#[cfg(feature = "anchor")]
+use anchor_lang::prelude::{AnchorDeserialize, AnchorSerialize};
+#[cfg(not(feature = "anchor"))]
+use borsh::{BorshDeserialize, BorshSerialize};
 
 /// Accounts.
 pub struct SetDecompressibleState {
@@ -39,10 +41,8 @@ impl SetDecompressibleState {
             true,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let mut data = SetDecompressibleStateInstructionData::new()
-            .try_to_vec()
-            .unwrap();
-        let mut args = args.try_to_vec().unwrap();
+        let mut data = borsh::to_vec(&(SetDecompressibleStateInstructionData::new())).unwrap();
+        let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
         solana_program::instruction::Instruction {
@@ -53,21 +53,24 @@ impl SetDecompressibleState {
     }
 }
 
-#[derive(BorshDeserialize, BorshSerialize)]
-struct SetDecompressibleStateInstructionData {
+#[cfg_attr(not(feature = "anchor"), derive(BorshSerialize, BorshDeserialize))]
+#[cfg_attr(feature = "anchor", derive(AnchorSerialize, AnchorDeserialize))]
+pub struct SetDecompressibleStateInstructionData {
     discriminator: [u8; 8],
 }
 
 impl SetDecompressibleStateInstructionData {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             discriminator: [82, 104, 152, 6, 149, 111, 100, 13],
         }
     }
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(not(feature = "anchor"), derive(BorshSerialize, BorshDeserialize))]
+#[cfg_attr(feature = "anchor", derive(AnchorSerialize, AnchorDeserialize))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SetDecompressibleStateInstructionArgs {
     pub decompressable_state: DecompressibleState,
 }
@@ -217,14 +220,12 @@ impl<'a, 'b> SetDecompressibleStateCpi<'a, 'b> {
         remaining_accounts.iter().for_each(|remaining_account| {
             accounts.push(solana_program::instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
-                is_signer: remaining_account.1,
-                is_writable: remaining_account.2,
+                is_writable: remaining_account.1,
+                is_signer: remaining_account.2,
             })
         });
-        let mut data = SetDecompressibleStateInstructionData::new()
-            .try_to_vec()
-            .unwrap();
-        let mut args = self.__args.try_to_vec().unwrap();
+        let mut data = borsh::to_vec(&(SetDecompressibleStateInstructionData::new())).unwrap();
+        let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
         let instruction = solana_program::instruction::Instruction {
