@@ -2,7 +2,6 @@ use anchor_lang::prelude::*;
 use mpl_account_compression::{program::MplAccountCompression, Noop as MplNoop};
 use mpl_core::Collection as MplCoreCollection;
 use mpl_token_metadata::types::MetadataDelegateRole;
-use spl_account_compression::{program::SplAccountCompression, Noop as SplNoop};
 
 use crate::{
     asserts::{assert_has_collection_authority, assert_metadata_is_mpl_compatible},
@@ -20,7 +19,8 @@ use crate::{
     traits::ValidationResult,
     utils::{
         get_asset_id, hash_collection_option, hash_creators, hash_metadata, replace_leaf,
-        DEFAULT_ASSET_DATA_HASH, DEFAULT_COLLECTION_HASH, DEFAULT_FLAGS,
+        validate_ownership_and_programs, DEFAULT_ASSET_DATA_HASH, DEFAULT_COLLECTION_HASH,
+        DEFAULT_FLAGS,
     },
 };
 
@@ -49,8 +49,10 @@ pub struct UpdateMetadata<'info> {
     /// CHECK: This account is modified in the downstream program
     #[account(mut)]
     pub merkle_tree: UncheckedAccount<'info>,
-    pub log_wrapper: Program<'info, SplNoop>,
-    pub compression_program: Program<'info, SplAccountCompression>,
+    /// CHECK: Program is verified in the instruction
+    pub log_wrapper: UncheckedAccount<'info>,
+    /// CHECK: Program is verified in the instruction
+    pub compression_program: UncheckedAccount<'info>,
     /// CHECK: This is no longer needed but kept for backwards compatibility.
     pub token_metadata_program: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
@@ -64,6 +66,12 @@ pub fn update_metadata<'info>(
     current_metadata: MetadataArgs,
     update_args: UpdateArgs,
 ) -> Result<()> {
+    validate_ownership_and_programs(
+        &ctx.accounts.merkle_tree,
+        &ctx.accounts.log_wrapper,
+        &ctx.accounts.compression_program,
+    )?;
+
     // V1 instructions only work with V1 trees.
     require!(
         ctx.accounts.tree_authority.version == Version::V1,
@@ -383,7 +391,6 @@ fn process_update_metadata<T: MetadataArgsCommon>(
     assert_metadata_is_mpl_compatible(&updated_metadata)?;
     let updated_data_hash = hash_metadata(&updated_metadata)?;
     let updated_creator_hash = hash_creators(updated_metadata.creators())?;
-
     let asset_id = get_asset_id(&merkle_tree, nonce);
     let leaf_delegate = leaf_delegate.unwrap_or(leaf_owner);
 
@@ -408,7 +415,6 @@ fn process_update_metadata<T: MetadataArgsCommon>(
 
             Ok((previous_leaf, new_leaf))
         }
-
         Version::V2 => {
             let collection_hash = collection_hash.unwrap_or(DEFAULT_COLLECTION_HASH);
             let asset_data_hash = asset_data_hash.unwrap_or(DEFAULT_ASSET_DATA_HASH);

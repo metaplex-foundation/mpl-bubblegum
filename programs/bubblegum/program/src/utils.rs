@@ -1,15 +1,19 @@
-use crate::state::{
-    leaf_schema::Version,
-    metaplex_adapter::{Creator, MetadataArgsCommon},
-    ASSET_PREFIX,
-};
 use anchor_lang::{
     prelude::*,
-    solana_program::{program_memory::sol_memcmp, pubkey::PUBKEY_BYTES},
+    solana_program::{program::invoke, program_memory::sol_memcmp, pubkey::PUBKEY_BYTES},
 };
 use modular_bitfield::{bitfield, specifiers::B5};
-use solana_program::{keccak, program::invoke};
+use solana_program::keccak;
 use spl_account_compression::Node;
+
+use crate::{
+    error::BubblegumError,
+    state::{
+        leaf_schema::Version,
+        metaplex_adapter::{Creator, MetadataArgsCommon},
+        ASSET_PREFIX,
+    },
+};
 
 pub fn hash_creators(creators: &[Creator]) -> Result<[u8; 32]> {
     // Convert creator Vec to bytes Vec.
@@ -63,7 +67,7 @@ pub const DEFAULT_ASSET_DATA_HASH: [u8; 32] = [
 pub const DEFAULT_FLAGS: u8 = 0;
 
 pub fn replace_leaf<'info>(
-    version: Version,
+    _version: Version,
     seed: &Pubkey,
     bump: u8,
     compression_program: &AccountInfo<'info>,
@@ -79,50 +83,47 @@ pub fn replace_leaf<'info>(
     let seeds = &[seed.as_ref(), &[bump]];
     let authority_pda_signer = &[&seeds[..]];
 
-    match version {
-        Version::V1 => {
-            let cpi_ctx = CpiContext::new_with_signer(
-                compression_program.clone(),
-                spl_account_compression::cpi::accounts::Modify {
-                    authority: authority.clone(),
-                    merkle_tree: merkle_tree.clone(),
-                    noop: log_wrapper.clone(),
-                },
-                authority_pda_signer,
-            )
-            .with_remaining_accounts(remaining_accounts.to_vec());
-            spl_account_compression::cpi::replace_leaf(
-                cpi_ctx,
-                root_node,
-                previous_leaf,
-                new_leaf,
-                index,
-            )
-        }
-        Version::V2 => {
-            let cpi_ctx = CpiContext::new_with_signer(
-                compression_program.clone(),
-                mpl_account_compression::cpi::accounts::Modify {
-                    authority: authority.clone(),
-                    merkle_tree: merkle_tree.clone(),
-                    noop: log_wrapper.clone(),
-                },
-                authority_pda_signer,
-            )
-            .with_remaining_accounts(remaining_accounts.to_vec());
-            mpl_account_compression::cpi::replace_leaf(
-                cpi_ctx,
-                root_node,
-                previous_leaf,
-                new_leaf,
-                index,
-            )
-        }
+    if compression_program.key == &spl_account_compression::id() {
+        let cpi_ctx = CpiContext::new_with_signer(
+            compression_program.clone(),
+            spl_account_compression::cpi::accounts::Modify {
+                authority: authority.clone(),
+                merkle_tree: merkle_tree.clone(),
+                noop: log_wrapper.clone(),
+            },
+            authority_pda_signer,
+        )
+        .with_remaining_accounts(remaining_accounts.to_vec());
+        spl_account_compression::cpi::replace_leaf(
+            cpi_ctx,
+            root_node,
+            previous_leaf,
+            new_leaf,
+            index,
+        )
+    } else {
+        let cpi_ctx = CpiContext::new_with_signer(
+            compression_program.clone(),
+            mpl_account_compression::cpi::accounts::Modify {
+                authority: authority.clone(),
+                merkle_tree: merkle_tree.clone(),
+                noop: log_wrapper.clone(),
+            },
+            authority_pda_signer,
+        )
+        .with_remaining_accounts(remaining_accounts.to_vec());
+        mpl_account_compression::cpi::replace_leaf(
+            cpi_ctx,
+            root_node,
+            previous_leaf,
+            new_leaf,
+            index,
+        )
     }
 }
 
 pub fn append_leaf<'info>(
-    version: Version,
+    _version: Version,
     seed: &Pubkey,
     bump: u8,
     compression_program: &AccountInfo<'info>,
@@ -134,32 +135,28 @@ pub fn append_leaf<'info>(
     let seeds = &[seed.as_ref(), &[bump]];
     let authority_pda_signer = &[&seeds[..]];
 
-    match version {
-        Version::V1 => {
-            let cpi_ctx = CpiContext::new_with_signer(
-                compression_program.clone(),
-                spl_account_compression::cpi::accounts::Modify {
-                    authority: authority.clone(),
-                    merkle_tree: merkle_tree.clone(),
-                    noop: log_wrapper.clone(),
-                },
-                authority_pda_signer,
-            );
-            spl_account_compression::cpi::append(cpi_ctx, leaf_node)
-        }
-
-        Version::V2 => {
-            let cpi_ctx = CpiContext::new_with_signer(
-                compression_program.clone(),
-                mpl_account_compression::cpi::accounts::Modify {
-                    authority: authority.clone(),
-                    merkle_tree: merkle_tree.clone(),
-                    noop: log_wrapper.clone(),
-                },
-                authority_pda_signer,
-            );
-            mpl_account_compression::cpi::append(cpi_ctx, leaf_node)
-        }
+    if compression_program.key == &spl_account_compression::id() {
+        let cpi_ctx = CpiContext::new_with_signer(
+            compression_program.clone(),
+            spl_account_compression::cpi::accounts::Modify {
+                authority: authority.clone(),
+                merkle_tree: merkle_tree.clone(),
+                noop: log_wrapper.clone(),
+            },
+            authority_pda_signer,
+        );
+        spl_account_compression::cpi::append(cpi_ctx, leaf_node)
+    } else {
+        let cpi_ctx = CpiContext::new_with_signer(
+            compression_program.clone(),
+            mpl_account_compression::cpi::accounts::Modify {
+                authority: authority.clone(),
+                merkle_tree: merkle_tree.clone(),
+                noop: log_wrapper.clone(),
+            },
+            authority_pda_signer,
+        );
+        mpl_account_compression::cpi::append(cpi_ctx, leaf_node)
     }
 }
 
@@ -201,37 +198,78 @@ pub struct Flags {
 /// Modified from spl-account-compression to allow `noop_program` to be an `UncheckedAccount`
 /// and choose the correct one based on program ID.
 pub(crate) fn wrap_application_data_v1(
-    version: Version,
+    _version: Version,
     custom_data: Vec<u8>,
     noop_program: &AccountInfo<'_>,
 ) -> Result<()> {
-    match version {
-        Version::V1 => {
-            let versioned_data = spl_account_compression::events::ApplicationDataEventV1 {
-                application_data: custom_data,
-            };
-            let event = spl_account_compression::events::AccountCompressionEvent::ApplicationData(
-                spl_account_compression::events::ApplicationDataEvent::V1(versioned_data),
-            );
+    // `version` is not used in the SVM version of the program.  Instead, the Noop program to use
+    // is based on the Noop program ID which will be spl_noop for version 1 and mpl_noop for
+    // version 2.  Using the Noop program ID allows us to test V1 using SPL programs.
+    if noop_program.key == &spl_noop::id() {
+        let versioned_data = spl_account_compression::events::ApplicationDataEventV1 {
+            application_data: custom_data,
+        };
+        let event = spl_account_compression::events::AccountCompressionEvent::ApplicationData(
+            spl_account_compression::events::ApplicationDataEvent::V1(versioned_data),
+        );
 
-            invoke(
-                &spl_noop::instruction(event.try_to_vec()?),
-                &[noop_program.to_account_info()],
-            )?;
-        }
-        Version::V2 => {
-            let versioned_data = mpl_account_compression::events::ApplicationDataEventV1 {
-                application_data: custom_data,
-            };
-            let event = mpl_account_compression::events::AccountCompressionEvent::ApplicationData(
-                mpl_account_compression::events::ApplicationDataEvent::V1(versioned_data),
-            );
+        invoke(
+            &spl_noop::instruction(event.try_to_vec()?),
+            &[noop_program.to_account_info()],
+        )?;
+    } else if noop_program.key == &mpl_noop::id() {
+        let versioned_data = mpl_account_compression::events::ApplicationDataEventV1 {
+            application_data: custom_data,
+        };
+        let event = mpl_account_compression::events::AccountCompressionEvent::ApplicationData(
+            mpl_account_compression::events::ApplicationDataEvent::V1(versioned_data),
+        );
 
-            invoke(
-                &mpl_noop::instruction(event.try_to_vec()?),
-                &[noop_program.to_account_info()],
-            )?;
-        }
+        invoke(
+            &mpl_noop::instruction(event.try_to_vec()?),
+            &[noop_program.to_account_info()],
+        )?;
+    } else {
+        return Err(BubblegumError::InvalidLogWrapper.into());
     }
+
+    Ok(())
+}
+
+/// Validate the Merkle tree is owned by one of the valid program choices, and that the provided
+/// log wrapper and compression program are one of the valid choices.
+pub(crate) fn validate_ownership_and_programs(
+    merkle_tree: &AccountInfo<'_>,
+    log_wrapper: &AccountInfo<'_>,
+    compression_program: &AccountInfo<'_>,
+) -> Result<()> {
+    if merkle_tree.owner == &spl_account_compression::id() {
+        require!(
+            log_wrapper.key == &spl_noop::id(),
+            BubblegumError::InvalidLogWrapper
+        );
+        require!(
+            compression_program.key == &spl_account_compression::id(),
+            BubblegumError::InvalidCompressionProgram
+        );
+    } else if merkle_tree.owner == &mpl_account_compression::id() {
+        require!(
+            log_wrapper.key == &mpl_noop::id(),
+            BubblegumError::InvalidLogWrapper
+        );
+        require!(
+            compression_program.key == &mpl_account_compression::id(),
+            BubblegumError::InvalidCompressionProgram
+        );
+    } else {
+        return Err(BubblegumError::IncorrectOwner.into());
+    }
+
+    require!(log_wrapper.executable, BubblegumError::InvalidLogWrapper);
+    require!(
+        compression_program.executable,
+        BubblegumError::InvalidCompressionProgram
+    );
+
     Ok(())
 }
