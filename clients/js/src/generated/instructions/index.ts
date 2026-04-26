@@ -14,6 +14,7 @@ export * from './collectV2';
 export * from './createTreeConfig';
 export * from './createTreeConfigV2';
 export * from './decompressV1';
+export * from './decompressV2';
 export * from './delegate';
 export * from './delegateAndFreezeV2';
 export * from './delegateV2';

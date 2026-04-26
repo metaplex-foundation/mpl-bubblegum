@@ -4,8 +4,8 @@ use mpl_account_compression::{program::MplAccountCompression, Noop as MplNoop};
 use mpl_core::{
     instructions::{CreateV2CpiBuilder, UpdateCollectionInfoV1CpiBuilder},
     types::{
-        Creator as MplCoreCreator, DataState, Plugin, PluginAuthority, PluginAuthorityPair,
-        Royalties, RuleSet, UpdateType,
+        BurnDelegate, Creator as MplCoreCreator, DataState, FreezeDelegate, Plugin,
+        PluginAuthority, PluginAuthorityPair, Royalties, RuleSet, TransferDelegate, UpdateType,
     },
     Collection as MplCoreCollection,
 };
@@ -341,10 +341,18 @@ pub(crate) fn decompress_v2<'info>(
     let raw_flags = flags.unwrap_or(DEFAULT_FLAGS);
     let parsed_flags = Flags::from_bytes([raw_flags]);
 
-    // A frozen or permanent-frozen leaf cannot be decompressed: the caller must
-    // thaw first so the resulting Core asset's frozen state is unambiguous.
-    if parsed_flags.asset_lvl_frozen() || parsed_flags.permanent_lvl_frozen() {
+    // A collection-permanent-frozen leaf cannot be decompressed: the asset-level
+    // freeze flag came from the collection's PermanentFreezeDelegate, not from
+    // the leaf delegate, and there is no per-asset way to mirror that on the
+    // resulting Core asset. The caller must thaw the collection first.
+    if parsed_flags.permanent_lvl_frozen() {
         return Err(BubblegumError::AssetIsFrozen.into());
+    }
+
+    // Soulbound leaves cannot be decompressed because mpl-core has no per-asset
+    // soulbound primitive — non-transferability would silently disappear.
+    if parsed_flags.non_transferable() {
+        return Err(BubblegumError::AssetIsNonTransferable.into());
     }
 
     // Hash the user-supplied metadata and reconstruct the leaf so we can prove it
@@ -400,6 +408,11 @@ pub(crate) fn decompress_v2<'info>(
     // add asset-level plugins for things that vary per-leaf:
     //   * royalties / creators (always emitted so creator splits survive
     //     decompression even if the collection has no Royalties plugin)
+    //   * leaf_delegate -> TransferDelegate + BurnDelegate (a leaf delegate can
+    //     do both in Bubblegum)
+    //   * asset-level frozen flag -> FreezeDelegate { frozen: true } scoped to
+    //     the leaf_delegate so they retain the same thaw authority post-
+    //     decompression
     let mut plugins: Vec<PluginAuthorityPair> = Vec::new();
 
     if !metadata.creators.is_empty() {
@@ -419,6 +432,42 @@ pub(crate) fn decompress_v2<'info>(
                 rule_set: RuleSet::None,
             }),
             authority: Some(PluginAuthority::UpdateAuthority),
+        });
+    }
+
+    let has_leaf_delegate = leaf_delegate != leaf_owner;
+    let is_frozen = parsed_flags.asset_lvl_frozen();
+
+    if has_leaf_delegate {
+        let delegate_authority = PluginAuthority::Address {
+            address: leaf_delegate,
+        };
+
+        plugins.push(PluginAuthorityPair {
+            plugin: Plugin::TransferDelegate(TransferDelegate {}),
+            authority: Some(delegate_authority.clone()),
+        });
+        plugins.push(PluginAuthorityPair {
+            plugin: Plugin::BurnDelegate(BurnDelegate {}),
+            authority: Some(delegate_authority),
+        });
+    }
+
+    if is_frozen {
+        // When there is a leaf delegate, scope the freeze authority to that
+        // address so they keep the ability to thaw (mirroring Bubblegum's
+        // `thaw_v2`). Otherwise fall back to the asset owner.
+        let freeze_authority = if has_leaf_delegate {
+            PluginAuthority::Address {
+                address: leaf_delegate,
+            }
+        } else {
+            PluginAuthority::Owner
+        };
+
+        plugins.push(PluginAuthorityPair {
+            plugin: Plugin::FreezeDelegate(FreezeDelegate { frozen: true }),
+            authority: Some(freeze_authority),
         });
     }
 
