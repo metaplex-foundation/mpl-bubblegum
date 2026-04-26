@@ -43,6 +43,7 @@ pub enum InstructionName {
     BurnV2,
     CollectV2,
     CreateTreeV2,
+    DecompressV2,
     DelegateAndFreezeV2,
     DelegateV2,
     FreezeV2,
@@ -88,6 +89,7 @@ pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
         [115, 210, 34, 240, 232, 143, 183, 16] => InstructionName::BurnV2,
         [21, 11, 159, 47, 4, 195, 106, 56] => InstructionName::CollectV2,
         [55, 99, 95, 215, 142, 203, 227, 205] => InstructionName::CreateTreeV2,
+        [222, 204, 18, 191, 82, 195, 125, 153] => InstructionName::DecompressV2,
         [17, 229, 35, 218, 190, 241, 250, 123] => InstructionName::DelegateAndFreezeV2,
         [95, 87, 125, 140, 181, 131, 128, 227] => InstructionName::DelegateV2,
         [200, 151, 244, 102, 16, 195, 255, 3] => InstructionName::FreezeV2,
@@ -192,6 +194,22 @@ pub mod bubblegum {
     /// Decompresses a leaf node from the tree.
     pub fn decompress_v1(ctx: Context<DecompressV1>, metadata: MetadataArgs) -> Result<()> {
         processor::decompress_v1(ctx, metadata)
+    }
+
+    /// Decompresses a `LeafSchema` V2 leaf into a regular MPL Core asset that
+    /// lives in the same MPL Core collection the compressed asset belonged to.
+    /// Requires a tree created with `createTreeV2` and a collection with the
+    /// `BubblegumV2` plugin.
+    pub fn decompress_v2<'info>(
+        ctx: Context<'_, '_, '_, 'info, DecompressV2<'info>>,
+        root: [u8; 32],
+        nonce: u64,
+        index: u32,
+        metadata: MetadataArgsV2,
+        asset_data_hash: Option<[u8; 32]>,
+        flags: Option<u8>,
+    ) -> Result<()> {
+        processor::decompress_v2(ctx, root, nonce, index, metadata, asset_data_hash, flags)
     }
 
     /// Sets a delegate for a leaf node.
