@@ -21,6 +21,14 @@ on:
         type: choice
         options:
           - mainnet-beta
+      mode:
+        description: Verification action
+        required: true
+        default: submit-remote-job
+        type: choice
+        options:
+          - export-pda-tx
+          - submit-remote-job
 
 env:
   CACHE: true
@@ -69,59 +77,111 @@ jobs:
         run: |
           if [ "${{ inputs.cluster }}" == "mainnet-beta" ]; then
             printf 'RPC=%s\n' "${{ secrets.MAINNET_RPC }}" >> "$GITHUB_ENV"
+            printf 'PROGRAM_ID=%s\n' "BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY" >> "$GITHUB_ENV"
+            printf 'SQUADS_VAULT=%s\n' "bfQVv6niKVgEURYqQ1beJmiEQQN7MrvLRvk3mZGFubb" >> "$GITHUB_ENV"
           else
             echo "Invalid cluster: ${{ inputs.cluster }}"
             exit 1
           fi
 
       - name: Identify Program
-        env:
-          BUBBLEGUM_ID: ${{ secrets.BUBBLEGUM_ID }}
-          SQUADS_BOT_KEY: ${{ secrets.SQUADS_BOT_KEY }}
         run: |
           printf 'PROGRAM_NAME=%s\n' "${{ inputs.program }}" >> "$GITHUB_ENV"
           printf 'PROGRAM_PACKAGE=%s\n' "${{ inputs.program }}" >> "$GITHUB_ENV"
-          printf '%s' "$BUBBLEGUM_ID" > ./program-id.json
-          printf '%s' "$SQUADS_BOT_KEY" > ./deployer-key.json
 
-      # solana-verify 0.4.15 unconditionally loads ~/.config/solana/cli/config.yml
-      # during PDA upload (Ellipsis-Labs/solana-verifiable-build process_otter_verify_ixs),
-      # so initialize a CLI config even though --keypair and --url are passed explicitly.
       - name: Initialize Solana CLI config for solana-verify
         run: |
-          solana config set \
-            --url "${RPC}" \
-            --keypair "${GITHUB_WORKSPACE}/deployer-key.json"
+          solana config set --url "${RPC}"
 
-      - name: Upload verified-build PDA
+      - name: Export verified-build PDA transaction
+        if: inputs.mode == 'export-pda-tx'
         run: |
-          PROGRAM_ID="$(solana-keygen pubkey ./program-id.json)"
           COMMIT_HASH="$(git rev-parse HEAD)"
 
-          solana-verify verify-from-repo \
-            --current-dir \
-            --program-id "${PROGRAM_ID}" \
+          solana-verify export-pda-tx \
             --url "${RPC}" \
-            --keypair ./deployer-key.json \
+            --program-id "${PROGRAM_ID}" \
+            --uploader "${SQUADS_VAULT}" \
+            --encoding base58 \
+            --compute-unit-price 0 \
             --base-image "${SOLANA_VERIFY_BASE_IMAGE}" \
             --library-name "${PROGRAM_NAME}" \
             --mount-path programs/bubblegum \
             --commit-hash "${COMMIT_HASH}" \
-            --skip-prompt \
             https://github.com/metaplex-foundation/mpl-bubblegum.git \
             -- \
-            --package "${PROGRAM_PACKAGE}"
+            --package "${PROGRAM_PACKAGE}" > raw-pda-tx.out
+
+          # Extract the longest base58 line (>= 100 chars). solana-verify
+          # may interleave docker progress with the transaction on stdout.
+          TX_LINE=$(grep -E '^[1-9A-HJ-NP-Za-km-z]{100,}$' raw-pda-tx.out \
+                    | awk '{ print length, $0 }' \
+                    | sort -n \
+                    | tail -n 1 \
+                    | cut -d' ' -f2-)
+
+          if [ -z "${TX_LINE}" ]; then
+            echo "::error title=Verified-build PDA export::Could not extract a base58 transaction from solana-verify output."
+            echo "Raw solana-verify stdout follows:" >&2
+            cat raw-pda-tx.out >&2
+            exit 1
+          fi
+
+          printf '%s\n' "${TX_LINE}" > verify-pda-tx.b58
+          rm -f raw-pda-tx.out
+
+          {
+            echo "### Verified-build PDA transaction"
+            echo ""
+            echo "Submit this base58 transaction through Squads. It must execute with uploader \`${SQUADS_VAULT}\` for explorers to show the program as verified."
+            echo ""
+            echo '```'
+            cat verify-pda-tx.b58
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload verified-build PDA transaction
+        if: inputs.mode == 'export-pda-tx'
+        uses: actions/upload-artifact@v4
+        with:
+          name: verify-pda-tx
+          path: verify-pda-tx.b58
+          if-no-files-found: error
+
+      # Local hash check before triggering OtterSec. Rebuild the program
+      # deterministically and compare against the on-chain executable hash.
+      # Fail fast if they differ so we don't waste an OtterSec rebuild on a
+      # source/program mismatch.
+      - name: Rebuild program for hash comparison
+        if: inputs.mode == 'submit-remote-job'
+        working-directory: programs/bubblegum
+        run: |
+          solana-verify build \
+            --base-image "${SOLANA_VERIFY_BASE_IMAGE}" \
+            --library-name "${PROGRAM_NAME}" \
+            -- --package "${PROGRAM_PACKAGE}"
+
+      - name: Compare local and on-chain hashes
+        if: inputs.mode == 'submit-remote-job'
+        run: |
+          LOCAL_HASH=$(solana-verify get-executable-hash \
+            "programs/bubblegum/target/deploy/${PROGRAM_NAME}.so")
+          ONCHAIN_HASH=$(solana-verify get-program-hash \
+            --url "${RPC}" \
+            "${PROGRAM_ID}")
+
+          echo "Local build hash:    ${LOCAL_HASH}"
+          echo "On-chain executable: ${ONCHAIN_HASH}"
+
+          if [ "${LOCAL_HASH}" != "${ONCHAIN_HASH}" ]; then
+            echo "::error title=Verified-build hash mismatch::Local build hash (${LOCAL_HASH}) does not match the on-chain program (${ONCHAIN_HASH}). Refusing to submit the OtterSec remote verification job for git_ref=${{ inputs.git_ref }}."
+            exit 1
+          fi
 
       - name: Submit remote verification job
+        if: inputs.mode == 'submit-remote-job'
         run: |
-          PROGRAM_ID="$(solana-keygen pubkey ./program-id.json)"
-          UPLOADER="$(solana-keygen pubkey ./deployer-key.json)"
-
           solana-verify remote submit-job \
             --url "${RPC}" \
             --program-id "${PROGRAM_ID}" \
-            --uploader "${UPLOADER}"
-
-      - name: Clean up signer files
-        if: always()
-        run: rm -f ./deployer-key.json ./program-id.json
+            --uploader "${SQUADS_VAULT}"
