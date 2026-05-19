@@ -19,6 +19,19 @@ use state::{
 
 declare_id!("BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY");
 
+#[cfg(not(feature = "no-entrypoint"))]
+solana_security_txt::security_txt! {
+    // Required fields
+    name: "Mpl Bubblegum",
+    project_url: "https://metaplex.com",
+    contacts: "email:security@metaplex.foundation",
+    policy: "Report suspected vulnerabilities privately by emailing security@metaplex.foundation before public disclosure.",
+
+    // Optional fields
+    preferred_languages: "en",
+    source_code: "https://github.com/metaplex-foundation/mpl-bubblegum"
+}
+
 pub enum InstructionName {
     Unknown,
     MintV1,
