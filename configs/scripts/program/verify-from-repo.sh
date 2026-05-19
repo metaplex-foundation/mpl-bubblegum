@@ -131,6 +131,13 @@ if [ -z "${REPO_URL}" ]; then
     fi
 fi
 
+# Strip embedded credentials (e.g. `https://user:token@host/...`) so we never
+# forward them to solana-verify, the OtterSec API, the build container, or CI
+# logs.
+if [[ "${REPO_URL}" =~ ^([a-zA-Z][a-zA-Z0-9+.-]*://)[^@/]+@(.*)$ ]]; then
+    REPO_URL="${BASH_REMATCH[1]}${BASH_REMATCH[2]}"
+fi
+
 if [ -z "${COMMIT_HASH}" ]; then
     if ! COMMIT_HASH=$(git rev-parse HEAD 2>/dev/null); then
         echo "error: --commit-hash not provided and HEAD could not be resolved" >&2
@@ -161,5 +168,4 @@ if [ ${#PASSTHROUGH[@]} -gt 0 ]; then
     CMD+=("${PASSTHROUGH[@]}")
 fi
 
-echo "+ ${CMD[*]}"
 exec "${CMD[@]}"
