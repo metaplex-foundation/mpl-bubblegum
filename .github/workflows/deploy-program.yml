@@ -99,17 +99,25 @@ jobs:
           ref: ${{ inputs.git_ref }}
 
       - name: Load environment variables
-        run: cat .github/.env >> $GITHUB_ENV
+        id: env_vars
+        run: |
+          cat .github/.env >> "$GITHUB_ENV"
+          while IFS='=' read -r key value; do
+            case "$key" in
+              RUST_VERSION) printf 'rust_version=%s\n' "$value" >> "$GITHUB_OUTPUT" ;;
+              DEPLOY_SOLANA_VERSION) printf 'deploy_solana_version=%s\n' "$value" >> "$GITHUB_OUTPUT" ;;
+            esac
+          done < .github/.env
 
       - name: Install Rust
         uses: metaplex-foundation/actions/install-rust@v1
         with:
-          toolchain: ${{ env.RUST_VERSION }}
+          toolchain: ${{ steps.env_vars.outputs.rust_version }}
 
       - name: Install Solana
         uses: metaplex-foundation/actions/install-solana@v1
         with:
-          version: ${{ env.DEPLOY_SOLANA_VERSION }}
+          version: ${{ steps.env_vars.outputs.deploy_solana_version }}
           cache: ${{ env.CACHE }}
 
       # - name: Install Anchor CLI
@@ -203,9 +211,10 @@ jobs:
             -k ./deployer-key.json \
             --max-sign-attempts 100 \
             --use-rpc
-          
-          rm ./deployer-key.json
-          rm ./program-id.json
+
+      - name: Clean up direct signer files
+        if: always() && env.DEPLOY_TYPE == 'direct'
+        run: rm -f ./deployer-key.json ./program-id.json
 
       - name: Download release asset
         uses: actions/github-script@v5

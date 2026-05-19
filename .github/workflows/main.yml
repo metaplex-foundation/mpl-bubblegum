@@ -39,10 +39,22 @@ jobs:
           changes: ${{ steps.changes.outputs.changes }}
           suffix: _program
 
+  test_verified_program_config:
+    name: Verified Program Config
+    if: ${{ needs.changes.outputs.any == 'true' }}
+    needs: changes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v4
+
+      - name: Validate verified program wiring
+        run: ./configs/scripts/program/test-verified-program-config.sh
+
   build_programs:
     name: Programs
     if: ${{ needs.changes.outputs.any == 'true' }}
-    needs: changes
+    needs: [changes, test_verified_program_config]
     uses: ./.github/workflows/build-programs.yml
     secrets: inherit
 
@@ -58,7 +70,7 @@ jobs:
   generate_clients:
     name: Generate clients
     if: ${{ needs.changes.outputs.any == 'true' }}
-    needs: build_programs
+    needs: [changes, build_programs]
     runs-on: ubuntu-latest
     steps:
       - name: Git checkout
@@ -105,20 +117,20 @@ jobs:
   test_js:
     if: needs.changes.outputs.js_client == 'true'
     name: JS Client
-    needs: generate_clients
+    needs: [changes, generate_clients]
     uses: ./.github/workflows/test-js-client.yml
     secrets: inherit
 
   build_rust_client:
     if: needs.changes.outputs.rust_client == 'true'
     name: Rust Client
-    needs: generate_clients
+    needs: [changes, generate_clients]
     uses: ./.github/workflows/build-rust-client.yml
     secrets: inherit
 
   test_rust_client:
     if: needs.changes.outputs.rust_client == 'true'
     name: Rust Client
-    needs: generate_clients
+    needs: [changes, generate_clients]
     uses: ./.github/workflows/test-rust-client.yml
     secrets: inherit
