@@ -110,7 +110,25 @@ jobs:
             --commit-hash "${COMMIT_HASH}" \
             https://github.com/metaplex-foundation/mpl-bubblegum.git \
             -- \
-            --package "${PROGRAM_PACKAGE}" > verify-pda-tx.b58
+            --package "${PROGRAM_PACKAGE}" > raw-pda-tx.out
+
+          # Extract the longest base58 line (>= 100 chars). solana-verify
+          # may interleave docker progress with the transaction on stdout.
+          TX_LINE=$(grep -E '^[1-9A-HJ-NP-Za-km-z]{100,}$' raw-pda-tx.out \
+                    | awk '{ print length, $0 }' \
+                    | sort -n \
+                    | tail -n 1 \
+                    | cut -d' ' -f2-)
+
+          if [ -z "${TX_LINE}" ]; then
+            echo "::error title=Verified-build PDA export::Could not extract a base58 transaction from solana-verify output."
+            echo "Raw solana-verify stdout follows:" >&2
+            cat raw-pda-tx.out >&2
+            exit 1
+          fi
+
+          printf '%s\n' "${TX_LINE}" > verify-pda-tx.b58
+          rm -f raw-pda-tx.out
 
           {
             echo "### Verified-build PDA transaction"
@@ -129,6 +147,36 @@ jobs:
           name: verify-pda-tx
           path: verify-pda-tx.b58
           if-no-files-found: error
+
+      # Local hash check before triggering OtterSec. Rebuild the program
+      # deterministically and compare against the on-chain executable hash.
+      # Fail fast if they differ so we don't waste an OtterSec rebuild on a
+      # source/program mismatch.
+      - name: Rebuild program for hash comparison
+        if: inputs.mode == 'submit-remote-job'
+        working-directory: programs/bubblegum
+        run: |
+          solana-verify build \
+            --base-image "${SOLANA_VERIFY_BASE_IMAGE}" \
+            --library-name "${PROGRAM_NAME}" \
+            -- --package "${PROGRAM_PACKAGE}"
+
+      - name: Compare local and on-chain hashes
+        if: inputs.mode == 'submit-remote-job'
+        run: |
+          LOCAL_HASH=$(solana-verify get-executable-hash \
+            "programs/bubblegum/target/deploy/${PROGRAM_NAME}.so")
+          ONCHAIN_HASH=$(solana-verify get-program-hash \
+            --url "${RPC}" \
+            "${PROGRAM_ID}")
+
+          echo "Local build hash:    ${LOCAL_HASH}"
+          echo "On-chain executable: ${ONCHAIN_HASH}"
+
+          if [ "${LOCAL_HASH}" != "${ONCHAIN_HASH}" ]; then
+            echo "::error title=Verified-build hash mismatch::Local build hash (${LOCAL_HASH}) does not match the on-chain program (${ONCHAIN_HASH}). Refusing to submit the OtterSec remote verification job for git_ref=${{ inputs.git_ref }}."
+            exit 1
+          fi
 
       - name: Submit remote verification job
         if: inputs.mode == 'submit-remote-job'
