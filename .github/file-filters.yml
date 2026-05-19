@@ -6,13 +6,10 @@
 
 program_common: &program_common
   - ".github/workflows/build-programs.yml"
-  - ".github/workflows/deploy-program.yml"
   - ".github/workflows/test-programs.yml"
-  - ".github/workflows/verify-program.yml"
   - ".github/workflows/main.yml"
   - ".github/file-filters.yml"
   - ".github/.env"
-  - "configs/scripts/program/**"
 
 bubblegum_program: &bubblegum_program
   - *program_common

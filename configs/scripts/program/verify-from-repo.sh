@@ -6,16 +6,14 @@
 #   ./verify-from-repo.sh --program-id <PUBKEY> [--url <RPC_URL>] [--keypair <PATH>]
 #                         [--commit-hash <SHA>] [--library-name <LIB>]
 #                         [--mount-path <DIR>] [--workspace-path <DIR>]
-#                         [--repo-url <URL>] [--base-image <IMAGE>]
-#                         [--package <PACKAGE>] [--skip-prompt] [--] [extra args]
+#                         [--repo-url <URL>] [--skip-prompt] [--] [extra args]
 #
 # Defaults:
 #   --library-name : bubblegum (matches programs/bubblegum/program/Cargo.toml)
 #   --mount-path   : programs/bubblegum (the Cargo workspace containing Cargo.lock)
 #   --workspace-path : omitted by default, so solana-verify uses --mount-path
 #   --repo-url     : derived from `git remote get-url origin`, normalized to https://
-#   --commit-hash  : current HEAD if inside a git repo
-#   --package      : bubblegum
+#   --commit-hash  : current HEAD if inside a clean repo, otherwise required
 #
 # The on-chain hash is fetched from the cluster targeted by --url and compared
 # against a deterministic docker build of the resolved commit.
@@ -34,8 +32,6 @@ LIBRARY_NAME="bubblegum"
 MOUNT_PATH="programs/bubblegum"
 WORKSPACE_PATH=""
 REPO_URL=""
-BASE_IMAGE="${SOLANA_VERIFY_BASE_IMAGE:-}"
-PACKAGE_NAME="bubblegum"
 SKIP_PROMPT=()
 PASSTHROUGH=()
 
@@ -88,16 +84,6 @@ while [ $# -gt 0 ]; do
             REPO_URL="$2"
             shift 2
             ;;
-        --base-image)
-            require_value "$@"
-            BASE_IMAGE="$2"
-            shift 2
-            ;;
-        --package)
-            require_value "$@"
-            PACKAGE_NAME="$2"
-            shift 2
-            ;;
         --skip-prompt|-y)
             SKIP_PROMPT=(--skip-prompt)
             shift
@@ -108,7 +94,7 @@ while [ $# -gt 0 ]; do
             break
             ;;
         -h|--help)
-            sed -n '3,22p' "$0"
+            sed -n '3,20p' "$0"
             exit 0
             ;;
         *)
@@ -162,9 +148,6 @@ fi
 if [ -n "${WORKSPACE_PATH}" ]; then
     CMD+=(--workspace-path "${WORKSPACE_PATH}")
 fi
-if [ -n "${BASE_IMAGE}" ]; then
-    CMD+=(--base-image "${BASE_IMAGE}")
-fi
 CMD+=(
     --program-id "${PROGRAM_ID}"
     --library-name "${LIBRARY_NAME}"
@@ -174,12 +157,8 @@ CMD+=(
     "${REPO_URL}"
 )
 
-if [ ${#PASSTHROUGH[@]} -eq 0 ] && [ -n "${PACKAGE_NAME}" ]; then
-    PASSTHROUGH=(--package "${PACKAGE_NAME}")
-fi
-
 if [ ${#PASSTHROUGH[@]} -gt 0 ]; then
-    CMD+=(-- "${PASSTHROUGH[@]}")
+    CMD+=("${PASSTHROUGH[@]}")
 fi
 
 echo "+ ${CMD[*]}"

@@ -21,11 +21,6 @@ on:
         type: choice
         options:
           - mainnet-beta
-      submit_remote_job:
-        description: Submit the remote verification job after the exported PDA transaction has been executed through Squads
-        required: false
-        type: boolean
-        default: false
 
 env:
   CACHE: true
@@ -45,7 +40,7 @@ jobs:
       - name: Load environment variables
         id: env_vars
         run: |
-          grep -E '^(RUST_VERSION|DEPLOY_SOLANA_VERSION|SOLANA_VERIFY_RUST_VERSION|SOLANA_VERIFY_VERSION|SOLANA_VERIFY_BASE_IMAGE)=' .github/.env >> "$GITHUB_ENV"
+          grep -E '^(RUST_VERSION|DEPLOY_SOLANA_VERSION|SOLANA_VERIFY_VERSION|SOLANA_VERIFY_BASE_IMAGE)=' .github/.env >> "$GITHUB_ENV"
           while IFS='=' read -r key value; do
             case "$key" in
               RUST_VERSION) printf 'rust_version=%s\n' "$value" >> "$GITHUB_OUTPUT" ;;
@@ -68,44 +63,65 @@ jobs:
           cache: ${{ env.CACHE }}
 
       - name: Install Solana Verify
-        run: |
-          rustup toolchain install "${SOLANA_VERIFY_RUST_VERSION}" --profile minimal
-          cargo "+${SOLANA_VERIFY_RUST_VERSION}" install solana-verify --locked --force --version "${SOLANA_VERIFY_VERSION}"
+        run: cargo install solana-verify --locked --force --version "${SOLANA_VERIFY_VERSION}"
 
       - name: Set RPC
         run: |
           if [ "${{ inputs.cluster }}" == "mainnet-beta" ]; then
             printf 'RPC=%s\n' "${{ secrets.MAINNET_RPC }}" >> "$GITHUB_ENV"
-            printf 'PROGRAM_ID=%s\n' "BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY" >> "$GITHUB_ENV"
-            printf 'SQUADS_VAULT=%s\n' "bfQVv6niKVgEURYqQ1beJmiEQQN7MrvLRvk3mZGFubb" >> "$GITHUB_ENV"
           else
             echo "Invalid cluster: ${{ inputs.cluster }}"
             exit 1
           fi
 
-      - name: Export verified-build PDA transaction
-        if: github.event.inputs.submit_remote_job != 'true'
+      - name: Identify Program
+        env:
+          BUBBLEGUM_ID: ${{ secrets.BUBBLEGUM_ID }}
+          SQUADS_BOT_KEY: ${{ secrets.SQUADS_BOT_KEY }}
         run: |
+          printf 'PROGRAM_NAME=%s\n' "${{ inputs.program }}" >> "$GITHUB_ENV"
+          printf 'PROGRAM_PACKAGE=%s\n' "${{ inputs.program }}" >> "$GITHUB_ENV"
+          printf '%s' "$BUBBLEGUM_ID" > ./program-id.json
+          printf '%s' "$SQUADS_BOT_KEY" > ./deployer-key.json
+
+      # solana-verify 0.4.15 unconditionally loads ~/.config/solana/cli/config.yml
+      # during PDA upload (Ellipsis-Labs/solana-verifiable-build process_otter_verify_ixs),
+      # so initialize a CLI config even though --keypair and --url are passed explicitly.
+      - name: Initialize Solana CLI config for solana-verify
+        run: |
+          solana config set \
+            --url "${RPC}" \
+            --keypair "${GITHUB_WORKSPACE}/deployer-key.json"
+
+      - name: Upload verified-build PDA
+        run: |
+          PROGRAM_ID="$(solana-keygen pubkey ./program-id.json)"
           COMMIT_HASH="$(git rev-parse HEAD)"
 
-          solana-verify export-pda-tx \
-            --url "${RPC}" \
+          solana-verify verify-from-repo \
+            --current-dir \
             --program-id "${PROGRAM_ID}" \
-            --uploader "${SQUADS_VAULT}" \
-            --encoding base58 \
-            --compute-unit-price 0 \
+            --url "${RPC}" \
+            --keypair ./deployer-key.json \
             --base-image "${SOLANA_VERIFY_BASE_IMAGE}" \
-            --library-name bubblegum \
+            --library-name "${PROGRAM_NAME}" \
             --mount-path programs/bubblegum \
             --commit-hash "${COMMIT_HASH}" \
+            --skip-prompt \
             https://github.com/metaplex-foundation/mpl-bubblegum.git \
             -- \
-            --package bubblegum
+            --package "${PROGRAM_PACKAGE}"
 
       - name: Submit remote verification job
-        if: github.event.inputs.submit_remote_job == 'true'
         run: |
+          PROGRAM_ID="$(solana-keygen pubkey ./program-id.json)"
+          UPLOADER="$(solana-keygen pubkey ./deployer-key.json)"
+
           solana-verify remote submit-job \
             --url "${RPC}" \
             --program-id "${PROGRAM_ID}" \
-            --uploader "${SQUADS_VAULT}"
+            --uploader "${UPLOADER}"
+
+      - name: Clean up signer files
+        if: always()
+        run: rm -f ./deployer-key.json ./program-id.json
