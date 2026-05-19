@@ -252,6 +252,78 @@ jobs:
             -H "Accept: application/octet-stream" \
             "${{ steps.get_release.outputs.url }}"
 
+      # Verification PDA export runs before the Squads buffer/proposal steps
+      # so a failed export aborts the deploy without leaving an orphaned
+      # upgrade proposal in Squads.
+      - name: Install Solana Verify
+        if: github.event.inputs.dry_run == 'false' && env.DEPLOY_TYPE == 'squads' && inputs.cluster == 'mainnet-beta'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libudev-dev pkg-config
+          cargo install solana-verify --locked --force --version "${SOLANA_VERIFY_VERSION}"
+
+      - name: Export verified-build PDA transaction
+        if: github.event.inputs.dry_run == 'false' && env.DEPLOY_TYPE == 'squads' && inputs.cluster == 'mainnet-beta'
+        run: |
+          PROGRAM_ID="$(solana-keygen pubkey ./program-id.json)"
+          COMMIT_HASH="$(git rev-parse HEAD)"
+
+          solana config set --url "${RPC}"
+
+          # Capture full stdout; docker progress can be mixed in with the
+          # base58 transaction depending on solana-verify's output mode.
+          solana-verify export-pda-tx \
+            --url "${RPC}" \
+            --program-id "${PROGRAM_ID}" \
+            --uploader "${SQUADS_VAULT}" \
+            --encoding base58 \
+            --compute-unit-price 0 \
+            --base-image "${SOLANA_VERIFY_BASE_IMAGE}" \
+            --library-name "${PROGRAM_NAME}" \
+            --mount-path programs/bubblegum \
+            --commit-hash "${COMMIT_HASH}" \
+            https://github.com/metaplex-foundation/mpl-bubblegum.git \
+            -- \
+            --package "${PROGRAM_NAME}" > raw-pda-tx.out
+
+          # Extract the longest line that is pure base58 and at least 100 chars
+          # (serialized Solana transactions are several hundred chars).
+          TX_LINE=$(grep -E '^[1-9A-HJ-NP-Za-km-z]{100,}$' raw-pda-tx.out \
+                    | awk '{ print length, $0 }' \
+                    | sort -n \
+                    | tail -n 1 \
+                    | cut -d' ' -f2-)
+
+          if [ -z "${TX_LINE}" ]; then
+            echo "::error title=Verified-build PDA export::Could not extract a base58 transaction from solana-verify output."
+            echo "Raw solana-verify stdout follows:" >&2
+            cat raw-pda-tx.out >&2
+            exit 1
+          fi
+
+          printf '%s\n' "${TX_LINE}" > verify-pda-tx.b58
+          rm -f raw-pda-tx.out
+
+          {
+            echo "### Verified-build PDA transaction"
+            echo ""
+            echo "Submit this base58 transaction through Squads alongside the program upgrade proposal."
+            echo ""
+            echo '```'
+            cat verify-pda-tx.b58
+            echo '```'
+            echo ""
+            echo "After Squads executes this transaction, run the Verify Program workflow in \`submit-remote-job\` mode for \`${{ inputs.git_ref }}\`."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload verified-build PDA transaction
+        if: github.event.inputs.dry_run == 'false' && env.DEPLOY_TYPE == 'squads' && inputs.cluster == 'mainnet-beta'
+        uses: actions/upload-artifact@v4
+        with:
+          name: verify-pda-tx-${{ steps.sanitize.outputs.sanitized }}
+          path: verify-pda-tx.b58
+          if-no-files-found: error
+
       - name: Deploy squads buffer
         if: github.event.inputs.dry_run == 'false' && env.DEPLOY_TYPE == 'squads'
         run: |
@@ -269,7 +341,7 @@ jobs:
           rm ./submitter-key.json
 
           echo "BUFFER=$BUFFER" >> $GITHUB_ENV
-        
+
       - name: Create Squads proposal
         if: github.event.inputs.dry_run == 'false' && env.DEPLOY_TYPE == 'squads'
         uses: metaplex-foundation/squads-program-upgrade@main
@@ -283,55 +355,6 @@ jobs:
           authority: ${{ env.SQUADS_VAULT }}
           name: 'Deploy ${{ inputs.git_ref }}'
           keypair: ${{ secrets.SQUADS_BOT_KEY }}
-
-      - name: Install Solana Verify
-        if: github.event.inputs.dry_run == 'false' && env.DEPLOY_TYPE == 'squads' && inputs.cluster == 'mainnet-beta'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libudev-dev pkg-config
-          cargo install solana-verify --locked --force --version "${SOLANA_VERIFY_VERSION}"
-
-      - name: Export verified-build PDA transaction
-        if: github.event.inputs.dry_run == 'false' && env.DEPLOY_TYPE == 'squads' && inputs.cluster == 'mainnet-beta'
-        run: |
-          PROGRAM_ID="$(solana-keygen pubkey ./program-id.json)"
-          COMMIT_HASH="$(git rev-parse HEAD)"
-
-          solana config set --url "${RPC}"
-
-          solana-verify export-pda-tx \
-            --url "${RPC}" \
-            --program-id "${PROGRAM_ID}" \
-            --uploader "${SQUADS_VAULT}" \
-            --encoding base58 \
-            --compute-unit-price 0 \
-            --base-image "${SOLANA_VERIFY_BASE_IMAGE}" \
-            --library-name "${PROGRAM_NAME}" \
-            --mount-path programs/bubblegum \
-            --commit-hash "${COMMIT_HASH}" \
-            https://github.com/metaplex-foundation/mpl-bubblegum.git \
-            -- \
-            --package "${PROGRAM_NAME}" > verify-pda-tx.b58
-
-          {
-            echo "### Verified-build PDA transaction"
-            echo ""
-            echo "Submit this base58 transaction through Squads after the program upgrade proposal is executed."
-            echo ""
-            echo '```'
-            cat verify-pda-tx.b58
-            echo '```'
-            echo ""
-            echo "After Squads executes this transaction, run the Verify Program workflow in \`submit-remote-job\` mode for \`${{ inputs.git_ref }}\`."
-          } >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Upload verified-build PDA transaction
-        if: github.event.inputs.dry_run == 'false' && env.DEPLOY_TYPE == 'squads' && inputs.cluster == 'mainnet-beta'
-        uses: actions/upload-artifact@v4
-        with:
-          name: verify-pda-tx-${{ steps.sanitize.outputs.sanitized }}
-          path: verify-pda-tx.b58
-          if-no-files-found: error
 
       - name: Create env tag
         uses: actions/github-script@v7
