@@ -1,6 +1,5 @@
 use anchor_lang::prelude::*;
 use mpl_account_compression::{program::MplAccountCompression, Noop as MplNoop};
-use spl_account_compression::{program::SplAccountCompression, Noop as SplNoop};
 
 use crate::{
     error::BubblegumError,
@@ -9,8 +8,8 @@ use crate::{
         TreeConfig,
     },
     utils::{
-        get_asset_id, replace_leaf, Flags, DEFAULT_ASSET_DATA_HASH, DEFAULT_COLLECTION_HASH,
-        DEFAULT_FLAGS,
+        get_asset_id, replace_leaf, validate_ownership_and_programs, Flags,
+        DEFAULT_ASSET_DATA_HASH, DEFAULT_COLLECTION_HASH, DEFAULT_FLAGS,
     },
 };
 
@@ -30,8 +29,10 @@ pub struct Delegate<'info> {
     /// CHECK: This account is modified in the downstream program
     #[account(mut)]
     pub merkle_tree: UncheckedAccount<'info>,
-    pub log_wrapper: Program<'info, SplNoop>,
-    pub compression_program: Program<'info, SplAccountCompression>,
+    /// CHECK: Program is verified in the instruction
+    pub log_wrapper: UncheckedAccount<'info>,
+    /// CHECK: Program is verified in the instruction
+    pub compression_program: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
 }
 
@@ -43,6 +44,12 @@ pub(crate) fn delegate<'info>(
     nonce: u64,
     index: u32,
 ) -> Result<()> {
+    validate_ownership_and_programs(
+        &ctx.accounts.merkle_tree,
+        &ctx.accounts.log_wrapper,
+        &ctx.accounts.compression_program,
+    )?;
+
     // V1 instructions only work with V1 trees.
     require!(
         ctx.accounts.tree_authority.version == Version::V1,
