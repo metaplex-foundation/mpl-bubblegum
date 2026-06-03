@@ -9,8 +9,14 @@ use mpl_token_metadata::{
     types::{Collection, MetadataDelegateRole, TokenStandard},
 };
 
+pub const SELLER_FEE_BASIS_POINTS_INHERIT: u16 = u16::MAX;
+pub const MAX_SELLER_FEE_BASIS_POINTS: u16 = 10_000;
+
 /// Assert that the provided MetadataArgs are compatible with MPL `Data`
-pub fn assert_metadata_is_mpl_compatible<T: MetadataArgsCommon>(metadata: &T) -> Result<()> {
+pub fn assert_metadata_is_mpl_compatible<T: MetadataArgsCommon>(
+    metadata: &T,
+    allow_inherited_sfbp: bool,
+) -> Result<()> {
     if metadata.name().len() > mpl_token_metadata::MAX_NAME_LENGTH {
         return Err(BubblegumError::MetadataNameTooLong.into());
     }
@@ -23,7 +29,10 @@ pub fn assert_metadata_is_mpl_compatible<T: MetadataArgsCommon>(metadata: &T) ->
         return Err(BubblegumError::MetadataUriTooLong.into());
     }
 
-    if metadata.seller_fee_basis_points() > 10000 {
+    let seller_fee_basis_points = metadata.seller_fee_basis_points();
+    let inherited_sfbp_allowed =
+        allow_inherited_sfbp && seller_fee_basis_points == SELLER_FEE_BASIS_POINTS_INHERIT;
+    if seller_fee_basis_points > MAX_SELLER_FEE_BASIS_POINTS && !inherited_sfbp_allowed {
         return Err(BubblegumError::MetadataBasisPointsTooHigh.into());
     }
 

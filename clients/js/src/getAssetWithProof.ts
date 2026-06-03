@@ -15,6 +15,16 @@ import {
 import { fetchMerkleTree } from '@metaplex-foundation/spl-account-compression';
 import { LeafSchemaV2Flags, isValidLeafSchemaV2Flags } from './flags';
 import { MetadataArgs, TokenProgramVersion, TokenStandard } from './generated';
+import { SELLER_FEE_BASIS_POINTS_INHERIT } from './hash';
+
+type DasRoyaltyWithRawSfbp = NonNullable<DasApiAsset['royalty']> & {
+  basis_points_raw?: number;
+  sfbp_inherited?: boolean;
+};
+
+type DasApiAssetWithRawSfbp = DasApiAsset & {
+  royalty?: DasRoyaltyWithRawSfbp;
+};
 
 export type AssetWithProof = {
   leafOwner: PublicKey;
@@ -30,13 +40,20 @@ export type AssetWithProof = {
   index: number;
   proof: PublicKey[];
   metadata: MetadataArgs;
+  rawMetadata?: MetadataArgs;
+  rawSellerFeeBasisPoints?: number;
+  resolvedSellerFeeBasisPoints?: number;
+  sellerFeeBasisPointsInherited?: boolean;
   rpcAsset: DasApiAsset;
   rpcAssetProof: GetAssetProofRpcResponse;
 };
 
 type GetAssetWithProofOptions = {
-  /* Define the options properties here */
   truncateCanopy?: boolean;
+  resolveCollectionSellerFeeBasisPoints?: (
+    collection: PublicKey,
+    rpcAsset: DasApiAsset
+  ) => number | Promise<number | undefined> | undefined;
 };
 
 export const getAssetWithProof = async (
@@ -51,6 +68,7 @@ export const getAssetWithProof = async (
     }),
     context.rpc.getAssetProof(assetId),
   ]);
+  const rpcAssetWithRawSfbp = rpcAsset as DasApiAssetWithRawSfbp;
 
   let { proof } = rpcAssetProof;
   if (options?.truncateCanopy) {
@@ -68,25 +86,52 @@ export const getAssetWithProof = async (
   const collectionGroup = (rpcAsset.grouping ?? []).find(
     (group) => group.group_key === 'collection'
   );
+  const collection = collectionGroup
+    ? {
+        key: publicKey(collectionGroup.group_value),
+        verified: collectionGroup.verified ?? false,
+      }
+    : undefined;
+
+  const rawSellerFeeBasisPoints =
+    rpcAssetWithRawSfbp.royalty?.basis_points_raw ??
+    rpcAssetWithRawSfbp.royalty?.basis_points;
+  const sellerFeeBasisPointsInherited =
+    rpcAssetWithRawSfbp.royalty?.sfbp_inherited ??
+    rawSellerFeeBasisPoints === SELLER_FEE_BASIS_POINTS_INHERIT;
+  let resolvedSellerFeeBasisPoints = rpcAssetWithRawSfbp.royalty?.basis_points;
+  if (
+    sellerFeeBasisPointsInherited &&
+    resolvedSellerFeeBasisPoints === SELLER_FEE_BASIS_POINTS_INHERIT &&
+    collection &&
+    options?.resolveCollectionSellerFeeBasisPoints
+  ) {
+    resolvedSellerFeeBasisPoints =
+      (await options.resolveCollectionSellerFeeBasisPoints(
+        collection.key,
+        rpcAsset
+      )) ?? resolvedSellerFeeBasisPoints;
+  }
 
   const metadata: MetadataArgs = {
     name: rpcAsset.content?.metadata?.name ?? '',
     symbol: rpcAsset.content?.metadata?.symbol ?? '',
     uri: rpcAsset.content?.json_uri,
-    sellerFeeBasisPoints: rpcAsset.royalty?.basis_points,
+    sellerFeeBasisPoints:
+      resolvedSellerFeeBasisPoints ?? rawSellerFeeBasisPoints,
     primarySaleHappened: rpcAsset.royalty?.primary_sale_happened,
     isMutable: rpcAsset.mutable,
     editionNonce: wrapNullable(rpcAsset.supply?.edition_nonce),
     tokenStandard: some(TokenStandard.NonFungible),
-    collection: collectionGroup
-      ? some({
-          key: publicKey(collectionGroup.group_value),
-          verified: collectionGroup.verified ?? false,
-        })
-      : none(),
+    collection: collection ? some(collection) : none(),
     uses: none(),
     tokenProgramVersion: TokenProgramVersion.Original,
     creators: rpcAsset.creators,
+  };
+  const rawMetadata: MetadataArgs = {
+    ...metadata,
+    sellerFeeBasisPoints:
+      rawSellerFeeBasisPoints ?? resolvedSellerFeeBasisPoints,
   };
 
   const collectionHashBytes = rpcAsset.compression.collection_hash
@@ -117,6 +162,10 @@ export const getAssetWithProof = async (
     index: rpcAssetProof.node_index - 2 ** rpcAssetProof.proof.length,
     proof,
     metadata,
+    rawMetadata,
+    rawSellerFeeBasisPoints,
+    resolvedSellerFeeBasisPoints,
+    sellerFeeBasisPointsInherited,
     rpcAsset,
     rpcAssetProof,
   };

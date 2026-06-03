@@ -93,6 +93,7 @@ pub(crate) fn mint_v1(ctx: Context<MintV1>, message: MetadataArgs) -> Result<Lea
         &ctx.accounts.log_wrapper,
         &ctx.accounts.compression_program,
         false,
+        false,
     )?;
 
     authority.increment_mint_count();
@@ -187,6 +188,7 @@ pub(crate) fn mint_v2(
             .map(|a| a.key()),
     );
 
+    let mut allow_inherited_sfbp = false;
     match &ctx.accounts.core_collection {
         Some(core_collection_account) => {
             let collection_authority = ctx
@@ -213,6 +215,7 @@ pub(crate) fn mint_v2(
                 &ctx.accounts.mpl_core_program,
                 &metadata_args,
             )?;
+            allow_inherited_sfbp = true;
         }
         None => {
             if metadata_args.collection.is_some() {
@@ -232,6 +235,7 @@ pub(crate) fn mint_v2(
         &ctx.accounts.log_wrapper,
         &ctx.accounts.compression_program,
         true,
+        allow_inherited_sfbp,
     )?;
 
     tree_authority.increment_mint_count();
@@ -262,8 +266,9 @@ pub(crate) fn process_mint<'info, T: MetadataArgsCommon>(
     wrapper: &AccountInfo<'info>,
     compression_program: &AccountInfo<'info>,
     allow_verified_collection: bool,
+    allow_inherited_sfbp: bool,
 ) -> Result<LeafSchema> {
-    assert_metadata_is_mpl_compatible(&message)?;
+    assert_metadata_is_mpl_compatible(&message, allow_inherited_sfbp)?;
 
     if !allow_verified_collection && message.collection_verified() {
         return Err(BubblegumError::CollectionCannotBeVerifiedInThisInstruction.into());

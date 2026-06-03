@@ -12,6 +12,7 @@ import {
   transferV2,
   hashMetadataCreators,
   hashMetadataDataV2,
+  SELLER_FEE_BASIS_POINTS_INHERIT,
 } from '../src';
 import { createTreeV2, createUmi } from './_setup';
 
@@ -91,6 +92,84 @@ test('it can mint an NFT from a collection and then transfer it using V2 instruc
     delegate: leafOwnerB.publicKey,
     leafIndex: 0,
     metadata,
+  });
+  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(updatedLeaf));
+});
+
+test('it defaults seller fee basis points to inherit from core collection', async (t) => {
+  // Given an empty Bubblegum tree.
+  const umi = await createUmi();
+  const merkleTree = await createTreeV2(umi);
+  const leafOwner = generateSigner(umi);
+  const leafOwnerKey = leafOwner.publicKey;
+
+  // And a Collection NFT.
+  const coreCollection = generateSigner(umi);
+  const collectionUpdateAuthority = generateSigner(umi);
+  await createCollection(umi, {
+    collection: coreCollection,
+    updateAuthority: collectionUpdateAuthority.publicKey,
+    name: 'Test Collection',
+    uri: 'https://example.com/collection.json',
+    plugins: [
+      {
+        type: 'BubblegumV2',
+      },
+    ],
+  }).sendAndConfirm(umi);
+
+  // When we mint a new NFT from the tree without an explicit seller fee.
+  const metadata = {
+    name: 'My NFT',
+    uri: 'https://example.com/my-nft.json',
+    collection: some(coreCollection.publicKey),
+    creators: [],
+  };
+  await mintV2(umi, {
+    collectionAuthority: collectionUpdateAuthority,
+    leafOwner: leafOwnerKey,
+    merkleTree,
+    coreCollection: coreCollection.publicKey,
+    metadata,
+  }).sendAndConfirm(umi);
+
+  // Then the new leaf uses the inherited seller fee sentinel in its hash.
+  const expectedMetadata: MetadataArgsV2Args = {
+    ...metadata,
+    sellerFeeBasisPoints: SELLER_FEE_BASIS_POINTS_INHERIT,
+  };
+  const leaf = hashLeafV2(umi, {
+    merkleTree,
+    owner: leafOwnerKey,
+    leafIndex: 0,
+    metadata: expectedMetadata,
+  });
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(leaf));
+
+  // And the NFT can still be transferred with the sentinel-based data hash.
+  const leafOwnerB = generateSigner(umi);
+  await transferV2(umi, {
+    authority: leafOwner,
+    leafOwner: leafOwner.publicKey,
+    newLeafOwner: leafOwnerB.publicKey,
+    merkleTree,
+    coreCollection: coreCollection.publicKey,
+    root: getCurrentRoot(merkleTreeAccount.tree),
+    dataHash: hashMetadataDataV2(expectedMetadata),
+    creatorHash: hashMetadataCreators(expectedMetadata.creators),
+    nonce: 0,
+    index: 0,
+    proof: [],
+  }).sendAndConfirm(umi);
+
+  const updatedLeaf = hashLeafV2(umi, {
+    merkleTree,
+    owner: leafOwnerB.publicKey,
+    delegate: leafOwnerB.publicKey,
+    leafIndex: 0,
+    metadata: expectedMetadata,
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(updatedLeaf));

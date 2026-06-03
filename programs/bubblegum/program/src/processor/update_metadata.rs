@@ -114,6 +114,7 @@ pub fn update_metadata<'info>(
         None,
         None,
         None,
+        false,
         nonce,
     )?;
 
@@ -224,12 +225,15 @@ pub fn update_metadata_v2<'info>(
         .as_ref()
         .map(|account| account.key());
 
-    let collection_hash = hash_collection_option(
-        ctx.accounts
-            .core_collection
-            .as_ref()
-            .map(|account| *account.key),
-    )?;
+    let core_collection_key = ctx
+        .accounts
+        .core_collection
+        .as_ref()
+        .map(|account| *account.key);
+    let allow_inherited_sfbp = core_collection_key
+        .map(|key| current_metadata.collection_key() == Some(key))
+        .unwrap_or(false);
+    let collection_hash = hash_collection_option(core_collection_key)?;
 
     let (previous_leaf, new_leaf) = process_update_metadata(
         ctx.accounts.merkle_tree.key(),
@@ -241,6 +245,7 @@ pub fn update_metadata_v2<'info>(
         Some(collection_hash),
         asset_data_hash,
         flags,
+        allow_inherited_sfbp,
         nonce,
     )?;
 
@@ -321,6 +326,7 @@ fn process_update_metadata<T: MetadataArgsCommon>(
     collection_hash: Option<[u8; 32]>,
     asset_data_hash: Option<[u8; 32]>,
     flags: Option<u8>,
+    allow_inherited_sfbp: bool,
     nonce: u64,
 ) -> Result<(LeafSchema, LeafSchema)> {
     // Old metadata must be mutable to allow metadata update
@@ -380,7 +386,7 @@ fn process_update_metadata<T: MetadataArgsCommon>(
         updated_metadata.set_is_mutable(is_mutable);
     };
 
-    assert_metadata_is_mpl_compatible(&updated_metadata)?;
+    assert_metadata_is_mpl_compatible(&updated_metadata, allow_inherited_sfbp)?;
     let updated_data_hash = hash_metadata(&updated_metadata)?;
     let updated_creator_hash = hash_creators(updated_metadata.creators())?;
 
