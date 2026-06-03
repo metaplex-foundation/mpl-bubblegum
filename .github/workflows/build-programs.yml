@@ -17,41 +17,25 @@ jobs:
       - name: Git checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.git_ref || github.sha }}
+          ref: ${{ inputs.git_ref }}
 
       - name: Load environment variables
-        id: env_vars
-        run: |
-          cat .github/.env >> "$GITHUB_ENV"
-          while IFS='=' read -r key value; do
-            case "$key" in
-              RUST_VERSION) printf 'rust_version=%s\n' "$value" >> "$GITHUB_OUTPUT" ;;
-              SOLANA_VERSION) printf 'solana_version=%s\n' "$value" >> "$GITHUB_OUTPUT" ;;
-            esac
-          done < .github/.env
+        run: cat .github/.env >> $GITHUB_ENV
 
       - name: Install Rust
         uses: metaplex-foundation/actions/install-rust@v1
         with:
-          toolchain: ${{ steps.env_vars.outputs.rust_version }}
+          toolchain: ${{ env.RUST_VERSION }}
 
       - name: Install Solana
         uses: metaplex-foundation/actions/install-solana@v1
         with:
-          version: ${{ steps.env_vars.outputs.solana_version }}
+          version: ${{ env.SOLANA_VERSION }}
           cache: ${{ env.CACHE }}
 
       - name: Cache program dependencies
         if: env.CACHE == 'true'
         uses: metaplex-foundation/actions/cache-programs@v1
-
-      - name: Install libudev (required by solana-verify)
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libudev-dev pkg-config
-
-      - name: Install Solana Verify
-        run: cargo install solana-verify --locked --force --version "${SOLANA_VERIFY_VERSION}"
 
       - name: Build programs
         shell: bash
