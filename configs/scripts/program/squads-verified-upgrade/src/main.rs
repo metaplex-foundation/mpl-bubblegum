@@ -291,6 +291,31 @@ fn extract_verified_build_instruction(
         .into());
     }
 
+    // Variant check: otter-verify exposes initialize/update/close, and
+    // `solana-verify export-pda-tx` only ever emits initialize (first upload) or
+    // update (re-upload) to write the build record. Pin the 8-byte Anchor
+    // discriminator to those two so a tampered file cannot swap in `close` (or
+    // any other vault-signed otter-verify instruction) and still satisfy the
+    // broad program/account/signer checks below.
+    let discriminator: [u8; 8] = instruction
+        .data
+        .get(..8)
+        .and_then(|prefix| prefix.try_into().ok())
+        .ok_or_else(|| {
+            format!(
+                "verified-build instruction data is {} bytes, too short for an 8-byte discriminator",
+                instruction.data.len()
+            )
+        })?;
+    let initialize = anchor_discriminator("initialize");
+    let update = anchor_discriminator("update");
+    if discriminator != initialize && discriminator != update {
+        return Err(format!(
+            "verified-build instruction is not an otter-verify initialize/update write (discriminator {discriminator:?})"
+        )
+        .into());
+    }
+
     // The otter-verify build record is per-program (its PDA is derived from the
     // program address), so the program being upgraded must appear in the
     // instruction's accounts. This rejects a record exported for a different
