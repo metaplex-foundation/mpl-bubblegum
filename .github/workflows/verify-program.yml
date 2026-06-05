@@ -1,0 +1,114 @@
+name: Verify Program
+
+on:
+  workflow_dispatch:
+    inputs:
+      git_ref:
+        description: Release tag, commit hash, or branch that was deployed
+        required: true
+        type: string
+      program:
+        description: Program
+        required: true
+        default: bubblegum
+        type: choice
+        options:
+          - bubblegum
+      cluster:
+        description: Cluster environment
+        required: true
+        default: mainnet-beta
+        type: choice
+        options:
+          - mainnet-beta
+          - devnet
+
+env:
+  CACHE: true
+
+jobs:
+  verify_program:
+    name: Program / Verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.git_ref }}
+
+      - name: Load environment variables
+        run: |
+          grep -E '^(SOLANA_VERSION|DEPLOY_SOLANA_VERSION|SOLANA_VERIFY_VERSION|SOLANA_VERIFY_RUST_VERSION)=' .github/.env >> "$GITHUB_ENV"
+
+      - name: Install Rust
+        uses: metaplex-foundation/actions/install-rust@v1
+        with:
+          toolchain: ${{ env.SOLANA_VERIFY_RUST_VERSION }}
+
+      - name: Install Solana
+        uses: metaplex-foundation/actions/install-solana@v1
+        with:
+          version: ${{ env.DEPLOY_SOLANA_VERSION }}
+          cache: ${{ env.CACHE }}
+
+      - name: Install solana-verify
+        uses: metaplex-foundation/actions/install-solana-verify@v1
+        with:
+          version: ${{ env.SOLANA_VERIFY_VERSION }}
+
+      - name: Set RPC
+        run: |
+          if [ "${{ inputs.cluster }}" == "mainnet-beta" ]; then
+            printf 'RPC=%s\n' "${{ secrets.MAINNET_RPC }}" >> "$GITHUB_ENV"
+          elif [ "${{ inputs.cluster }}" == "devnet" ]; then
+            printf 'RPC=%s\n' "${{ secrets.DEVNET_RPC }}" >> "$GITHUB_ENV"
+          else
+            echo "Invalid cluster: ${{ inputs.cluster }}"
+            exit 1
+          fi
+
+      - name: Identify Program
+        env:
+          BUBBLEGUM_ID: ${{ secrets.BUBBLEGUM_ID }}
+        run: |
+          printf 'PROGRAM_NAME=%s\n' "${{ inputs.program }}" >> "$GITHUB_ENV"
+          printf 'PROGRAM_PACKAGE=%s\n' "${{ inputs.program }}" >> "$GITHUB_ENV"
+          printf '%s' "$BUBBLEGUM_ID" > ./program-id.json
+          # Squads vault that signed the verified-build PDA upload during deploy;
+          # OtterSec's remote job (mainnet only) looks the PDA up by this uploader.
+          # Must match SQUADS_VAULT per cluster in deploy-program.yml.
+          if [ "${{ inputs.cluster }}" == "mainnet-beta" ]; then
+            printf 'SQUADS_VAULT=%s\n' "bfQVv6niKVgEURYqQ1beJmiEQQN7MrvLRvk3mZGFubb" >> "$GITHUB_ENV"
+          elif [ "${{ inputs.cluster }}" == "devnet" ]; then
+            printf 'SQUADS_VAULT=%s\n' "Fsxr5WVKZZoeb7xgwTWRHymSRVGY9vk7m5B5GPu1KU59" >> "$GITHUB_ENV"
+          fi
+
+      # bubblegum is squads-deployed (devnet + mainnet), so the verified-build PDA
+      # upload requires the squads vault to sign — a CI keypair cannot do it. This
+      # workflow runs `submit-remote-job` mode: it rebuilds the program
+      # deterministically, compares the local hash to the on-chain hash, and —
+      # since mpl-bubblegum is a public repo — submits the remote OtterSec
+      # verification job for the vault-uploaded PDA — but only on mainnet, since
+      # OtterSec has no devnet verifier. The Cargo workspace is nested, so
+      # the verifier is pointed at programs/bubblegum via mount-path.
+      - name: Verify program
+        uses: metaplex-foundation/actions/verify-program@v1
+        with:
+          mode: submit-remote-job
+          program-id-keypair: ./program-id.json
+          rpc-url: ${{ env.RPC }}
+          library-name: ${{ env.PROGRAM_NAME }}
+          package: ${{ env.PROGRAM_PACKAGE }}
+          mount-path: programs/bubblegum
+          solana-version: ${{ env.SOLANA_VERSION }}
+          uploader: ${{ env.SQUADS_VAULT }}
+          repo-visibility: public
+          # OtterSec has no devnet verifier, so only submit the remote job on
+          # mainnet. submit-remote-job still rebuilds + hash-compares regardless.
+          submit-remote: ${{ inputs.cluster == 'mainnet-beta' }}
+
+      - name: Clean up signer files
+        if: always()
+        run: rm -f ./program-id.json
