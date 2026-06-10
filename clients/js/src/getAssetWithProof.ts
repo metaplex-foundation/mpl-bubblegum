@@ -20,7 +20,10 @@ import {
   TokenProgramVersion,
   TokenStandard,
 } from './generated';
-import { SELLER_FEE_BASIS_POINTS_INHERIT } from './hash';
+import {
+  SELLER_FEE_BASIS_POINTS_INHERIT,
+  hashMetadataDataV2,
+} from './hash';
 
 type DasRoyaltyWithRawSfbp = NonNullable<DasApiAsset['royalty']> & {
   basis_points_raw?: number;
@@ -30,6 +33,9 @@ type DasRoyaltyWithRawSfbp = NonNullable<DasApiAsset['royalty']> & {
 type DasApiAssetWithRawSfbp = DasApiAsset & {
   royalty?: DasRoyaltyWithRawSfbp;
 };
+
+const bytesEqual = (a: Uint8Array, b: Uint8Array): boolean =>
+  a.length === b.length && a.every((value, index) => value === b[index]);
 
 export type AssetWithProof = {
   leafOwner: PublicKey;
@@ -46,9 +52,6 @@ export type AssetWithProof = {
   proof: PublicKey[];
   metadata: MetadataArgs;
   currentMetadata: MetadataArgsV2Args;
-  rawSellerFeeBasisPoints?: number;
-  resolvedSellerFeeBasisPoints?: number;
-  sellerFeeBasisPointsInherited?: boolean;
   rpcAsset: DasApiAsset;
   rpcAssetProof: GetAssetProofRpcResponse;
 };
@@ -100,7 +103,9 @@ export const getAssetWithProof = async (
 
   const rawSellerFeeBasisPoints =
     rpcAssetWithRawSfbp.royalty?.basis_points_raw ??
-    rpcAssetWithRawSfbp.royalty?.basis_points;
+    (rpcAssetWithRawSfbp.royalty?.sfbp_inherited
+      ? SELLER_FEE_BASIS_POINTS_INHERIT
+      : rpcAssetWithRawSfbp.royalty?.basis_points);
   const sellerFeeBasisPointsInherited =
     rpcAssetWithRawSfbp.royalty?.sfbp_inherited ??
     rawSellerFeeBasisPoints === SELLER_FEE_BASIS_POINTS_INHERIT;
@@ -133,18 +138,36 @@ export const getAssetWithProof = async (
     tokenProgramVersion: TokenProgramVersion.Original,
     creators: rpcAsset.creators,
   };
-  const currentMetadata: MetadataArgsV2Args = {
+  const buildCurrentMetadata = (
+    sellerFeeBasisPoints: number
+  ): MetadataArgsV2Args => ({
     name: metadata.name,
     symbol: metadata.symbol,
     uri: metadata.uri,
-    sellerFeeBasisPoints:
-      rawSellerFeeBasisPoints ?? resolvedSellerFeeBasisPoints,
+    sellerFeeBasisPoints,
     primarySaleHappened: metadata.primarySaleHappened,
     isMutable: metadata.isMutable,
     tokenStandard: metadata.tokenStandard,
     creators: metadata.creators,
     collection: collection ? some(collection.key) : none(),
-  };
+  });
+
+  const expectedDataHash = publicKeyBytes(rpcAsset.compression.data_hash);
+  let currentMetadata = buildCurrentMetadata(
+    rawSellerFeeBasisPoints ?? resolvedSellerFeeBasisPoints
+  );
+  if (
+    collection &&
+    currentMetadata.sellerFeeBasisPoints !== SELLER_FEE_BASIS_POINTS_INHERIT &&
+    !bytesEqual(hashMetadataDataV2(currentMetadata), expectedDataHash)
+  ) {
+    const inheritedMetadata = buildCurrentMetadata(
+      SELLER_FEE_BASIS_POINTS_INHERIT
+    );
+    if (bytesEqual(hashMetadataDataV2(inheritedMetadata), expectedDataHash)) {
+      currentMetadata = inheritedMetadata;
+    }
+  }
 
   const collectionHashBytes = rpcAsset.compression.collection_hash
     ? publicKeyBytes(rpcAsset.compression.collection_hash)
@@ -165,7 +188,7 @@ export const getAssetWithProof = async (
       : rpcAsset.ownership.owner,
     merkleTree: rpcAssetProof.tree_id,
     root: publicKeyBytes(rpcAssetProof.root),
-    dataHash: publicKeyBytes(rpcAsset.compression.data_hash),
+    dataHash: expectedDataHash,
     creatorHash: publicKeyBytes(rpcAsset.compression.creator_hash),
     collection_hash: collectionHashBytes,
     asset_data_hash: assetDataHashBytes,
@@ -175,9 +198,6 @@ export const getAssetWithProof = async (
     proof,
     metadata,
     currentMetadata,
-    rawSellerFeeBasisPoints,
-    resolvedSellerFeeBasisPoints,
-    sellerFeeBasisPointsInherited,
     rpcAsset,
     rpcAssetProof,
   };

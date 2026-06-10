@@ -16,6 +16,7 @@ import {
   mintV2 as baseMintV2,
   SELLER_FEE_BASIS_POINTS_INHERIT,
 } from '../src';
+import { mintV2 as mintV2WithInheritedSellerFees } from '../src/mintV2';
 import { createTreeV2, createUmi, mintV2 } from './_setup';
 
 test('it can mint a compressed NFT using V2 instructions', async (t) => {
@@ -56,7 +57,7 @@ test('it requires seller fee basis points when minting without a core collection
   // Then the SDK rejects the missing value before submitting the transaction.
   t.throws(
     () =>
-      baseMintV2(umi, {
+      mintV2WithInheritedSellerFees(umi, {
         leafOwner: leafOwner.publicKey,
         merkleTree,
         metadata,

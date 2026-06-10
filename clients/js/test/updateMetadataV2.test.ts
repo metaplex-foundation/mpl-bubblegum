@@ -34,6 +34,7 @@ import {
   LeafSchemaV2Flags,
   SELLER_FEE_BASIS_POINTS_INHERIT,
 } from '../src';
+import { mintV2 as mintV2WithInheritedSellerFees } from '../src/mintV2';
 import { createTreeV2, createUmi, mintV2 } from './_setup';
 
 test('tree owner can update the metadata of a minted compressed NFT using V2 instructions', async (t) => {
@@ -247,7 +248,7 @@ test('it can update metadata using the getAssetWithProof helper using V2 instruc
   t.is(assetWithProof.rpcAssetProof, rpcAssetProof);
 });
 
-test('getAssetWithProof uses DAS raw inherited seller fee for metadata hashing', async (t) => {
+test('getAssetWithProof infers inherited seller fee metadata from the data hash', async (t) => {
   // Given a DAS asset whose royalty basis points are resolved from the collection.
   const assetId = publicKey('EczRmPqSEWBXtcMKVK1avV87EXH5JZrRbTVdUJdnYaKo');
   const merkleTree = publicKey('BJjUoux3xacYcRZV31Ytsi4haJb3HgyzmweVDHutiLWU');
@@ -255,6 +256,13 @@ test('getAssetWithProof uses DAS raw inherited seller fee for metadata hashing',
   const coreCollection = publicKey(
     '7USYF5BnFo4FuE8eRoEqEvSvZSEaMG5AqPCQbLQ5BxPL'
   );
+  const canonicalMetadata: MetadataArgsV2Args = {
+    name: 'My NFT',
+    uri: 'https://example.com/my-nft.json',
+    sellerFeeBasisPoints: SELLER_FEE_BASIS_POINTS_INHERIT,
+    collection: some(coreCollection),
+    creators: [],
+  };
   const rpcAsset = {
     ownership: { owner: leafOwner },
     content: {
@@ -264,8 +272,6 @@ test('getAssetWithProof uses DAS raw inherited seller fee for metadata hashing',
     royalty: {
       basis_points: 500,
       primary_sale_happened: false,
-      basis_points_raw: SELLER_FEE_BASIS_POINTS_INHERIT,
-      sfbp_inherited: true,
     },
     mutable: true,
     supply: {},
@@ -279,7 +285,7 @@ test('getAssetWithProof uses DAS raw inherited seller fee for metadata hashing',
     ],
     compression: {
       leaf_id: 0,
-      data_hash: defaultPublicKey(),
+      data_hash: publicKey(hashMetadataDataV2(canonicalMetadata)),
       creator_hash: defaultPublicKey(),
       collection_hash: publicKey(hashCollection(coreCollection)),
       asset_data_hash: publicKey(hashAssetData()),
@@ -309,9 +315,6 @@ test('getAssetWithProof uses DAS raw inherited seller fee for metadata hashing',
     SELLER_FEE_BASIS_POINTS_INHERIT
   );
   t.deepEqual(assetWithProof.currentMetadata.collection, some(coreCollection));
-  t.is(assetWithProof.rawSellerFeeBasisPoints, SELLER_FEE_BASIS_POINTS_INHERIT);
-  t.is(assetWithProof.resolvedSellerFeeBasisPoints, 500);
-  t.true(assetWithProof.sellerFeeBasisPointsInherited);
   t.is(assetWithProof.rpcAsset.royalty?.basis_points, 500);
 });
 
@@ -380,9 +383,6 @@ test('getAssetWithProof resolves inherited seller fee basis points with a collec
     SELLER_FEE_BASIS_POINTS_INHERIT
   );
   t.deepEqual(assetWithProof.currentMetadata.collection, some(coreCollection));
-  t.is(assetWithProof.rawSellerFeeBasisPoints, SELLER_FEE_BASIS_POINTS_INHERIT);
-  t.is(assetWithProof.resolvedSellerFeeBasisPoints, 500);
-  t.true(assetWithProof.sellerFeeBasisPointsInherited);
 });
 
 test('getAssetWithProof currentMetadata can update inherited seller fee assets', async (t) => {
@@ -421,7 +421,7 @@ test('getAssetWithProof currentMetadata can update inherited seller fee assets',
     collection: some(coreCollection.publicKey),
     creators: [],
   };
-  await baseMintV2(umi, {
+  await mintV2WithInheritedSellerFees(umi, {
     collectionAuthority: collectionUpdateAuthority,
     leafOwner,
     merkleTree,

@@ -14,6 +14,7 @@ import {
   hashMetadataDataV2,
   SELLER_FEE_BASIS_POINTS_INHERIT,
 } from '../src';
+import { mintV2 as mintV2WithInheritedSellerFees } from '../src/mintV2';
 import { createTreeV2, createUmi } from './_setup';
 
 test('it can mint an NFT from a collection and then transfer it using V2 instructions', async (t) => {
@@ -126,7 +127,7 @@ test('it defaults seller fee basis points to inherit from core collection', asyn
     collection: some(coreCollection.publicKey),
     creators: [],
   };
-  await mintV2(umi, {
+  await mintV2WithInheritedSellerFees(umi, {
     collectionAuthority: collectionUpdateAuthority,
     leafOwner: leafOwnerKey,
     merkleTree,
