@@ -22,17 +22,51 @@ import {
 } from './generated';
 import { SELLER_FEE_BASIS_POINTS_INHERIT, hashMetadataDataV2 } from './hash';
 
+/**
+ * DasRoyaltyWithRawSfbp carries optional DAS-extension hints that are not part
+ * of the official DAS schema. The basis_points_raw field preserves the raw
+ * seller fee basis points used in the leaf hash, and sfbp_inherited indicates
+ * inherited seller-fee-by-proxy. These fields may be present when a client
+ * augments DAS responses with inferred or inherited royalty data.
+ */
 type DasRoyaltyWithRawSfbp = NonNullable<DasApiAsset['royalty']> & {
   basis_points_raw?: number;
   sfbp_inherited?: boolean;
 };
 
+/**
+ * DasApiAssetWithRawSfbp is a DAS asset whose royalty object may include the
+ * optional DAS-extension fields basis_points_raw and sfbp_inherited, usually
+ * added when the client augments DAS responses with inferred or inherited
+ * royalty data.
+ */
 type DasApiAssetWithRawSfbp = DasApiAsset & {
   royalty?: DasRoyaltyWithRawSfbp;
 };
 
 const bytesEqual = (a: Uint8Array, b: Uint8Array): boolean =>
   a.length === b.length && a.every((value, index) => value === b[index]);
+
+const bytesToBase58 = (bytes: Uint8Array): string =>
+  publicKey(bytes).toString();
+
+const hasDasRoyaltyWithRawSfbp = (
+  asset: DasApiAsset
+): asset is DasApiAssetWithRawSfbp => {
+  const { royalty } = asset;
+  if (!royalty || typeof royalty !== 'object') {
+    return false;
+  }
+
+  const hasBasisPointsRaw = 'basis_points_raw' in royalty;
+  const hasSfbpInherited = 'sfbp_inherited' in royalty;
+
+  return (
+    (hasBasisPointsRaw || hasSfbpInherited) &&
+    (!hasBasisPointsRaw || typeof royalty.basis_points_raw === 'number') &&
+    (!hasSfbpInherited || typeof royalty.sfbp_inherited === 'boolean')
+  );
+};
 
 export type AssetWithProof = {
   leafOwner: PublicKey;
@@ -73,7 +107,9 @@ export const getAssetWithProof = async (
     }),
     context.rpc.getAssetProof(assetId),
   ]);
-  const rpcAssetWithRawSfbp = rpcAsset as DasApiAssetWithRawSfbp;
+  const rpcAssetWithRawSfbp = hasDasRoyaltyWithRawSfbp(rpcAsset)
+    ? rpcAsset
+    : undefined;
 
   let { proof } = rpcAssetProof;
   if (options?.truncateCanopy) {
@@ -99,14 +135,18 @@ export const getAssetWithProof = async (
     : undefined;
 
   const rawSellerFeeBasisPoints =
-    rpcAssetWithRawSfbp.royalty?.basis_points_raw ??
-    (rpcAssetWithRawSfbp.royalty?.sfbp_inherited
+    rpcAssetWithRawSfbp?.royalty?.basis_points_raw ??
+    (rpcAssetWithRawSfbp?.royalty?.sfbp_inherited
       ? SELLER_FEE_BASIS_POINTS_INHERIT
-      : rpcAssetWithRawSfbp.royalty?.basis_points);
+      : rpcAsset.royalty?.basis_points);
   const sellerFeeBasisPointsInherited =
-    rpcAssetWithRawSfbp.royalty?.sfbp_inherited ??
+    rpcAssetWithRawSfbp?.royalty?.sfbp_inherited ??
     rawSellerFeeBasisPoints === SELLER_FEE_BASIS_POINTS_INHERIT;
-  let resolvedSellerFeeBasisPoints = rpcAssetWithRawSfbp.royalty?.basis_points;
+  let resolvedSellerFeeBasisPoints = rpcAsset.royalty?.basis_points;
+
+  // Preserve the raw sentinel for currentMetadata/hash comparisons, while the
+  // display metadata prefers the resolved value returned by DAS or the optional
+  // collection resolver.
   if (
     sellerFeeBasisPointsInherited &&
     resolvedSellerFeeBasisPoints === SELLER_FEE_BASIS_POINTS_INHERIT &&
@@ -153,16 +193,31 @@ export const getAssetWithProof = async (
   let currentMetadata = buildCurrentMetadata(
     rawSellerFeeBasisPoints ?? resolvedSellerFeeBasisPoints
   );
-  if (
-    collection &&
-    currentMetadata.sellerFeeBasisPoints !== SELLER_FEE_BASIS_POINTS_INHERIT &&
-    !bytesEqual(hashMetadataDataV2(currentMetadata), expectedDataHash)
-  ) {
-    const inheritedMetadata = buildCurrentMetadata(
-      SELLER_FEE_BASIS_POINTS_INHERIT
-    );
-    if (bytesEqual(hashMetadataDataV2(inheritedMetadata), expectedDataHash)) {
-      currentMetadata = inheritedMetadata;
+  const isV2Compression =
+    rpcAsset.compression.collection_hash !== undefined ||
+    rpcAsset.compression.asset_data_hash !== undefined ||
+    rpcAsset.compression.flags !== undefined;
+  if (isV2Compression && collection) {
+    const currentMetadataHash = hashMetadataDataV2(currentMetadata);
+    if (!bytesEqual(currentMetadataHash, expectedDataHash)) {
+      const inheritedMetadata = buildCurrentMetadata(
+        SELLER_FEE_BASIS_POINTS_INHERIT
+      );
+      const inheritedMetadataHash = hashMetadataDataV2(inheritedMetadata);
+      if (bytesEqual(inheritedMetadataHash, expectedDataHash)) {
+        currentMetadata = inheritedMetadata;
+      } else {
+        throw new Error(
+          [
+            'Unable to reconstruct current metadata data hash from DAS asset.',
+            `expectedDataHash=${bytesToBase58(expectedDataHash)}`,
+            `currentMetadataHash=${bytesToBase58(currentMetadataHash)}`,
+            `currentSellerFeeBasisPoints=${currentMetadata.sellerFeeBasisPoints}`,
+            `inheritedMetadataHash=${bytesToBase58(inheritedMetadataHash)}`,
+            `inheritedSellerFeeBasisPoints=${inheritedMetadata.sellerFeeBasisPoints}`,
+          ].join(' ')
+        );
+      }
     }
   }
 

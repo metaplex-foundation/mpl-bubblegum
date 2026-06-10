@@ -326,6 +326,13 @@ test('getAssetWithProof resolves inherited seller fee basis points with a collec
   const coreCollection = publicKey(
     '7USYF5BnFo4FuE8eRoEqEvSvZSEaMG5AqPCQbLQ5BxPL'
   );
+  const canonicalMetadata: MetadataArgsV2Args = {
+    name: 'My NFT',
+    uri: 'https://example.com/my-nft.json',
+    sellerFeeBasisPoints: SELLER_FEE_BASIS_POINTS_INHERIT,
+    collection: some(coreCollection),
+    creators: [],
+  };
   const rpcAsset = {
     ownership: { owner: leafOwner },
     content: {
@@ -348,7 +355,7 @@ test('getAssetWithProof resolves inherited seller fee basis points with a collec
     ],
     compression: {
       leaf_id: 0,
-      data_hash: defaultPublicKey(),
+      data_hash: publicKey(hashMetadataDataV2(canonicalMetadata)),
       creator_hash: defaultPublicKey(),
       collection_hash: publicKey(hashCollection(coreCollection)),
       asset_data_hash: publicKey(hashAssetData()),
