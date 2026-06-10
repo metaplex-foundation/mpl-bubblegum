@@ -14,7 +14,12 @@ import {
 } from '@metaplex-foundation/digital-asset-standard-api';
 import { fetchMerkleTree } from '@metaplex-foundation/spl-account-compression';
 import { LeafSchemaV2Flags, isValidLeafSchemaV2Flags } from './flags';
-import { MetadataArgs, TokenProgramVersion, TokenStandard } from './generated';
+import {
+  MetadataArgs,
+  MetadataArgsV2Args,
+  TokenProgramVersion,
+  TokenStandard,
+} from './generated';
 import { SELLER_FEE_BASIS_POINTS_INHERIT } from './hash';
 
 type DasRoyaltyWithRawSfbp = NonNullable<DasApiAsset['royalty']> & {
@@ -40,7 +45,7 @@ export type AssetWithProof = {
   index: number;
   proof: PublicKey[];
   metadata: MetadataArgs;
-  rawMetadata?: MetadataArgs;
+  currentMetadata: MetadataArgsV2Args;
   rawSellerFeeBasisPoints?: number;
   resolvedSellerFeeBasisPoints?: number;
   sellerFeeBasisPointsInherited?: boolean;
@@ -128,10 +133,17 @@ export const getAssetWithProof = async (
     tokenProgramVersion: TokenProgramVersion.Original,
     creators: rpcAsset.creators,
   };
-  const rawMetadata: MetadataArgs = {
-    ...metadata,
+  const currentMetadata: MetadataArgsV2Args = {
+    name: metadata.name,
+    symbol: metadata.symbol,
+    uri: metadata.uri,
     sellerFeeBasisPoints:
       rawSellerFeeBasisPoints ?? resolvedSellerFeeBasisPoints,
+    primarySaleHappened: metadata.primarySaleHappened,
+    isMutable: metadata.isMutable,
+    tokenStandard: metadata.tokenStandard,
+    creators: metadata.creators,
+    collection: collection ? some(collection.key) : none(),
   };
 
   const collectionHashBytes = rpcAsset.compression.collection_hash
@@ -162,7 +174,7 @@ export const getAssetWithProof = async (
     index: rpcAssetProof.node_index - 2 ** rpcAssetProof.proof.length,
     proof,
     metadata,
-    rawMetadata,
+    currentMetadata,
     rawSellerFeeBasisPoints,
     resolvedSellerFeeBasisPoints,
     sellerFeeBasisPointsInherited,
