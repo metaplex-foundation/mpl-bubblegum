@@ -20,10 +20,7 @@ import {
   TokenProgramVersion,
   TokenStandard,
 } from './generated';
-import {
-  SELLER_FEE_BASIS_POINTS_INHERIT,
-  hashMetadataDataV2,
-} from './hash';
+import { SELLER_FEE_BASIS_POINTS_INHERIT, hashMetadataDataV2 } from './hash';
 
 type DasRoyaltyWithRawSfbp = NonNullable<DasApiAsset['royalty']> & {
   basis_points_raw?: number;
