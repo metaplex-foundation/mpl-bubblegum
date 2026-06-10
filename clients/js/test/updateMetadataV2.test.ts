@@ -601,6 +601,14 @@ test('it can update a collected NFT to inherit seller fee basis points', async (
       {
         type: 'BubblegumV2',
       },
+      {
+        type: 'Royalties',
+        basisPoints: 500,
+        creators: [
+          { address: collectionUpdateAuthority.publicKey, percentage: 100 },
+        ],
+        ruleSet: ruleSet('None'),
+      },
     ],
   }).sendAndConfirm(umi);
 
@@ -652,6 +660,64 @@ test('it can update a collected NFT to inherit seller fee basis points', async (
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(updatedLeaf));
+});
+
+test('it cannot update a collected NFT to inherit seller fees from a collection without royalties', async (t) => {
+  // Given an empty Bubblegum tree.
+  const umi = await createUmi();
+  const merkleTree = await createTreeV2(umi);
+  const leafOwner = generateSigner(umi).publicKey;
+
+  // And a Collection NFT without the Royalties plugin.
+  const coreCollection = generateSigner(umi);
+  const collectionUpdateAuthority = generateSigner(umi);
+  await createCollection(umi, {
+    collection: coreCollection,
+    updateAuthority: collectionUpdateAuthority.publicKey,
+    name: 'Test Collection',
+    uri: 'https://example.com/collection.json',
+    plugins: [
+      {
+        type: 'BubblegumV2',
+      },
+    ],
+  }).sendAndConfirm(umi);
+
+  // And a minted NFT in the collection with an explicit seller fee.
+  const metadata: MetadataArgsV2Args = {
+    name: 'My NFT',
+    uri: 'https://example.com/my-nft.json',
+    sellerFeeBasisPoints: 550,
+    collection: some(coreCollection.publicKey),
+    creators: [],
+  };
+  await baseMintV2(umi, {
+    collectionAuthority: collectionUpdateAuthority,
+    leafOwner,
+    merkleTree,
+    coreCollection: coreCollection.publicKey,
+    metadata,
+  }).sendAndConfirm(umi);
+
+  // When the collection authority tries to switch the NFT to inherited seller fees.
+  const merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  const promise = updateMetadataV2(umi, {
+    authority: collectionUpdateAuthority,
+    leafOwner,
+    merkleTree,
+    coreCollection: coreCollection.publicKey,
+    root: getCurrentRoot(merkleTreeAccount.tree),
+    nonce: 0,
+    index: 0,
+    currentMetadata: metadata,
+    proof: [],
+    updateArgs: {
+      sellerFeeBasisPoints: some(SELLER_FEE_BASIS_POINTS_INHERIT),
+    },
+  }).sendAndConfirm(umi);
+
+  // Then the program rejects the collection because there is nothing to inherit.
+  await t.throwsAsync(promise, { name: 'CollectionMustHaveRoyaltiesPlugin' });
 });
 
 test('it can update metadata using collection update delegate when NFT is in a collection', async (t) => {

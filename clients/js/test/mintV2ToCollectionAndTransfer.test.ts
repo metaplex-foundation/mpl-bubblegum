@@ -1,4 +1,4 @@
-import { createCollection } from '@metaplex-foundation/mpl-core';
+import { createCollection, ruleSet } from '@metaplex-foundation/mpl-core';
 import { generateSigner, publicKey, some } from '@metaplex-foundation/umi';
 import test from 'ava';
 import {
@@ -98,6 +98,48 @@ test('it can mint an NFT from a collection and then transfer it using V2 instruc
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(updatedLeaf));
 });
 
+test('it cannot inherit seller fee basis points from a collection without royalties', async (t) => {
+  // Given an empty Bubblegum tree.
+  const umi = await createUmi();
+  const merkleTree = await createTreeV2(umi);
+  const leafOwner = generateSigner(umi);
+
+  // And a Collection NFT without the Royalties plugin.
+  const coreCollection = generateSigner(umi);
+  const collectionUpdateAuthority = generateSigner(umi);
+  await createCollection(umi, {
+    collection: coreCollection,
+    updateAuthority: collectionUpdateAuthority.publicKey,
+    name: 'Test Collection',
+    uri: 'https://example.com/collection.json',
+    plugins: [
+      {
+        type: 'BubblegumV2',
+      },
+    ],
+  }).sendAndConfirm(umi);
+
+  // When we mint without an explicit seller fee, the SDK sends the inherited sentinel.
+  const promise = mintV2WithInheritedSellerFees(umi, {
+    collectionAuthority: collectionUpdateAuthority,
+    leafOwner: leafOwner.publicKey,
+    merkleTree,
+    coreCollection: coreCollection.publicKey,
+    metadata: {
+      name: 'My NFT',
+      uri: 'https://example.com/my-nft.json',
+      collection: some(coreCollection.publicKey),
+      creators: [],
+    },
+  }).sendAndConfirm(umi);
+
+  // Then the program rejects the collection because there is nothing to inherit.
+  await t.throwsAsync(promise, { name: 'CollectionMustHaveRoyaltiesPlugin' });
+
+  const merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.sequenceNumber, 0n);
+});
+
 test('it defaults seller fee basis points to inherit from core collection', async (t) => {
   // Given an empty Bubblegum tree.
   const umi = await createUmi();
@@ -116,6 +158,14 @@ test('it defaults seller fee basis points to inherit from core collection', asyn
     plugins: [
       {
         type: 'BubblegumV2',
+      },
+      {
+        type: 'Royalties',
+        basisPoints: 500,
+        creators: [
+          { address: collectionUpdateAuthority.publicKey, percentage: 100 },
+        ],
+        ruleSet: ruleSet('None'),
       },
     ],
   }).sendAndConfirm(umi);

@@ -7,7 +7,10 @@ use spl_account_compression::{program::SplAccountCompression, Noop as SplNoop};
 use crate::{
     asserts::{assert_has_collection_authority, assert_metadata_is_mpl_compatible},
     error::BubblegumError,
-    processor::mpl_core_collection_validate_update,
+    processor::{
+        assert_collection_has_royalties_if_seller_fee_inherited,
+        mpl_core_collection_validate_update,
+    },
     state::{
         leaf_schema::{LeafSchema, Version},
         metaplex_adapter::{
@@ -209,6 +212,14 @@ pub fn update_metadata_v2<'info>(
         {
             return Err(BubblegumError::InvalidCollectionAuthority.into());
         }
+
+        let updated_seller_fee_basis_points = update_args
+            .seller_fee_basis_points
+            .unwrap_or(current_metadata.seller_fee_basis_points());
+        assert_collection_has_royalties_if_seller_fee_inherited(
+            &collection,
+            updated_seller_fee_basis_points,
+        )?;
     } else {
         // No collection case.
         require!(

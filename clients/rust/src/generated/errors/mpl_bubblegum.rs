@@ -182,6 +182,9 @@ pub enum MplBubblegumError {
     /// 6056 (0x17A8) - Asset is not frozen
     #[error("Asset is not frozen")]
     AssetIsNotFrozen,
+    /// 6057 (0x17A9) - Core collections must have the Royalties plugin to inherit seller fee basis points
+    #[error("Core collections must have the Royalties plugin to inherit seller fee basis points")]
+    CollectionMustHaveRoyaltiesPlugin,
 }
 
 impl From<MplBubblegumError> for ProgramError {
@@ -251,6 +254,7 @@ impl TryFrom<u32> for MplBubblegumError {
             6054 => Ok(MplBubblegumError::AlreadyNotInCollection),
             6055 => Ok(MplBubblegumError::MissingMplCoreCpiSignerAccount),
             6056 => Ok(MplBubblegumError::AssetIsNotFrozen),
+            6057 => Ok(MplBubblegumError::CollectionMustHaveRoyaltiesPlugin),
             _ => Err(ProgramError::InvalidArgument),
         }
     }
@@ -352,6 +356,9 @@ impl ToStr for MplBubblegumError {
                 "Missing mpl-core CPI signer account"
             }
             MplBubblegumError::AssetIsNotFrozen => "Asset is not frozen",
+            MplBubblegumError::CollectionMustHaveRoyaltiesPlugin => {
+                "Core collections must have the Royalties plugin to inherit seller fee basis points"
+            }
         }
     }
 }
