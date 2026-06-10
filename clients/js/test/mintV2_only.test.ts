@@ -2,6 +2,7 @@ import {
   defaultPublicKey,
   generateSigner,
   publicKey,
+  PublicKey,
   sol,
   none,
 } from '@metaplex-foundation/umi';
@@ -13,7 +14,9 @@ import {
   hashLeafV2,
   MetadataArgsV2Args,
   mintV2 as baseMintV2,
+  SELLER_FEE_BASIS_POINTS_INHERIT,
 } from '../src';
+import { mintV2 as mintV2WithInheritedSellerFees } from '../src/mintV2';
 import { createTreeV2, createUmi, mintV2 } from './_setup';
 
 test('it can mint a compressed NFT using V2 instructions', async (t) => {
@@ -35,6 +38,35 @@ test('it can mint a compressed NFT using V2 instructions', async (t) => {
   });
   const merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(leaf));
+});
+
+test('it requires seller fee basis points when minting without a core collection', async (t) => {
+  // Given an empty Bubblegum tree.
+  const umi = await createUmi();
+  const merkleTree = await createTreeV2(umi);
+  const leafOwner = generateSigner(umi);
+
+  // When we build a collectionless mint without seller fee basis points.
+  const metadata = {
+    name: 'My NFT',
+    uri: 'https://example.com/my-nft.json',
+    collection: none<PublicKey>(),
+    creators: [],
+  };
+
+  // Then the SDK rejects the missing value before submitting the transaction.
+  t.throws(
+    () =>
+      mintV2WithInheritedSellerFees(umi, {
+        leafOwner: leafOwner.publicKey,
+        merkleTree,
+        metadata,
+      }),
+    {
+      message:
+        'metadata.sellerFeeBasisPoints is required unless coreCollection is provided',
+    }
+  );
 });
 
 test('it can mint a compressed NFT with a separate payer', async (t) => {
@@ -82,6 +114,37 @@ test('it cannot mint a compressed NFT with asset data using V2 instructions', as
   await t.throwsAsync(promise, { name: 'NotAvailable' });
 
   // Then the rightmost leaf is still the default `Publickey`.
+  const merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.sequenceNumber, 0n);
+  t.is(
+    merkleTreeAccount.tree.rightMostPath.leaf,
+    publicKey(defaultPublicKey())
+  );
+});
+
+test('it cannot mint a collectionless NFT with the inherited seller fee sentinel', async (t) => {
+  // Given an empty Bubblegum tree.
+  const umi = await createUmi();
+  const merkleTree = await createTreeV2(umi);
+  const leafOwner = generateSigner(umi);
+
+  // When we try to mint a collectionless NFT with the inherited seller fee sentinel.
+  const metadata: MetadataArgsV2Args = {
+    name: 'My NFT',
+    uri: 'https://example.com/my-nft.json',
+    sellerFeeBasisPoints: SELLER_FEE_BASIS_POINTS_INHERIT,
+    collection: none(),
+    creators: [],
+  };
+  const promise = baseMintV2(umi, {
+    leafOwner: leafOwner.publicKey,
+    merkleTree,
+    metadata,
+  }).sendAndConfirm(umi);
+
+  // Then the program rejects it as too high.
+  await t.throwsAsync(promise, { name: 'MetadataBasisPointsTooHigh' });
+
   const merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.sequenceNumber, 0n);
   t.is(

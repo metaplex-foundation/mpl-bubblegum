@@ -3,6 +3,7 @@ use mpl_account_compression::{program::MplAccountCompression, Noop as MplNoop};
 use mpl_core::types::UpdateType;
 
 use crate::{
+    asserts::SELLER_FEE_BASIS_POINTS_INHERIT,
     error::BubblegumError,
     processor::process_collection_verification_mpl_core_only,
     state::{
@@ -144,6 +145,10 @@ pub(crate) fn set_collection_v2<'info>(
                 &updated_message,
             )?;
         } else {
+            if updated_message.seller_fee_basis_points == SELLER_FEE_BASIS_POINTS_INHERIT {
+                return Err(BubblegumError::MetadataBasisPointsTooHigh.into());
+            }
+
             updated_message.collection = None;
         }
 

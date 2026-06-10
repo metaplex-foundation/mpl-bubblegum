@@ -814,6 +814,26 @@ export class AssetIsNotFrozenError extends ProgramError {
 codeToErrorMap.set(0x17a8, AssetIsNotFrozenError);
 nameToErrorMap.set('AssetIsNotFrozen', AssetIsNotFrozenError);
 
+/** CollectionMustHaveRoyaltiesPlugin: Core collections must have the Royalties plugin to inherit seller fee basis points */
+export class CollectionMustHaveRoyaltiesPluginError extends ProgramError {
+  override readonly name: string = 'CollectionMustHaveRoyaltiesPlugin';
+
+  readonly code: number = 0x17a9; // 6057
+
+  constructor(program: Program, cause?: Error) {
+    super(
+      'Core collections must have the Royalties plugin to inherit seller fee basis points',
+      program,
+      cause
+    );
+  }
+}
+codeToErrorMap.set(0x17a9, CollectionMustHaveRoyaltiesPluginError);
+nameToErrorMap.set(
+  'CollectionMustHaveRoyaltiesPlugin',
+  CollectionMustHaveRoyaltiesPluginError
+);
+
 /**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors

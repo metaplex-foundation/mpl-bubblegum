@@ -1,4 +1,4 @@
-import { createCollection } from '@metaplex-foundation/mpl-core';
+import { createCollection, ruleSet } from '@metaplex-foundation/mpl-core';
 import {
   defaultPublicKey,
   generateSigner,
@@ -32,7 +32,9 @@ import {
   hashAssetData,
   hashCollection,
   LeafSchemaV2Flags,
+  SELLER_FEE_BASIS_POINTS_INHERIT,
 } from '../src';
+import { mintV2 as mintV2WithInheritedSellerFees } from '../src/mintV2';
 import { createTreeV2, createUmi, mintV2 } from './_setup';
 
 test('tree owner can update the metadata of a minted compressed NFT using V2 instructions', async (t) => {
@@ -246,6 +248,276 @@ test('it can update metadata using the getAssetWithProof helper using V2 instruc
   t.is(assetWithProof.rpcAssetProof, rpcAssetProof);
 });
 
+test('getAssetWithProof infers inherited seller fee metadata from the data hash', async (t) => {
+  // Given a DAS asset whose royalty basis points are resolved from the collection.
+  const assetId = publicKey('EczRmPqSEWBXtcMKVK1avV87EXH5JZrRbTVdUJdnYaKo');
+  const merkleTree = publicKey('BJjUoux3xacYcRZV31Ytsi4haJb3HgyzmweVDHutiLWU');
+  const leafOwner = publicKey('HjzLbPCVGFjXAo5HXS5fpQmXjQE6FMgDEPvFZon7rC7G');
+  const coreCollection = publicKey(
+    '7USYF5BnFo4FuE8eRoEqEvSvZSEaMG5AqPCQbLQ5BxPL'
+  );
+  const canonicalMetadata: MetadataArgsV2Args = {
+    name: 'My NFT',
+    uri: 'https://example.com/my-nft.json',
+    sellerFeeBasisPoints: SELLER_FEE_BASIS_POINTS_INHERIT,
+    collection: some(coreCollection),
+    creators: [],
+  };
+  const rpcAsset = {
+    ownership: { owner: leafOwner },
+    content: {
+      metadata: { name: 'My NFT', symbol: '' },
+      json_uri: 'https://example.com/my-nft.json',
+    },
+    royalty: {
+      basis_points: 500,
+      primary_sale_happened: false,
+    },
+    mutable: true,
+    supply: {},
+    creators: [],
+    grouping: [
+      {
+        group_key: 'collection',
+        group_value: coreCollection,
+        verified: true,
+      },
+    ],
+    compression: {
+      leaf_id: 0,
+      data_hash: publicKey(hashMetadataDataV2(canonicalMetadata)),
+      creator_hash: defaultPublicKey(),
+      collection_hash: publicKey(hashCollection(coreCollection)),
+      asset_data_hash: publicKey(hashAssetData()),
+      flags: LeafSchemaV2Flags.None,
+    },
+  } as unknown as DasApiAsset;
+  const rpcAssetProof = {
+    proof: [],
+    root: defaultPublicKey(),
+    tree_id: merkleTree,
+    node_index: 1,
+  } as unknown as GetAssetProofRpcResponse;
+  const context = {
+    rpc: {
+      getAsset: async () => rpcAsset,
+      getAssetProof: async () => rpcAssetProof,
+    },
+  } as unknown as Parameters<typeof getAssetWithProof>[0];
+
+  // When we use the getAssetWithProof helper.
+  const assetWithProof = await getAssetWithProof(context, assetId);
+
+  // Then metadata uses the resolved value, while currentMetadata keeps the sentinel for hashing.
+  t.is(assetWithProof.metadata.sellerFeeBasisPoints, 500);
+  t.is(
+    assetWithProof.currentMetadata.sellerFeeBasisPoints,
+    SELLER_FEE_BASIS_POINTS_INHERIT
+  );
+  t.deepEqual(assetWithProof.currentMetadata.collection, some(coreCollection));
+  t.is(assetWithProof.rpcAsset.royalty?.basis_points, 500);
+});
+
+test('getAssetWithProof resolves inherited seller fee basis points with a collection resolver', async (t) => {
+  // Given a DAS asset whose royalty basis points are still the raw sentinel.
+  const assetId = publicKey('EczRmPqSEWBXtcMKVK1avV87EXH5JZrRbTVdUJdnYaKo');
+  const merkleTree = publicKey('BJjUoux3xacYcRZV31Ytsi4haJb3HgyzmweVDHutiLWU');
+  const leafOwner = publicKey('HjzLbPCVGFjXAo5HXS5fpQmXjQE6FMgDEPvFZon7rC7G');
+  const coreCollection = publicKey(
+    '7USYF5BnFo4FuE8eRoEqEvSvZSEaMG5AqPCQbLQ5BxPL'
+  );
+  const canonicalMetadata: MetadataArgsV2Args = {
+    name: 'My NFT',
+    uri: 'https://example.com/my-nft.json',
+    sellerFeeBasisPoints: SELLER_FEE_BASIS_POINTS_INHERIT,
+    collection: some(coreCollection),
+    creators: [],
+  };
+  const rpcAsset = {
+    ownership: { owner: leafOwner },
+    content: {
+      metadata: { name: 'My NFT', symbol: '' },
+      json_uri: 'https://example.com/my-nft.json',
+    },
+    royalty: {
+      basis_points: SELLER_FEE_BASIS_POINTS_INHERIT,
+      primary_sale_happened: false,
+    },
+    mutable: true,
+    supply: {},
+    creators: [],
+    grouping: [
+      {
+        group_key: 'collection',
+        group_value: coreCollection,
+        verified: true,
+      },
+    ],
+    compression: {
+      leaf_id: 0,
+      data_hash: publicKey(hashMetadataDataV2(canonicalMetadata)),
+      creator_hash: defaultPublicKey(),
+      collection_hash: publicKey(hashCollection(coreCollection)),
+      asset_data_hash: publicKey(hashAssetData()),
+      flags: LeafSchemaV2Flags.None,
+    },
+  } as unknown as DasApiAsset;
+  const rpcAssetProof = {
+    proof: [],
+    root: defaultPublicKey(),
+    tree_id: merkleTree,
+    node_index: 1,
+  } as unknown as GetAssetProofRpcResponse;
+  const context = {
+    rpc: {
+      getAsset: async () => rpcAsset,
+      getAssetProof: async () => rpcAssetProof,
+    },
+  } as unknown as Parameters<typeof getAssetWithProof>[0];
+
+  // When we use the getAssetWithProof helper with a collection royalty resolver.
+  const assetWithProof = await getAssetWithProof(context, assetId, {
+    resolveCollectionSellerFeeBasisPoints: (collection) => {
+      t.is(collection, coreCollection);
+      return 500;
+    },
+  });
+
+  // Then metadata uses the resolved value, while currentMetadata keeps the sentinel for hashing.
+  t.is(assetWithProof.metadata.sellerFeeBasisPoints, 500);
+  t.is(
+    assetWithProof.currentMetadata.sellerFeeBasisPoints,
+    SELLER_FEE_BASIS_POINTS_INHERIT
+  );
+  t.deepEqual(assetWithProof.currentMetadata.collection, some(coreCollection));
+});
+
+test('getAssetWithProof currentMetadata can update inherited seller fee assets', async (t) => {
+  // Given an empty Bubblegum tree.
+  const umi = await createUmi();
+  const merkleTree = await createTreeV2(umi);
+  const leafOwner = generateSigner(umi).publicKey;
+
+  // And a Bubblegum V2 Core collection with royalties.
+  const coreCollection = generateSigner(umi);
+  const collectionUpdateAuthority = generateSigner(umi);
+  await createCollection(umi, {
+    collection: coreCollection,
+    updateAuthority: collectionUpdateAuthority.publicKey,
+    name: 'Test Collection',
+    uri: 'https://example.com/collection.json',
+    plugins: [
+      {
+        type: 'BubblegumV2',
+      },
+      {
+        type: 'Royalties',
+        basisPoints: 500,
+        creators: [
+          { address: collectionUpdateAuthority.publicKey, percentage: 100 },
+        ],
+        ruleSet: ruleSet('None'),
+      },
+    ],
+  }).sendAndConfirm(umi);
+
+  // And a minted NFT that defaults to inheriting seller fees from the collection.
+  const metadata = {
+    name: 'My NFT',
+    uri: 'https://example.com/my-nft.json',
+    collection: some(coreCollection.publicKey),
+    creators: [],
+  };
+  await mintV2WithInheritedSellerFees(umi, {
+    collectionAuthority: collectionUpdateAuthority,
+    leafOwner,
+    merkleTree,
+    coreCollection: coreCollection.publicKey,
+    metadata,
+  }).sendAndConfirm(umi);
+
+  const canonicalMetadata: MetadataArgsV2Args = {
+    ...metadata,
+    sellerFeeBasisPoints: SELLER_FEE_BASIS_POINTS_INHERIT,
+  };
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  const assetId = findLeafAssetIdPda(umi, { merkleTree, leafIndex: 0 })[0];
+  const rpcAsset = {
+    ownership: { owner: leafOwner },
+    content: {
+      metadata: { name: 'My NFT', symbol: '' },
+      json_uri: 'https://example.com/my-nft.json',
+    },
+    royalty: {
+      basis_points: 500,
+      primary_sale_happened: false,
+      basis_points_raw: SELLER_FEE_BASIS_POINTS_INHERIT,
+      sfbp_inherited: true,
+    },
+    mutable: true,
+    supply: {},
+    creators: [],
+    grouping: [
+      {
+        group_key: 'collection',
+        group_value: coreCollection.publicKey,
+        verified: true,
+      },
+    ],
+    compression: {
+      leaf_id: 0,
+      data_hash: publicKey(hashMetadataDataV2(canonicalMetadata)),
+      creator_hash: publicKey(hashMetadataCreators(canonicalMetadata.creators)),
+      collection_hash: publicKey(hashCollection(coreCollection.publicKey)),
+      asset_data_hash: publicKey(hashAssetData()),
+      flags: LeafSchemaV2Flags.None,
+    },
+  } as unknown as DasApiAsset;
+  const rpcAssetProof = {
+    proof: [],
+    root: publicKey(getCurrentRoot(merkleTreeAccount.tree)),
+    tree_id: merkleTree,
+    node_index: 1,
+  } as unknown as GetAssetProofRpcResponse;
+  const context = {
+    rpc: {
+      getAsset: async () => rpcAsset,
+      getAssetProof: async () => rpcAssetProof,
+    },
+  } as unknown as Parameters<typeof getAssetWithProof>[0];
+
+  // When we update from the helper output without overriding currentMetadata.
+  const assetWithProof = await getAssetWithProof(context, assetId);
+  t.is(assetWithProof.metadata.sellerFeeBasisPoints, 500);
+  t.is(
+    assetWithProof.currentMetadata.sellerFeeBasisPoints,
+    SELLER_FEE_BASIS_POINTS_INHERIT
+  );
+
+  await updateMetadataV2(umi, {
+    ...assetWithProof,
+    authority: collectionUpdateAuthority,
+    coreCollection: coreCollection.publicKey,
+    updateArgs: {
+      name: some('New name'),
+    },
+  }).sendAndConfirm(umi);
+
+  // Then the leaf was updated using the sentinel-based metadata hash.
+  const updatedMetadata: MetadataArgsV2Args = {
+    ...canonicalMetadata,
+    name: 'New name',
+  };
+  const updatedLeaf = hashLeafV2(umi, {
+    merkleTree,
+    owner: leafOwner,
+    leafIndex: 0,
+    metadata: updatedMetadata,
+  });
+  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(updatedLeaf));
+});
+
 test('it can update metadata using collection update authority if NFT is in a collection', async (t) => {
   // Given an empty Bubblegum tree.
   const umi = await createUmi();
@@ -316,6 +588,143 @@ test('it can update metadata using collection update authority if NFT is in a co
   });
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(updatedLeaf));
+});
+
+test('it can update a collected NFT to inherit seller fee basis points', async (t) => {
+  // Given an empty Bubblegum tree.
+  const umi = await createUmi();
+  const merkleTree = await createTreeV2(umi);
+  const leafOwner = generateSigner(umi).publicKey;
+
+  // And a Collection NFT.
+  const coreCollection = generateSigner(umi);
+  const collectionUpdateAuthority = generateSigner(umi);
+  await createCollection(umi, {
+    collection: coreCollection,
+    updateAuthority: collectionUpdateAuthority.publicKey,
+    name: 'Test Collection',
+    uri: 'https://example.com/collection.json',
+    plugins: [
+      {
+        type: 'BubblegumV2',
+      },
+      {
+        type: 'Royalties',
+        basisPoints: 500,
+        creators: [
+          { address: collectionUpdateAuthority.publicKey, percentage: 100 },
+        ],
+        ruleSet: ruleSet('None'),
+      },
+    ],
+  }).sendAndConfirm(umi);
+
+  // And a minted NFT in the collection with an explicit seller fee.
+  const metadata: MetadataArgsV2Args = {
+    name: 'My NFT',
+    uri: 'https://example.com/my-nft.json',
+    sellerFeeBasisPoints: 550, // 5.5%
+    collection: some(coreCollection.publicKey),
+    creators: [],
+  };
+  await baseMintV2(umi, {
+    collectionAuthority: collectionUpdateAuthority,
+    leafOwner,
+    merkleTree,
+    coreCollection: coreCollection.publicKey,
+    metadata,
+  }).sendAndConfirm(umi);
+
+  // When the collection authority updates the NFT to inherit seller fees.
+  const updateArgs: UpdateArgsArgs = {
+    sellerFeeBasisPoints: some(SELLER_FEE_BASIS_POINTS_INHERIT),
+  };
+
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  await updateMetadataV2(umi, {
+    authority: collectionUpdateAuthority,
+    leafOwner,
+    merkleTree,
+    coreCollection: coreCollection.publicKey,
+    root: getCurrentRoot(merkleTreeAccount.tree),
+    nonce: 0,
+    index: 0,
+    currentMetadata: metadata,
+    proof: [],
+    updateArgs,
+  }).sendAndConfirm(umi);
+
+  // Then the leaf uses the inherited seller fee sentinel in its hash.
+  const updatedMetadata: MetadataArgsV2Args = {
+    ...metadata,
+    sellerFeeBasisPoints: SELLER_FEE_BASIS_POINTS_INHERIT,
+  };
+  const updatedLeaf = hashLeafV2(umi, {
+    merkleTree,
+    owner: leafOwner,
+    leafIndex: 0,
+    metadata: updatedMetadata,
+  });
+  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(updatedLeaf));
+});
+
+test('it cannot update a collected NFT to inherit seller fees from a collection without royalties', async (t) => {
+  // Given an empty Bubblegum tree.
+  const umi = await createUmi();
+  const merkleTree = await createTreeV2(umi);
+  const leafOwner = generateSigner(umi).publicKey;
+
+  // And a Collection NFT without the Royalties plugin.
+  const coreCollection = generateSigner(umi);
+  const collectionUpdateAuthority = generateSigner(umi);
+  await createCollection(umi, {
+    collection: coreCollection,
+    updateAuthority: collectionUpdateAuthority.publicKey,
+    name: 'Test Collection',
+    uri: 'https://example.com/collection.json',
+    plugins: [
+      {
+        type: 'BubblegumV2',
+      },
+    ],
+  }).sendAndConfirm(umi);
+
+  // And a minted NFT in the collection with an explicit seller fee.
+  const metadata: MetadataArgsV2Args = {
+    name: 'My NFT',
+    uri: 'https://example.com/my-nft.json',
+    sellerFeeBasisPoints: 550,
+    collection: some(coreCollection.publicKey),
+    creators: [],
+  };
+  await baseMintV2(umi, {
+    collectionAuthority: collectionUpdateAuthority,
+    leafOwner,
+    merkleTree,
+    coreCollection: coreCollection.publicKey,
+    metadata,
+  }).sendAndConfirm(umi);
+
+  // When the collection authority tries to switch the NFT to inherited seller fees.
+  const merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  const promise = updateMetadataV2(umi, {
+    authority: collectionUpdateAuthority,
+    leafOwner,
+    merkleTree,
+    coreCollection: coreCollection.publicKey,
+    root: getCurrentRoot(merkleTreeAccount.tree),
+    nonce: 0,
+    index: 0,
+    currentMetadata: metadata,
+    proof: [],
+    updateArgs: {
+      sellerFeeBasisPoints: some(SELLER_FEE_BASIS_POINTS_INHERIT),
+    },
+  }).sendAndConfirm(umi);
+
+  // Then the program rejects the collection because there is nothing to inherit.
+  await t.throwsAsync(promise, { name: 'CollectionMustHaveRoyaltiesPlugin' });
 });
 
 test('it can update metadata using collection update delegate when NFT is in a collection', async (t) => {

@@ -4423,6 +4423,11 @@
       "code": 6056,
       "name": "AssetIsNotFrozen",
       "msg": "Asset is not frozen"
+    },
+    {
+      "code": 6057,
+      "name": "CollectionMustHaveRoyaltiesPlugin",
+      "msg": "Core collections must have the Royalties plugin to inherit seller fee basis points"
     }
   ],
   "metadata": {
