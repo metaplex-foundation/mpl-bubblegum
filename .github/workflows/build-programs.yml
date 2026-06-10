@@ -5,6 +5,13 @@ on:
     inputs:
       git_ref:
         type: string
+  workflow_dispatch:
+    inputs:
+      git_ref:
+        description: Commit hash, branch, or tag to build
+        default: main
+        required: true
+        type: string
 
 env:
   CACHE: true
@@ -20,45 +27,53 @@ jobs:
           ref: ${{ inputs.git_ref || github.sha }}
 
       - name: Load environment variables
-        id: env_vars
         run: |
-          cat .github/.env >> "$GITHUB_ENV"
-          while IFS='=' read -r key value; do
-            case "$key" in
-              RUST_VERSION) printf 'rust_version=%s\n' "$value" >> "$GITHUB_OUTPUT" ;;
-              SOLANA_VERSION) printf 'solana_version=%s\n' "$value" >> "$GITHUB_OUTPUT" ;;
-            esac
-          done < .github/.env
+          # Allowlist instead of a blanket `cat .github/.env >> "$GITHUB_ENV"` so a
+          # PR-editable key in `.github/.env` cannot inject arbitrary env vars into
+          # subsequent steps.
+          grep -E '^(CARGO_TERM_COLOR|RUST_VERSION|SOLANA_VERSION|SOLANA_VERIFY_VERSION|SOLANA_VERIFY_RUST_VERSION|PROGRAMS)=' .github/.env >> "$GITHUB_ENV"
 
       - name: Install Rust
         uses: metaplex-foundation/actions/install-rust@v1
         with:
-          toolchain: ${{ steps.env_vars.outputs.rust_version }}
+          # solana-verify is compiled from source and needs Rust 1.85+. The program
+          # itself builds inside the verifiable-build container, so the host
+          # toolchain only has to satisfy `cargo install solana-verify`.
+          toolchain: ${{ env.SOLANA_VERIFY_RUST_VERSION }}
 
       - name: Install Solana
         uses: metaplex-foundation/actions/install-solana@v1
         with:
-          version: ${{ steps.env_vars.outputs.solana_version }}
+          version: ${{ env.SOLANA_VERSION }}
           cache: ${{ env.CACHE }}
 
       - name: Cache program dependencies
         if: env.CACHE == 'true'
         uses: metaplex-foundation/actions/cache-programs@v1
 
-      - name: Install libudev (required by solana-verify)
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libudev-dev pkg-config
+      - name: Install solana-verify
+        uses: metaplex-foundation/actions/install-solana-verify@v1
+        with:
+          version: ${{ env.SOLANA_VERIFY_VERSION }}
 
-      - name: Install Solana Verify
-        run: cargo install solana-verify --locked --force --version "${SOLANA_VERIFY_VERSION}"
+      - name: Build bubblegum (verified)
+        uses: metaplex-foundation/actions/verified-build@v1
+        with:
+          library-name: bubblegum
+          package: bubblegum
+          # bubblegum's Cargo workspace is nested under programs/bubblegum (the repo
+          # root has no Cargo.toml), so run the verified build from there and copy
+          # the artifact back up to programs/.bin at the repo root.
+          working-directory: programs/bubblegum
+          solana-version: ${{ env.SOLANA_VERSION }}
+          output-dir: ../../programs/.bin
 
-      - name: Build programs
+      - name: Dump external program binaries
         shell: bash
-        working-directory: configs/scripts/program
-        run: ./build.sh
-        env:
-          PROGRAMS: ${{ env.PROGRAMS }}
+        run: |
+          ./configs/scripts/program/dump.sh ./programs/.bin
+          ./configs/scripts/program/dump_devnet.sh ./programs/.bin
+
       - name: Sanitize Ref
         id: sanitize
         shell: bash
@@ -69,6 +84,7 @@ jobs:
           fi
           SANITIZED=${REF//\//-}
           echo "sanitized=$SANITIZED" >> "$GITHUB_OUTPUT"
+
       - name: Upload program builds
         uses: actions/upload-artifact@v4
         with:

@@ -21,6 +21,7 @@ on:
         type: choice
         options:
           - mainnet-beta
+          - devnet
 
 env:
   CACHE: true
@@ -28,7 +29,7 @@ env:
 jobs:
   verify_program:
     name: Program / Verify
-    runs-on: ubuntu-latest-16-cores
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
@@ -38,37 +39,31 @@ jobs:
           ref: ${{ inputs.git_ref }}
 
       - name: Load environment variables
-        id: env_vars
         run: |
-          grep -E '^(RUST_VERSION|DEPLOY_SOLANA_VERSION|SOLANA_VERIFY_VERSION|SOLANA_VERIFY_BASE_IMAGE)=' .github/.env >> "$GITHUB_ENV"
-          while IFS='=' read -r key value; do
-            case "$key" in
-              RUST_VERSION) printf 'rust_version=%s\n' "$value" >> "$GITHUB_OUTPUT" ;;
-              DEPLOY_SOLANA_VERSION) printf 'deploy_solana_version=%s\n' "$value" >> "$GITHUB_OUTPUT" ;;
-            esac
-          done < .github/.env
-
-      - name: Install Linux build deps
-        run: sudo apt-get update && sudo apt-get install -y libudev-dev pkg-config
+          grep -E '^(SOLANA_VERSION|DEPLOY_SOLANA_VERSION|SOLANA_VERIFY_VERSION|SOLANA_VERIFY_RUST_VERSION)=' .github/.env >> "$GITHUB_ENV"
 
       - name: Install Rust
         uses: metaplex-foundation/actions/install-rust@v1
         with:
-          toolchain: ${{ steps.env_vars.outputs.rust_version }}
+          toolchain: ${{ env.SOLANA_VERIFY_RUST_VERSION }}
 
       - name: Install Solana
         uses: metaplex-foundation/actions/install-solana@v1
         with:
-          version: ${{ steps.env_vars.outputs.deploy_solana_version }}
+          version: ${{ env.DEPLOY_SOLANA_VERSION }}
           cache: ${{ env.CACHE }}
 
-      - name: Install Solana Verify
-        run: cargo install solana-verify --locked --force --version "${SOLANA_VERIFY_VERSION}"
+      - name: Install solana-verify
+        uses: metaplex-foundation/actions/install-solana-verify@v1
+        with:
+          version: ${{ env.SOLANA_VERIFY_VERSION }}
 
       - name: Set RPC
         run: |
           if [ "${{ inputs.cluster }}" == "mainnet-beta" ]; then
             printf 'RPC=%s\n' "${{ secrets.MAINNET_RPC }}" >> "$GITHUB_ENV"
+          elif [ "${{ inputs.cluster }}" == "devnet" ]; then
+            printf 'RPC=%s\n' "${{ secrets.DEVNET_RPC }}" >> "$GITHUB_ENV"
           else
             echo "Invalid cluster: ${{ inputs.cluster }}"
             exit 1
@@ -77,51 +72,43 @@ jobs:
       - name: Identify Program
         env:
           BUBBLEGUM_ID: ${{ secrets.BUBBLEGUM_ID }}
-          SQUADS_BOT_KEY: ${{ secrets.SQUADS_BOT_KEY }}
         run: |
           printf 'PROGRAM_NAME=%s\n' "${{ inputs.program }}" >> "$GITHUB_ENV"
           printf 'PROGRAM_PACKAGE=%s\n' "${{ inputs.program }}" >> "$GITHUB_ENV"
           printf '%s' "$BUBBLEGUM_ID" > ./program-id.json
-          printf '%s' "$SQUADS_BOT_KEY" > ./deployer-key.json
+          # Squads vault that signed the verified-build PDA upload during deploy;
+          # OtterSec's remote job (mainnet only) looks the PDA up by this uploader.
+          # Must match SQUADS_VAULT per cluster in deploy-program.yml.
+          if [ "${{ inputs.cluster }}" == "mainnet-beta" ]; then
+            printf 'SQUADS_VAULT=%s\n' "bfQVv6niKVgEURYqQ1beJmiEQQN7MrvLRvk3mZGFubb" >> "$GITHUB_ENV"
+          elif [ "${{ inputs.cluster }}" == "devnet" ]; then
+            printf 'SQUADS_VAULT=%s\n' "Fsxr5WVKZZoeb7xgwTWRHymSRVGY9vk7m5B5GPu1KU59" >> "$GITHUB_ENV"
+          fi
 
-      # solana-verify 0.4.15 unconditionally loads ~/.config/solana/cli/config.yml
-      # during PDA upload (Ellipsis-Labs/solana-verifiable-build process_otter_verify_ixs),
-      # so initialize a CLI config even though --keypair and --url are passed explicitly.
-      - name: Initialize Solana CLI config for solana-verify
-        run: |
-          solana config set \
-            --url "${RPC}" \
-            --keypair "${GITHUB_WORKSPACE}/deployer-key.json"
-
-      - name: Upload verified-build PDA
-        run: |
-          PROGRAM_ID="$(solana-keygen pubkey ./program-id.json)"
-          COMMIT_HASH="$(git rev-parse HEAD)"
-
-          solana-verify verify-from-repo \
-            --current-dir \
-            --program-id "${PROGRAM_ID}" \
-            --url "${RPC}" \
-            --keypair ./deployer-key.json \
-            --base-image "${SOLANA_VERIFY_BASE_IMAGE}" \
-            --library-name "${PROGRAM_NAME}" \
-            --mount-path programs/bubblegum \
-            --commit-hash "${COMMIT_HASH}" \
-            --skip-prompt \
-            https://github.com/metaplex-foundation/mpl-bubblegum.git \
-            -- \
-            --package "${PROGRAM_PACKAGE}"
-
-      - name: Submit remote verification job
-        run: |
-          PROGRAM_ID="$(solana-keygen pubkey ./program-id.json)"
-          UPLOADER="$(solana-keygen pubkey ./deployer-key.json)"
-
-          solana-verify remote submit-job \
-            --url "${RPC}" \
-            --program-id "${PROGRAM_ID}" \
-            --uploader "${UPLOADER}"
+      # bubblegum is squads-deployed (devnet + mainnet), so the verified-build PDA
+      # upload requires the squads vault to sign — a CI keypair cannot do it. This
+      # workflow runs `submit-remote-job` mode: it rebuilds the program
+      # deterministically, compares the local hash to the on-chain hash, and —
+      # since mpl-bubblegum is a public repo — submits the remote OtterSec
+      # verification job for the vault-uploaded PDA — but only on mainnet, since
+      # OtterSec has no devnet verifier. The Cargo workspace is nested, so
+      # the verifier is pointed at programs/bubblegum via mount-path.
+      - name: Verify program
+        uses: metaplex-foundation/actions/verify-program@v1
+        with:
+          mode: submit-remote-job
+          program-id-keypair: ./program-id.json
+          rpc-url: ${{ env.RPC }}
+          library-name: ${{ env.PROGRAM_NAME }}
+          package: ${{ env.PROGRAM_PACKAGE }}
+          mount-path: programs/bubblegum
+          solana-version: ${{ env.SOLANA_VERSION }}
+          uploader: ${{ env.SQUADS_VAULT }}
+          repo-visibility: public
+          # OtterSec has no devnet verifier, so only submit the remote job on
+          # mainnet. submit-remote-job still rebuilds + hash-compares regardless.
+          submit-remote: ${{ inputs.cluster == 'mainnet-beta' }}
 
       - name: Clean up signer files
         if: always()
-        run: rm -f ./deployer-key.json ./program-id.json
+        run: rm -f ./program-id.json

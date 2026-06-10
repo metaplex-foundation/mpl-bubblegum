@@ -99,38 +99,38 @@ jobs:
           ref: ${{ inputs.git_ref }}
 
       - name: Load environment variables
-        id: env_vars
         run: |
-          cat .github/.env >> "$GITHUB_ENV"
-          while IFS='=' read -r key value; do
-            case "$key" in
-              RUST_VERSION) printf 'rust_version=%s\n' "$value" >> "$GITHUB_OUTPUT" ;;
-              DEPLOY_SOLANA_VERSION) printf 'deploy_solana_version=%s\n' "$value" >> "$GITHUB_OUTPUT" ;;
-            esac
-          done < .github/.env
+          # Allowlist instead of a blanket `cat .github/.env >> "$GITHUB_ENV"` so a
+          # PR-editable key in `.github/.env` cannot inject arbitrary env vars into
+          # subsequent steps.
+          grep -E '^(CARGO_TERM_COLOR|RUST_VERSION|SOLANA_VERSION|SOLANA_VERIFY_VERSION|SOLANA_VERIFY_RUST_VERSION|COMMIT_USER_NAME|COMMIT_USER_EMAIL|DEPLOY_SOLANA_VERSION)=' .github/.env >> "$GITHUB_ENV"
 
       - name: Install Rust
         uses: metaplex-foundation/actions/install-rust@v1
         with:
-          toolchain: ${{ steps.env_vars.outputs.rust_version }}
+          # solana-verify (mainnet) and the squads-verified-upgrade crate compile
+          # from source and need Rust 1.85+. The deploy job never builds the program
+          # itself (it downloads the build artifact), so the host toolchain only has
+          # to satisfy those two.
+          toolchain: ${{ env.SOLANA_VERIFY_RUST_VERSION }}
 
       - name: Install Solana
         uses: metaplex-foundation/actions/install-solana@v1
         with:
-          version: ${{ steps.env_vars.outputs.deploy_solana_version }}
+          version: ${{ env.DEPLOY_SOLANA_VERSION }}
           cache: ${{ env.CACHE }}
+
+      - name: Install solana-verify
+        if: github.event.inputs.dry_run == 'false' && (inputs.cluster == 'mainnet-beta' || inputs.cluster == 'devnet')
+        uses: metaplex-foundation/actions/install-solana-verify@v1
+        with:
+          version: ${{ env.SOLANA_VERIFY_VERSION }}
 
       # - name: Install Anchor CLI
       #   uses: metaplex-foundation/actions/install-anchor-cli@v1
       #   with:
       #     version: ${{ env.ANCHOR_VERSION }}
       #     cache: ${{ env.CACHE }}
-
-      - name: Install cargo-release
-        uses: metaplex-foundation/actions/install-cargo-release@v1
-        if: github.event.inputs.publish_crate == 'true'
-        with:
-          cache: ${{ env.CACHE }}
 
       - name: Install cargo-release
         uses: metaplex-foundation/actions/install-cargo-release@v1
@@ -160,8 +160,13 @@ jobs:
       - name: Identify program
         run: |
           echo PROGRAM_NAME="${{ inputs.program }}" >> $GITHUB_ENV
+          echo PROGRAM_PACKAGE="${{ inputs.program }}" >> $GITHUB_ENV
           echo ${{ secrets.BUBBLEGUM_ID }} > ./program-id.json
-          
+          # Derive the program id pubkey from the canonical keypair so the
+          # bundled-proposal step cannot drift from the PDA export target.
+          # solana-keygen pubkey only emits the public key, not the secret.
+          echo "PROGRAM_ID=$(solana-keygen pubkey ./program-id.json)" >> $GITHUB_ENV
+
           if [[ "${{ inputs.cluster }}" == "sonic"* ]]; then
             echo ${{ secrets.BUBBLEGUM_SONIC_DEPLOY_KEY }} > ./deployer-key.json
             echo DEPLOY_TYPE="direct" >> $GITHUB_ENV
@@ -181,7 +186,7 @@ jobs:
           else
             echo "Invalid cluster: ${{ inputs.cluster }}"
             exit 1
-          fi  
+          fi
 
       - name: Sanitize Ref
         id: sanitize
@@ -212,10 +217,6 @@ jobs:
             --max-sign-attempts 100 \
             --use-rpc
 
-      - name: Clean up direct signer files
-        if: always() && env.DEPLOY_TYPE == 'direct'
-        run: rm -f ./deployer-key.json ./program-id.json
-
       - name: Download release asset
         uses: actions/github-script@v5
         id: get_release
@@ -231,18 +232,18 @@ jobs:
               repo: context.repo.repo,
               tag: tag
             });
-            
+
             if (release.status !== 200) {
               throw new Error(`Failed to fetch release for tag ${tag}`);
             }
-            
+
             const asset = release.data.assets.find(asset => asset.name === assetName);
             if (!asset) {
               throw new Error(`Asset ${assetName} not found in release tagged ${tag}`);
             }
 
             core.setOutput("url", asset.url);
-  
+
       - name: Download the Selected Asset
         if: needs.check_tag.outputs.type == 'release'
         run: |
@@ -252,11 +253,33 @@ jobs:
             -H "Accept: application/octet-stream" \
             "${{ steps.get_release.outputs.url }}"
 
+      # Squads-deployed clusters need the squads vault to sign both the program
+      # upgrade and the verified-build PDA write. Export the PDA-write instruction
+      # first, then bundle it with the program upgrade in a single atomic squads
+      # transaction below. A failed export aborts before writing an orphan buffer.
+      - name: Export verified-build PDA transaction
+        if: github.event.inputs.dry_run == 'false' && env.DEPLOY_TYPE == 'squads' && (inputs.cluster == 'mainnet-beta' || inputs.cluster == 'devnet')
+        uses: metaplex-foundation/actions/verify-program@v1
+        with:
+          mode: export-pda-tx
+          program-id-keypair: ./program-id.json
+          uploader: ${{ env.SQUADS_VAULT }}
+          rpc-url: ${{ env.RPC }}
+          library-name: ${{ env.PROGRAM_NAME }}
+          package: ${{ env.PROGRAM_PACKAGE }}
+          mount-path: programs/bubblegum
+          solana-version: ${{ env.SOLANA_VERSION }}
+          repo-visibility: public
+          submit-remote: false
+          output-file: verify-pda-tx.b58
+
       - name: Deploy squads buffer
         if: github.event.inputs.dry_run == 'false' && env.DEPLOY_TYPE == 'squads'
+        env:
+          SQUADS_BOT_KEY: ${{ secrets.SQUADS_BOT_KEY }}
         run: |
           echo "Deploying buffer for ${{ inputs.program }} on ${{ inputs.cluster }}"
-          echo ${{ secrets.SQUADS_BOT_KEY }} > ./submitter-key.json
+          printf '%s' "$SQUADS_BOT_KEY" > ./submitter-key.json
 
           BUFFER=$(solana program write-buffer -u ${{ env.RPC }} -k ./submitter-key.json --max-sign-attempts 100 --use-rpc ./programs/.bin/${{ env.PROGRAM_NAME }}.so | awk '{print $2}')
           echo "Buffer: $BUFFER"
@@ -266,12 +289,30 @@ jobs:
             -k ./submitter-key.json \
             -u ${{ env.RPC }}
 
-          rm ./submitter-key.json
-
           echo "BUFFER=$BUFFER" >> $GITHUB_ENV
-        
+
+      # Build the bundled proposal with a pinned, isolated Rust crate
+      # (cargo --locked) instead of an npm helper, so no npm/pnpm dependency tree
+      # or install scripts run in the job that holds the squads bot key. The crate
+      # reuses the Rust toolchain installed above.
+      #
+      # The crate also reads RPC, SQUADS_MULTISIG, and SQUADS_VAULT, which are
+      # exported into $GITHUB_ENV by the "Set RPC" and "Identify program" steps,
+      # plus BUFFER from "Deploy squads buffer". The step-level env below sets the
+      # remaining inputs the crate needs. The crate defaults the squads authority
+      # index to 1, which derives the shared upgrade-authority vault (SQUADS_VAULT);
+      # SQUADS_PROGRAM_INDEX is the program-manager slot, not the authority index.
+      - name: Create bundled Squads proposal
+        if: github.event.inputs.dry_run == 'false' && env.DEPLOY_TYPE == 'squads' && (inputs.cluster == 'mainnet-beta' || inputs.cluster == 'devnet')
+        env:
+          PROGRAM_ID: ${{ env.PROGRAM_ID }}
+          SUBMITTER_KEYPAIR: ./submitter-key.json
+          PDA_TX_FILE: verify-pda-tx.b58
+          SPILL_ADDRESS: botTxAkJhuCtNNn9xsH8fHJjzTkcN6XD4dR3R5hkzV2
+        run: cargo run --locked --manifest-path configs/scripts/program/squads-verified-upgrade/Cargo.toml
+
       - name: Create Squads proposal
-        if: github.event.inputs.dry_run == 'false' && env.DEPLOY_TYPE == 'squads'
+        if: github.event.inputs.dry_run == 'false' && env.DEPLOY_TYPE == 'squads' && inputs.cluster != 'mainnet-beta' && inputs.cluster != 'devnet'
         uses: metaplex-foundation/squads-program-upgrade@main
         with:
           network-url: ${{ env.RPC }}
@@ -313,3 +354,7 @@ jobs:
                 force: true
               });
             })
+
+      - name: Clean up signer files
+        if: always()
+        run: rm -f ./deployer-key.json ./program-id.json ./submitter-key.json
