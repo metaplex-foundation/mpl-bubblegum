@@ -2,6 +2,7 @@ import {
   Context,
   Pda,
   PublicKey,
+  RpcGetTransactionOptions,
   TransactionSignature,
 } from '@metaplex-foundation/umi';
 import { publicKey, string, u64 } from '@metaplex-foundation/umi/serializers';
@@ -31,9 +32,10 @@ export function findLeafAssetIdPda(
 
 export async function parseLeafFromMintV1Transaction(
   context: Pick<Context, 'programs' | 'eddsa' | 'rpc'>,
-  signature: TransactionSignature
+  signature: TransactionSignature,
+  options?: RpcGetTransactionOptions
 ): Promise<LeafSchema> {
-  const transaction = await context.rpc.getTransaction(signature);
+  const transaction = await context.rpc.getTransaction(signature, options);
   const innerInstructions = transaction?.meta.innerInstructions;
 
   if (innerInstructions) {
@@ -48,9 +50,10 @@ export async function parseLeafFromMintV1Transaction(
 
 export async function parseLeafFromMintToCollectionV1Transaction(
   context: Pick<Context, 'programs' | 'eddsa' | 'rpc'>,
-  signature: TransactionSignature
+  signature: TransactionSignature,
+  options?: RpcGetTransactionOptions
 ): Promise<LeafSchema> {
-  const transaction = await context.rpc.getTransaction(signature);
+  const transaction = await context.rpc.getTransaction(signature, options);
   if (!transaction) {
     throw new Error('Could not get transaction from signature');
   }
@@ -91,9 +94,10 @@ export async function parseLeafFromMintToCollectionV1Transaction(
 
 export async function parseLeafFromMintV2Transaction(
   context: Pick<Context, 'programs' | 'eddsa' | 'rpc'>,
-  signature: TransactionSignature
+  signature: TransactionSignature,
+  options?: RpcGetTransactionOptions
 ): Promise<LeafSchema> {
-  const transaction = await context.rpc.getTransaction(signature);
+  const transaction = await context.rpc.getTransaction(signature, options);
   if (!transaction) {
     throw new Error('Could not get transaction from signature');
   }
