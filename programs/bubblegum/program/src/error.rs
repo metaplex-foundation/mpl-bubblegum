@@ -120,6 +120,8 @@ pub enum BubblegumError {
     AssetIsNotFrozen,
     #[msg("Core collections must have the Royalties plugin to inherit seller fee basis points")]
     CollectionMustHaveRoyaltiesPlugin,
+    #[msg("Inherited seller fee basis points cannot be used with leaf-level creators")]
+    InheritedSellerFeeCannotHaveLeafCreators,
 }
 
 // Converts certain Token Metadata errors into Bubblegum equivalents

@@ -37,6 +37,10 @@ pub fn assert_metadata_is_mpl_compatible<T: MetadataArgsCommon>(
     }
 
     let creators = metadata.creators();
+    if inherited_sfbp_allowed && !creators.is_empty() {
+        return Err(BubblegumError::InheritedSellerFeeCannotHaveLeafCreators.into());
+    }
+
     if !creators.is_empty() {
         if creators.len() > mpl_token_metadata::MAX_CREATOR_LIMIT {
             return Err(BubblegumError::CreatorsTooLong.into());

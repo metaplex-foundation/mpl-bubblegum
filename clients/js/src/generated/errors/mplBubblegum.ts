@@ -834,6 +834,26 @@ nameToErrorMap.set(
   CollectionMustHaveRoyaltiesPluginError
 );
 
+/** InheritedSellerFeeCannotHaveLeafCreators: Inherited seller fee basis points cannot be used with leaf-level creators */
+export class InheritedSellerFeeCannotHaveLeafCreatorsError extends ProgramError {
+  override readonly name: string = 'InheritedSellerFeeCannotHaveLeafCreators';
+
+  readonly code: number = 0x17aa; // 6058
+
+  constructor(program: Program, cause?: Error) {
+    super(
+      'Inherited seller fee basis points cannot be used with leaf-level creators',
+      program,
+      cause
+    );
+  }
+}
+codeToErrorMap.set(0x17aa, InheritedSellerFeeCannotHaveLeafCreatorsError);
+nameToErrorMap.set(
+  'InheritedSellerFeeCannotHaveLeafCreators',
+  InheritedSellerFeeCannotHaveLeafCreatorsError
+);
+
 /**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors

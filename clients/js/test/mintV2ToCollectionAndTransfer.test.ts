@@ -225,3 +225,53 @@ test('it defaults seller fee basis points to inherit from core collection', asyn
   merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
   t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(updatedLeaf));
 });
+
+test('it cannot mint an inherited seller fee NFT with leaf-level creators', async (t) => {
+  const umi = await createUmi();
+  const merkleTree = await createTreeV2(umi);
+  const leafOwner = generateSigner(umi);
+  const coreCollection = generateSigner(umi);
+  const collectionUpdateAuthority = generateSigner(umi);
+
+  await createCollection(umi, {
+    collection: coreCollection,
+    updateAuthority: collectionUpdateAuthority.publicKey,
+    name: 'Test Collection',
+    uri: 'https://example.com/collection.json',
+    plugins: [
+      { type: 'BubblegumV2' },
+      {
+        type: 'Royalties',
+        basisPoints: 500,
+        creators: [
+          { address: collectionUpdateAuthority.publicKey, percentage: 100 },
+        ],
+        ruleSet: ruleSet('None'),
+      },
+    ],
+  }).sendAndConfirm(umi);
+
+  const metadata = {
+    name: 'My NFT',
+    uri: 'https://example.com/my-nft.json',
+    collection: some(coreCollection.publicKey),
+    creators: [
+      { address: umi.identity.publicKey, verified: false, share: 100 },
+    ],
+  };
+
+  const promise = mintV2WithInheritedSellerFees(umi, {
+    collectionAuthority: collectionUpdateAuthority,
+    leafOwner: leafOwner.publicKey,
+    merkleTree,
+    coreCollection: coreCollection.publicKey,
+    metadata,
+  }).sendAndConfirm(umi);
+
+  await t.throwsAsync(promise, {
+    name: 'InheritedSellerFeeCannotHaveLeafCreators',
+  });
+
+  const merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.sequenceNumber, 0n);
+});
