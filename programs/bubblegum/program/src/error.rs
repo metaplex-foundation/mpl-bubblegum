@@ -122,6 +122,8 @@ pub enum BubblegumError {
     CollectionMustHaveRoyaltiesPlugin,
     #[msg("Inherited seller fee basis points cannot be used with leaf-level creators")]
     InheritedSellerFeeCannotHaveLeafCreators,
+    #[msg("Cannot remove from collection while seller fee basis points are inherited")]
+    CannotRemoveFromCollectionWithInheritedSellerFee,
 }
 
 // Converts certain Token Metadata errors into Bubblegum equivalents

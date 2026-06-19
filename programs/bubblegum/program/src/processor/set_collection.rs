@@ -146,7 +146,9 @@ pub(crate) fn set_collection_v2<'info>(
             )?;
         } else {
             if updated_message.seller_fee_basis_points == SELLER_FEE_BASIS_POINTS_INHERIT {
-                return Err(BubblegumError::MetadataBasisPointsTooHigh.into());
+                return Err(
+                    BubblegumError::CannotRemoveFromCollectionWithInheritedSellerFee.into(),
+                );
             }
 
             updated_message.collection = None;

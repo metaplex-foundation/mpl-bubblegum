@@ -311,10 +311,10 @@ test('getAssetWithProof infers inherited seller fee metadata from the data hash'
   // Then metadata uses the resolved value, while currentMetadata keeps the sentinel for hashing.
   t.is(assetWithProof.metadata.sellerFeeBasisPoints, 500);
   t.is(
-    assetWithProof.currentMetadata.sellerFeeBasisPoints,
+    assetWithProof.currentMetadata!.sellerFeeBasisPoints,
     SELLER_FEE_BASIS_POINTS_INHERIT
   );
-  t.deepEqual(assetWithProof.currentMetadata.collection, some(coreCollection));
+  t.deepEqual(assetWithProof.currentMetadata!.collection, some(coreCollection));
   t.is(assetWithProof.rpcAsset.royalty?.basis_points, 500);
 });
 
@@ -386,10 +386,10 @@ test('getAssetWithProof resolves inherited seller fee basis points with a collec
   // Then metadata uses the resolved value, while currentMetadata keeps the sentinel for hashing.
   t.is(assetWithProof.metadata.sellerFeeBasisPoints, 500);
   t.is(
-    assetWithProof.currentMetadata.sellerFeeBasisPoints,
+    assetWithProof.currentMetadata!.sellerFeeBasisPoints,
     SELLER_FEE_BASIS_POINTS_INHERIT
   );
-  t.deepEqual(assetWithProof.currentMetadata.collection, some(coreCollection));
+  t.deepEqual(assetWithProof.currentMetadata!.collection, some(coreCollection));
 });
 
 test('getAssetWithProof currentMetadata can update inherited seller fee assets', async (t) => {
@@ -490,12 +490,13 @@ test('getAssetWithProof currentMetadata can update inherited seller fee assets',
   const assetWithProof = await getAssetWithProof(context, assetId);
   t.is(assetWithProof.metadata.sellerFeeBasisPoints, 500);
   t.is(
-    assetWithProof.currentMetadata.sellerFeeBasisPoints,
+    assetWithProof.currentMetadata!.sellerFeeBasisPoints,
     SELLER_FEE_BASIS_POINTS_INHERIT
   );
 
   await updateMetadataV2(umi, {
     ...assetWithProof,
+    currentMetadata: assetWithProof.currentMetadata!,
     authority: collectionUpdateAuthority,
     coreCollection: coreCollection.publicKey,
     updateArgs: {
@@ -658,6 +659,78 @@ test('it can update a collected NFT to inherit seller fee basis points', async (
   const updatedMetadata: MetadataArgsV2Args = {
     ...metadata,
     sellerFeeBasisPoints: SELLER_FEE_BASIS_POINTS_INHERIT,
+  };
+  const updatedLeaf = hashLeafV2(umi, {
+    merkleTree,
+    owner: leafOwner,
+    leafIndex: 0,
+    metadata: updatedMetadata,
+  });
+  merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  t.is(merkleTreeAccount.tree.rightMostPath.leaf, publicKey(updatedLeaf));
+});
+
+test('it can update a collected NFT from inherited seller fees back to an explicit value', async (t) => {
+  const umi = await createUmi();
+  const merkleTree = await createTreeV2(umi);
+  const leafOwner = generateSigner(umi).publicKey;
+
+  const coreCollection = generateSigner(umi);
+  const collectionUpdateAuthority = generateSigner(umi);
+  await createCollection(umi, {
+    collection: coreCollection,
+    updateAuthority: collectionUpdateAuthority.publicKey,
+    name: 'Test Collection',
+    uri: 'https://example.com/collection.json',
+    plugins: [
+      { type: 'BubblegumV2' },
+      {
+        type: 'Royalties',
+        basisPoints: 500,
+        creators: [
+          { address: collectionUpdateAuthority.publicKey, percentage: 100 },
+        ],
+        ruleSet: ruleSet('None'),
+      },
+    ],
+  }).sendAndConfirm(umi);
+
+  const metadata: MetadataArgsV2Args = {
+    name: 'My NFT',
+    uri: 'https://example.com/my-nft.json',
+    sellerFeeBasisPoints: SELLER_FEE_BASIS_POINTS_INHERIT,
+    collection: some(coreCollection.publicKey),
+    creators: [],
+  };
+  await baseMintV2(umi, {
+    collectionAuthority: collectionUpdateAuthority,
+    leafOwner,
+    merkleTree,
+    coreCollection: coreCollection.publicKey,
+    metadata,
+  }).sendAndConfirm(umi);
+
+  const updateArgs: UpdateArgsArgs = {
+    sellerFeeBasisPoints: some(550),
+  };
+
+  let merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+  await updateMetadataV2(umi, {
+    authority: collectionUpdateAuthority,
+    leafOwner,
+    merkleTree,
+    coreCollection: coreCollection.publicKey,
+    root: getCurrentRoot(merkleTreeAccount.tree),
+    nonce: 0,
+    index: 0,
+    currentMetadata: metadata,
+    proof: [],
+    updateArgs,
+  }).sendAndConfirm(umi);
+
+  const updatedMetadata: MetadataArgsV2Args = {
+    ...metadata,
+    sellerFeeBasisPoints: 550,
   };
   const updatedLeaf = hashLeafV2(umi, {
     merkleTree,

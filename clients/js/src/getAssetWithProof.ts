@@ -82,7 +82,8 @@ export type AssetWithProof = {
   index: number;
   proof: PublicKey[];
   metadata: MetadataArgs;
-  currentMetadata: MetadataArgsV2Args;
+  /** Canonical on-chain metadata for V2 hash/update instructions. Omitted for V1 assets. */
+  currentMetadata?: MetadataArgsV2Args;
   rpcAsset: DasApiAsset;
   rpcAssetProof: GetAssetProofRpcResponse;
 };

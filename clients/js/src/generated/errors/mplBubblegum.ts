@@ -854,6 +854,30 @@ nameToErrorMap.set(
   InheritedSellerFeeCannotHaveLeafCreatorsError
 );
 
+/** CannotRemoveFromCollectionWithInheritedSellerFee: Cannot remove from collection while seller fee basis points are inherited */
+export class CannotRemoveFromCollectionWithInheritedSellerFeeError extends ProgramError {
+  override readonly name: string =
+    'CannotRemoveFromCollectionWithInheritedSellerFee';
+
+  readonly code: number = 0x17ab; // 6059
+
+  constructor(program: Program, cause?: Error) {
+    super(
+      'Cannot remove from collection while seller fee basis points are inherited',
+      program,
+      cause
+    );
+  }
+}
+codeToErrorMap.set(
+  0x17ab,
+  CannotRemoveFromCollectionWithInheritedSellerFeeError
+);
+nameToErrorMap.set(
+  'CannotRemoveFromCollectionWithInheritedSellerFee',
+  CannotRemoveFromCollectionWithInheritedSellerFeeError
+);
+
 /**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
