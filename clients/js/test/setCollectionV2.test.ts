@@ -289,7 +289,10 @@ test('it can move an inherited seller fee NFT to a new collection with royalties
         type: 'Royalties',
         basisPoints: 500,
         creators: [
-          { address: originalCollectionUpdateAuthority.publicKey, percentage: 100 },
+          {
+            address: originalCollectionUpdateAuthority.publicKey,
+            percentage: 100,
+          },
         ],
         ruleSet: ruleSet('None'),
       },
