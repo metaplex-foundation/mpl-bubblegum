@@ -27,13 +27,13 @@ import {
   hashLeafV2,
   updateMetadataV2,
   hashMetadataDataV2,
-  mintV2 as baseMintV2,
   verifyCreatorV2,
   hashAssetData,
   hashCollection,
   LeafSchemaV2Flags,
   SELLER_FEE_BASIS_POINTS_INHERIT,
 } from '../src';
+import { mintV2 as baseMintV2 } from '../src/generated/instructions/mintV2';
 import { mintV2 as mintV2WithInheritedSellerFees } from '../src/mintV2';
 import { createTreeV2, createUmi, mintV2 } from './_setup';
 

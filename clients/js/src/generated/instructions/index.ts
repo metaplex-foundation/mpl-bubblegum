@@ -20,7 +20,7 @@ export * from './delegateV2';
 export * from './freezeV2';
 export * from './mintToCollectionV1';
 export * from './mintV1';
-export * from './mintV2';
+// mintV2 is exported from the package root via ../mintV2.ts
 export * from './redeem';
 export * from './setAndVerifyCollection';
 export * from './setCollectionV2';

@@ -768,6 +768,19 @@ kinobi.accept(
   })
 );
 
+// mintV2 is wrapped in clients/js/src/mintV2.ts for inherited seller fee defaults.
+{
+  const fs = require("fs");
+  const instructionsIndexPath = path.join(jsDir, "instructions", "index.ts");
+  const instructionsIndex = fs
+    .readFileSync(instructionsIndexPath, "utf8")
+    .replace(
+      "export * from './mintV2';\n",
+      "// mintV2 is exported from the package root via ../mintV2.ts\n"
+    );
+  fs.writeFileSync(instructionsIndexPath, instructionsIndex);
+}
+
 // Render Rust.
 const crateDir = path.join(clientDir, "rust");
 const rustDir = path.join(clientDir, "rust", "src", "generated");

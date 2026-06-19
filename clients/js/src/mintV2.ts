@@ -1,10 +1,10 @@
 import { Context, TransactionBuilder } from '@metaplex-foundation/umi';
+import { MetadataArgsV2Args } from './generated';
 import {
-  MetadataArgsV2Args,
   MintV2InstructionAccounts,
   MintV2InstructionArgs as GeneratedMintV2InstructionArgs,
   mintV2 as generatedMintV2,
-} from './generated';
+} from './generated/instructions/mintV2';
 import { SELLER_FEE_BASIS_POINTS_INHERIT } from './hash';
 
 export type MintV2InstructionArgs = Omit<

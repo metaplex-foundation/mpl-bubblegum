@@ -13,9 +13,9 @@ import {
   AssetDataSchema,
   hashLeafV2,
   MetadataArgsV2Args,
-  mintV2 as baseMintV2,
   SELLER_FEE_BASIS_POINTS_INHERIT,
 } from '../src';
+import { mintV2 as baseMintV2 } from '../src/generated/instructions/mintV2';
 import { mintV2 as mintV2WithInheritedSellerFees } from '../src/mintV2';
 import { createTreeV2, createUmi, mintV2 } from './_setup';
 
