@@ -66,7 +66,7 @@ jobs:
       - name: Git checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.git_ref || github.ref }}
+          ref: ${{ inputs.git_ref || github.sha }}
           persist-credentials: false
 
       - name: Load environment variables
@@ -137,7 +137,7 @@ jobs:
       - name: Git checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.git_ref || github.ref }}
+          ref: ${{ inputs.git_ref || github.sha }}
           persist-credentials: false
 
       - name: Load environment variables
