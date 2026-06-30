@@ -5,6 +5,9 @@ on:
     inputs:
       git_ref:
         type: string
+    secrets:
+      READ_API_RPC_DEVNET:
+        required: false
 
 env:
   CACHE: true
