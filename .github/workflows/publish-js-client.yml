@@ -101,17 +101,22 @@ jobs:
       - name: Bump
         id: bump
         working-directory: ./clients/js
+        env:
+          BUMP: ${{ inputs.bump }}
+          TAG: ${{ inputs.tag }}
         run: |
           if [ "${{ startsWith(inputs.bump, 'pre') }}" == "true" ]; then
-            pnpm version ${{ inputs.bump }} --preid ${{ inputs.tag }} --no-git-tag-version
+            pnpm version "$BUMP" --preid "$TAG" --no-git-tag-version
           else
-            pnpm version ${{ inputs.bump }} --no-git-tag-version
+            pnpm version "$BUMP" --no-git-tag-version
           fi
           echo "new_version=$(pnpm pkg get version | sed 's/"//g')" >> $GITHUB_OUTPUT
 
       - name: Publish
         working-directory: ./clients/js
-        run: npm publish --access public --tag ${{ inputs.tag }}
+        env:
+          TAG: ${{ inputs.tag }}
+        run: npm publish --access public --tag "$TAG"
 
       - name: Create release pull request
         if: ${{ github.event.inputs.create_release == 'true' }}
