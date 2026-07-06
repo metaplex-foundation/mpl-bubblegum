@@ -16,9 +16,6 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node: ["22.x", "24.x"]
     steps:
       - name: Git checkout
         uses: actions/checkout@v4
@@ -42,7 +39,7 @@ jobs:
       - name: Start validator
         uses: metaplex-foundation/actions/start-validator@v1
         with:
-          node: ${{ matrix.node }}
+          node: ${{ env.NODE_VERSION }}
           solana: ${{ env.SOLANA_VERSION }}
           cache: ${{ env.CACHE }}
           artifacts: program-builds-${{ steps.sanitize.outputs.sanitized }}
