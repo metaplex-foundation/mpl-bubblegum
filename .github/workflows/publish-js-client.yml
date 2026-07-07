@@ -1,8 +1,13 @@
-name: Deploy JS Client
+name: Publish JS Client
 
 on:
   workflow_dispatch:
     inputs:
+      git_ref:
+        description: Release tag or commit to publish from
+        required: false
+        type: string
+        default: ''
       bump:
         description: Version bump
         required: true
@@ -35,33 +40,52 @@ jobs:
     name: Programs
     uses: ./.github/workflows/build-programs.yml
     secrets: inherit
+    with:
+      git_ref: ${{ inputs.git_ref }}
 
   test_js:
     name: JS client
     needs: build_programs
     uses: ./.github/workflows/test-js-client.yml
-    secrets: inherit
+    permissions:
+      contents: read
+    secrets:
+      READ_API_RPC_DEVNET: ${{ secrets.READ_API_RPC_DEVNET }}
+    with:
+      git_ref: ${{ inputs.git_ref }}
 
-  deploy_js:
-    name: JS client / Deploy
+  publish_js:
+    name: JS client / Publish
     runs-on: ubuntu-latest
     needs: test_js
     permissions:
       contents: write
+      pull-requests: write
+      id-token: write
     steps:
       - name: Git checkout
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.SVC_TOKEN }}
+          ref: ${{ inputs.git_ref || github.sha }}
+          persist-credentials: false
 
       - name: Load environment variables
         run: cat .github/.env >> $GITHUB_ENV
 
-      - name: Install Node.js
-        uses: metaplex-foundation/actions/install-node-with-pnpm@v1
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
         with:
-          version: ${{ env.NODE_VERSION }}
-          cache: ${{ env.CACHE }}
+          version: 8.15.9
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          registry-url: 'https://registry.npmjs.org'
+          cache: 'pnpm'
+
+      - name: Install npm >= 11.5.1
+        run: npm install -g "npm@>=11.5.1"
 
       - name: Install dependencies
         uses: metaplex-foundation/actions/install-node-dependencies@v1
@@ -77,39 +101,40 @@ jobs:
       - name: Bump
         id: bump
         working-directory: ./clients/js
+        env:
+          BUMP: ${{ inputs.bump }}
+          TAG: ${{ inputs.tag }}
         run: |
           if [ "${{ startsWith(inputs.bump, 'pre') }}" == "true" ]; then
-            pnpm version ${{ inputs.bump }} --preid ${{ inputs.tag }} --no-git-tag-version
+            pnpm version "$BUMP" --preid "$TAG" --no-git-tag-version
           else
-            pnpm version ${{ inputs.bump }} --no-git-tag-version
+            pnpm version "$BUMP" --no-git-tag-version
           fi
-          echo "new_version=$(node -e "console.log(require('./package.json').version)")" >> $GITHUB_OUTPUT
-
-      - name: Set publishing config
-        run: pnpm config set '//registry.npmjs.org/:_authToken' "${NODE_AUTH_TOKEN}"
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          echo "new_version=$(pnpm pkg get version | sed 's/"//g')" >> $GITHUB_OUTPUT
 
       - name: Publish
         working-directory: ./clients/js
-        run: pnpm publish --no-git-checks --tag ${{ inputs.tag }}
+        env:
+          TAG: ${{ inputs.tag }}
+        run: npm publish --access public --tag "$TAG"
 
-      - name: Commit and tag new version
-        uses: stefanzweifel/git-auto-commit-action@v4
+      - name: Create release pull request
+        if: ${{ github.event.inputs.create_release == 'true' }}
+        uses: peter-evans/create-pull-request@v6
         with:
-          commit_message: Deploy JS client v${{ steps.bump.outputs.new_version }}
-          tagging_message: js@v${{ steps.bump.outputs.new_version }}
-
-      - name: Create GitHub release
-        if: github.event.inputs.create_release == 'true'
-        uses: ncipollo/release-action@v1
-        with:
-          tag: js@v${{ steps.bump.outputs.new_version }}
+          commit-message: 'chore: release JS client v${{ steps.bump.outputs.new_version }}'
+          branch: release/js-client-v${{ steps.bump.outputs.new_version }}
+          title: 'chore: release JS client v${{ steps.bump.outputs.new_version }}'
+          body: |
+            ## Summary
+            - publish-js-client workflow bumped the package to `${{ steps.bump.outputs.new_version }}`
+          labels: release
 
   deploy_js_docs:
     name: JS client / Deploy docs
+    if: ${{ github.event.inputs.create_release == 'true' }}
     runs-on: ubuntu-latest
-    needs: deploy_js
+    needs: publish_js
     environment:
       name: js-client-documentation
       url: ${{ steps.deploy.outputs.url }}
@@ -117,7 +142,8 @@ jobs:
       - name: Git checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.ref }}
+          ref: ${{ inputs.git_ref || github.sha }}
+          persist-credentials: false
 
       - name: Load environment variables
         run: cat .github/.env >> $GITHUB_ENV

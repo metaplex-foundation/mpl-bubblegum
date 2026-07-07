@@ -5,6 +5,9 @@ on:
     inputs:
       git_ref:
         type: string
+    secrets:
+      READ_API_RPC_DEVNET:
+        required: false
 
 env:
   CACHE: true
@@ -13,9 +16,6 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node: ["18.x", "20.x"]
     steps:
       - name: Git checkout
         uses: actions/checkout@v4
@@ -39,7 +39,7 @@ jobs:
       - name: Start validator
         uses: metaplex-foundation/actions/start-validator@v1
         with:
-          node: ${{ matrix.node }}
+          node: ${{ env.NODE_VERSION }}
           solana: ${{ env.SOLANA_VERSION }}
           cache: ${{ env.CACHE }}
           artifacts: program-builds-${{ steps.sanitize.outputs.sanitized }}
