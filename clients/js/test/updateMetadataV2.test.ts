@@ -248,8 +248,8 @@ test('it can update metadata using the getAssetWithProof helper using V2 instruc
   t.is(assetWithProof.rpcAssetProof, rpcAssetProof);
 });
 
-test('getAssetWithProof infers inherited seller fee metadata from the data hash', async (t) => {
-  // Given a DAS asset whose royalty basis points are resolved from the collection.
+test('getAssetWithProof keeps leaf seller fee basis points for inherited assets', async (t) => {
+  // Given a DAS asset with leaf sentinel SFBP and collection-resolved inherited fields.
   const assetId = publicKey('EczRmPqSEWBXtcMKVK1avV87EXH5JZrRbTVdUJdnYaKo');
   const merkleTree = publicKey('BJjUoux3xacYcRZV31Ytsi4haJb3HgyzmweVDHutiLWU');
   const leafOwner = publicKey('HjzLbPCVGFjXAo5HXS5fpQmXjQE6FMgDEPvFZon7rC7G');
@@ -270,12 +270,17 @@ test('getAssetWithProof infers inherited seller fee metadata from the data hash'
       json_uri: 'https://example.com/my-nft.json',
     },
     royalty: {
-      basis_points: 500,
+      basis_points: SELLER_FEE_BASIS_POINTS_INHERIT,
+      basis_points_inherited: 500,
+      percent_inherited: 0.05,
       primary_sale_happened: false,
     },
     mutable: true,
     supply: {},
     creators: [],
+    creators_inherited: [
+      { address: leafOwner, share: 100, verified: true },
+    ],
     grouping: [
       {
         group_key: 'collection',
@@ -308,91 +313,21 @@ test('getAssetWithProof infers inherited seller fee metadata from the data hash'
   // When we use the getAssetWithProof helper.
   const assetWithProof = await getAssetWithProof(context, assetId);
 
-  // Then metadata uses the resolved value, while currentMetadata keeps the sentinel for hashing.
-  t.is(assetWithProof.metadata.sellerFeeBasisPoints, 500);
+  // Then metadata keeps leaf values for hashing; display lives on rpcAsset *_inherited.
   t.is(
-    assetWithProof.currentMetadata!.sellerFeeBasisPoints,
+    assetWithProof.metadata.sellerFeeBasisPoints,
     SELLER_FEE_BASIS_POINTS_INHERIT
   );
-  t.deepEqual(assetWithProof.currentMetadata!.collection, some(coreCollection));
-  t.is(assetWithProof.rpcAsset.royalty?.basis_points, 500);
+  t.deepEqual(assetWithProof.metadata.creators, []);
+  t.deepEqual(
+    assetWithProof.metadata.collection,
+    some({ key: coreCollection, verified: true })
+  );
+  t.is(assetWithProof.rpcAsset.royalty?.basis_points_inherited, 500);
+  t.is(assetWithProof.rpcAsset.creators_inherited?.length, 1);
 });
 
-test('getAssetWithProof resolves inherited seller fee basis points with a collection resolver', async (t) => {
-  // Given a DAS asset whose royalty basis points are still the raw sentinel.
-  const assetId = publicKey('EczRmPqSEWBXtcMKVK1avV87EXH5JZrRbTVdUJdnYaKo');
-  const merkleTree = publicKey('BJjUoux3xacYcRZV31Ytsi4haJb3HgyzmweVDHutiLWU');
-  const leafOwner = publicKey('HjzLbPCVGFjXAo5HXS5fpQmXjQE6FMgDEPvFZon7rC7G');
-  const coreCollection = publicKey(
-    '7USYF5BnFo4FuE8eRoEqEvSvZSEaMG5AqPCQbLQ5BxPL'
-  );
-  const canonicalMetadata: MetadataArgsV2Args = {
-    name: 'My NFT',
-    uri: 'https://example.com/my-nft.json',
-    sellerFeeBasisPoints: SELLER_FEE_BASIS_POINTS_INHERIT,
-    collection: some(coreCollection),
-    creators: [],
-  };
-  const rpcAsset = {
-    ownership: { owner: leafOwner },
-    content: {
-      metadata: { name: 'My NFT', symbol: '' },
-      json_uri: 'https://example.com/my-nft.json',
-    },
-    royalty: {
-      basis_points: SELLER_FEE_BASIS_POINTS_INHERIT,
-      primary_sale_happened: false,
-    },
-    mutable: true,
-    supply: {},
-    creators: [],
-    grouping: [
-      {
-        group_key: 'collection',
-        group_value: coreCollection,
-        verified: true,
-      },
-    ],
-    compression: {
-      leaf_id: 0,
-      data_hash: publicKey(hashMetadataDataV2(canonicalMetadata)),
-      creator_hash: defaultPublicKey(),
-      collection_hash: publicKey(hashCollection(coreCollection)),
-      asset_data_hash: publicKey(hashAssetData()),
-      flags: LeafSchemaV2Flags.None,
-    },
-  } as unknown as DasApiAsset;
-  const rpcAssetProof = {
-    proof: [],
-    root: defaultPublicKey(),
-    tree_id: merkleTree,
-    node_index: 1,
-  } as unknown as GetAssetProofRpcResponse;
-  const context = {
-    rpc: {
-      getAsset: async () => rpcAsset,
-      getAssetProof: async () => rpcAssetProof,
-    },
-  } as unknown as Parameters<typeof getAssetWithProof>[0];
-
-  // When we use the getAssetWithProof helper with a collection royalty resolver.
-  const assetWithProof = await getAssetWithProof(context, assetId, {
-    resolveCollectionSellerFeeBasisPoints: (collection) => {
-      t.is(collection, coreCollection);
-      return 500;
-    },
-  });
-
-  // Then metadata uses the resolved value, while currentMetadata keeps the sentinel for hashing.
-  t.is(assetWithProof.metadata.sellerFeeBasisPoints, 500);
-  t.is(
-    assetWithProof.currentMetadata!.sellerFeeBasisPoints,
-    SELLER_FEE_BASIS_POINTS_INHERIT
-  );
-  t.deepEqual(assetWithProof.currentMetadata!.collection, some(coreCollection));
-});
-
-test('getAssetWithProof currentMetadata can update inherited seller fee assets', async (t) => {
+test('getAssetWithProof metadata can update inherited seller fee assets', async (t) => {
   // Given an empty Bubblegum tree.
   const umi = await createUmi();
   const merkleTree = await createTreeV2(umi);
@@ -449,10 +384,10 @@ test('getAssetWithProof currentMetadata can update inherited seller fee assets',
       json_uri: 'https://example.com/my-nft.json',
     },
     royalty: {
-      basis_points: 500,
+      basis_points: SELLER_FEE_BASIS_POINTS_INHERIT,
+      basis_points_inherited: 500,
+      percent_inherited: 0.05,
       primary_sale_happened: false,
-      basis_points_raw: SELLER_FEE_BASIS_POINTS_INHERIT,
-      sfbp_inherited: true,
     },
     mutable: true,
     supply: {},
@@ -486,17 +421,16 @@ test('getAssetWithProof currentMetadata can update inherited seller fee assets',
     },
   } as unknown as Parameters<typeof getAssetWithProof>[0];
 
-  // When we update from the helper output without overriding currentMetadata.
+  // When we update using leaf metadata from the helper as the instruction currentMetadata.
   const assetWithProof = await getAssetWithProof(context, assetId);
-  t.is(assetWithProof.metadata.sellerFeeBasisPoints, 500);
   t.is(
-    assetWithProof.currentMetadata!.sellerFeeBasisPoints,
+    assetWithProof.metadata.sellerFeeBasisPoints,
     SELLER_FEE_BASIS_POINTS_INHERIT
   );
 
   await updateMetadataV2(umi, {
     ...assetWithProof,
-    currentMetadata: assetWithProof.currentMetadata!,
+    currentMetadata: canonicalMetadata,
     authority: collectionUpdateAuthority,
     coreCollection: coreCollection.publicKey,
     updateArgs: {
