@@ -270,17 +270,15 @@ test('getAssetWithProof keeps leaf seller fee basis points for inherited assets'
       json_uri: 'https://example.com/my-nft.json',
     },
     royalty: {
-      basis_points: SELLER_FEE_BASIS_POINTS_INHERIT,
-      basis_points_inherited: 500,
-      percent_inherited: 0.05,
+      basis_points: 500,
+      basis_points_raw: SELLER_FEE_BASIS_POINTS_INHERIT,
+      sfbp_inherited: true,
       primary_sale_happened: false,
     },
     mutable: true,
     supply: {},
-    creators: [],
-    creators_inherited: [
-      { address: leafOwner, share: 100, verified: true },
-    ],
+    creators: [{ address: leafOwner, share: 100, verified: true }],
+    creators_raw: [],
     grouping: [
       {
         group_key: 'collection',
@@ -313,7 +311,7 @@ test('getAssetWithProof keeps leaf seller fee basis points for inherited assets'
   // When we use the getAssetWithProof helper.
   const assetWithProof = await getAssetWithProof(context, assetId);
 
-  // Then metadata keeps leaf values for hashing; display lives on rpcAsset *_inherited.
+  // Then metadata keeps leaf values for hashing; display lives on rpcAsset main fields.
   t.is(
     assetWithProof.metadata.sellerFeeBasisPoints,
     SELLER_FEE_BASIS_POINTS_INHERIT
@@ -323,8 +321,9 @@ test('getAssetWithProof keeps leaf seller fee basis points for inherited assets'
     assetWithProof.metadata.collection,
     some({ key: coreCollection, verified: true })
   );
-  t.is(assetWithProof.rpcAsset.royalty?.basis_points_inherited, 500);
-  t.is(assetWithProof.rpcAsset.creators_inherited?.length, 1);
+  t.is(assetWithProof.rpcAsset.royalty?.basis_points, 500);
+  t.is(assetWithProof.rpcAsset.creators?.length, 1);
+  t.deepEqual(assetWithProof.rpcAsset.creators_raw, []);
 });
 
 test('getAssetWithProof metadata can update inherited seller fee assets', async (t) => {
@@ -384,14 +383,15 @@ test('getAssetWithProof metadata can update inherited seller fee assets', async 
       json_uri: 'https://example.com/my-nft.json',
     },
     royalty: {
-      basis_points: SELLER_FEE_BASIS_POINTS_INHERIT,
-      basis_points_inherited: 500,
-      percent_inherited: 0.05,
+      basis_points: 500,
+      basis_points_raw: SELLER_FEE_BASIS_POINTS_INHERIT,
+      sfbp_inherited: true,
       primary_sale_happened: false,
     },
     mutable: true,
     supply: {},
     creators: [],
+    creators_raw: [],
     grouping: [
       {
         group_key: 'collection',

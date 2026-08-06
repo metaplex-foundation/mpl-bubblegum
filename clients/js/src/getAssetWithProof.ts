@@ -11,6 +11,7 @@ import {
   DasApiAsset,
   DasApiInterface,
   GetAssetProofRpcResponse,
+  getRawSellerFeeBasisPoints,
 } from '@metaplex-foundation/digital-asset-standard-api';
 import { fetchMerkleTree } from '@metaplex-foundation/spl-account-compression';
 import { LeafSchemaV2Flags, isValidLeafSchemaV2Flags } from './flags';
@@ -65,27 +66,29 @@ export const getAssetWithProof = async (
   }
 
   const collectionGroup = (rpcAsset.grouping ?? []).find(
-    (group) => group.group_key === 'collection'
+    (group) => group.group_key === 'collection' && group.group_value != null
   );
 
   const metadata: MetadataArgs = {
     name: rpcAsset.content?.metadata?.name ?? '',
     symbol: rpcAsset.content?.metadata?.symbol ?? '',
     uri: rpcAsset.content?.json_uri,
-    sellerFeeBasisPoints: rpcAsset.royalty?.basis_points,
+    sellerFeeBasisPoints: rpcAsset.royalty
+      ? getRawSellerFeeBasisPoints(rpcAsset.royalty)
+      : 0,
     primarySaleHappened: rpcAsset.royalty?.primary_sale_happened,
     isMutable: rpcAsset.mutable,
     editionNonce: wrapNullable(rpcAsset.supply?.edition_nonce),
     tokenStandard: some(TokenStandard.NonFungible),
     collection: collectionGroup
       ? some({
-          key: publicKey(collectionGroup.group_value),
+          key: publicKey(collectionGroup.group_value as string),
           verified: collectionGroup.verified ?? false,
         })
       : none(),
     uses: none(),
     tokenProgramVersion: TokenProgramVersion.Original,
-    creators: rpcAsset.creators,
+    creators: rpcAsset.creators_raw ?? rpcAsset.creators,
   };
 
   const collectionHashBytes = rpcAsset.compression.collection_hash
