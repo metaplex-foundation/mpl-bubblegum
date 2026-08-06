@@ -272,7 +272,7 @@ test('getAssetWithProof keeps leaf seller fee basis points for inherited assets'
     royalty: {
       basis_points: 500,
       basis_points_raw: SELLER_FEE_BASIS_POINTS_INHERIT,
-      sfbp_inherited: true,
+      inherited: true,
       primary_sale_happened: false,
     },
     mutable: true,
@@ -385,7 +385,7 @@ test('getAssetWithProof metadata can update inherited seller fee assets', async 
     royalty: {
       basis_points: 500,
       basis_points_raw: SELLER_FEE_BASIS_POINTS_INHERIT,
-      sfbp_inherited: true,
+      inherited: true,
       primary_sale_happened: false,
     },
     mutable: true,
