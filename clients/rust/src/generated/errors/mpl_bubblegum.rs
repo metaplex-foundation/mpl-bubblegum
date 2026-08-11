@@ -182,15 +182,6 @@ pub enum MplBubblegumError {
     /// 6056 (0x17A8) - Asset is not frozen
     #[error("Asset is not frozen")]
     AssetIsNotFrozen,
-    /// 6057 (0x17A9) - Core collections must have the Royalties plugin to inherit seller fee basis points
-    #[error("Core collections must have the Royalties plugin to inherit seller fee basis points")]
-    CollectionMustHaveRoyaltiesPlugin,
-    /// 6058 (0x17AA) - Inherited seller fee basis points cannot be used with leaf-level creators
-    #[error("Inherited seller fee basis points cannot be used with leaf-level creators")]
-    InheritedSellerFeeCannotHaveLeafCreators,
-    /// 6059 (0x17AB) - Cannot remove from collection while seller fee basis points are inherited
-    #[error("Cannot remove from collection while seller fee basis points are inherited")]
-    CannotRemoveFromCollectionWithInheritedSellerFee,
 }
 
 impl From<MplBubblegumError> for ProgramError {
@@ -260,9 +251,6 @@ impl TryFrom<u32> for MplBubblegumError {
             6054 => Ok(MplBubblegumError::AlreadyNotInCollection),
             6055 => Ok(MplBubblegumError::MissingMplCoreCpiSignerAccount),
             6056 => Ok(MplBubblegumError::AssetIsNotFrozen),
-            6057 => Ok(MplBubblegumError::CollectionMustHaveRoyaltiesPlugin),
-            6058 => Ok(MplBubblegumError::InheritedSellerFeeCannotHaveLeafCreators),
-            6059 => Ok(MplBubblegumError::CannotRemoveFromCollectionWithInheritedSellerFee),
             _ => Err(ProgramError::InvalidArgument),
         }
     }
@@ -364,15 +352,6 @@ impl ToStr for MplBubblegumError {
                 "Missing mpl-core CPI signer account"
             }
             MplBubblegumError::AssetIsNotFrozen => "Asset is not frozen",
-            MplBubblegumError::CollectionMustHaveRoyaltiesPlugin => {
-                "Core collections must have the Royalties plugin to inherit seller fee basis points"
-            }
-            MplBubblegumError::InheritedSellerFeeCannotHaveLeafCreators => {
-                "Inherited seller fee basis points cannot be used with leaf-level creators"
-            }
-            MplBubblegumError::CannotRemoveFromCollectionWithInheritedSellerFee => {
-                "Cannot remove from collection while seller fee basis points are inherited"
-            }
         }
     }
 }

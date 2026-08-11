@@ -4423,21 +4423,6 @@
       "code": 6056,
       "name": "AssetIsNotFrozen",
       "msg": "Asset is not frozen"
-    },
-    {
-      "code": 6057,
-      "name": "CollectionMustHaveRoyaltiesPlugin",
-      "msg": "Core collections must have the Royalties plugin to inherit seller fee basis points"
-    },
-    {
-      "code": 6058,
-      "name": "InheritedSellerFeeCannotHaveLeafCreators",
-      "msg": "Inherited seller fee basis points cannot be used with leaf-level creators"
-    },
-    {
-      "code": 6059,
-      "name": "CannotRemoveFromCollectionWithInheritedSellerFee",
-      "msg": "Cannot remove from collection while seller fee basis points are inherited"
     }
   ],
   "metadata": {

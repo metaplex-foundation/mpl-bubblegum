@@ -20,6 +20,7 @@ import {
   createTree as baseCreateTree,
   createTreeV2 as baseCreateTreeV2,
   mintV1 as baseMintV1,
+  mintV2 as baseMintV2,
   findLeafAssetIdPda,
   findTreeConfigPda,
   hashLeaf,
@@ -27,7 +28,6 @@ import {
   mplBubblegum,
   setDecompressibleState,
 } from '../src';
-import { mintV2 as baseMintV2 } from '../src/generated/instructions/mintV2';
 
 export const createUmi = async (endpoint?: string, airdropAmount?: SolAmount) =>
   (await baseCreateUmi(endpoint, undefined, airdropAmount))

@@ -130,7 +130,6 @@ pub(crate) fn mint_to_collection_v1(
         &ctx.accounts.log_wrapper,
         &ctx.accounts.compression_program,
         true,
-        false,
     )?;
 
     authority.increment_mint_count();

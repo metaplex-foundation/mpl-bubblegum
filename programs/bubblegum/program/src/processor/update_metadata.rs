@@ -7,10 +7,7 @@ use spl_account_compression::{program::SplAccountCompression, Noop as SplNoop};
 use crate::{
     asserts::{assert_has_collection_authority, assert_metadata_is_mpl_compatible},
     error::BubblegumError,
-    processor::{
-        assert_collection_has_royalties_if_seller_fee_inherited,
-        mpl_core_collection_validate_update,
-    },
+    processor::mpl_core_collection_validate_update,
     state::{
         leaf_schema::{LeafSchema, Version},
         metaplex_adapter::{
@@ -117,7 +114,6 @@ pub fn update_metadata<'info>(
         None,
         None,
         None,
-        false,
         nonce,
     )?;
 
@@ -212,14 +208,6 @@ pub fn update_metadata_v2<'info>(
         {
             return Err(BubblegumError::InvalidCollectionAuthority.into());
         }
-
-        let updated_seller_fee_basis_points = update_args
-            .seller_fee_basis_points
-            .unwrap_or(current_metadata.seller_fee_basis_points());
-        assert_collection_has_royalties_if_seller_fee_inherited(
-            &collection,
-            updated_seller_fee_basis_points,
-        )?;
     } else {
         // No collection case.
         require!(
@@ -236,15 +224,12 @@ pub fn update_metadata_v2<'info>(
         .as_ref()
         .map(|account| account.key());
 
-    let core_collection_key = ctx
-        .accounts
-        .core_collection
-        .as_ref()
-        .map(|account| *account.key);
-    let allow_inherited_sfbp = core_collection_key
-        .map(|key| current_metadata.collection_key() == Some(key))
-        .unwrap_or(false);
-    let collection_hash = hash_collection_option(core_collection_key)?;
+    let collection_hash = hash_collection_option(
+        ctx.accounts
+            .core_collection
+            .as_ref()
+            .map(|account| *account.key),
+    )?;
 
     let (previous_leaf, new_leaf) = process_update_metadata(
         ctx.accounts.merkle_tree.key(),
@@ -256,7 +241,6 @@ pub fn update_metadata_v2<'info>(
         Some(collection_hash),
         asset_data_hash,
         flags,
-        allow_inherited_sfbp,
         nonce,
     )?;
 
@@ -337,7 +321,6 @@ fn process_update_metadata<T: MetadataArgsCommon>(
     collection_hash: Option<[u8; 32]>,
     asset_data_hash: Option<[u8; 32]>,
     flags: Option<u8>,
-    allow_inherited_sfbp: bool,
     nonce: u64,
 ) -> Result<(LeafSchema, LeafSchema)> {
     // Old metadata must be mutable to allow metadata update
@@ -397,7 +380,7 @@ fn process_update_metadata<T: MetadataArgsCommon>(
         updated_metadata.set_is_mutable(is_mutable);
     };
 
-    assert_metadata_is_mpl_compatible(&updated_metadata, allow_inherited_sfbp)?;
+    assert_metadata_is_mpl_compatible(&updated_metadata)?;
     let updated_data_hash = hash_metadata(&updated_metadata)?;
     let updated_creator_hash = hash_creators(updated_metadata.creators())?;
 
