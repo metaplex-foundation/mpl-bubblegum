@@ -87,31 +87,43 @@ export function cancelRedeem(
   );
 
   // Accounts.
-  const resolvedAccounts: ResolvedAccountsWithIndices = {
+  const resolvedAccounts = {
     treeConfig: {
       index: 0,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.treeConfig ?? null,
     },
-    leafOwner: { index: 1, isWritable: true, value: input.leafOwner ?? null },
-    merkleTree: { index: 2, isWritable: true, value: input.merkleTree ?? null },
-    voucher: { index: 3, isWritable: true, value: input.voucher ?? null },
+    leafOwner: {
+      index: 1,
+      isWritable: true as boolean,
+      value: input.leafOwner ?? null,
+    },
+    merkleTree: {
+      index: 2,
+      isWritable: true as boolean,
+      value: input.merkleTree ?? null,
+    },
+    voucher: {
+      index: 3,
+      isWritable: true as boolean,
+      value: input.voucher ?? null,
+    },
     logWrapper: {
       index: 4,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.logWrapper ?? null,
     },
     compressionProgram: {
       index: 5,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.compressionProgram ?? null,
     },
     systemProgram: {
       index: 6,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.systemProgram ?? null,
     },
-  };
+  } satisfies ResolvedAccountsWithIndices;
 
   // Arguments.
   const resolvedArgs: CancelRedeemInstructionArgs = { ...input };

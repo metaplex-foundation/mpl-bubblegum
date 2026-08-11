@@ -6,8 +6,10 @@
 //!
 
 use crate::generated::types::MetadataArgs;
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+#[cfg(feature = "anchor")]
+use anchor_lang::prelude::{AnchorDeserialize, AnchorSerialize};
+#[cfg(not(feature = "anchor"))]
+use borsh::{BorshDeserialize, BorshSerialize};
 
 /// Accounts.
 pub struct UnverifyCreator {
@@ -80,8 +82,8 @@ impl UnverifyCreator {
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let mut data = UnverifyCreatorInstructionData::new().try_to_vec().unwrap();
-        let mut args = args.try_to_vec().unwrap();
+        let mut data = borsh::to_vec(&(UnverifyCreatorInstructionData::new())).unwrap();
+        let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
         solana_program::instruction::Instruction {
@@ -92,21 +94,24 @@ impl UnverifyCreator {
     }
 }
 
-#[derive(BorshDeserialize, BorshSerialize)]
-struct UnverifyCreatorInstructionData {
+#[cfg_attr(not(feature = "anchor"), derive(BorshSerialize, BorshDeserialize))]
+#[cfg_attr(feature = "anchor", derive(AnchorSerialize, AnchorDeserialize))]
+pub struct UnverifyCreatorInstructionData {
     discriminator: [u8; 8],
 }
 
 impl UnverifyCreatorInstructionData {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             discriminator: [107, 178, 57, 39, 105, 115, 112, 152],
         }
     }
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(not(feature = "anchor"), derive(BorshSerialize, BorshDeserialize))]
+#[cfg_attr(feature = "anchor", derive(AnchorSerialize, AnchorDeserialize))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct UnverifyCreatorInstructionArgs {
     pub root: [u8; 32],
     pub data_hash: [u8; 32],
@@ -116,7 +121,19 @@ pub struct UnverifyCreatorInstructionArgs {
     pub metadata: MetadataArgs,
 }
 
-/// Instruction builder.
+/// Instruction builder for `UnverifyCreator`.
+///
+/// ### Accounts:
+///
+///   0. `[]` tree_config
+///   1. `[]` leaf_owner
+///   2. `[]` leaf_delegate
+///   3. `[writable]` merkle_tree
+///   4. `[signer]` payer
+///   5. `[signer]` creator
+///   6. `[optional]` log_wrapper (default to `noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV`)
+///   7. `[optional]` compression_program (default to `cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK`)
+///   8. `[optional]` system_program (default to `11111111111111111111111111111111`)
 #[derive(Default)]
 pub struct UnverifyCreatorBuilder {
     tree_config: Option<solana_program::pubkey::Pubkey>,
@@ -412,12 +429,12 @@ impl<'a, 'b> UnverifyCreatorCpi<'a, 'b> {
         remaining_accounts.iter().for_each(|remaining_account| {
             accounts.push(solana_program::instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
-                is_signer: remaining_account.1,
-                is_writable: remaining_account.2,
+                is_writable: remaining_account.1,
+                is_signer: remaining_account.2,
             })
         });
-        let mut data = UnverifyCreatorInstructionData::new().try_to_vec().unwrap();
-        let mut args = self.__args.try_to_vec().unwrap();
+        let mut data = borsh::to_vec(&(UnverifyCreatorInstructionData::new())).unwrap();
+        let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
         let instruction = solana_program::instruction::Instruction {
@@ -448,7 +465,19 @@ impl<'a, 'b> UnverifyCreatorCpi<'a, 'b> {
     }
 }
 
-/// `unverify_creator` CPI instruction builder.
+/// Instruction builder for `UnverifyCreator` via CPI.
+///
+/// ### Accounts:
+///
+///   0. `[]` tree_config
+///   1. `[]` leaf_owner
+///   2. `[]` leaf_delegate
+///   3. `[writable]` merkle_tree
+///   4. `[signer]` payer
+///   5. `[signer]` creator
+///   6. `[]` log_wrapper
+///   7. `[]` compression_program
+///   8. `[]` system_program
 pub struct UnverifyCreatorCpiBuilder<'a, 'b> {
     instruction: Box<UnverifyCreatorCpiBuilderInstruction<'a, 'b>>,
 }

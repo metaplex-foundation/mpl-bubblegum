@@ -75,11 +75,23 @@ export function closeEmptyTree(
   );
 
   // Accounts.
-  const resolvedAccounts: ResolvedAccountsWithIndices = {
-    merkleTree: { index: 0, isWritable: true, value: input.merkleTree ?? null },
-    authority: { index: 1, isWritable: false, value: input.authority ?? null },
-    recipient: { index: 2, isWritable: true, value: input.recipient ?? null },
-  };
+  const resolvedAccounts = {
+    merkleTree: {
+      index: 0,
+      isWritable: true as boolean,
+      value: input.merkleTree ?? null,
+    },
+    authority: {
+      index: 1,
+      isWritable: false as boolean,
+      value: input.authority ?? null,
+    },
+    recipient: {
+      index: 2,
+      isWritable: true as boolean,
+      value: input.recipient ?? null,
+    },
+  } satisfies ResolvedAccountsWithIndices;
 
   // Default values.
   if (!resolvedAccounts.authority.value) {

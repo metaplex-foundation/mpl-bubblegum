@@ -6,6 +6,7 @@
 //!
 
 use num_derive::FromPrimitive;
+use solana_program_error::{ProgramError, ToStr};
 use thiserror::Error;
 
 #[derive(Clone, Debug, Eq, Error, FromPrimitive, PartialEq)]
@@ -183,8 +184,174 @@ pub enum MplBubblegumError {
     AssetIsNotFrozen,
 }
 
-impl solana_program::program_error::PrintProgramError for MplBubblegumError {
-    fn print<E>(&self) {
-        solana_program::msg!(&self.to_string());
+impl From<MplBubblegumError> for ProgramError {
+    fn from(e: MplBubblegumError) -> Self {
+        ProgramError::Custom(e as u32)
+    }
+}
+
+impl TryFrom<u32> for MplBubblegumError {
+    type Error = ProgramError;
+    fn try_from(error: u32) -> Result<Self, Self::Error> {
+        match error {
+            6000 => Ok(MplBubblegumError::AssetOwnerMismatch),
+            6001 => Ok(MplBubblegumError::PublicKeyMismatch),
+            6002 => Ok(MplBubblegumError::HashingMismatch),
+            6003 => Ok(MplBubblegumError::UnsupportedSchemaVersion),
+            6004 => Ok(MplBubblegumError::CreatorShareTotalMustBe100),
+            6005 => Ok(MplBubblegumError::DuplicateCreatorAddress),
+            6006 => Ok(MplBubblegumError::CreatorDidNotVerify),
+            6007 => Ok(MplBubblegumError::CreatorNotFound),
+            6008 => Ok(MplBubblegumError::NoCreatorsPresent),
+            6009 => Ok(MplBubblegumError::CreatorHashMismatch),
+            6010 => Ok(MplBubblegumError::DataHashMismatch),
+            6011 => Ok(MplBubblegumError::CreatorsTooLong),
+            6012 => Ok(MplBubblegumError::MetadataNameTooLong),
+            6013 => Ok(MplBubblegumError::MetadataSymbolTooLong),
+            6014 => Ok(MplBubblegumError::MetadataUriTooLong),
+            6015 => Ok(MplBubblegumError::MetadataBasisPointsTooHigh),
+            6016 => Ok(MplBubblegumError::TreeAuthorityIncorrect),
+            6017 => Ok(MplBubblegumError::InsufficientMintCapacity),
+            6018 => Ok(MplBubblegumError::NumericalOverflowError),
+            6019 => Ok(MplBubblegumError::IncorrectOwner),
+            6020 => Ok(MplBubblegumError::CollectionCannotBeVerifiedInThisInstruction),
+            6021 => Ok(MplBubblegumError::CollectionNotFound),
+            6022 => Ok(MplBubblegumError::AlreadyVerified),
+            6023 => Ok(MplBubblegumError::AlreadyUnverified),
+            6024 => Ok(MplBubblegumError::UpdateAuthorityIncorrect),
+            6025 => Ok(MplBubblegumError::LeafAuthorityMustSign),
+            6026 => Ok(MplBubblegumError::CollectionMustBeSized),
+            6027 => Ok(MplBubblegumError::MetadataMintMismatch),
+            6028 => Ok(MplBubblegumError::InvalidCollectionAuthority),
+            6029 => Ok(MplBubblegumError::InvalidDelegateRecord),
+            6030 => Ok(MplBubblegumError::CollectionMasterEditionAccountInvalid),
+            6031 => Ok(MplBubblegumError::CollectionMustBeAUniqueMasterEdition),
+            6032 => Ok(MplBubblegumError::UnknownExternalError),
+            6033 => Ok(MplBubblegumError::DecompressionDisabled),
+            6034 => Ok(MplBubblegumError::MissingCollectionMintAccount),
+            6035 => Ok(MplBubblegumError::MissingCollectionMetadataAccount),
+            6036 => Ok(MplBubblegumError::CollectionMismatch),
+            6037 => Ok(MplBubblegumError::MetadataImmutable),
+            6038 => Ok(MplBubblegumError::PrimarySaleCanOnlyBeFlippedToTrue),
+            6039 => Ok(MplBubblegumError::CreatorDidNotUnverify),
+            6040 => Ok(MplBubblegumError::InvalidTokenStandard),
+            6041 => Ok(MplBubblegumError::InvalidCanopySize),
+            6042 => Ok(MplBubblegumError::InvalidLogWrapper),
+            6043 => Ok(MplBubblegumError::InvalidCompressionProgram),
+            6044 => Ok(MplBubblegumError::LeafMustBeDelegated),
+            6045 => Ok(MplBubblegumError::AssetIsFrozen),
+            6046 => Ok(MplBubblegumError::AssetIsNonTransferable),
+            6047 => Ok(MplBubblegumError::InvalidAuthority),
+            6048 => Ok(MplBubblegumError::CollectionIsFrozen),
+            6049 => Ok(MplBubblegumError::CollectionMustHaveBubblegumPlugin),
+            6050 => Ok(MplBubblegumError::NotAvailable),
+            6051 => Ok(MplBubblegumError::MissingCollectionAccount),
+            6052 => Ok(MplBubblegumError::AssetDataLengthTooLong),
+            6053 => Ok(MplBubblegumError::AlreadyInCollection),
+            6054 => Ok(MplBubblegumError::AlreadyNotInCollection),
+            6055 => Ok(MplBubblegumError::MissingMplCoreCpiSignerAccount),
+            6056 => Ok(MplBubblegumError::AssetIsNotFrozen),
+            _ => Err(ProgramError::InvalidArgument),
+        }
+    }
+}
+
+impl ToStr for MplBubblegumError {
+    fn to_str(&self) -> &'static str {
+        match self {
+            MplBubblegumError::AssetOwnerMismatch => "Asset Owner Does not match",
+            MplBubblegumError::PublicKeyMismatch => "PublicKeyMismatch",
+            MplBubblegumError::HashingMismatch => "Hashing Mismatch Within Leaf Schema",
+            MplBubblegumError::UnsupportedSchemaVersion => "Unsupported Schema Version",
+            MplBubblegumError::CreatorShareTotalMustBe100 => "Creator shares must sum to 100",
+            MplBubblegumError::DuplicateCreatorAddress => {
+                "No duplicate creator addresses in metadata"
+            }
+            MplBubblegumError::CreatorDidNotVerify => "Creator did not verify the metadata",
+            MplBubblegumError::CreatorNotFound => "Creator not found in creator Vec",
+            MplBubblegumError::NoCreatorsPresent => "No creators in creator Vec",
+            MplBubblegumError::CreatorHashMismatch => {
+                "User-provided creator Vec must result in same user-provided creator hash"
+            }
+            MplBubblegumError::DataHashMismatch => {
+                "User-provided metadata must result in same user-provided data hash"
+            }
+            MplBubblegumError::CreatorsTooLong => "Creators list too long",
+            MplBubblegumError::MetadataNameTooLong => "Name in metadata is too long",
+            MplBubblegumError::MetadataSymbolTooLong => "Symbol in metadata is too long",
+            MplBubblegumError::MetadataUriTooLong => "Uri in metadata is too long",
+            MplBubblegumError::MetadataBasisPointsTooHigh => {
+                "Basis points in metadata cannot exceed 10000"
+            }
+            MplBubblegumError::TreeAuthorityIncorrect => "Tree creator or tree delegate must sign.",
+            MplBubblegumError::InsufficientMintCapacity => "Not enough unapproved mints left",
+            MplBubblegumError::NumericalOverflowError => "NumericalOverflowError",
+            MplBubblegumError::IncorrectOwner => "Incorrect account owner",
+            MplBubblegumError::CollectionCannotBeVerifiedInThisInstruction => {
+                "Cannot Verify Collection in this Instruction"
+            }
+            MplBubblegumError::CollectionNotFound => "Collection Not Found on Metadata",
+            MplBubblegumError::AlreadyVerified => "Collection item is already verified.",
+            MplBubblegumError::AlreadyUnverified => "Collection item is already unverified.",
+            MplBubblegumError::UpdateAuthorityIncorrect => {
+                "Incorrect leaf metadata update authority."
+            }
+            MplBubblegumError::LeafAuthorityMustSign => {
+                "This transaction must be signed by either the leaf owner or leaf delegate"
+            }
+            MplBubblegumError::CollectionMustBeSized => {
+                "Collection Not Compatable with Compression, Must be Sized"
+            }
+            MplBubblegumError::MetadataMintMismatch => {
+                "Metadata mint does not match collection mint"
+            }
+            MplBubblegumError::InvalidCollectionAuthority => "Invalid collection authority",
+            MplBubblegumError::InvalidDelegateRecord => "Invalid delegate record pda derivation",
+            MplBubblegumError::CollectionMasterEditionAccountInvalid => {
+                "Edition account doesnt match collection"
+            }
+            MplBubblegumError::CollectionMustBeAUniqueMasterEdition => {
+                "Collection Must Be a Unique Master Edition v2"
+            }
+            MplBubblegumError::UnknownExternalError => {
+                "Could not convert external error to BubblegumError"
+            }
+            MplBubblegumError::DecompressionDisabled => "Decompression is disabled for this tree.",
+            MplBubblegumError::MissingCollectionMintAccount => "Missing collection mint account",
+            MplBubblegumError::MissingCollectionMetadataAccount => {
+                "Missing collection metadata account"
+            }
+            MplBubblegumError::CollectionMismatch => "Collection mismatch",
+            MplBubblegumError::MetadataImmutable => "Metadata not mutable",
+            MplBubblegumError::PrimarySaleCanOnlyBeFlippedToTrue => {
+                "Can only update primary sale to true"
+            }
+            MplBubblegumError::CreatorDidNotUnverify => "Creator did not unverify the metadata",
+            MplBubblegumError::InvalidTokenStandard => "Only NonFungible standard is supported",
+            MplBubblegumError::InvalidCanopySize => {
+                "Canopy size should be set bigger for this tree"
+            }
+            MplBubblegumError::InvalidLogWrapper => "Invalid log wrapper program",
+            MplBubblegumError::InvalidCompressionProgram => "Invalid compression program",
+            MplBubblegumError::LeafMustBeDelegated => {
+                "Leaf must be delegated to someone other than the leaf owner"
+            }
+            MplBubblegumError::AssetIsFrozen => "Asset is frozen",
+            MplBubblegumError::AssetIsNonTransferable => "Asset is non-transferable",
+            MplBubblegumError::InvalidAuthority => "Invalid authority",
+            MplBubblegumError::CollectionIsFrozen => "Collection is frozen",
+            MplBubblegumError::CollectionMustHaveBubblegumPlugin => {
+                "Core collections must have the Bubblegum V2 plugin on them"
+            }
+            MplBubblegumError::NotAvailable => "Feature not currently available",
+            MplBubblegumError::MissingCollectionAccount => "Missing collection account",
+            MplBubblegumError::AssetDataLengthTooLong => "Asset data length too long",
+            MplBubblegumError::AlreadyInCollection => "Item is already in the collection",
+            MplBubblegumError::AlreadyNotInCollection => "Item is already not in a collection",
+            MplBubblegumError::MissingMplCoreCpiSignerAccount => {
+                "Missing mpl-core CPI signer account"
+            }
+            MplBubblegumError::AssetIsNotFrozen => "Asset is not frozen",
+        }
     }
 }

@@ -65,9 +65,9 @@ export const getAssetWithProof = async (
     );
   }
 
-  const collectionString = (rpcAsset.grouping ?? []).find(
+  const collectionGroup = (rpcAsset.grouping ?? []).find(
     (group) => group.group_key === 'collection'
-  )?.group_value;
+  );
 
   const metadata: MetadataArgs = {
     name: rpcAsset.content?.metadata?.name ?? '',
@@ -78,8 +78,11 @@ export const getAssetWithProof = async (
     isMutable: rpcAsset.mutable,
     editionNonce: wrapNullable(rpcAsset.supply?.edition_nonce),
     tokenStandard: some(TokenStandard.NonFungible),
-    collection: collectionString
-      ? some({ key: publicKey(collectionString), verified: true })
+    collection: collectionGroup
+      ? some({
+          key: publicKey(collectionGroup.group_value),
+          verified: collectionGroup.verified ?? false,
+        })
       : none(),
     uses: none(),
     tokenProgramVersion: TokenProgramVersion.Original,

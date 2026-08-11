@@ -88,7 +88,7 @@ export function getDelegateInstructionDataSerializer(): Serializer<
 }
 
 // Extra Args.
-export type DelegateInstructionExtraArgs = { proof: Array<PublicKey> };
+export type DelegateInstructionExtraArgs = { proof?: Array<PublicKey> };
 
 // Args.
 export type DelegateInstructionArgs = PickPartial<
@@ -108,40 +108,48 @@ export function delegate(
   );
 
   // Accounts.
-  const resolvedAccounts: ResolvedAccountsWithIndices = {
+  const resolvedAccounts = {
     treeConfig: {
       index: 0,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.treeConfig ?? null,
     },
-    leafOwner: { index: 1, isWritable: false, value: input.leafOwner ?? null },
+    leafOwner: {
+      index: 1,
+      isWritable: false as boolean,
+      value: input.leafOwner ?? null,
+    },
     previousLeafDelegate: {
       index: 2,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.previousLeafDelegate ?? null,
     },
     newLeafDelegate: {
       index: 3,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.newLeafDelegate ?? null,
     },
-    merkleTree: { index: 4, isWritable: true, value: input.merkleTree ?? null },
+    merkleTree: {
+      index: 4,
+      isWritable: true as boolean,
+      value: input.merkleTree ?? null,
+    },
     logWrapper: {
       index: 5,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.logWrapper ?? null,
     },
     compressionProgram: {
       index: 6,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.compressionProgram ?? null,
     },
     systemProgram: {
       index: 7,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.systemProgram ?? null,
     },
-  };
+  } satisfies ResolvedAccountsWithIndices;
 
   // Arguments.
   const resolvedArgs: DelegateInstructionArgs = { ...input };

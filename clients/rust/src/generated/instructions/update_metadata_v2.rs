@@ -7,8 +7,10 @@
 
 use crate::generated::types::MetadataArgsV2;
 use crate::generated::types::UpdateArgs;
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+#[cfg(feature = "anchor")]
+use anchor_lang::prelude::{AnchorDeserialize, AnchorSerialize};
+#[cfg(not(feature = "anchor"))]
+use borsh::{BorshDeserialize, BorshSerialize};
 
 /// Accounts.
 pub struct UpdateMetadataV2 {
@@ -108,8 +110,8 @@ impl UpdateMetadataV2 {
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let mut data = UpdateMetadataV2InstructionData::new().try_to_vec().unwrap();
-        let mut args = args.try_to_vec().unwrap();
+        let mut data = borsh::to_vec(&(UpdateMetadataV2InstructionData::new())).unwrap();
+        let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
         solana_program::instruction::Instruction {
@@ -120,21 +122,24 @@ impl UpdateMetadataV2 {
     }
 }
 
-#[derive(BorshDeserialize, BorshSerialize)]
-struct UpdateMetadataV2InstructionData {
+#[cfg_attr(not(feature = "anchor"), derive(BorshSerialize, BorshDeserialize))]
+#[cfg_attr(feature = "anchor", derive(AnchorSerialize, AnchorDeserialize))]
+pub struct UpdateMetadataV2InstructionData {
     discriminator: [u8; 8],
 }
 
 impl UpdateMetadataV2InstructionData {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             discriminator: [43, 103, 89, 42, 121, 242, 62, 72],
         }
     }
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(not(feature = "anchor"), derive(BorshSerialize, BorshDeserialize))]
+#[cfg_attr(feature = "anchor", derive(AnchorSerialize, AnchorDeserialize))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct UpdateMetadataV2InstructionArgs {
     pub root: [u8; 32],
     pub asset_data_hash: Option<[u8; 32]>,
@@ -145,7 +150,20 @@ pub struct UpdateMetadataV2InstructionArgs {
     pub update_args: UpdateArgs,
 }
 
-/// Instruction builder.
+/// Instruction builder for `UpdateMetadataV2`.
+///
+/// ### Accounts:
+///
+///   0. `[writable]` tree_config
+///   1. `[writable, signer]` payer
+///   2. `[signer, optional]` authority
+///   3. `[]` leaf_owner
+///   4. `[optional]` leaf_delegate
+///   5. `[writable]` merkle_tree
+///   6. `[optional]` core_collection
+///   7. `[optional]` log_wrapper (default to `mnoopTCrg4p8ry25e4bcWA9XZjbNjMTfgYVGGEdRsf3`)
+///   8. `[optional]` compression_program (default to `mcmt6YrQEMKw8Mw43FmpRLmf7BqRnFMKmAcbxE3xkAW`)
+///   9. `[optional]` system_program (default to `11111111111111111111111111111111`)
 #[derive(Default)]
 pub struct UpdateMetadataV2Builder {
     tree_config: Option<solana_program::pubkey::Pubkey>,
@@ -504,12 +522,12 @@ impl<'a, 'b> UpdateMetadataV2Cpi<'a, 'b> {
         remaining_accounts.iter().for_each(|remaining_account| {
             accounts.push(solana_program::instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
-                is_signer: remaining_account.1,
-                is_writable: remaining_account.2,
+                is_writable: remaining_account.1,
+                is_signer: remaining_account.2,
             })
         });
-        let mut data = UpdateMetadataV2InstructionData::new().try_to_vec().unwrap();
-        let mut args = self.__args.try_to_vec().unwrap();
+        let mut data = borsh::to_vec(&(UpdateMetadataV2InstructionData::new())).unwrap();
+        let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
         let instruction = solana_program::instruction::Instruction {
@@ -547,7 +565,20 @@ impl<'a, 'b> UpdateMetadataV2Cpi<'a, 'b> {
     }
 }
 
-/// `update_metadata_v2` CPI instruction builder.
+/// Instruction builder for `UpdateMetadataV2` via CPI.
+///
+/// ### Accounts:
+///
+///   0. `[writable]` tree_config
+///   1. `[writable, signer]` payer
+///   2. `[signer, optional]` authority
+///   3. `[]` leaf_owner
+///   4. `[optional]` leaf_delegate
+///   5. `[writable]` merkle_tree
+///   6. `[optional]` core_collection
+///   7. `[]` log_wrapper
+///   8. `[]` compression_program
+///   9. `[]` system_program
 pub struct UpdateMetadataV2CpiBuilder<'a, 'b> {
     instruction: Box<UpdateMetadataV2CpiBuilderInstruction<'a, 'b>>,
 }

@@ -6,8 +6,10 @@
 //!
 
 use crate::generated::types::MetadataArgs;
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+#[cfg(feature = "anchor")]
+use anchor_lang::prelude::{AnchorDeserialize, AnchorSerialize};
+#[cfg(not(feature = "anchor"))]
+use borsh::{BorshDeserialize, BorshSerialize};
 
 /// Accounts.
 pub struct MintToCollectionV1 {
@@ -130,10 +132,8 @@ impl MintToCollectionV1 {
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let mut data = MintToCollectionV1InstructionData::new()
-            .try_to_vec()
-            .unwrap();
-        let mut args = args.try_to_vec().unwrap();
+        let mut data = borsh::to_vec(&(MintToCollectionV1InstructionData::new())).unwrap();
+        let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
         solana_program::instruction::Instruction {
@@ -144,26 +144,48 @@ impl MintToCollectionV1 {
     }
 }
 
-#[derive(BorshDeserialize, BorshSerialize)]
-struct MintToCollectionV1InstructionData {
+#[cfg_attr(not(feature = "anchor"), derive(BorshSerialize, BorshDeserialize))]
+#[cfg_attr(feature = "anchor", derive(AnchorSerialize, AnchorDeserialize))]
+pub struct MintToCollectionV1InstructionData {
     discriminator: [u8; 8],
 }
 
 impl MintToCollectionV1InstructionData {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             discriminator: [153, 18, 178, 47, 197, 158, 86, 15],
         }
     }
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(not(feature = "anchor"), derive(BorshSerialize, BorshDeserialize))]
+#[cfg_attr(feature = "anchor", derive(AnchorSerialize, AnchorDeserialize))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct MintToCollectionV1InstructionArgs {
     pub metadata: MetadataArgs,
 }
 
-/// Instruction builder.
+/// Instruction builder for `MintToCollectionV1`.
+///
+/// ### Accounts:
+///
+///   0. `[writable]` tree_config
+///   1. `[]` leaf_owner
+///   2. `[]` leaf_delegate
+///   3. `[writable]` merkle_tree
+///   4. `[signer]` payer
+///   5. `[signer]` tree_creator_or_delegate
+///   6. `[signer]` collection_authority
+///   7. `[optional]` collection_authority_record_pda
+///   8. `[]` collection_mint
+///   9. `[writable]` collection_metadata
+///   10. `[]` collection_edition
+///   11. `[optional]` bubblegum_signer (default to `BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY`)
+///   12. `[optional]` log_wrapper (default to `noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV`)
+///   13. `[optional]` compression_program (default to `cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK`)
+///   14. `[optional]` token_metadata_program (default to `BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY`)
+///   15. `[optional]` system_program (default to `11111111111111111111111111111111`)
 #[derive(Default)]
 pub struct MintToCollectionV1Builder {
     tree_config: Option<solana_program::pubkey::Pubkey>,
@@ -587,14 +609,12 @@ impl<'a, 'b> MintToCollectionV1Cpi<'a, 'b> {
         remaining_accounts.iter().for_each(|remaining_account| {
             accounts.push(solana_program::instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
-                is_signer: remaining_account.1,
-                is_writable: remaining_account.2,
+                is_writable: remaining_account.1,
+                is_signer: remaining_account.2,
             })
         });
-        let mut data = MintToCollectionV1InstructionData::new()
-            .try_to_vec()
-            .unwrap();
-        let mut args = self.__args.try_to_vec().unwrap();
+        let mut data = borsh::to_vec(&(MintToCollectionV1InstructionData::new())).unwrap();
+        let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
         let instruction = solana_program::instruction::Instruction {
@@ -634,7 +654,26 @@ impl<'a, 'b> MintToCollectionV1Cpi<'a, 'b> {
     }
 }
 
-/// `mint_to_collection_v1` CPI instruction builder.
+/// Instruction builder for `MintToCollectionV1` via CPI.
+///
+/// ### Accounts:
+///
+///   0. `[writable]` tree_config
+///   1. `[]` leaf_owner
+///   2. `[]` leaf_delegate
+///   3. `[writable]` merkle_tree
+///   4. `[signer]` payer
+///   5. `[signer]` tree_creator_or_delegate
+///   6. `[signer]` collection_authority
+///   7. `[optional]` collection_authority_record_pda
+///   8. `[]` collection_mint
+///   9. `[writable]` collection_metadata
+///   10. `[]` collection_edition
+///   11. `[]` bubblegum_signer
+///   12. `[]` log_wrapper
+///   13. `[]` compression_program
+///   14. `[]` token_metadata_program
+///   15. `[]` system_program
 pub struct MintToCollectionV1CpiBuilder<'a, 'b> {
     instruction: Box<MintToCollectionV1CpiBuilderInstruction<'a, 'b>>,
 }

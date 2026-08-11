@@ -69,9 +69,9 @@ export type DelegateAndFreezeV2InstructionDataArgs = {
   root: Uint8Array;
   dataHash: Uint8Array;
   creatorHash: Uint8Array;
-  collectionHash: OptionOrNullable<Uint8Array>;
-  assetDataHash: OptionOrNullable<Uint8Array>;
-  flags: OptionOrNullable<number>;
+  collectionHash?: OptionOrNullable<Uint8Array>;
+  assetDataHash?: OptionOrNullable<Uint8Array>;
+  flags?: OptionOrNullable<number>;
   nonce: number | bigint;
   index: number;
 };
@@ -102,6 +102,9 @@ export function getDelegateAndFreezeV2InstructionDataSerializer(): Serializer<
     (value) => ({
       ...value,
       discriminator: [17, 229, 35, 218, 190, 241, 250, 123],
+      collectionHash: value.collectionHash ?? none(),
+      assetDataHash: value.assetDataHash ?? none(),
+      flags: value.flags ?? none(),
     })
   ) as Serializer<
     DelegateAndFreezeV2InstructionDataArgs,
@@ -111,14 +114,14 @@ export function getDelegateAndFreezeV2InstructionDataSerializer(): Serializer<
 
 // Extra Args.
 export type DelegateAndFreezeV2InstructionExtraArgs = {
-  proof: Array<PublicKey>;
+  proof?: Array<PublicKey>;
 };
 
 // Args.
 export type DelegateAndFreezeV2InstructionArgs = PickPartial<
   DelegateAndFreezeV2InstructionDataArgs &
     DelegateAndFreezeV2InstructionExtraArgs,
-  'collectionHash' | 'assetDataHash' | 'flags' | 'proof'
+  'proof'
 >;
 
 // Instruction.
@@ -134,37 +137,53 @@ export function delegateAndFreezeV2(
   );
 
   // Accounts.
-  const resolvedAccounts: ResolvedAccountsWithIndices = {
-    treeConfig: { index: 0, isWritable: true, value: input.treeConfig ?? null },
-    payer: { index: 1, isWritable: true, value: input.payer ?? null },
-    leafOwner: { index: 2, isWritable: false, value: input.leafOwner ?? null },
+  const resolvedAccounts = {
+    treeConfig: {
+      index: 0,
+      isWritable: true as boolean,
+      value: input.treeConfig ?? null,
+    },
+    payer: {
+      index: 1,
+      isWritable: true as boolean,
+      value: input.payer ?? null,
+    },
+    leafOwner: {
+      index: 2,
+      isWritable: false as boolean,
+      value: input.leafOwner ?? null,
+    },
     previousLeafDelegate: {
       index: 3,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.previousLeafDelegate ?? null,
     },
     newLeafDelegate: {
       index: 4,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.newLeafDelegate ?? null,
     },
-    merkleTree: { index: 5, isWritable: true, value: input.merkleTree ?? null },
+    merkleTree: {
+      index: 5,
+      isWritable: true as boolean,
+      value: input.merkleTree ?? null,
+    },
     logWrapper: {
       index: 6,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.logWrapper ?? null,
     },
     compressionProgram: {
       index: 7,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.compressionProgram ?? null,
     },
     systemProgram: {
       index: 8,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.systemProgram ?? null,
     },
-  };
+  } satisfies ResolvedAccountsWithIndices;
 
   // Arguments.
   const resolvedArgs: DelegateAndFreezeV2InstructionArgs = { ...input };
@@ -198,15 +217,6 @@ export function delegateAndFreezeV2(
       '11111111111111111111111111111111'
     );
     resolvedAccounts.systemProgram.isWritable = false;
-  }
-  if (!resolvedArgs.collectionHash) {
-    resolvedArgs.collectionHash = none();
-  }
-  if (!resolvedArgs.assetDataHash) {
-    resolvedArgs.assetDataHash = none();
-  }
-  if (!resolvedArgs.flags) {
-    resolvedArgs.flags = none();
   }
   if (!resolvedArgs.proof) {
     resolvedArgs.proof = [];

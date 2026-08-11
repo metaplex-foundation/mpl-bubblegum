@@ -9,6 +9,7 @@
 export * from './burn';
 export * from './burnV2';
 export * from './cancelRedeem';
+export * from './closeTreeV2';
 export * from './collectV2';
 export * from './createTreeConfig';
 export * from './createTreeConfigV2';

@@ -1,0 +1,21 @@
+[package]
+name = "squads-verified-upgrade"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+# Empty workspace table so this crate is its own workspace root and is NOT
+# pulled into the bubblegum program workspace (programs/bubblegum). That keeps it
+# out of `cargo build-sbf`, clippy, and fmt over the on-chain program.
+[workspace]
+
+[[bin]]
+name = "squads-verified-upgrade"
+path = "src/main.rs"
+
+[dependencies]
+solana-client = "=1.18.26"
+solana-sdk = "=1.18.26"
+sha2 = "=0.10.8"
+bs58 = "=0.5.1"
+bincode = "=1.3.3"

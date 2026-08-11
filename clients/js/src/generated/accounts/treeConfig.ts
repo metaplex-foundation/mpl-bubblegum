@@ -182,6 +182,7 @@ export function getTreeConfigSize(): number {
 export function findTreeConfigPda(
   context: Pick<Context, 'eddsa' | 'programs'>,
   seeds: {
+    /** The merkle tree account */
     merkleTree: PublicKey;
   }
 ): Pda {

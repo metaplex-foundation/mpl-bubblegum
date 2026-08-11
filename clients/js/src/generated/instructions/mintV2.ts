@@ -30,7 +30,6 @@ import {
 } from '@metaplex-foundation/umi/serializers';
 import { findTreeConfigPda } from '../accounts';
 import {
-  PickPartial,
   ResolvedAccount,
   ResolvedAccountsWithIndices,
   expectPublicKey,
@@ -74,8 +73,8 @@ export type MintV2InstructionData = {
 
 export type MintV2InstructionDataArgs = {
   metadata: MetadataArgsV2Args;
-  assetData: OptionOrNullable<Uint8Array>;
-  assetDataSchema: OptionOrNullable<AssetDataSchemaArgs>;
+  assetData?: OptionOrNullable<Uint8Array>;
+  assetDataSchema?: OptionOrNullable<AssetDataSchemaArgs>;
 };
 
 export function getMintV2InstructionDataSerializer(): Serializer<
@@ -95,15 +94,14 @@ export function getMintV2InstructionDataSerializer(): Serializer<
     (value) => ({
       ...value,
       discriminator: [120, 121, 23, 146, 173, 110, 199, 205],
+      assetData: value.assetData ?? none(),
+      assetDataSchema: value.assetDataSchema ?? none(),
     })
   ) as Serializer<MintV2InstructionDataArgs, MintV2InstructionData>;
 }
 
 // Args.
-export type MintV2InstructionArgs = PickPartial<
-  MintV2InstructionDataArgs,
-  'assetData' | 'assetDataSchema'
->;
+export type MintV2InstructionArgs = MintV2InstructionDataArgs;
 
 // Instruction.
 export function mintV2(
@@ -117,57 +115,73 @@ export function mintV2(
   );
 
   // Accounts.
-  const resolvedAccounts: ResolvedAccountsWithIndices = {
-    treeConfig: { index: 0, isWritable: true, value: input.treeConfig ?? null },
-    payer: { index: 1, isWritable: true, value: input.payer ?? null },
+  const resolvedAccounts = {
+    treeConfig: {
+      index: 0,
+      isWritable: true as boolean,
+      value: input.treeConfig ?? null,
+    },
+    payer: {
+      index: 1,
+      isWritable: true as boolean,
+      value: input.payer ?? null,
+    },
     treeCreatorOrDelegate: {
       index: 2,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.treeCreatorOrDelegate ?? null,
     },
     collectionAuthority: {
       index: 3,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.collectionAuthority ?? null,
     },
-    leafOwner: { index: 4, isWritable: false, value: input.leafOwner ?? null },
+    leafOwner: {
+      index: 4,
+      isWritable: false as boolean,
+      value: input.leafOwner ?? null,
+    },
     leafDelegate: {
       index: 5,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.leafDelegate ?? null,
     },
-    merkleTree: { index: 6, isWritable: true, value: input.merkleTree ?? null },
+    merkleTree: {
+      index: 6,
+      isWritable: true as boolean,
+      value: input.merkleTree ?? null,
+    },
     coreCollection: {
       index: 7,
-      isWritable: true,
+      isWritable: true as boolean,
       value: input.coreCollection ?? null,
     },
     mplCoreCpiSigner: {
       index: 8,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.mplCoreCpiSigner ?? null,
     },
     logWrapper: {
       index: 9,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.logWrapper ?? null,
     },
     compressionProgram: {
       index: 10,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.compressionProgram ?? null,
     },
     mplCoreProgram: {
       index: 11,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.mplCoreProgram ?? null,
     },
     systemProgram: {
       index: 12,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.systemProgram ?? null,
     },
-  };
+  } satisfies ResolvedAccountsWithIndices;
 
   // Arguments.
   const resolvedArgs: MintV2InstructionArgs = { ...input };
@@ -215,12 +229,6 @@ export function mintV2(
       '11111111111111111111111111111111'
     );
     resolvedAccounts.systemProgram.isWritable = false;
-  }
-  if (!resolvedArgs.assetData) {
-    resolvedArgs.assetData = none();
-  }
-  if (!resolvedArgs.assetDataSchema) {
-    resolvedArgs.assetDataSchema = none();
   }
 
   // Accounts in order.
