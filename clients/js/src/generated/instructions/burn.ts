@@ -87,7 +87,7 @@ export function getBurnInstructionDataSerializer(): Serializer<
 }
 
 // Extra Args.
-export type BurnInstructionExtraArgs = { proof: Array<PublicKey> };
+export type BurnInstructionExtraArgs = { proof?: Array<PublicKey> };
 
 // Args.
 export type BurnInstructionArgs = PickPartial<
@@ -107,35 +107,43 @@ export function burn(
   );
 
   // Accounts.
-  const resolvedAccounts: ResolvedAccountsWithIndices = {
+  const resolvedAccounts = {
     treeConfig: {
       index: 0,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.treeConfig ?? null,
     },
-    leafOwner: { index: 1, isWritable: false, value: input.leafOwner ?? null },
+    leafOwner: {
+      index: 1,
+      isWritable: false as boolean,
+      value: input.leafOwner ?? null,
+    },
     leafDelegate: {
       index: 2,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.leafDelegate ?? null,
     },
-    merkleTree: { index: 3, isWritable: true, value: input.merkleTree ?? null },
+    merkleTree: {
+      index: 3,
+      isWritable: true as boolean,
+      value: input.merkleTree ?? null,
+    },
     logWrapper: {
       index: 4,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.logWrapper ?? null,
     },
     compressionProgram: {
       index: 5,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.compressionProgram ?? null,
     },
     systemProgram: {
       index: 6,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.systemProgram ?? null,
     },
-  };
+  } satisfies ResolvedAccountsWithIndices;
 
   // Arguments.
   const resolvedArgs: BurnInstructionArgs = { ...input };

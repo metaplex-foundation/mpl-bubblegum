@@ -7,7 +7,10 @@ use mpl_token_metadata::types::MetadataDelegateRole;
 use solana_program::{account_info::AccountInfo, pubkey::Pubkey};
 
 use crate::{
-    asserts::{assert_collection_membership, assert_has_collection_authority},
+    asserts::{
+        assert_collection_membership, assert_has_collection_authority,
+        SELLER_FEE_BASIS_POINTS_INHERIT,
+    },
     error::BubblegumError,
     state::{
         leaf_schema::{LeafSchema, Version},
@@ -27,6 +30,7 @@ use crate::{
 
 mod burn;
 mod cancel_redeem;
+mod close_tree;
 mod collect;
 mod compress;
 mod create_tree;
@@ -54,6 +58,7 @@ mod verify_creator;
 
 pub(crate) use burn::*;
 pub(crate) use cancel_redeem::*;
+pub(crate) use close_tree::*;
 pub(crate) use collect::*;
 pub(crate) use compress::*;
 pub(crate) use create_tree::*;
@@ -401,6 +406,11 @@ fn process_collection_verification_mpl_core_only<'info>(
         return Err(BubblegumError::CollectionMustHaveBubblegumPlugin.into());
     }
 
+    assert_collection_has_royalties_if_seller_fee_inherited(
+        &collection,
+        message.seller_fee_basis_points,
+    )?;
+
     let asset_collection = message
         .collection
         .ok_or(BubblegumError::CollectionNotFound)?;
@@ -419,6 +429,19 @@ fn process_collection_verification_mpl_core_only<'info>(
             MPL_CORE_CPI_SIGNER_PREFIX.as_bytes(),
             &[bubblegum_signer_bump],
         ]])?;
+
+    Ok(())
+}
+
+pub(crate) fn assert_collection_has_royalties_if_seller_fee_inherited(
+    collection: &MplCoreCollection,
+    seller_fee_basis_points: u16,
+) -> Result<()> {
+    if seller_fee_basis_points == SELLER_FEE_BASIS_POINTS_INHERIT
+        && collection.plugin_list.royalties.is_none()
+    {
+        return Err(BubblegumError::CollectionMustHaveRoyaltiesPlugin.into());
+    }
 
     Ok(())
 }

@@ -72,8 +72,8 @@ export type FreezeV2InstructionDataArgs = {
   root: Uint8Array;
   dataHash: Uint8Array;
   creatorHash: Uint8Array;
-  assetDataHash: OptionOrNullable<Uint8Array>;
-  flags: OptionOrNullable<number>;
+  assetDataHash?: OptionOrNullable<Uint8Array>;
+  flags?: OptionOrNullable<number>;
   nonce: number | bigint;
   index: number;
 };
@@ -103,17 +103,19 @@ export function getFreezeV2InstructionDataSerializer(): Serializer<
     (value) => ({
       ...value,
       discriminator: [200, 151, 244, 102, 16, 195, 255, 3],
+      assetDataHash: value.assetDataHash ?? none(),
+      flags: value.flags ?? none(),
     })
   ) as Serializer<FreezeV2InstructionDataArgs, FreezeV2InstructionData>;
 }
 
 // Extra Args.
-export type FreezeV2InstructionExtraArgs = { proof: Array<PublicKey> };
+export type FreezeV2InstructionExtraArgs = { proof?: Array<PublicKey> };
 
 // Args.
 export type FreezeV2InstructionArgs = PickPartial<
   FreezeV2InstructionDataArgs & FreezeV2InstructionExtraArgs,
-  'assetDataHash' | 'flags' | 'proof'
+  'proof'
 >;
 
 // Instruction.
@@ -128,38 +130,58 @@ export function freezeV2(
   );
 
   // Accounts.
-  const resolvedAccounts: ResolvedAccountsWithIndices = {
-    treeConfig: { index: 0, isWritable: true, value: input.treeConfig ?? null },
-    payer: { index: 1, isWritable: true, value: input.payer ?? null },
-    authority: { index: 2, isWritable: false, value: input.authority ?? null },
-    leafOwner: { index: 3, isWritable: false, value: input.leafOwner ?? null },
+  const resolvedAccounts = {
+    treeConfig: {
+      index: 0,
+      isWritable: true as boolean,
+      value: input.treeConfig ?? null,
+    },
+    payer: {
+      index: 1,
+      isWritable: true as boolean,
+      value: input.payer ?? null,
+    },
+    authority: {
+      index: 2,
+      isWritable: false as boolean,
+      value: input.authority ?? null,
+    },
+    leafOwner: {
+      index: 3,
+      isWritable: false as boolean,
+      value: input.leafOwner ?? null,
+    },
     leafDelegate: {
       index: 4,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.leafDelegate ?? null,
     },
-    merkleTree: { index: 5, isWritable: true, value: input.merkleTree ?? null },
+    merkleTree: {
+      index: 5,
+      isWritable: true as boolean,
+      value: input.merkleTree ?? null,
+    },
     coreCollection: {
       index: 6,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.coreCollection ?? null,
     },
     logWrapper: {
       index: 7,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.logWrapper ?? null,
     },
     compressionProgram: {
       index: 8,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.compressionProgram ?? null,
     },
     systemProgram: {
       index: 9,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.systemProgram ?? null,
     },
-  };
+  } satisfies ResolvedAccountsWithIndices;
 
   // Arguments.
   const resolvedArgs: FreezeV2InstructionArgs = { ...input };
@@ -193,12 +215,6 @@ export function freezeV2(
       '11111111111111111111111111111111'
     );
     resolvedAccounts.systemProgram.isWritable = false;
-  }
-  if (!resolvedArgs.assetDataHash) {
-    resolvedArgs.assetDataHash = none();
-  }
-  if (!resolvedArgs.flags) {
-    resolvedArgs.flags = none();
   }
   if (!resolvedArgs.proof) {
     resolvedArgs.proof = [];

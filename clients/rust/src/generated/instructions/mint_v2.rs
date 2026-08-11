@@ -7,8 +7,10 @@
 
 use crate::generated::types::AssetDataSchema;
 use crate::generated::types::MetadataArgsV2;
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+#[cfg(feature = "anchor")]
+use anchor_lang::prelude::{AnchorDeserialize, AnchorSerialize};
+#[cfg(not(feature = "anchor"))]
+use borsh::{BorshDeserialize, BorshSerialize};
 
 /// Accounts.
 pub struct MintV2 {
@@ -140,8 +142,8 @@ impl MintV2 {
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let mut data = MintV2InstructionData::new().try_to_vec().unwrap();
-        let mut args = args.try_to_vec().unwrap();
+        let mut data = borsh::to_vec(&(MintV2InstructionData::new())).unwrap();
+        let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
         solana_program::instruction::Instruction {
@@ -152,28 +154,47 @@ impl MintV2 {
     }
 }
 
-#[derive(BorshDeserialize, BorshSerialize)]
-struct MintV2InstructionData {
+#[cfg_attr(not(feature = "anchor"), derive(BorshSerialize, BorshDeserialize))]
+#[cfg_attr(feature = "anchor", derive(AnchorSerialize, AnchorDeserialize))]
+pub struct MintV2InstructionData {
     discriminator: [u8; 8],
 }
 
 impl MintV2InstructionData {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             discriminator: [120, 121, 23, 146, 173, 110, 199, 205],
         }
     }
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(not(feature = "anchor"), derive(BorshSerialize, BorshDeserialize))]
+#[cfg_attr(feature = "anchor", derive(AnchorSerialize, AnchorDeserialize))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct MintV2InstructionArgs {
     pub metadata: MetadataArgsV2,
     pub asset_data: Option<Vec<u8>>,
     pub asset_data_schema: Option<AssetDataSchema>,
 }
 
-/// Instruction builder.
+/// Instruction builder for `MintV2`.
+///
+/// ### Accounts:
+///
+///   0. `[writable]` tree_config
+///   1. `[writable, signer]` payer
+///   2. `[signer, optional]` tree_creator_or_delegate
+///   3. `[signer, optional]` collection_authority
+///   4. `[]` leaf_owner
+///   5. `[optional]` leaf_delegate
+///   6. `[writable]` merkle_tree
+///   7. `[writable, optional]` core_collection
+///   8. `[optional]` mpl_core_cpi_signer
+///   9. `[optional]` log_wrapper (default to `mnoopTCrg4p8ry25e4bcWA9XZjbNjMTfgYVGGEdRsf3`)
+///   10. `[optional]` compression_program (default to `mcmt6YrQEMKw8Mw43FmpRLmf7BqRnFMKmAcbxE3xkAW`)
+///   11. `[optional]` mpl_core_program (default to `CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d`)
+///   12. `[optional]` system_program (default to `11111111111111111111111111111111`)
 #[derive(Default)]
 pub struct MintV2Builder {
     tree_config: Option<solana_program::pubkey::Pubkey>,
@@ -577,12 +598,12 @@ impl<'a, 'b> MintV2Cpi<'a, 'b> {
         remaining_accounts.iter().for_each(|remaining_account| {
             accounts.push(solana_program::instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
-                is_signer: remaining_account.1,
-                is_writable: remaining_account.2,
+                is_writable: remaining_account.1,
+                is_signer: remaining_account.2,
             })
         });
-        let mut data = MintV2InstructionData::new().try_to_vec().unwrap();
-        let mut args = self.__args.try_to_vec().unwrap();
+        let mut data = borsh::to_vec(&(MintV2InstructionData::new())).unwrap();
+        let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
         let instruction = solana_program::instruction::Instruction {
@@ -627,7 +648,23 @@ impl<'a, 'b> MintV2Cpi<'a, 'b> {
     }
 }
 
-/// `mint_v2` CPI instruction builder.
+/// Instruction builder for `MintV2` via CPI.
+///
+/// ### Accounts:
+///
+///   0. `[writable]` tree_config
+///   1. `[writable, signer]` payer
+///   2. `[signer, optional]` tree_creator_or_delegate
+///   3. `[signer, optional]` collection_authority
+///   4. `[]` leaf_owner
+///   5. `[optional]` leaf_delegate
+///   6. `[writable]` merkle_tree
+///   7. `[writable, optional]` core_collection
+///   8. `[optional]` mpl_core_cpi_signer
+///   9. `[]` log_wrapper
+///   10. `[]` compression_program
+///   11. `[]` mpl_core_program
+///   12. `[]` system_program
 pub struct MintV2CpiBuilder<'a, 'b> {
     instruction: Box<MintV2CpiBuilderInstruction<'a, 'b>>,
 }

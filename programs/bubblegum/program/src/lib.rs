@@ -19,6 +19,19 @@ use state::{
 
 declare_id!("BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY");
 
+#[cfg(not(feature = "no-entrypoint"))]
+solana_security_txt::security_txt! {
+    // Required fields
+    name: "Mpl Bubblegum",
+    project_url: "https://metaplex.com",
+    contacts: "email:security@metaplex.foundation",
+    policy: "Report suspected vulnerabilities privately by emailing security@metaplex.foundation before public disclosure.",
+
+    // Optional fields
+    preferred_languages: "en",
+    source_code: "https://github.com/metaplex-foundation/mpl-bubblegum"
+}
+
 pub enum InstructionName {
     Unknown,
     MintV1,
@@ -56,6 +69,7 @@ pub enum InstructionName {
     UpdateAssetDataV2,
     UpdateMetadataV2,
     VerifyCreatorV2,
+    CloseTreeV2,
 }
 
 pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
@@ -100,6 +114,7 @@ pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
         [59, 56, 111, 43, 95, 14, 11, 61] => InstructionName::UpdateAssetDataV2,
         [43, 103, 89, 42, 121, 242, 62, 72] => InstructionName::UpdateMetadataV2,
         [85, 138, 140, 42, 22, 241, 118, 102] => InstructionName::VerifyCreatorV2,
+        [45, 172, 6, 94, 28, 90, 157, 70] => InstructionName::CloseTreeV2,
         _ => InstructionName::Unknown,
     }
 }
@@ -149,6 +164,11 @@ pub mod bubblegum {
         root: [u8; 32],
     ) -> Result<()> {
         processor::cancel_redeem(ctx, root)
+    }
+
+    /// Closes an empty tree and its config PDA to reclaim rent.
+    pub fn close_tree_v2(ctx: Context<CloseTreeV2>) -> Result<()> {
+        processor::close_tree_v2(ctx)
     }
 
     /// Collect fees from a V2 tree.

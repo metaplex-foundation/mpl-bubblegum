@@ -25,6 +25,8 @@ import {
 import { findLeafAssetIdPda } from './leafAssetId';
 import { LeafSchemaV2Flags, isValidLeafSchemaV2Flags } from './flags';
 
+export const SELLER_FEE_BASIS_POINTS_INHERIT = 0xffff;
+
 export function hash(input: Uint8Array | Uint8Array[]): Uint8Array {
   return keccak_256(Array.isArray(input) ? mergeBytes(input) : input);
 }

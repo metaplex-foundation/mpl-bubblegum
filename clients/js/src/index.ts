@@ -10,3 +10,4 @@ export * from './merkle';
 export * from './plugin';
 export * from './canTransfer';
 export * from './getCompressionProgramsForV1Ixs';
+export { mintV2 } from './mintV2';

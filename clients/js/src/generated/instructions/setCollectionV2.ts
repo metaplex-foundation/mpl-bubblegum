@@ -86,8 +86,8 @@ export type SetCollectionV2InstructionData = {
 
 export type SetCollectionV2InstructionDataArgs = {
   root: Uint8Array;
-  assetDataHash: OptionOrNullable<Uint8Array>;
-  flags: OptionOrNullable<number>;
+  assetDataHash?: OptionOrNullable<Uint8Array>;
+  flags?: OptionOrNullable<number>;
   nonce: number | bigint;
   index: number;
   metadata: MetadataArgsV2Args;
@@ -114,7 +114,12 @@ export function getSetCollectionV2InstructionDataSerializer(): Serializer<
       ],
       { description: 'SetCollectionV2InstructionData' }
     ),
-    (value) => ({ ...value, discriminator: [229, 35, 61, 91, 15, 14, 99, 160] })
+    (value) => ({
+      ...value,
+      discriminator: [229, 35, 61, 91, 15, 14, 99, 160],
+      assetDataHash: value.assetDataHash ?? none(),
+      flags: value.flags ?? none(),
+    })
   ) as Serializer<
     SetCollectionV2InstructionDataArgs,
     SetCollectionV2InstructionData
@@ -122,12 +127,12 @@ export function getSetCollectionV2InstructionDataSerializer(): Serializer<
 }
 
 // Extra Args.
-export type SetCollectionV2InstructionExtraArgs = { proof: Array<PublicKey> };
+export type SetCollectionV2InstructionExtraArgs = { proof?: Array<PublicKey> };
 
 // Args.
 export type SetCollectionV2InstructionArgs = PickPartial<
   SetCollectionV2InstructionDataArgs & SetCollectionV2InstructionExtraArgs,
-  'assetDataHash' | 'flags' | 'proof'
+  'proof'
 >;
 
 // Instruction.
@@ -142,58 +147,78 @@ export function setCollectionV2(
   );
 
   // Accounts.
-  const resolvedAccounts: ResolvedAccountsWithIndices = {
-    treeConfig: { index: 0, isWritable: true, value: input.treeConfig ?? null },
-    payer: { index: 1, isWritable: true, value: input.payer ?? null },
-    authority: { index: 2, isWritable: false, value: input.authority ?? null },
+  const resolvedAccounts = {
+    treeConfig: {
+      index: 0,
+      isWritable: true as boolean,
+      value: input.treeConfig ?? null,
+    },
+    payer: {
+      index: 1,
+      isWritable: true as boolean,
+      value: input.payer ?? null,
+    },
+    authority: {
+      index: 2,
+      isWritable: false as boolean,
+      value: input.authority ?? null,
+    },
     newCollectionAuthority: {
       index: 3,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.newCollectionAuthority ?? null,
     },
-    leafOwner: { index: 4, isWritable: false, value: input.leafOwner ?? null },
+    leafOwner: {
+      index: 4,
+      isWritable: false as boolean,
+      value: input.leafOwner ?? null,
+    },
     leafDelegate: {
       index: 5,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.leafDelegate ?? null,
     },
-    merkleTree: { index: 6, isWritable: true, value: input.merkleTree ?? null },
+    merkleTree: {
+      index: 6,
+      isWritable: true as boolean,
+      value: input.merkleTree ?? null,
+    },
     coreCollection: {
       index: 7,
-      isWritable: true,
+      isWritable: true as boolean,
       value: input.coreCollection ?? null,
     },
     newCoreCollection: {
       index: 8,
-      isWritable: true,
+      isWritable: true as boolean,
       value: input.newCoreCollection ?? null,
     },
     mplCoreCpiSigner: {
       index: 9,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.mplCoreCpiSigner ?? null,
     },
     logWrapper: {
       index: 10,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.logWrapper ?? null,
     },
     compressionProgram: {
       index: 11,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.compressionProgram ?? null,
     },
     mplCoreProgram: {
       index: 12,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.mplCoreProgram ?? null,
     },
     systemProgram: {
       index: 13,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.systemProgram ?? null,
     },
-  };
+  } satisfies ResolvedAccountsWithIndices;
 
   // Arguments.
   const resolvedArgs: SetCollectionV2InstructionArgs = { ...input };
@@ -239,12 +264,6 @@ export function setCollectionV2(
       '11111111111111111111111111111111'
     );
     resolvedAccounts.systemProgram.isWritable = false;
-  }
-  if (!resolvedArgs.assetDataHash) {
-    resolvedArgs.assetDataHash = none();
-  }
-  if (!resolvedArgs.flags) {
-    resolvedArgs.flags = none();
   }
   if (!resolvedArgs.proof) {
     resolvedArgs.proof = [];

@@ -91,14 +91,18 @@ export function setDecompressibleState(
   );
 
   // Accounts.
-  const resolvedAccounts: ResolvedAccountsWithIndices = {
-    treeConfig: { index: 0, isWritable: true, value: input.treeConfig ?? null },
+  const resolvedAccounts = {
+    treeConfig: {
+      index: 0,
+      isWritable: true as boolean,
+      value: input.treeConfig ?? null,
+    },
     treeCreator: {
       index: 1,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.treeCreator ?? null,
     },
-  };
+  } satisfies ResolvedAccountsWithIndices;
 
   // Arguments.
   const resolvedArgs: SetDecompressibleStateInstructionArgs = { ...input };

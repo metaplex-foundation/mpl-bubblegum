@@ -19,10 +19,10 @@ import {
   hashMetadataDataV2,
   hashLeafV2,
   setNonTransferableV2,
-  mintV2 as baseMintV2,
   MetadataArgsV2Args,
   LeafSchemaV2Flags,
 } from '../src';
+import { mintV2 as baseMintV2 } from '../src/generated/instructions/mintV2';
 import { createTreeV2, createUmi, mintV2 } from './_setup';
 
 test('owner can burn a compressed NFT using V2 instructions', async (t) => {

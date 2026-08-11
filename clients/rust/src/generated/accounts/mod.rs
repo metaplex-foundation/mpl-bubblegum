@@ -5,8 +5,8 @@
 //! [https://github.com/metaplex-foundation/kinobi]
 //!
 
-pub(crate) mod tree_config;
-pub(crate) mod voucher;
+pub(crate) mod r#tree_config;
+pub(crate) mod r#voucher;
 
-pub use self::tree_config::*;
-pub use self::voucher::*;
+pub use self::r#tree_config::*;
+pub use self::r#voucher::*;

@@ -6,8 +6,10 @@
 //!
 
 use crate::generated::types::MetadataArgs;
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+#[cfg(feature = "anchor")]
+use anchor_lang::prelude::{AnchorDeserialize, AnchorSerialize};
+#[cfg(not(feature = "anchor"))]
+use borsh::{BorshDeserialize, BorshSerialize};
 
 /// Accounts.
 pub struct DecompressV1 {
@@ -104,8 +106,8 @@ impl DecompressV1 {
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let mut data = DecompressV1InstructionData::new().try_to_vec().unwrap();
-        let mut args = args.try_to_vec().unwrap();
+        let mut data = borsh::to_vec(&(DecompressV1InstructionData::new())).unwrap();
+        let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
         solana_program::instruction::Instruction {
@@ -116,26 +118,45 @@ impl DecompressV1 {
     }
 }
 
-#[derive(BorshDeserialize, BorshSerialize)]
-struct DecompressV1InstructionData {
+#[cfg_attr(not(feature = "anchor"), derive(BorshSerialize, BorshDeserialize))]
+#[cfg_attr(feature = "anchor", derive(AnchorSerialize, AnchorDeserialize))]
+pub struct DecompressV1InstructionData {
     discriminator: [u8; 8],
 }
 
 impl DecompressV1InstructionData {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             discriminator: [54, 85, 76, 70, 228, 250, 164, 81],
         }
     }
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(not(feature = "anchor"), derive(BorshSerialize, BorshDeserialize))]
+#[cfg_attr(feature = "anchor", derive(AnchorSerialize, AnchorDeserialize))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DecompressV1InstructionArgs {
     pub metadata: MetadataArgs,
 }
 
-/// Instruction builder.
+/// Instruction builder for `DecompressV1`.
+///
+/// ### Accounts:
+///
+///   0. `[writable]` voucher
+///   1. `[writable, signer]` leaf_owner
+///   2. `[writable]` token_account
+///   3. `[writable]` mint
+///   4. `[writable]` mint_authority
+///   5. `[writable]` metadata_account
+///   6. `[writable]` master_edition
+///   7. `[optional]` system_program (default to `11111111111111111111111111111111`)
+///   8. `[optional]` sysvar_rent (default to `SysvarRent111111111111111111111111111111111`)
+///   9. `[optional]` token_metadata_program (default to `metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s`)
+///   10. `[optional]` token_program (default to `TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA`)
+///   11. `[optional]` associated_token_program (default to `ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL`)
+///   12. `[optional]` log_wrapper (default to `noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV`)
 #[derive(Default)]
 pub struct DecompressV1Builder {
     voucher: Option<solana_program::pubkey::Pubkey>,
@@ -476,12 +497,12 @@ impl<'a, 'b> DecompressV1Cpi<'a, 'b> {
         remaining_accounts.iter().for_each(|remaining_account| {
             accounts.push(solana_program::instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
-                is_signer: remaining_account.1,
-                is_writable: remaining_account.2,
+                is_writable: remaining_account.1,
+                is_signer: remaining_account.2,
             })
         });
-        let mut data = DecompressV1InstructionData::new().try_to_vec().unwrap();
-        let mut args = self.__args.try_to_vec().unwrap();
+        let mut data = borsh::to_vec(&(DecompressV1InstructionData::new())).unwrap();
+        let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
         let instruction = solana_program::instruction::Instruction {
@@ -516,7 +537,23 @@ impl<'a, 'b> DecompressV1Cpi<'a, 'b> {
     }
 }
 
-/// `decompress_v1` CPI instruction builder.
+/// Instruction builder for `DecompressV1` via CPI.
+///
+/// ### Accounts:
+///
+///   0. `[writable]` voucher
+///   1. `[writable, signer]` leaf_owner
+///   2. `[writable]` token_account
+///   3. `[writable]` mint
+///   4. `[writable]` mint_authority
+///   5. `[writable]` metadata_account
+///   6. `[writable]` master_edition
+///   7. `[]` system_program
+///   8. `[]` sysvar_rent
+///   9. `[]` token_metadata_program
+///   10. `[]` token_program
+///   11. `[]` associated_token_program
+///   12. `[]` log_wrapper
 pub struct DecompressV1CpiBuilder<'a, 'b> {
     instruction: Box<DecompressV1CpiBuilderInstruction<'a, 'b>>,
 }

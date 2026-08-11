@@ -173,6 +173,17 @@ test('it can fetch the proof of a compressed asset', async (t) => {
       tokenProgramVersion: TokenProgramVersion.Original,
       creators: [],
     },
+    currentMetadata: {
+      name: 'My NFT',
+      symbol: '',
+      uri: 'https://example.com/my-nft.json',
+      sellerFeeBasisPoints: 500,
+      primarySaleHappened: false,
+      isMutable: true,
+      tokenStandard: some(TokenStandard.NonFungible),
+      collection: none(),
+      creators: [],
+    },
     rpcAsset: {
       interface: 'V1_NFT',
       id: assetId,
@@ -294,6 +305,17 @@ test('it can fetch the truncated proof of a compressed asset with canopy depth 0
       collection: none(),
       uses: none(),
       tokenProgramVersion: TokenProgramVersion.Original,
+      creators: [],
+    },
+    currentMetadata: {
+      name: 'My NFT',
+      symbol: '',
+      uri: 'https://example.com/my-nft.json',
+      sellerFeeBasisPoints: 500,
+      primarySaleHappened: false,
+      isMutable: true,
+      tokenStandard: some(TokenStandard.NonFungible),
+      collection: none(),
       creators: [],
     },
     rpcAsset: {
@@ -420,6 +442,30 @@ test('it can fetch the proof of a compressed asset with nonzero canopy depth', a
       }),
       uses: none(),
       tokenProgramVersion: TokenProgramVersion.Original,
+      creators: [
+        {
+          address: publicKey('3HxqsUguP6E7CNqjvpEAnJ8v86qbyJgWvN2idAKygLdD'),
+          share: 100,
+          verified: false,
+        },
+        {
+          address: publicKey('792RcrqqmoWUh6LbijAfpAkxR2kVCoBGrmshWzfy7HgD'),
+          share: 0,
+          verified: false,
+        },
+      ],
+    },
+    currentMetadata: {
+      name: 'Welcome to Creator Studio',
+      symbol: 'CS',
+      uri: 'https://arweave.net/0h9bJ_dST9JN7jdYgfW5SoTQ5b_6zYkpX7x5nLkeeD0',
+      sellerFeeBasisPoints: 0,
+      primarySaleHappened: false,
+      isMutable: false,
+      tokenStandard: some(TokenStandard.NonFungible),
+      collection: some(
+        publicKey('5141VSFjgYFEKTy45aT1tUEeApwQ1eXPEfzRdRVt7xTL')
+      ),
       creators: [
         {
           address: publicKey('3HxqsUguP6E7CNqjvpEAnJ8v86qbyJgWvN2idAKygLdD'),
@@ -566,6 +612,30 @@ test('it can fetch the truncated proof of a compressed asset with nonzero canopy
       }),
       uses: none(),
       tokenProgramVersion: TokenProgramVersion.Original,
+      creators: [
+        {
+          address: publicKey('3HxqsUguP6E7CNqjvpEAnJ8v86qbyJgWvN2idAKygLdD'),
+          share: 100,
+          verified: false,
+        },
+        {
+          address: publicKey('792RcrqqmoWUh6LbijAfpAkxR2kVCoBGrmshWzfy7HgD'),
+          share: 0,
+          verified: false,
+        },
+      ],
+    },
+    currentMetadata: {
+      name: 'Welcome to Creator Studio',
+      symbol: 'CS',
+      uri: 'https://arweave.net/0h9bJ_dST9JN7jdYgfW5SoTQ5b_6zYkpX7x5nLkeeD0',
+      sellerFeeBasisPoints: 0,
+      primarySaleHappened: false,
+      isMutable: false,
+      tokenStandard: some(TokenStandard.NonFungible),
+      collection: some(
+        publicKey('5141VSFjgYFEKTy45aT1tUEeApwQ1eXPEfzRdRVt7xTL')
+      ),
       creators: [
         {
           address: publicKey('3HxqsUguP6E7CNqjvpEAnJ8v86qbyJgWvN2idAKygLdD'),

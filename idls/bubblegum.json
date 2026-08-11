@@ -270,6 +270,57 @@
       ]
     },
     {
+      "name": "closeTreeV2",
+      "docs": [
+        "Closes an empty tree and its config PDA to reclaim rent."
+      ],
+      "accounts": [
+        {
+          "name": "treeAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "Tree creator or delegate."
+          ]
+        },
+        {
+          "name": "merkleTree",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "recipient",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Recipient for reclaimed lamports (tree + config PDA). Must be the creator",
+            "or the delegate."
+          ]
+        },
+        {
+          "name": "compressionProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "logWrapper",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "collectV2",
       "docs": [
         "Collect fees from a V2 tree."
@@ -4079,6 +4130,9 @@
           },
           {
             "name": "VerifyCreatorV2"
+          },
+          {
+            "name": "CloseTreeV2"
           }
         ]
       }
@@ -4369,6 +4423,21 @@
       "code": 6056,
       "name": "AssetIsNotFrozen",
       "msg": "Asset is not frozen"
+    },
+    {
+      "code": 6057,
+      "name": "CollectionMustHaveRoyaltiesPlugin",
+      "msg": "Core collections must have the Royalties plugin to inherit seller fee basis points"
+    },
+    {
+      "code": 6058,
+      "name": "InheritedSellerFeeCannotHaveLeafCreators",
+      "msg": "Inherited seller fee basis points cannot be used with leaf-level creators"
+    },
+    {
+      "code": 6059,
+      "name": "CannotRemoveFromCollectionWithInheritedSellerFee",
+      "msg": "Cannot remove from collection while seller fee basis points are inherited"
     }
   ],
   "metadata": {

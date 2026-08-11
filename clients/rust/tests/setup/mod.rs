@@ -4,6 +4,7 @@ pub use tree_manager::*;
 use solana_program::pubkey::Pubkey;
 use solana_program_test::{ProgramTest, ProgramTestContext};
 use solana_sdk::account::Account;
+use std::str::FromStr;
 
 /// Asserts that a given error is a custom instruction error.
 #[macro_export]
@@ -38,9 +39,12 @@ macro_rules! assert_custom_instruction_error {
 /// Setup a program test with the required programs.
 pub fn create_program_test() -> ProgramTest {
     let mut program_test = ProgramTest::new("bubblegum", mpl_bubblegum::ID, None);
-    // V1: SPL-based programs
-    program_test.add_program("spl_account_compression", spl_account_compression::ID, None);
-    program_test.add_program("spl_noop", spl_noop::ID, None);
+    // V1: SPL-based programs (hardcoded IDs to avoid pulling in SPL crate dependencies)
+    let spl_account_compression_id =
+        Pubkey::from_str("cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK").unwrap();
+    let spl_noop_id = Pubkey::from_str("noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV").unwrap();
+    program_test.add_program("spl_account_compression", spl_account_compression_id, None);
+    program_test.add_program("spl_noop", spl_noop_id, None);
 
     // V2: MPL-based programs
     program_test.add_program("mpl_account_compression", mpl_account_compression::ID, None);

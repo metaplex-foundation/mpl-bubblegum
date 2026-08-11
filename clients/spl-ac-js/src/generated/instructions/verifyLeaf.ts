@@ -74,7 +74,7 @@ export function getVerifyLeafInstructionDataSerializer(): Serializer<
 }
 
 // Extra Args.
-export type VerifyLeafInstructionExtraArgs = { proof: Array<PublicKey> };
+export type VerifyLeafInstructionExtraArgs = { proof?: Array<PublicKey> };
 
 // Args.
 export type VerifyLeafInstructionArgs = PickPartial<
@@ -94,13 +94,13 @@ export function verifyLeaf(
   );
 
   // Accounts.
-  const resolvedAccounts: ResolvedAccountsWithIndices = {
+  const resolvedAccounts = {
     merkleTree: {
       index: 0,
-      isWritable: false,
+      isWritable: false as boolean,
       value: input.merkleTree ?? null,
     },
-  };
+  } satisfies ResolvedAccountsWithIndices;
 
   // Arguments.
   const resolvedArgs: VerifyLeafInstructionArgs = { ...input };

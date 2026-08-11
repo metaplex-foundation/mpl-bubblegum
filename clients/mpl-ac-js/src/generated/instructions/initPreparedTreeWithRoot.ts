@@ -101,11 +101,19 @@ export function initPreparedTreeWithRoot(
   );
 
   // Accounts.
-  const resolvedAccounts: ResolvedAccountsWithIndices = {
-    merkleTree: { index: 0, isWritable: true, value: input.merkleTree ?? null },
-    authority: { index: 1, isWritable: false, value: input.authority ?? null },
-    noop: { index: 2, isWritable: false, value: input.noop ?? null },
-  };
+  const resolvedAccounts = {
+    merkleTree: {
+      index: 0,
+      isWritable: true as boolean,
+      value: input.merkleTree ?? null,
+    },
+    authority: {
+      index: 1,
+      isWritable: false as boolean,
+      value: input.authority ?? null,
+    },
+    noop: { index: 2, isWritable: false as boolean, value: input.noop ?? null },
+  } satisfies ResolvedAccountsWithIndices;
 
   // Arguments.
   const resolvedArgs: InitPreparedTreeWithRootInstructionArgs = { ...input };

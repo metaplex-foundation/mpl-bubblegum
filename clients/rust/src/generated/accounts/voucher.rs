@@ -6,12 +6,16 @@
 //!
 
 use crate::generated::types::LeafSchema;
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+#[cfg(feature = "anchor")]
+use anchor_lang::prelude::{AnchorDeserialize, AnchorSerialize};
+#[cfg(not(feature = "anchor"))]
+use borsh::{BorshDeserialize, BorshSerialize};
 use solana_program::pubkey::Pubkey;
 
-#[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(not(feature = "anchor"), derive(BorshSerialize, BorshDeserialize))]
+#[cfg_attr(feature = "anchor", derive(AnchorSerialize, AnchorDeserialize))]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Voucher {
     pub discriminator: [u8; 8],
     pub leaf_schema: LeafSchema,
@@ -24,6 +28,15 @@ pub struct Voucher {
 }
 
 impl Voucher {
+    /// Prefix values used to generate a PDA for this account.
+    ///
+    /// Values are positional and appear in the following order:
+    ///
+    ///   0. `Voucher::PREFIX`
+    ///   1. merkle_tree (`Pubkey`)
+    ///   2. nonce (`u64`)
+    pub const PREFIX: &'static [u8] = "voucher".as_bytes();
+
     pub fn create_pda(
         merkle_tree: Pubkey,
         nonce: u64,

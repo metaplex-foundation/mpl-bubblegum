@@ -70,14 +70,14 @@ export function accountCompressionEvent(
   >['fields']
 ): GetDataEnumKind<AccountCompressionEventArgs, 'ApplicationData'>;
 export function accountCompressionEvent<
-  K extends AccountCompressionEventArgs['__kind']
+  K extends AccountCompressionEventArgs['__kind'],
 >(kind: K, data?: any): Extract<AccountCompressionEventArgs, { __kind: K }> {
   return Array.isArray(data)
     ? { __kind: kind, fields: data }
     : { __kind: kind, ...(data ?? {}) };
 }
 export function isAccountCompressionEvent<
-  K extends AccountCompressionEvent['__kind']
+  K extends AccountCompressionEvent['__kind'],
 >(
   kind: K,
   value: AccountCompressionEvent

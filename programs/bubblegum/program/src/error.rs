@@ -118,6 +118,12 @@ pub enum BubblegumError {
     MissingMplCoreCpiSignerAccount,
     #[msg("Asset is not frozen")]
     AssetIsNotFrozen,
+    #[msg("Core collections must have the Royalties plugin to inherit seller fee basis points")]
+    CollectionMustHaveRoyaltiesPlugin,
+    #[msg("Inherited seller fee basis points cannot be used with leaf-level creators")]
+    InheritedSellerFeeCannotHaveLeafCreators,
+    #[msg("Cannot remove from collection while seller fee basis points are inherited")]
+    CannotRemoveFromCollectionWithInheritedSellerFee,
 }
 
 // Converts certain Token Metadata errors into Bubblegum equivalents
