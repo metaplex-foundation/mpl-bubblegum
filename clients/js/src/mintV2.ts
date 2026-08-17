@@ -7,6 +7,18 @@ import {
 } from './generated/instructions/mintV2';
 import { SELLER_FEE_BASIS_POINTS_INHERIT } from './hash';
 
+// Re-export the generated mintV2 helpers that are no longer star-exported
+// from ./generated/instructions since this wrapper replaced the generated
+// mintV2 function. Note the generated MintV2InstructionArgs is intentionally
+// superseded by the widened type below, which makes sellerFeeBasisPoints
+// optional when a core collection is provided.
+export {
+  getMintV2InstructionDataSerializer,
+  type MintV2InstructionAccounts,
+  type MintV2InstructionData,
+  type MintV2InstructionDataArgs,
+} from './generated/instructions/mintV2';
+
 export type MintV2InstructionArgs = Omit<
   GeneratedMintV2InstructionArgs,
   'metadata'
