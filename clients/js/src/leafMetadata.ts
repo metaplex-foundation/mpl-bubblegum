@@ -1,4 +1,10 @@
-import { none, some, unwrapOption } from '@metaplex-foundation/umi';
+import {
+  isOption,
+  none,
+  some,
+  unwrapOption,
+  wrapNullable,
+} from '@metaplex-foundation/umi';
 import {
   Creator,
   MetadataArgs,
@@ -69,7 +75,10 @@ export const toLeafMetadataV2 = (
 ): MetadataArgsV2Args => {
   if (isV1MetadataArgs(metadata)) {
     const leaf = resolveLeafRoyaltyFields(metadata, raw) as MetadataArgs;
-    const collection = unwrapOption(leaf.collection);
+    const collectionOption = isOption(leaf.collection)
+      ? leaf.collection
+      : wrapNullable(leaf.collection);
+    const collection = unwrapOption(collectionOption, () => null);
     return {
       name: leaf.name,
       symbol: leaf.symbol,
@@ -90,7 +99,7 @@ export const toLeafMetadataV2 = (
 
 /** Minimal shape for {@link asCurrentMetadata} / {@link asCurrentMetadataV2}. */
 export type AssetRoyaltySource = {
-  metadata: MetadataArgsArgs;
+  metadata: MetadataArgsArgs | MetadataArgsV2Args;
   sellerFeeBasisPointsRaw?: number;
   creatorsRaw?: Array<Creator>;
 };
@@ -99,9 +108,11 @@ export type AssetRoyaltySource = {
  * Leaf-canonical V1 metadata for write ixs / hashing from an AssetWithProof-like
  * value using explicit `_raw` siblings.
  */
-export const asCurrentMetadata = (
-  asset: AssetRoyaltySource
-): MetadataArgsArgs =>
+export const asCurrentMetadata = (asset: {
+  metadata: MetadataArgsArgs;
+  sellerFeeBasisPointsRaw?: number;
+  creatorsRaw?: Array<Creator>;
+}): MetadataArgsArgs =>
   toLeafMetadata(asset.metadata, {
     sellerFeeBasisPointsRaw: asset.sellerFeeBasisPointsRaw,
     creatorsRaw: asset.creatorsRaw,

@@ -85,3 +85,37 @@ test('toLeafMetadata leaves explicit leaf metadata unchanged without raw', (t) =
   t.is(leaf.sellerFeeBasisPoints, 550);
   t.is(leaf.creators.length, 1);
 });
+
+test('toLeafMetadataV2 accepts native MetadataArgsV2Args', (t) => {
+  const v2 = {
+    name: 'V2 NFT',
+    uri: 'https://example.com/v2.json',
+    sellerFeeBasisPoints: 500,
+    collection: some(coreCollection),
+    creators: [{ address: payee, share: 100, verified: true }],
+  };
+  const leaf = toLeafMetadataV2(v2, {
+    sellerFeeBasisPointsRaw: SELLER_FEE_BASIS_POINTS_INHERIT,
+    creatorsRaw: [],
+  });
+  t.is(leaf.sellerFeeBasisPoints, SELLER_FEE_BASIS_POINTS_INHERIT);
+  t.deepEqual(leaf.creators, []);
+  t.deepEqual(leaf.collection, some(coreCollection));
+});
+
+test('toLeafMetadataV2 handles null and plain collection values', (t) => {
+  const withNullCollection = {
+    ...resolvedMetadata,
+    collection: null,
+  };
+  t.deepEqual(toLeafMetadataV2(withNullCollection).collection, none());
+
+  const withPlainCollection = {
+    ...resolvedMetadata,
+    collection: { key: coreCollection, verified: true },
+  };
+  t.deepEqual(
+    toLeafMetadataV2(withPlainCollection).collection,
+    some(coreCollection)
+  );
+});

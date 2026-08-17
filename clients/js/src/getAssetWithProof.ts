@@ -25,6 +25,7 @@ import {
   TokenProgramVersion,
   TokenStandard,
 } from './generated';
+import { asCurrentMetadataV2 } from './leafMetadata';
 
 export type AssetWithProof = {
   leafOwner: PublicKey;
@@ -145,20 +146,11 @@ export const getAssetWithProof = async (
     creators,
   };
 
-  const currentMetadata: MetadataArgsV2Args = {
-    name: metadata.name,
-    symbol: metadata.symbol,
-    uri: metadata.uri,
-    sellerFeeBasisPoints:
-      sellerFeeBasisPointsRaw ?? metadata.sellerFeeBasisPoints,
-    primarySaleHappened: metadata.primarySaleHappened,
-    isMutable: metadata.isMutable,
-    tokenStandard: metadata.tokenStandard,
-    creators: creatorsRaw ?? metadata.creators,
-    collection: collectionGroup
-      ? some(publicKey(collectionGroup.group_value as string))
-      : none(),
-  };
+  const currentMetadata = asCurrentMetadataV2({
+    metadata,
+    sellerFeeBasisPointsRaw,
+    creatorsRaw,
+  });
 
   const collectionHashBytes = rpcAsset.compression.collection_hash
     ? publicKeyBytes(rpcAsset.compression.collection_hash)
