@@ -1,5 +1,6 @@
 import {
   Context,
+  Option,
   PublicKey,
   none,
   publicKey,
@@ -11,62 +12,19 @@ import {
   DasApiAsset,
   DasApiInterface,
   GetAssetProofRpcResponse,
+  isInheritedSfbpRoyalty,
+  SELLER_FEE_BASIS_POINTS_INHERIT,
 } from '@metaplex-foundation/digital-asset-standard-api';
 import { fetchMerkleTree } from '@metaplex-foundation/spl-account-compression';
 import { LeafSchemaV2Flags, isValidLeafSchemaV2Flags } from './flags';
 import {
+  Collection,
+  Creator,
   MetadataArgs,
   MetadataArgsV2Args,
   TokenProgramVersion,
   TokenStandard,
 } from './generated';
-import { SELLER_FEE_BASIS_POINTS_INHERIT, hashMetadataDataV2 } from './hash';
-
-/**
- * DasRoyaltyWithRawSfbp carries optional DAS-extension hints that are not part
- * of the official DAS schema. The basis_points_raw field preserves the raw
- * seller fee basis points used in the leaf hash, and sfbp_inherited indicates
- * inherited seller-fee-by-proxy. These fields may be present when a client
- * augments DAS responses with inferred or inherited royalty data.
- */
-type DasRoyaltyWithRawSfbp = NonNullable<DasApiAsset['royalty']> & {
-  basis_points_raw?: number;
-  sfbp_inherited?: boolean;
-};
-
-/**
- * DasApiAssetWithRawSfbp is a DAS asset whose royalty object may include the
- * optional DAS-extension fields basis_points_raw and sfbp_inherited, usually
- * added when the client augments DAS responses with inferred or inherited
- * royalty data.
- */
-type DasApiAssetWithRawSfbp = DasApiAsset & {
-  royalty?: DasRoyaltyWithRawSfbp;
-};
-
-const bytesEqual = (a: Uint8Array, b: Uint8Array): boolean =>
-  a.length === b.length && a.every((value, index) => value === b[index]);
-
-const bytesToBase58 = (bytes: Uint8Array): string =>
-  publicKey(bytes).toString();
-
-const hasDasRoyaltyWithRawSfbp = (
-  asset: DasApiAsset
-): asset is DasApiAssetWithRawSfbp => {
-  const { royalty } = asset;
-  if (!royalty || typeof royalty !== 'object') {
-    return false;
-  }
-
-  const hasBasisPointsRaw = 'basis_points_raw' in royalty;
-  const hasSfbpInherited = 'sfbp_inherited' in royalty;
-
-  return (
-    (hasBasisPointsRaw || hasSfbpInherited) &&
-    (!hasBasisPointsRaw || typeof royalty.basis_points_raw === 'number') &&
-    (!hasSfbpInherited || typeof royalty.sfbp_inherited === 'boolean')
-  );
-};
 
 export type AssetWithProof = {
   leafOwner: PublicKey;
@@ -81,19 +39,37 @@ export type AssetWithProof = {
   nonce: number;
   index: number;
   proof: PublicKey[];
+  /**
+   * Display-aligned metadata mirroring DAS main fields
+   * (`royalty.basis_points`, `creators`). Type stays `MetadataArgs`.
+   * When SFBP is inherited this holds the collection-resolved rate and payees.
+   */
   metadata: MetadataArgs;
-  /** Canonical on-chain metadata for V2 hash/update instructions. Omitted for V1 assets. */
-  currentMetadata?: MetadataArgsV2Args;
+  /**
+   * Canonical leaf metadata for V2 hash and write instructions.
+   * Uses DAS `_raw` royalty fields when royalties are inherited.
+   */
+  currentMetadata: MetadataArgsV2Args;
+  /**
+   * Leaf SFBP from DAS `royalty.basis_points_raw`. Set only when DAS provides
+   * `_raw` / inherited SFBP (omitted for ordinary assets, like DAS).
+   */
+  sellerFeeBasisPointsRaw?: number;
+  /**
+   * Leaf creators from DAS `creators_raw`. Set only when DAS provides
+   * `creators_raw` / inherited SFBP (omitted for ordinary assets, like DAS).
+   */
+  creatorsRaw?: Array<Creator>;
+  /**
+   * Sugar for `rpcAsset.royalty.inherited` / inherit-sentinel detection.
+   */
+  inherited: boolean;
   rpcAsset: DasApiAsset;
   rpcAssetProof: GetAssetProofRpcResponse;
 };
 
 type GetAssetWithProofOptions = {
   truncateCanopy?: boolean;
-  resolveCollectionSellerFeeBasisPoints?: (
-    collection: PublicKey,
-    rpcAsset: DasApiAsset
-  ) => number | Promise<number | undefined> | undefined;
 };
 
 export const getAssetWithProof = async (
@@ -108,9 +84,6 @@ export const getAssetWithProof = async (
     }),
     context.rpc.getAssetProof(assetId),
   ]);
-  const rpcAssetWithRawSfbp = hasDasRoyaltyWithRawSfbp(rpcAsset)
-    ? rpcAsset
-    : undefined;
 
   let { proof } = rpcAssetProof;
   if (options?.truncateCanopy) {
@@ -126,101 +99,66 @@ export const getAssetWithProof = async (
   }
 
   const collectionGroup = (rpcAsset.grouping ?? []).find(
-    (group) => group.group_key === 'collection'
+    (group) => group.group_key === 'collection' && group.group_value != null
   );
-  const collection = collectionGroup
-    ? {
-        key: publicKey(collectionGroup.group_value),
+
+  const collection: Option<Collection> = collectionGroup
+    ? some({
+        key: publicKey(collectionGroup.group_value as string),
         verified: collectionGroup.verified ?? false,
-      }
-    : undefined;
+      })
+    : none();
 
-  const rawSellerFeeBasisPoints =
-    rpcAssetWithRawSfbp?.royalty?.basis_points_raw ??
-    (rpcAssetWithRawSfbp?.royalty?.sfbp_inherited
-      ? SELLER_FEE_BASIS_POINTS_INHERIT
-      : rpcAsset.royalty?.basis_points);
-  const sellerFeeBasisPointsInherited =
-    rpcAssetWithRawSfbp?.royalty?.sfbp_inherited ??
-    rawSellerFeeBasisPoints === SELLER_FEE_BASIS_POINTS_INHERIT;
-  let resolvedSellerFeeBasisPoints = rpcAsset.royalty?.basis_points;
+  const { royalty } = rpcAsset;
+  const inherited = royalty ? isInheritedSfbpRoyalty(royalty) : false;
 
-  // Preserve the raw sentinel for currentMetadata/hash comparisons, while the
-  // display metadata prefers the resolved value returned by DAS or the optional
-  // collection resolver.
-  if (
-    sellerFeeBasisPointsInherited &&
-    resolvedSellerFeeBasisPoints === SELLER_FEE_BASIS_POINTS_INHERIT &&
-    collection &&
-    options?.resolveCollectionSellerFeeBasisPoints
-  ) {
-    resolvedSellerFeeBasisPoints =
-      (await options.resolveCollectionSellerFeeBasisPoints(
-        collection.key,
-        rpcAsset
-      )) ?? resolvedSellerFeeBasisPoints;
+  // Main / display fields (DAS `basis_points`, `creators`).
+  const sellerFeeBasisPoints = royalty?.basis_points ?? 0;
+  const { creators } = rpcAsset;
+
+  // Leaf `_raw` — only when DAS exposes them or SFBP is inherited (DAS omission).
+  let sellerFeeBasisPointsRaw: number | undefined;
+  let creatorsRaw: Array<Creator> | undefined;
+  if (royalty?.basis_points_raw != null) {
+    sellerFeeBasisPointsRaw = royalty.basis_points_raw;
+  } else if (inherited) {
+    sellerFeeBasisPointsRaw = SELLER_FEE_BASIS_POINTS_INHERIT;
+  }
+  if (rpcAsset.creators_raw != null) {
+    creatorsRaw = rpcAsset.creators_raw;
+  } else if (inherited) {
+    creatorsRaw = [];
   }
 
   const metadata: MetadataArgs = {
     name: rpcAsset.content?.metadata?.name ?? '',
     symbol: rpcAsset.content?.metadata?.symbol ?? '',
     uri: rpcAsset.content?.json_uri,
-    sellerFeeBasisPoints:
-      resolvedSellerFeeBasisPoints ?? rawSellerFeeBasisPoints,
-    primarySaleHappened: rpcAsset.royalty?.primary_sale_happened,
+    sellerFeeBasisPoints,
+    primarySaleHappened: royalty?.primary_sale_happened,
     isMutable: rpcAsset.mutable,
     editionNonce: wrapNullable(rpcAsset.supply?.edition_nonce),
     tokenStandard: some(TokenStandard.NonFungible),
-    collection: collection ? some(collection) : none(),
+    collection,
     uses: none(),
     tokenProgramVersion: TokenProgramVersion.Original,
-    creators: rpcAsset.creators,
+    creators,
   };
-  const buildCurrentMetadata = (
-    sellerFeeBasisPoints: number
-  ): MetadataArgsV2Args => ({
+
+  const currentMetadata: MetadataArgsV2Args = {
     name: metadata.name,
     symbol: metadata.symbol,
     uri: metadata.uri,
-    sellerFeeBasisPoints,
+    sellerFeeBasisPoints:
+      sellerFeeBasisPointsRaw ?? metadata.sellerFeeBasisPoints,
     primarySaleHappened: metadata.primarySaleHappened,
     isMutable: metadata.isMutable,
     tokenStandard: metadata.tokenStandard,
-    creators: metadata.creators,
-    collection: collection ? some(collection.key) : none(),
-  });
-
-  const expectedDataHash = publicKeyBytes(rpcAsset.compression.data_hash);
-  let currentMetadata = buildCurrentMetadata(
-    rawSellerFeeBasisPoints ?? resolvedSellerFeeBasisPoints
-  );
-  const isV2Compression =
-    rpcAsset.compression.collection_hash !== undefined ||
-    rpcAsset.compression.asset_data_hash !== undefined ||
-    rpcAsset.compression.flags !== undefined;
-  if (isV2Compression && collection) {
-    const currentMetadataHash = hashMetadataDataV2(currentMetadata);
-    if (!bytesEqual(currentMetadataHash, expectedDataHash)) {
-      const inheritedMetadata = buildCurrentMetadata(
-        SELLER_FEE_BASIS_POINTS_INHERIT
-      );
-      const inheritedMetadataHash = hashMetadataDataV2(inheritedMetadata);
-      if (bytesEqual(inheritedMetadataHash, expectedDataHash)) {
-        currentMetadata = inheritedMetadata;
-      } else {
-        throw new Error(
-          [
-            'Unable to reconstruct current metadata data hash from DAS asset.',
-            `expectedDataHash=${bytesToBase58(expectedDataHash)}`,
-            `currentMetadataHash=${bytesToBase58(currentMetadataHash)}`,
-            `currentSellerFeeBasisPoints=${currentMetadata.sellerFeeBasisPoints}`,
-            `inheritedMetadataHash=${bytesToBase58(inheritedMetadataHash)}`,
-            `inheritedSellerFeeBasisPoints=${inheritedMetadata.sellerFeeBasisPoints}`,
-          ].join(' ')
-        );
-      }
-    }
-  }
+    creators: creatorsRaw ?? metadata.creators,
+    collection: collectionGroup
+      ? some(publicKey(collectionGroup.group_value as string))
+      : none(),
+  };
 
   const collectionHashBytes = rpcAsset.compression.collection_hash
     ? publicKeyBytes(rpcAsset.compression.collection_hash)
@@ -241,7 +179,7 @@ export const getAssetWithProof = async (
       : rpcAsset.ownership.owner,
     merkleTree: rpcAssetProof.tree_id,
     root: publicKeyBytes(rpcAssetProof.root),
-    dataHash: expectedDataHash,
+    dataHash: publicKeyBytes(rpcAsset.compression.data_hash),
     creatorHash: publicKeyBytes(rpcAsset.compression.creator_hash),
     collection_hash: collectionHashBytes,
     asset_data_hash: assetDataHashBytes,
@@ -251,6 +189,9 @@ export const getAssetWithProof = async (
     proof,
     metadata,
     currentMetadata,
+    sellerFeeBasisPointsRaw,
+    creatorsRaw,
+    inherited,
     rpcAsset,
     rpcAssetProof,
   };
