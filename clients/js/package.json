@@ -25,7 +25,7 @@
   "author": "Metaplex Maintainers <contact@metaplex.com>",
   "license": "Apache-2.0",
   "dependencies": {
-    "@metaplex-foundation/digital-asset-standard-api": "^2.1.0",
+    "@metaplex-foundation/digital-asset-standard-api": "^2.1.1",
     "@metaplex-foundation/mpl-account-compression": "^0.0.1",
     "@metaplex-foundation/mpl-token-metadata": "3.2.1",
     "@metaplex-foundation/mpl-toolbox": "^0.10.0",

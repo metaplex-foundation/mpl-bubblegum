@@ -1,5 +1,14 @@
 import test from 'ava';
-import { none, publicKey, some, unwrapOption } from '@metaplex-foundation/umi';
+import {
+  isOption,
+  none,
+  OptionOrNullable,
+  PublicKey,
+  publicKey,
+  some,
+  unwrapOption,
+  wrapNullable,
+} from '@metaplex-foundation/umi';
 import {
   MetadataArgs,
   SELLER_FEE_BASIS_POINTS_INHERIT,
@@ -10,6 +19,9 @@ import {
   toLeafMetadata,
   toLeafMetadataV2,
 } from '../src';
+
+const unwrapCollection = (value: OptionOrNullable<PublicKey>) =>
+  unwrapOption(isOption(value) ? value : wrapNullable(value), () => null);
 
 const coreCollection = publicKey(
   '7USYF5BnFo4FuE8eRoEqEvSvZSEaMG5AqPCQbLQ5BxPL'
@@ -48,7 +60,7 @@ test('toLeafMetadataV2 converts getAssetWithProof metadata + sibling raw', (t) =
   });
   t.is(leaf.sellerFeeBasisPoints, SELLER_FEE_BASIS_POINTS_INHERIT);
   t.deepEqual(leaf.creators, []);
-  t.is(unwrapOption(leaf.collection), coreCollection);
+  t.is(unwrapCollection(leaf.collection), coreCollection);
   t.false('tokenProgramVersion' in leaf);
 });
 
@@ -63,10 +75,7 @@ test('asCurrentMetadata / asCurrentMetadataV2 sugar', (t) => {
     asCurrentMetadata(asset).sellerFeeBasisPoints,
     SELLER_FEE_BASIS_POINTS_INHERIT
   );
-  t.is(
-    unwrapOption(asCurrentMetadataV2(asset).collection),
-    coreCollection
-  );
+  t.is(unwrapCollection(asCurrentMetadataV2(asset).collection), coreCollection);
 });
 
 test('toLeafMetadata leaves explicit leaf metadata unchanged without raw', (t) => {
@@ -103,7 +112,7 @@ test('toLeafMetadataV2 accepts native MetadataArgsV2Args', (t) => {
   });
   t.is(leaf.sellerFeeBasisPoints, SELLER_FEE_BASIS_POINTS_INHERIT);
   t.deepEqual(leaf.creators, []);
-  t.is(unwrapOption(leaf.collection), coreCollection);
+  t.is(unwrapCollection(leaf.collection), coreCollection);
 });
 
 test('toLeafMetadataV2 handles null and plain collection values', (t) => {
@@ -111,14 +120,14 @@ test('toLeafMetadataV2 handles null and plain collection values', (t) => {
     ...resolvedMetadata,
     collection: null,
   };
-  t.is(unwrapOption(toLeafMetadataV2(withNullCollection).collection), null);
+  t.is(unwrapCollection(toLeafMetadataV2(withNullCollection).collection), null);
 
   const withPlainCollection = {
     ...resolvedMetadata,
     collection: { key: coreCollection, verified: true },
   };
   t.is(
-    unwrapOption(toLeafMetadataV2(withPlainCollection).collection),
+    unwrapCollection(toLeafMetadataV2(withPlainCollection).collection),
     coreCollection
   );
 });

@@ -111,7 +111,10 @@ export const getAssetWithProof = async (
     : none();
 
   const { royalty } = rpcAsset;
-  const inherited = royalty ? isInheritedSfbpRoyalty(royalty) : false;
+  const inherited = royalty
+    ? isInheritedSfbpRoyalty(royalty) ||
+      royalty.basis_points === SELLER_FEE_BASIS_POINTS_INHERIT
+    : false;
 
   // Main / display fields (DAS `basis_points`, `creators`).
   const sellerFeeBasisPoints = royalty?.basis_points ?? 0;

@@ -335,6 +335,74 @@ test('getAssetWithProof exposes resolved metadata with DAS-aligned _raw fields',
   t.deepEqual(assetWithProof.rpcAsset.creators_raw, []);
 });
 
+test('getAssetWithProof recovers leaf _raw when DAS still returns the inherit sentinel in basis_points', async (t) => {
+  const assetId = publicKey('EczRmPqSEWBXtcMKVK1avV87EXH5JZrRbTVdUJdnYaKo');
+  const merkleTree = publicKey('BJjUoux3xacYcRZV31Ytsi4haJb3HgyzmweVDHutiLWU');
+  const leafOwner = publicKey('HjzLbPCVGFjXAo5HXS5fpQmXjQE6FMgDEPvFZon7rC7G');
+  const coreCollection = publicKey(
+    '7USYF5BnFo4FuE8eRoEqEvSvZSEaMG5AqPCQbLQ5BxPL'
+  );
+  const canonicalMetadata: MetadataArgsV2Args = {
+    name: 'My NFT',
+    uri: 'https://example.com/my-nft.json',
+    sellerFeeBasisPoints: SELLER_FEE_BASIS_POINTS_INHERIT,
+    collection: some(coreCollection),
+    creators: [],
+  };
+  const rpcAsset = {
+    ownership: { owner: leafOwner },
+    content: {
+      metadata: { name: 'My NFT', symbol: '' },
+      json_uri: 'https://example.com/my-nft.json',
+    },
+    royalty: {
+      basis_points: SELLER_FEE_BASIS_POINTS_INHERIT,
+      primary_sale_happened: false,
+    },
+    mutable: true,
+    supply: {},
+    creators: [],
+    grouping: [
+      {
+        group_key: 'collection',
+        group_value: coreCollection,
+        verified: true,
+      },
+    ],
+    compression: {
+      leaf_id: 0,
+      data_hash: publicKey(hashMetadataDataV2(canonicalMetadata)),
+      creator_hash: defaultPublicKey(),
+      collection_hash: publicKey(hashCollection(coreCollection)),
+      asset_data_hash: publicKey(hashAssetData()),
+      flags: LeafSchemaV2Flags.None,
+    },
+  } as unknown as DasApiAsset;
+  const rpcAssetProof = {
+    proof: [],
+    root: defaultPublicKey(),
+    tree_id: merkleTree,
+    node_index: 1,
+  } as unknown as GetAssetProofRpcResponse;
+  const context = {
+    rpc: {
+      getAsset: async () => rpcAsset,
+      getAssetProof: async () => rpcAssetProof,
+    },
+  } as unknown as Parameters<typeof getAssetWithProof>[0];
+
+  const assetWithProof = await getAssetWithProof(context, assetId);
+
+  t.true(assetWithProof.inherited);
+  t.is(assetWithProof.sellerFeeBasisPointsRaw, SELLER_FEE_BASIS_POINTS_INHERIT);
+  t.deepEqual(assetWithProof.creatorsRaw, []);
+  t.is(
+    assetWithProof.currentMetadata.sellerFeeBasisPoints,
+    SELLER_FEE_BASIS_POINTS_INHERIT
+  );
+  t.deepEqual(assetWithProof.currentMetadata.creators, []);
+});
+
 test('getAssetWithProof metadata can update inherited seller fee assets', async (t) => {
   // Given an empty Bubblegum tree.
   const umi = await createUmi();
