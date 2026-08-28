@@ -18,6 +18,11 @@ import {
   getCurrentRoot,
 } from '@metaplex-foundation/mpl-account-compression';
 import {
+  CompressionAccountType,
+  getConcurrentMerkleTreeHeaderSerializer,
+  getMerkleTreeSize,
+} from '@metaplex-foundation/spl-account-compression';
+import {
   UpdateArgsArgs,
   findLeafAssetIdPda,
   getAssetWithProof,
@@ -333,6 +338,72 @@ test('getAssetWithProof exposes resolved metadata with DAS-aligned _raw fields',
   t.is(assetWithProof.rpcAsset.royalty?.basis_points, 500);
   t.is(assetWithProof.rpcAsset.creators?.length, 1);
   t.deepEqual(assetWithProof.rpcAsset.creators_raw, []);
+});
+
+test('getAssetWithProof truncateCanopy reads header space instead of the full tree', async (t) => {
+  const assetId = publicKey('EczRmPqSEWBXtcMKVK1avV87EXH5JZrRbTVdUJdnYaKo');
+  const merkleTree = publicKey('BJjUoux3xacYcRZV31Ytsi4haJb3HgyzmweVDHutiLWU');
+  const leafOwner = publicKey('HjzLbPCVGFjXAo5HXS5fpQmXjQE6FMgDEPvFZon7rC7G');
+  const proof = Array.from({ length: 14 }, () => defaultPublicKey());
+  const headerBytes = getConcurrentMerkleTreeHeaderSerializer().serialize({
+    accountType: CompressionAccountType.ConcurrentMerkleTree,
+    header: {
+      __kind: 'V1',
+      maxBufferSize: 64,
+      maxDepth: 14,
+      authority: defaultPublicKey(),
+      creationSlot: 0,
+      padding: [0, 0, 0, 0, 0, 0],
+    },
+  });
+  const headerBase64 = Buffer.from(headerBytes).toString('base64');
+  let fetchedFullAccount = false;
+
+  const rpcAsset = {
+    ownership: { owner: leafOwner },
+    content: {
+      metadata: { name: 'My NFT', symbol: '' },
+      json_uri: 'https://example.com/my-nft.json',
+    },
+    royalty: { basis_points: 500, primary_sale_happened: false },
+    mutable: true,
+    supply: {},
+    creators: [],
+    grouping: [],
+    compression: {
+      leaf_id: 0,
+      data_hash: defaultPublicKey(),
+      creator_hash: defaultPublicKey(),
+    },
+  } as unknown as DasApiAsset;
+  const context = {
+    rpc: {
+      getAsset: async () => rpcAsset,
+      getAssetProof: async () =>
+        ({
+          proof,
+          root: defaultPublicKey(),
+          tree_id: merkleTree,
+          node_index: 1,
+        }) as GetAssetProofRpcResponse,
+      getAccount: async () => {
+        fetchedFullAccount = true;
+        throw new Error('should not fetch the full merkle tree');
+      },
+      call: async () => ({
+        value: {
+          data: [headerBase64, 'base64'],
+          space: getMerkleTreeSize(14, 64, 9),
+        },
+      }),
+    },
+  } as unknown as Parameters<typeof getAssetWithProof>[0];
+
+  const assetWithProof = await getAssetWithProof(context, assetId, {
+    truncateCanopy: true,
+  });
+  t.false(fetchedFullAccount);
+  t.is(assetWithProof.proof.length, 5);
 });
 
 test('getAssetWithProof recovers leaf _raw when DAS still returns the inherit sentinel in basis_points', async (t) => {

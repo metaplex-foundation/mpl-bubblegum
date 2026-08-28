@@ -15,7 +15,12 @@ import {
   isInheritedSfbpRoyalty,
   SELLER_FEE_BASIS_POINTS_INHERIT,
 } from '@metaplex-foundation/digital-asset-standard-api';
-import { fetchMerkleTree } from '@metaplex-foundation/spl-account-compression';
+import {
+  fetchMerkleTree,
+  getConcurrentMerkleTreeHeaderSerializer,
+  getMerkleTreeSize,
+} from '@metaplex-foundation/spl-account-compression';
+import { base64 } from '@metaplex-foundation/umi/serializers';
 import { LeafSchemaV2Flags, isValidLeafSchemaV2Flags } from './flags';
 import {
   Collection,
@@ -73,6 +78,67 @@ type GetAssetWithProofOptions = {
   truncateCanopy?: boolean;
 };
 
+type GetAccountInfoResult = {
+  value?: {
+    data?: [string, string];
+    space?: number;
+  } | null;
+};
+
+const MERKLE_TREE_HEADER_SIZE =
+  getConcurrentMerkleTreeHeaderSerializer().fixedSize ?? 56;
+
+/** Canopy nodes occupy 32 * ((1 << (depth + 1)) - 2) bytes after the tree body. */
+const canopyDepthFromNodeCount = (canopyNodes: number): number | null => {
+  if (canopyNodes <= 0) return 0;
+  const canopyDepth = Math.log2(canopyNodes + 2) - 1;
+  return Number.isInteger(canopyDepth) && canopyDepth >= 0 ? canopyDepth : null;
+};
+
+/**
+ * Resolve canopy depth without downloading the full merkle tree account.
+ * Tree accounts with a canopy are large enough that `getAccountInfo` often
+ * socket-timeouts on DAS / public RPCs (and on CI).
+ */
+const getCanopyDepth = async (
+  context: Pick<Context, 'rpc'>,
+  merkleTree: PublicKey
+): Promise<number> => {
+  try {
+    const result = await context.rpc.call<GetAccountInfoResult>(
+      'getAccountInfo',
+      [
+        merkleTree,
+        {
+          encoding: 'base64',
+          dataSlice: { offset: 0, length: MERKLE_TREE_HEADER_SIZE },
+        },
+      ]
+    );
+    const value = result?.value;
+    if (value?.data?.[0] != null && value.space != null) {
+      const headerBytes = base64.serialize(value.data[0]);
+      const [{ header }] =
+        getConcurrentMerkleTreeHeaderSerializer().deserialize(headerBytes);
+      if (header.__kind === 'V1') {
+        const sizeWithoutCanopy = getMerkleTreeSize(
+          header.maxDepth,
+          header.maxBufferSize,
+          0
+        );
+        const canopyNodes = (value.space - sizeWithoutCanopy) / 32;
+        const canopyDepth = canopyDepthFromNodeCount(canopyNodes);
+        if (canopyDepth != null) return canopyDepth;
+      }
+    }
+  } catch {
+    // Fall back to a full account fetch if the sliced RPC path is unavailable.
+  }
+
+  const merkleTreeAccount = await fetchMerkleTree(context, merkleTree);
+  return canopyDepthFromNodeCount(merkleTreeAccount.canopy.length) ?? 0;
+};
+
 export const getAssetWithProof = async (
   context: Pick<Context, 'rpc'> & { rpc: DasApiInterface },
   assetId: PublicKey,
@@ -88,11 +154,7 @@ export const getAssetWithProof = async (
 
   let { proof } = rpcAssetProof;
   if (options?.truncateCanopy) {
-    const merkleTreeAccount = await fetchMerkleTree(
-      context,
-      rpcAssetProof.tree_id
-    );
-    const canopyDepth = Math.log2(merkleTreeAccount.canopy.length + 2) - 1;
+    const canopyDepth = await getCanopyDepth(context, rpcAssetProof.tree_id);
     proof = rpcAssetProof.proof.slice(
       0,
       canopyDepth === 0 ? undefined : -canopyDepth
