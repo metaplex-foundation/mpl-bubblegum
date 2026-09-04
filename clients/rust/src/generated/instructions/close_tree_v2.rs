@@ -17,9 +17,12 @@ pub struct CloseTreeV2 {
     pub authority: solana_program::pubkey::Pubkey,
 
     pub merkle_tree: solana_program::pubkey::Pubkey,
-    /// Recipient for reclaimed lamports (tree + config PDA). Must be the creator
-    /// or the delegate.
+    /// Recipient for reclaimed lamports (tree + config PDA rent). Must be the
+    /// creator or the delegate.
     pub recipient: solana_program::pubkey::Pubkey,
+    /// Hardcoded protocol recipient for any uncollected fees held by the tree
+    /// config PDA.
+    pub fee_recipient: solana_program::pubkey::Pubkey,
 
     pub compression_program: solana_program::pubkey::Pubkey,
 
@@ -37,7 +40,7 @@ impl CloseTreeV2 {
         &self,
         remaining_accounts: &[solana_program::instruction::AccountMeta],
     ) -> solana_program::instruction::Instruction {
-        let mut accounts = Vec::with_capacity(7 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(8 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new(
             self.tree_config,
             false,
@@ -52,6 +55,10 @@ impl CloseTreeV2 {
         ));
         accounts.push(solana_program::instruction::AccountMeta::new(
             self.recipient,
+            false,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new(
+            self.fee_recipient,
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
@@ -99,15 +106,17 @@ impl CloseTreeV2InstructionData {
 ///   1. `[signer]` authority
 ///   2. `[writable]` merkle_tree
 ///   3. `[writable]` recipient
-///   4. `[optional]` compression_program (default to `mcmt6YrQEMKw8Mw43FmpRLmf7BqRnFMKmAcbxE3xkAW`)
-///   5. `[optional]` log_wrapper (default to `mnoopTCrg4p8ry25e4bcWA9XZjbNjMTfgYVGGEdRsf3`)
-///   6. `[optional]` system_program (default to `11111111111111111111111111111111`)
+///   4. `[writable, optional]` fee_recipient (default to `2dgJVPC5fjLTBTmMvKDRig9JJUGK2Fgwr3EHShFxckhv`)
+///   5. `[optional]` compression_program (default to `mcmt6YrQEMKw8Mw43FmpRLmf7BqRnFMKmAcbxE3xkAW`)
+///   6. `[optional]` log_wrapper (default to `mnoopTCrg4p8ry25e4bcWA9XZjbNjMTfgYVGGEdRsf3`)
+///   7. `[optional]` system_program (default to `11111111111111111111111111111111`)
 #[derive(Default)]
 pub struct CloseTreeV2Builder {
     tree_config: Option<solana_program::pubkey::Pubkey>,
     authority: Option<solana_program::pubkey::Pubkey>,
     merkle_tree: Option<solana_program::pubkey::Pubkey>,
     recipient: Option<solana_program::pubkey::Pubkey>,
+    fee_recipient: Option<solana_program::pubkey::Pubkey>,
     compression_program: Option<solana_program::pubkey::Pubkey>,
     log_wrapper: Option<solana_program::pubkey::Pubkey>,
     system_program: Option<solana_program::pubkey::Pubkey>,
@@ -134,11 +143,19 @@ impl CloseTreeV2Builder {
         self.merkle_tree = Some(merkle_tree);
         self
     }
-    /// Recipient for reclaimed lamports (tree + config PDA). Must be the creator
-    /// or the delegate.
+    /// Recipient for reclaimed lamports (tree + config PDA rent). Must be the
+    /// creator or the delegate.
     #[inline(always)]
     pub fn recipient(&mut self, recipient: solana_program::pubkey::Pubkey) -> &mut Self {
         self.recipient = Some(recipient);
+        self
+    }
+    /// `[optional account, default to '2dgJVPC5fjLTBTmMvKDRig9JJUGK2Fgwr3EHShFxckhv']`
+    /// Hardcoded protocol recipient for any uncollected fees held by the tree
+    /// config PDA.
+    #[inline(always)]
+    pub fn fee_recipient(&mut self, fee_recipient: solana_program::pubkey::Pubkey) -> &mut Self {
+        self.fee_recipient = Some(fee_recipient);
         self
     }
     /// `[optional account, default to 'mcmt6YrQEMKw8Mw43FmpRLmf7BqRnFMKmAcbxE3xkAW']`
@@ -187,6 +204,9 @@ impl CloseTreeV2Builder {
             authority: self.authority.expect("authority is not set"),
             merkle_tree: self.merkle_tree.expect("merkle_tree is not set"),
             recipient: self.recipient.expect("recipient is not set"),
+            fee_recipient: self.fee_recipient.unwrap_or(solana_program::pubkey!(
+                "2dgJVPC5fjLTBTmMvKDRig9JJUGK2Fgwr3EHShFxckhv"
+            )),
             compression_program: self.compression_program.unwrap_or(solana_program::pubkey!(
                 "mcmt6YrQEMKw8Mw43FmpRLmf7BqRnFMKmAcbxE3xkAW"
             )),
@@ -209,9 +229,12 @@ pub struct CloseTreeV2CpiAccounts<'a, 'b> {
     pub authority: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub merkle_tree: &'b solana_program::account_info::AccountInfo<'a>,
-    /// Recipient for reclaimed lamports (tree + config PDA). Must be the creator
-    /// or the delegate.
+    /// Recipient for reclaimed lamports (tree + config PDA rent). Must be the
+    /// creator or the delegate.
     pub recipient: &'b solana_program::account_info::AccountInfo<'a>,
+    /// Hardcoded protocol recipient for any uncollected fees held by the tree
+    /// config PDA.
+    pub fee_recipient: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub compression_program: &'b solana_program::account_info::AccountInfo<'a>,
 
@@ -230,9 +253,12 @@ pub struct CloseTreeV2Cpi<'a, 'b> {
     pub authority: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub merkle_tree: &'b solana_program::account_info::AccountInfo<'a>,
-    /// Recipient for reclaimed lamports (tree + config PDA). Must be the creator
-    /// or the delegate.
+    /// Recipient for reclaimed lamports (tree + config PDA rent). Must be the
+    /// creator or the delegate.
     pub recipient: &'b solana_program::account_info::AccountInfo<'a>,
+    /// Hardcoded protocol recipient for any uncollected fees held by the tree
+    /// config PDA.
+    pub fee_recipient: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub compression_program: &'b solana_program::account_info::AccountInfo<'a>,
 
@@ -252,6 +278,7 @@ impl<'a, 'b> CloseTreeV2Cpi<'a, 'b> {
             authority: accounts.authority,
             merkle_tree: accounts.merkle_tree,
             recipient: accounts.recipient,
+            fee_recipient: accounts.fee_recipient,
             compression_program: accounts.compression_program,
             log_wrapper: accounts.log_wrapper,
             system_program: accounts.system_program,
@@ -290,7 +317,7 @@ impl<'a, 'b> CloseTreeV2Cpi<'a, 'b> {
             bool,
         )],
     ) -> solana_program::entrypoint::ProgramResult {
-        let mut accounts = Vec::with_capacity(7 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(8 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new(
             *self.tree_config.key,
             false,
@@ -305,6 +332,10 @@ impl<'a, 'b> CloseTreeV2Cpi<'a, 'b> {
         ));
         accounts.push(solana_program::instruction::AccountMeta::new(
             *self.recipient.key,
+            false,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new(
+            *self.fee_recipient.key,
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
@@ -333,12 +364,13 @@ impl<'a, 'b> CloseTreeV2Cpi<'a, 'b> {
             accounts,
             data,
         };
-        let mut account_infos = Vec::with_capacity(7 + 1 + remaining_accounts.len());
+        let mut account_infos = Vec::with_capacity(8 + 1 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
         account_infos.push(self.tree_config.clone());
         account_infos.push(self.authority.clone());
         account_infos.push(self.merkle_tree.clone());
         account_infos.push(self.recipient.clone());
+        account_infos.push(self.fee_recipient.clone());
         account_infos.push(self.compression_program.clone());
         account_infos.push(self.log_wrapper.clone());
         account_infos.push(self.system_program.clone());
@@ -362,9 +394,10 @@ impl<'a, 'b> CloseTreeV2Cpi<'a, 'b> {
 ///   1. `[signer]` authority
 ///   2. `[writable]` merkle_tree
 ///   3. `[writable]` recipient
-///   4. `[]` compression_program
-///   5. `[]` log_wrapper
-///   6. `[]` system_program
+///   4. `[writable]` fee_recipient
+///   5. `[]` compression_program
+///   6. `[]` log_wrapper
+///   7. `[]` system_program
 pub struct CloseTreeV2CpiBuilder<'a, 'b> {
     instruction: Box<CloseTreeV2CpiBuilderInstruction<'a, 'b>>,
 }
@@ -377,6 +410,7 @@ impl<'a, 'b> CloseTreeV2CpiBuilder<'a, 'b> {
             authority: None,
             merkle_tree: None,
             recipient: None,
+            fee_recipient: None,
             compression_program: None,
             log_wrapper: None,
             system_program: None,
@@ -409,14 +443,24 @@ impl<'a, 'b> CloseTreeV2CpiBuilder<'a, 'b> {
         self.instruction.merkle_tree = Some(merkle_tree);
         self
     }
-    /// Recipient for reclaimed lamports (tree + config PDA). Must be the creator
-    /// or the delegate.
+    /// Recipient for reclaimed lamports (tree + config PDA rent). Must be the
+    /// creator or the delegate.
     #[inline(always)]
     pub fn recipient(
         &mut self,
         recipient: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.recipient = Some(recipient);
+        self
+    }
+    /// Hardcoded protocol recipient for any uncollected fees held by the tree
+    /// config PDA.
+    #[inline(always)]
+    pub fn fee_recipient(
+        &mut self,
+        fee_recipient: &'b solana_program::account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.fee_recipient = Some(fee_recipient);
         self
     }
     #[inline(always)]
@@ -501,6 +545,11 @@ impl<'a, 'b> CloseTreeV2CpiBuilder<'a, 'b> {
 
             recipient: self.instruction.recipient.expect("recipient is not set"),
 
+            fee_recipient: self
+                .instruction
+                .fee_recipient
+                .expect("fee_recipient is not set"),
+
             compression_program: self
                 .instruction
                 .compression_program
@@ -529,6 +578,7 @@ struct CloseTreeV2CpiBuilderInstruction<'a, 'b> {
     authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     merkle_tree: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     recipient: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    fee_recipient: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     compression_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     log_wrapper: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
