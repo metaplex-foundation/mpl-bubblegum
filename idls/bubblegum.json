@@ -272,7 +272,9 @@
     {
       "name": "closeTreeV2",
       "docs": [
-        "Closes an empty tree and its config PDA to reclaim rent."
+        "Closes an empty tree and its config PDA. Rent is reclaimed to the",
+        "recipient and any uncollected fees are swept to the protocol fee",
+        "recipient."
       ],
       "accounts": [
         {
@@ -298,8 +300,17 @@
           "isMut": true,
           "isSigner": false,
           "docs": [
-            "Recipient for reclaimed lamports (tree + config PDA). Must be the creator",
-            "or the delegate."
+            "Recipient for reclaimed lamports (tree + config PDA rent). Must be the",
+            "creator or the delegate."
+          ]
+        },
+        {
+          "name": "feeRecipient",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Hardcoded protocol recipient for any uncollected fees held by the tree",
+            "config PDA."
           ]
         },
         {
