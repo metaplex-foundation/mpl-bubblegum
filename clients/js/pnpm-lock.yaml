@@ -6,8 +6,8 @@ settings:
 
 dependencies:
   '@metaplex-foundation/digital-asset-standard-api':
-    specifier: ^2.0.0
-    version: 2.0.0(@metaplex-foundation/umi@1.2.0)
+    specifier: ^2.1.1
+    version: 2.1.1(@metaplex-foundation/umi@1.2.0)
   '@metaplex-foundation/mpl-account-compression':
     specifier: ^0.0.1
     version: 0.0.1(@metaplex-foundation/umi@1.2.0)
@@ -290,8 +290,8 @@ packages:
       '@metaplex-foundation/umi': 1.2.0
     dev: false
 
-  /@metaplex-foundation/digital-asset-standard-api@2.0.0(@metaplex-foundation/umi@1.2.0):
-    resolution: {integrity: sha512-CnFN7epCwNcei+OzDvIg7KpTcB+O827YKomdjKEl72LF/DHfDMXqpbnXf2qsIF4iGaBEOviwxkjUwbXIDLpAxQ==}
+  /@metaplex-foundation/digital-asset-standard-api@2.1.1(@metaplex-foundation/umi@1.2.0):
+    resolution: {integrity: sha512-Kr/gfN6q6vMDCXEuJljcuk48d1vgm4VSm6FdADaYHhVhcJ0QhTgdiy0StnCN9rAQPE1ciWbrE7B6nBnMEebY3g==}
     peerDependencies:
       '@metaplex-foundation/umi': '>= 0.8.2 <= 1'
     dependencies:
