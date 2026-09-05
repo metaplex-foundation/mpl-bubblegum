@@ -1,6 +1,5 @@
 use anchor_lang::prelude::*;
 use mpl_account_compression::{program::MplAccountCompression, Noop as MplNoop};
-use spl_account_compression::{program::SplAccountCompression, Noop as SplNoop};
 
 use crate::{
     processor::{process_creator_verification, BubblegumError},
@@ -9,7 +8,10 @@ use crate::{
         metaplex_adapter::{MetadataArgs, MetadataArgsV2},
         TreeConfig,
     },
-    utils::{hash_collection_option, hash_creators, hash_metadata, replace_leaf},
+    utils::{
+        hash_collection_option, hash_creators, hash_metadata, replace_leaf,
+        validate_ownership_and_programs,
+    },
 };
 
 #[derive(Accounts)]
@@ -28,8 +30,10 @@ pub struct CreatorVerification<'info> {
     pub merkle_tree: UncheckedAccount<'info>,
     pub payer: Signer<'info>,
     pub creator: Signer<'info>,
-    pub log_wrapper: Program<'info, SplNoop>,
-    pub compression_program: Program<'info, SplAccountCompression>,
+    /// CHECK: Program is verified in the instruction
+    pub log_wrapper: UncheckedAccount<'info>,
+    /// CHECK: Program is verified in the instruction
+    pub compression_program: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
 }
 
@@ -42,6 +46,12 @@ pub(crate) fn verify_creator<'info>(
     index: u32,
     message: MetadataArgs,
 ) -> Result<()> {
+    validate_ownership_and_programs(
+        &ctx.accounts.merkle_tree,
+        &ctx.accounts.log_wrapper,
+        &ctx.accounts.compression_program,
+    )?;
+
     // V1 instructions only work with V1 trees.
     require!(
         ctx.accounts.tree_authority.version == Version::V1,

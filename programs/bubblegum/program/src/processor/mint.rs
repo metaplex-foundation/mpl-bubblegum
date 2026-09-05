@@ -2,7 +2,6 @@ use anchor_lang::prelude::*;
 use mpl_account_compression::{program::MplAccountCompression, Noop as MplNoop};
 use mpl_core::types::UpdateType;
 use solana_program::{keccak, program::invoke, system_instruction};
-use spl_account_compression::{program::SplAccountCompression, Noop as SplNoop};
 use std::collections::HashSet;
 
 use crate::{
@@ -17,7 +16,8 @@ use crate::{
         AssetDataSchema, TreeConfig, MPL_CORE_CPI_SIGNER_PREFIX,
     },
     utils::{
-        append_leaf, get_asset_id, hash_collection_option, DEFAULT_ASSET_DATA_HASH, DEFAULT_FLAGS,
+        append_leaf, get_asset_id, hash_collection_option, validate_ownership_and_programs,
+        DEFAULT_ASSET_DATA_HASH, DEFAULT_FLAGS,
     },
 };
 
@@ -38,12 +38,20 @@ pub struct MintV1<'info> {
     pub merkle_tree: UncheckedAccount<'info>,
     pub payer: Signer<'info>,
     pub tree_delegate: Signer<'info>,
-    pub log_wrapper: Program<'info, SplNoop>,
-    pub compression_program: Program<'info, SplAccountCompression>,
+    /// CHECK: Program is verified in the instruction
+    pub log_wrapper: UncheckedAccount<'info>,
+    /// CHECK: Program is verified in the instruction
+    pub compression_program: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
 }
 
 pub(crate) fn mint_v1(ctx: Context<MintV1>, message: MetadataArgs) -> Result<LeafSchema> {
+    validate_ownership_and_programs(
+        &ctx.accounts.merkle_tree,
+        &ctx.accounts.log_wrapper,
+        &ctx.accounts.compression_program,
+    )?;
+
     let payer = ctx.accounts.payer.key();
     let incoming_tree_delegate = ctx.accounts.tree_delegate.key();
     let merkle_tree = &ctx.accounts.merkle_tree;
