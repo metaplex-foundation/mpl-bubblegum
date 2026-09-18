@@ -1,6 +1,6 @@
 use crate::{
     error::BubblegumError,
-    state::{leaf_schema::Version, TreeConfig},
+    state::{collect::COLLECT_RECIPIENT, leaf_schema::Version, TreeConfig, TREE_AUTHORITY_SIZE},
 };
 use anchor_lang::prelude::*;
 use mpl_account_compression::{program::MplAccountCompression, Noop as MplNoop};
@@ -18,11 +18,16 @@ pub struct CloseTreeV2<'info> {
     /// CHECK: This account is modified in the downstream program.
     #[account(mut, owner = mpl_account_compression::ID)]
     pub merkle_tree: UncheckedAccount<'info>,
-    /// Recipient for reclaimed lamports (tree + config PDA). Must be the creator
-    /// or the delegate.
+    /// Recipient for reclaimed lamports (tree + config PDA rent). Must be the
+    /// creator or the delegate.
     /// CHECK: This account is validated in the instruction.
     #[account(mut)]
     pub recipient: UncheckedAccount<'info>,
+    /// Hardcoded protocol recipient for any uncollected fees held by the tree
+    /// config PDA.
+    /// CHECK: Hardcoded recipient with no data
+    #[account(mut, address = COLLECT_RECIPIENT)]
+    pub fee_recipient: UncheckedAccount<'info>,
     pub compression_program: Program<'info, MplAccountCompression>,
     pub log_wrapper: Program<'info, MplNoop>,
     pub system_program: Program<'info, System>,
@@ -67,7 +72,21 @@ pub(crate) fn close_tree_v2(ctx: Context<CloseTreeV2>) -> Result<()> {
     );
     mpl_account_compression::cpi::close_empty_tree(cpi_ctx)?;
 
-    // Close the tree config PDA to reclaim its rent.
+    // Sweep any uncollected protocol fees (balance above rent) to the hardcoded
+    // protocol recipient before closing the PDA.
+    let rent_amount = Rent::get()?.minimum_balance(TREE_AUTHORITY_SIZE);
+    let config = ctx.accounts.tree_authority.to_account_info();
+    let fee_amount = config.lamports().saturating_sub(rent_amount);
+    if fee_amount > 0 {
+        let fee_recipient = ctx.accounts.fee_recipient.to_account_info();
+        **fee_recipient.try_borrow_mut_lamports()? = fee_recipient
+            .lamports()
+            .checked_add(fee_amount)
+            .ok_or(BubblegumError::NumericalOverflowError)?;
+        **config.try_borrow_mut_lamports()? = rent_amount;
+    }
+
+    // Close the tree config PDA to reclaim its remaining rent.
     ctx.accounts
         .tree_authority
         .close(ctx.accounts.recipient.to_account_info())

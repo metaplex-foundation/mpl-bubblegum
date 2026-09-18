@@ -166,7 +166,9 @@ pub mod bubblegum {
         processor::cancel_redeem(ctx, root)
     }
 
-    /// Closes an empty tree and its config PDA to reclaim rent.
+    /// Closes an empty tree and its config PDA. Rent is reclaimed to the
+    /// recipient and any uncollected fees are swept to the protocol fee
+    /// recipient.
     pub fn close_tree_v2(ctx: Context<CloseTreeV2>) -> Result<()> {
         processor::close_tree_v2(ctx)
     }

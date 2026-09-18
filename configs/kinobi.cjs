@@ -494,6 +494,13 @@ kinobi.update(
         }
       }
     },
+    closeTreeV2: {
+      accounts: {
+        feeRecipient: {
+          defaultValue: k.publicKeyValueNode("2dgJVPC5fjLTBTmMvKDRig9JJUGK2Fgwr3EHShFxckhv")
+        }
+      }
+    },
     createTreeV2: {
       name: "createTreeConfigV2",
       byteDeltas: [

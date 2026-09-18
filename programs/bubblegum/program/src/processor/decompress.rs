@@ -94,25 +94,49 @@ pub(crate) fn decompress_v1(ctx: Context<DecompressV1>, metadata: MetadataArgs) 
     match metadata.token_program_version {
         TokenProgramVersion::Original => {
             if ctx.accounts.mint.data_is_empty() {
+                // Create the mint account with the create-or-init pattern:
+                // transfer any rent shortfall, then allocate + assign.
+                let mint_rent = Rent::get()?.minimum_balance(Mint::LEN);
+                let mint_lamports = ctx.accounts.mint.lamports();
+                let nonce_bytes = voucher.leaf_schema.nonce().to_le_bytes();
+                let mint_signer_seeds: &[&[u8]] = &[
+                    ASSET_PREFIX.as_bytes(),
+                    voucher.merkle_tree.as_ref(),
+                    nonce_bytes.as_ref(),
+                    &[ctx.bumps.mint],
+                ];
+
+                if mint_lamports < mint_rent {
+                    invoke(
+                        &system_instruction::transfer(
+                            &ctx.accounts.leaf_owner.key(),
+                            &ctx.accounts.mint.key(),
+                            mint_rent.saturating_sub(mint_lamports),
+                        ),
+                        &[
+                            ctx.accounts.leaf_owner.to_account_info(),
+                            ctx.accounts.mint.to_account_info(),
+                            ctx.accounts.system_program.to_account_info(),
+                        ],
+                    )?;
+                }
+
                 invoke_signed(
-                    &system_instruction::create_account(
-                        &ctx.accounts.leaf_owner.key(),
-                        &ctx.accounts.mint.key(),
-                        Rent::get()?.minimum_balance(Mint::LEN),
-                        Mint::LEN as u64,
-                        &spl_token::id(),
-                    ),
+                    &system_instruction::allocate(&ctx.accounts.mint.key(), Mint::LEN as u64),
                     &[
-                        ctx.accounts.leaf_owner.to_account_info(),
                         ctx.accounts.mint.to_account_info(),
                         ctx.accounts.system_program.to_account_info(),
                     ],
-                    &[&[
-                        ASSET_PREFIX.as_bytes(),
-                        voucher.merkle_tree.key().as_ref(),
-                        voucher.leaf_schema.nonce().to_le_bytes().as_ref(),
-                        &[ctx.bumps.mint],
-                    ]],
+                    &[mint_signer_seeds],
+                )?;
+
+                invoke_signed(
+                    &system_instruction::assign(&ctx.accounts.mint.key(), &spl_token::id()),
+                    &[
+                        ctx.accounts.mint.to_account_info(),
+                        ctx.accounts.system_program.to_account_info(),
+                    ],
+                    &[mint_signer_seeds],
                 )?;
                 invoke(
                     &spl_token::instruction::initialize_mint2(

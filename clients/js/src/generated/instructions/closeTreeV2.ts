@@ -12,6 +12,7 @@ import {
   PublicKey,
   Signer,
   TransactionBuilder,
+  publicKey,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
 import {
@@ -36,11 +37,17 @@ export type CloseTreeV2InstructionAccounts = {
   authority?: Signer;
   merkleTree: PublicKey | Pda;
   /**
-   * Recipient for reclaimed lamports (tree + config PDA). Must be the creator
-   * or the delegate.
+   * Recipient for reclaimed lamports (tree + config PDA rent). Must be the
+   * creator or the delegate.
    */
 
   recipient: PublicKey | Pda;
+  /**
+   * Hardcoded protocol recipient for any uncollected fees held by the tree
+   * config PDA.
+   */
+
+  feeRecipient?: PublicKey | Pda;
   compressionProgram?: PublicKey | Pda;
   logWrapper?: PublicKey | Pda;
   systemProgram?: PublicKey | Pda;
@@ -101,18 +108,23 @@ export function closeTreeV2(
       isWritable: true as boolean,
       value: input.recipient ?? null,
     },
-    compressionProgram: {
+    feeRecipient: {
       index: 4,
+      isWritable: true as boolean,
+      value: input.feeRecipient ?? null,
+    },
+    compressionProgram: {
+      index: 5,
       isWritable: false as boolean,
       value: input.compressionProgram ?? null,
     },
     logWrapper: {
-      index: 5,
+      index: 6,
       isWritable: false as boolean,
       value: input.logWrapper ?? null,
     },
     systemProgram: {
-      index: 6,
+      index: 7,
       isWritable: false as boolean,
       value: input.systemProgram ?? null,
     },
@@ -126,6 +138,11 @@ export function closeTreeV2(
   }
   if (!resolvedAccounts.authority.value) {
     resolvedAccounts.authority.value = context.identity;
+  }
+  if (!resolvedAccounts.feeRecipient.value) {
+    resolvedAccounts.feeRecipient.value = publicKey(
+      '2dgJVPC5fjLTBTmMvKDRig9JJUGK2Fgwr3EHShFxckhv'
+    );
   }
   if (!resolvedAccounts.compressionProgram.value) {
     resolvedAccounts.compressionProgram.value = context.programs.getPublicKey(
