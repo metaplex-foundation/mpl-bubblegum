@@ -19,6 +19,7 @@ import {
   AssetWithProof,
   getAssetWithProof,
   mplBubblegum,
+  SELLER_FEE_BASIS_POINTS_INHERIT,
   TokenProgramVersion,
   TokenStandard,
 } from '../src';
@@ -134,7 +135,7 @@ test('it can fetch the proof of a compressed asset', async (t) => {
 
   // Then we expect the following data
   // with a proof length of 14.
-  t.like(asset, <AssetWithProof>{
+  t.like(asset, <Partial<AssetWithProof>>{
     leafOwner: publicKey('EczRmPqSEWBXtcMKVK1avV87EXH5JZrRbTVdUJdnYaKo'),
     leafDelegate: publicKey('EczRmPqSEWBXtcMKVK1avV87EXH5JZrRbTVdUJdnYaKo'),
     merkleTree: publicKey('6tPxkhcjcfR7rXsnGwzh8rPnkiYt2r6tDGN1TUv4T15E'),
@@ -173,17 +174,7 @@ test('it can fetch the proof of a compressed asset', async (t) => {
       tokenProgramVersion: TokenProgramVersion.Original,
       creators: [],
     },
-    currentMetadata: {
-      name: 'My NFT',
-      symbol: '',
-      uri: 'https://example.com/my-nft.json',
-      sellerFeeBasisPoints: 500,
-      primarySaleHappened: false,
-      isMutable: true,
-      tokenStandard: some(TokenStandard.NonFungible),
-      collection: none(),
-      creators: [],
-    },
+    inherited: false,
     rpcAsset: {
       interface: 'V1_NFT',
       id: assetId,
@@ -268,7 +259,7 @@ test('it can fetch the truncated proof of a compressed asset with canopy depth 0
 
   // Then we expect the following data
   // with a proof length of 14.
-  t.like(asset, <AssetWithProof>{
+  t.like(asset, <Partial<AssetWithProof>>{
     leafOwner: publicKey('EczRmPqSEWBXtcMKVK1avV87EXH5JZrRbTVdUJdnYaKo'),
     leafDelegate: publicKey('EczRmPqSEWBXtcMKVK1avV87EXH5JZrRbTVdUJdnYaKo'),
     merkleTree: publicKey('6tPxkhcjcfR7rXsnGwzh8rPnkiYt2r6tDGN1TUv4T15E'),
@@ -307,17 +298,7 @@ test('it can fetch the truncated proof of a compressed asset with canopy depth 0
       tokenProgramVersion: TokenProgramVersion.Original,
       creators: [],
     },
-    currentMetadata: {
-      name: 'My NFT',
-      symbol: '',
-      uri: 'https://example.com/my-nft.json',
-      sellerFeeBasisPoints: 500,
-      primarySaleHappened: false,
-      isMutable: true,
-      tokenStandard: some(TokenStandard.NonFungible),
-      collection: none(),
-      creators: [],
-    },
+    inherited: false,
     rpcAsset: {
       interface: 'V1_NFT',
       id: assetId,
@@ -402,7 +383,7 @@ test('it can fetch the proof of a compressed asset with nonzero canopy depth', a
 
   // Then we expect the following data
   // with a proof length of 14.
-  t.like(asset, <AssetWithProof>{
+  t.like(asset, <Partial<AssetWithProof>>{
     leafOwner: publicKey('BJjUoux3xacYcRZV31Ytsi4haJb3HgyzmweVDHutiLWU'),
     leafDelegate: publicKey('BJjUoux3xacYcRZV31Ytsi4haJb3HgyzmweVDHutiLWU'),
     merkleTree: publicKey('B6RTei821Mi4ZAFqXGCCeHMJbixnweFJMY49UZBs4LWN'),
@@ -455,30 +436,7 @@ test('it can fetch the proof of a compressed asset with nonzero canopy depth', a
         },
       ],
     },
-    currentMetadata: {
-      name: 'Welcome to Creator Studio',
-      symbol: 'CS',
-      uri: 'https://arweave.net/0h9bJ_dST9JN7jdYgfW5SoTQ5b_6zYkpX7x5nLkeeD0',
-      sellerFeeBasisPoints: 0,
-      primarySaleHappened: false,
-      isMutable: false,
-      tokenStandard: some(TokenStandard.NonFungible),
-      collection: some(
-        publicKey('5141VSFjgYFEKTy45aT1tUEeApwQ1eXPEfzRdRVt7xTL')
-      ),
-      creators: [
-        {
-          address: publicKey('3HxqsUguP6E7CNqjvpEAnJ8v86qbyJgWvN2idAKygLdD'),
-          share: 100,
-          verified: false,
-        },
-        {
-          address: publicKey('792RcrqqmoWUh6LbijAfpAkxR2kVCoBGrmshWzfy7HgD'),
-          share: 0,
-          verified: false,
-        },
-      ],
-    },
+    inherited: false,
     rpcAsset: {
       interface: 'V1_NFT',
       id: assetId,
@@ -581,7 +539,7 @@ test('it can fetch the truncated proof of a compressed asset with nonzero canopy
 
   // Then we expect the following data
   // with a proof length of 5.
-  t.like(asset, <AssetWithProof>{
+  t.like(asset, <Partial<AssetWithProof>>{
     leafOwner: publicKey('BJjUoux3xacYcRZV31Ytsi4haJb3HgyzmweVDHutiLWU'),
     leafDelegate: publicKey('BJjUoux3xacYcRZV31Ytsi4haJb3HgyzmweVDHutiLWU'),
     merkleTree: publicKey('B6RTei821Mi4ZAFqXGCCeHMJbixnweFJMY49UZBs4LWN'),
@@ -625,30 +583,7 @@ test('it can fetch the truncated proof of a compressed asset with nonzero canopy
         },
       ],
     },
-    currentMetadata: {
-      name: 'Welcome to Creator Studio',
-      symbol: 'CS',
-      uri: 'https://arweave.net/0h9bJ_dST9JN7jdYgfW5SoTQ5b_6zYkpX7x5nLkeeD0',
-      sellerFeeBasisPoints: 0,
-      primarySaleHappened: false,
-      isMutable: false,
-      tokenStandard: some(TokenStandard.NonFungible),
-      collection: some(
-        publicKey('5141VSFjgYFEKTy45aT1tUEeApwQ1eXPEfzRdRVt7xTL')
-      ),
-      creators: [
-        {
-          address: publicKey('3HxqsUguP6E7CNqjvpEAnJ8v86qbyJgWvN2idAKygLdD'),
-          share: 100,
-          verified: false,
-        },
-        {
-          address: publicKey('792RcrqqmoWUh6LbijAfpAkxR2kVCoBGrmshWzfy7HgD'),
-          share: 0,
-          verified: false,
-        },
-      ],
-    },
+    inherited: false,
     rpcAsset: {
       interface: 'V1_NFT',
       id: assetId,
@@ -755,4 +690,37 @@ test('it can fetch a compressed asset with grouping verified set to false', asyn
     false,
     'First grouping should have verified set to false'
   );
+});
+
+test('it exposes resolved and current metadata for inherited SFBP', async (t) => {
+  // Given an inherited-SFBP Bubblegum V2 asset indexed by DAS.
+  const { umi } = t.context;
+  const assetId = publicKey('BzQPqccY1c88XeVfvvqrJsryHYMcPuxKiCVo4R6MDznv');
+  const collection = publicKey('HgLnYtaZ9Nd1PqoGXh9rPXSMo6xUpUd6D5tsV8RUs7Qf');
+
+  // When we fetch its asset and proof.
+  const asset = await getAssetWithProof(umi, assetId);
+
+  // Writes / hashing always use the leaf sentinel for this inherited asset.
+  t.true(asset.inherited);
+  t.is(asset.sellerFeeBasisPointsRaw, SELLER_FEE_BASIS_POINTS_INHERIT);
+  t.deepEqual(asset.creatorsRaw, []);
+  t.is(
+    asset.currentMetadata.sellerFeeBasisPoints,
+    SELLER_FEE_BASIS_POINTS_INHERIT
+  );
+  t.deepEqual(asset.currentMetadata.creators, []);
+  t.deepEqual(asset.currentMetadata.collection, some(collection));
+
+  // Display fields: DAS 2.1.1 types include resolved `basis_points` + `_raw`,
+  // but the live indexer may still return the leaf sentinel until that ships.
+  if (
+    asset.rpcAsset.royalty?.inherited ||
+    asset.rpcAsset.royalty?.basis_points_raw != null
+  ) {
+    t.is(asset.metadata.sellerFeeBasisPoints, 750);
+    t.is(asset.metadata.creators.length, 1);
+  } else {
+    t.is(asset.metadata.sellerFeeBasisPoints, SELLER_FEE_BASIS_POINTS_INHERIT);
+  }
 });

@@ -6,6 +6,7 @@ export * from './getAssetWithProof';
 export * from './hash';
 export * from './hooked';
 export * from './leafAssetId';
+export * from './leafMetadata';
 export * from './merkle';
 export * from './plugin';
 export * from './canTransfer';

@@ -16,6 +16,7 @@ import {
 } from '@metaplex-foundation/umi/serializers';
 import { keccak_256 } from '@noble/hashes/sha3';
 import {
+  Creator,
   MetadataArgsArgs,
   MetadataArgsV2Args,
   getCreatorSerializer,
@@ -24,12 +25,19 @@ import {
 } from './generated';
 import { findLeafAssetIdPda } from './leafAssetId';
 import { LeafSchemaV2Flags, isValidLeafSchemaV2Flags } from './flags';
+import {
+  RoyaltyRawFields,
+  toLeafMetadata,
+  toLeafMetadataV2,
+} from './leafMetadata';
 
 export const SELLER_FEE_BASIS_POINTS_INHERIT = 0xffff;
 
 export function hash(input: Uint8Array | Uint8Array[]): Uint8Array {
   return keccak_256(Array.isArray(input) ? mergeBytes(input) : input);
 }
+
+type V2OrV1Metadata = MetadataArgsV2Args | MetadataArgsArgs;
 
 export function hashLeaf(
   context: Pick<Context, 'eddsa' | 'programs'>,
@@ -39,6 +47,8 @@ export function hashLeaf(
     delegate?: PublicKey;
     leafIndex: number | bigint;
     metadata: MetadataArgsArgs;
+    sellerFeeBasisPointsRaw?: number;
+    creatorsRaw?: Array<Creator>;
     nftVersion?: number;
   }
 ): Uint8Array {
@@ -48,6 +58,10 @@ export function hashLeaf(
     merkleTree: input.merkleTree,
     leafIndex: input.leafIndex,
   });
+  const metadata = toLeafMetadata(input.metadata, {
+    sellerFeeBasisPointsRaw: input.sellerFeeBasisPointsRaw,
+    creatorsRaw: input.creatorsRaw,
+  });
 
   return hash([
     u8().serialize(nftVersion),
@@ -55,22 +69,33 @@ export function hashLeaf(
     publicKeySerializer().serialize(input.owner),
     publicKeySerializer().serialize(delegate),
     u64().serialize(input.leafIndex),
-    hashMetadata(input.metadata),
+    hashMetadata(metadata),
   ]);
 }
 
+type HashLeafV2Input = {
+  merkleTree: PublicKey;
+  owner: PublicKey;
+  delegate?: PublicKey;
+  leafIndex: number | bigint;
+  sellerFeeBasisPointsRaw?: number;
+  creatorsRaw?: Array<Creator>;
+  assetData?: string | Uint8Array;
+  flags?: LeafSchemaV2Flags;
+  nftVersion?: number;
+};
+
 export function hashLeafV2(
   context: Pick<Context, 'eddsa' | 'programs'>,
-  input: {
-    merkleTree: PublicKey;
-    owner: PublicKey;
-    delegate?: PublicKey;
-    leafIndex: number | bigint;
-    metadata: MetadataArgsV2Args;
-    assetData?: string | Uint8Array;
-    flags?: LeafSchemaV2Flags;
-    nftVersion?: number;
-  }
+  input: HashLeafV2Input & { metadata: MetadataArgsV2Args }
+): Uint8Array;
+export function hashLeafV2(
+  context: Pick<Context, 'eddsa' | 'programs'>,
+  input: HashLeafV2Input & { metadata: MetadataArgsArgs }
+): Uint8Array;
+export function hashLeafV2(
+  context: Pick<Context, 'eddsa' | 'programs'>,
+  input: HashLeafV2Input & { metadata: V2OrV1Metadata }
 ): Uint8Array {
   const delegate = input.delegate ?? input.owner;
   const nftVersion = input.nftVersion ?? 2;
@@ -78,10 +103,14 @@ export function hashLeafV2(
     merkleTree: input.merkleTree,
     leafIndex: input.leafIndex,
   });
+  const metadata = toLeafMetadataV2(input.metadata, {
+    sellerFeeBasisPointsRaw: input.sellerFeeBasisPointsRaw,
+    creatorsRaw: input.creatorsRaw,
+  });
 
-  const collectionOption = isOption(input.metadata.collection)
-    ? input.metadata.collection
-    : wrapNullable(input.metadata.collection);
+  const collectionOption = isOption(metadata.collection)
+    ? metadata.collection
+    : wrapNullable(metadata.collection);
 
   const collection = unwrapOption(collectionOption, () => defaultPublicKey());
 
@@ -97,38 +126,70 @@ export function hashLeafV2(
     publicKeySerializer().serialize(input.owner),
     publicKeySerializer().serialize(delegate),
     u64().serialize(input.leafIndex),
-    hashMetadataV2(input.metadata),
+    hashMetadataV2(metadata),
     hashCollection(collection),
     hashAssetData(input.assetData),
     u8().serialize(flags),
   ]);
 }
 
-export function hashMetadata(metadata: MetadataArgsArgs): Uint8Array {
+export function hashMetadata(
+  metadata: MetadataArgsArgs,
+  raw?: RoyaltyRawFields
+): Uint8Array {
+  const leaf = toLeafMetadata(metadata, raw);
   return mergeBytes([
-    hashMetadataData(metadata),
-    hashMetadataCreators(metadata.creators),
+    hashMetadataData(leaf),
+    hashMetadataCreators(leaf.creators),
   ]);
 }
 
-export function hashMetadataV2(metadata: MetadataArgsV2Args): Uint8Array {
+export function hashMetadataV2(
+  metadata: MetadataArgsV2Args,
+  raw?: RoyaltyRawFields
+): Uint8Array;
+export function hashMetadataV2(
+  metadata: MetadataArgsArgs,
+  raw?: RoyaltyRawFields
+): Uint8Array;
+export function hashMetadataV2(
+  metadata: V2OrV1Metadata,
+  raw?: RoyaltyRawFields
+): Uint8Array {
+  const leaf = toLeafMetadataV2(metadata, raw);
   return mergeBytes([
-    hashMetadataDataV2(metadata),
-    hashMetadataCreators(metadata.creators),
+    hashMetadataDataV2(leaf),
+    hashMetadataCreators(leaf.creators),
   ]);
 }
 
-export function hashMetadataData(metadata: MetadataArgsArgs): Uint8Array {
+export function hashMetadataData(
+  metadata: MetadataArgsArgs,
+  raw?: RoyaltyRawFields
+): Uint8Array {
+  const leaf = toLeafMetadata(metadata, raw);
   return hash([
-    hash(getMetadataArgsSerializer().serialize(metadata)),
-    u16().serialize(metadata.sellerFeeBasisPoints),
+    hash(getMetadataArgsSerializer().serialize(leaf)),
+    u16().serialize(leaf.sellerFeeBasisPoints),
   ]);
 }
 
-export function hashMetadataDataV2(metadata: MetadataArgsV2Args): Uint8Array {
+export function hashMetadataDataV2(
+  metadata: MetadataArgsV2Args,
+  raw?: RoyaltyRawFields
+): Uint8Array;
+export function hashMetadataDataV2(
+  metadata: MetadataArgsArgs,
+  raw?: RoyaltyRawFields
+): Uint8Array;
+export function hashMetadataDataV2(
+  metadata: V2OrV1Metadata,
+  raw?: RoyaltyRawFields
+): Uint8Array {
+  const leaf = toLeafMetadataV2(metadata, raw);
   return hash([
-    hash(getMetadataArgsV2Serializer().serialize(metadata)),
-    u16().serialize(metadata.sellerFeeBasisPoints),
+    hash(getMetadataArgsV2Serializer().serialize(leaf)),
+    u16().serialize(leaf.sellerFeeBasisPoints),
   ]);
 }
 
