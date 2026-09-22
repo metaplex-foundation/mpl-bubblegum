@@ -15,7 +15,17 @@ use crate::{
     state::{DecompressibleState, TreeConfig, TREE_AUTHORITY_SIZE},
 };
 
-pub const MAX_ACC_PROOFS_SIZE: u32 = 17;
+/// Maximum number of proof accounts allowed to travel in the transaction itself
+/// (i.e. the maximum uncovered proof path a tree may require beyond its canopy).
+///
+/// Historically 17: a legacy (1232-byte) transaction could only fit ~17 proof
+/// nodes as 32-byte account keys alongside the instruction's fixed accounts, so
+/// deeper trees required a canopy to remain operable (e.g. burnable).
+///
+/// With the v1 transaction format (SIMD-0296 / SIMD-0385: 4096-byte
+/// transactions, 64 inline accounts), a full proof for the deepest supported
+/// tree (depth 30) fits inline, so no supported tree needs a canopy.
+pub const MAX_ACC_PROOFS_SIZE: u32 = 30;
 
 #[derive(Accounts)]
 pub struct CreateTree<'info> {
