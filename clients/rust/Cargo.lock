@@ -3184,7 +3184,7 @@ dependencies = [
 
 [[package]]
 name = "mpl-bubblegum"
-version = "3.0.0"
+version = "4.0.0"
 dependencies = [
  "anchor-lang",
  "assert_matches",
