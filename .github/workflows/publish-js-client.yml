@@ -66,7 +66,7 @@ jobs:
       - name: Git checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.git_ref || github.sha }}
+          ref: ${{ inputs.git_ref || github.ref }}
           persist-credentials: false
 
       - name: Load environment variables
@@ -124,8 +124,8 @@ jobs:
         with:
           commit-message: 'chore: release JS client v${{ steps.bump.outputs.new_version }}'
           branch: release/js-client-v${{ steps.bump.outputs.new_version }}
-          # The job checks out a commit (github.sha), leaving a detached HEAD;
-          # create-pull-request then requires an explicit base branch.
+          # Explicit base so the PR is created even when the checkout is a
+          # detached HEAD (dispatch with git_ref set to a tag or commit).
           base: main
           title: 'chore: release JS client v${{ steps.bump.outputs.new_version }}'
           body: |
@@ -145,7 +145,7 @@ jobs:
       - name: Git checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.git_ref || github.sha }}
+          ref: ${{ inputs.git_ref || github.ref }}
           persist-credentials: false
 
       - name: Load environment variables
