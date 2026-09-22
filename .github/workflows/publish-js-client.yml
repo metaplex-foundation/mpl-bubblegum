@@ -124,6 +124,9 @@ jobs:
         with:
           commit-message: 'chore: release JS client v${{ steps.bump.outputs.new_version }}'
           branch: release/js-client-v${{ steps.bump.outputs.new_version }}
+          # The job checks out a commit (github.sha), leaving a detached HEAD;
+          # create-pull-request then requires an explicit base branch.
+          base: main
           title: 'chore: release JS client v${{ steps.bump.outputs.new_version }}'
           body: |
             ## Summary
