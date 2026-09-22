@@ -1,5 +1,8 @@
 name: Deploy Rust Client
 
+# Make dry runs distinguishable from real publishes in the Actions run list.
+run-name: Deploy Rust Client (${{ inputs.level }}${{ inputs.dry_run && ', dry run' || '' }})
+
 on:
   workflow_dispatch:
     inputs:
@@ -53,11 +56,12 @@ jobs:
     needs: test_rust_client
     permissions:
       contents: write
+      pull-requests: write
     steps:
       - name: Git checkout
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.SVC_TOKEN }}
+          persist-credentials: false
 
       - name: Load environment variables
         run: cat .github/.env >> $GITHUB_ENV
@@ -97,9 +101,18 @@ jobs:
           PROGRAM_VERSION=`grep -E '^version\s*=' Cargo.toml | awk -F '"' '{print $2}'`
           echo PROGRAM_VERSION="${PROGRAM_VERSION}" >> $GITHUB_ENV
 
-      - name: Commit and tag new version
-        uses: stefanzweifel/git-auto-commit-action@v4
+      # Branch protection blocks direct pushes to main, so land the version
+      # bump through a pull request (same flow as publish-js-client.yml).
+      - name: Create release pull request
         if: github.event.inputs.dry_run == 'false'
+        uses: peter-evans/create-pull-request@v6
         with:
-          commit_message: "chore: Release mpl-bubblegum version ${{ env.PROGRAM_VERSION }}"
-          tagging_message: mpl-bubblegum@v${{ env.PROGRAM_VERSION }}
+          commit-message: 'chore: Release mpl-bubblegum version ${{ env.PROGRAM_VERSION }}'
+          branch: release/rust-client-v${{ env.PROGRAM_VERSION }}
+          base: main
+          title: 'chore: Release mpl-bubblegum version ${{ env.PROGRAM_VERSION }}'
+          body: |
+            ## Summary
+            - deploy-rust-client workflow published `mpl-bubblegum` `${{ env.PROGRAM_VERSION }}` to crates.io
+            - after merging, tag the merge commit as `mpl-bubblegum@v${{ env.PROGRAM_VERSION }}`
+          labels: release
