@@ -105,7 +105,8 @@ jobs:
       # bump through a pull request (same flow as publish-js-client.yml).
       - name: Create release pull request
         if: github.event.inputs.dry_run == 'false'
-        uses: peter-evans/create-pull-request@v6
+        # Pinned to a commit SHA because this step runs with write permissions.
+        uses: peter-evans/create-pull-request@c5a7806660adbe173f04e3e038b0ccdcd758773c # v6.1.0
         with:
           commit-message: 'chore: Release mpl-bubblegum version ${{ env.PROGRAM_VERSION }}'
           branch: release/rust-client-v${{ env.PROGRAM_VERSION }}
