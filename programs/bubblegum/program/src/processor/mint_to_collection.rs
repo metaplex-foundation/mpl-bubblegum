@@ -1,7 +1,5 @@
-use std::collections::HashSet;
-
 use anchor_lang::prelude::*;
-use spl_account_compression::{program::SplAccountCompression, Noop};
+use std::collections::HashSet;
 
 use crate::{
     error::BubblegumError,
@@ -12,6 +10,7 @@ use crate::{
         metaplex_anchor::TokenMetadata,
         TreeConfig,
     },
+    utils::validate_ownership_and_programs,
 };
 
 #[derive(Accounts)]
@@ -44,8 +43,10 @@ pub struct MintToCollectionV1<'info> {
     pub edition_account: UncheckedAccount<'info>,
     /// CHECK: This is no longer needed but kept for backwards compatibility.
     pub bubblegum_signer: UncheckedAccount<'info>,
-    pub log_wrapper: Program<'info, Noop>,
-    pub compression_program: Program<'info, SplAccountCompression>,
+    /// CHECK: Program is verified in the instruction
+    pub log_wrapper: UncheckedAccount<'info>,
+    /// CHECK: Program is verified in the instruction
+    pub compression_program: UncheckedAccount<'info>,
     /// CHECK: This is no longer needed but kept for backwards compatibility.
     pub token_metadata_program: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
@@ -55,6 +56,12 @@ pub(crate) fn mint_to_collection_v1(
     ctx: Context<MintToCollectionV1>,
     metadata_args: MetadataArgs,
 ) -> Result<LeafSchema> {
+    validate_ownership_and_programs(
+        &ctx.accounts.merkle_tree,
+        &ctx.accounts.log_wrapper,
+        &ctx.accounts.compression_program,
+    )?;
+
     // V1 instructions only work with V1 trees.
     require!(
         ctx.accounts.tree_authority.version == Version::V1,
