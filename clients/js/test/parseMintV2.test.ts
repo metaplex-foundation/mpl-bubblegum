@@ -1,8 +1,15 @@
 /* eslint-disable no-await-in-loop */
-import { createCollection } from '@metaplex-foundation/mpl-core';
 import {
+  create,
+  createCollection,
+  execute,
+  findAssetSignerPda,
+} from '@metaplex-foundation/mpl-core';
+import {
+  createNoopSigner,
   defaultPublicKey,
   generateSigner,
+  publicKey,
   some,
   none,
 } from '@metaplex-foundation/umi';
@@ -150,6 +157,54 @@ test('it can parse the leaf schema from mintV2 when Bubblegum instruction is not
     .add(mintBuilder)
     .sendAndConfirm(umi);
 
+  const leaf = await parseLeafFromMintV2Transaction(umi, signature);
+  const assetId = findLeafAssetIdPda(umi, { merkleTree, leafIndex: 0 });
+
+  t.is(leafOwner, leaf.owner);
+  t.is(Number(leaf.nonce), 0);
+  t.is(leaf.id, assetId[0]);
+});
+
+test('it can parse the leaf from mintV2 called via mpl-core execute (CPI)', async (t) => {
+  // Given an empty Bubblegum tree.
+  const umi = await createUmi();
+  const merkleTree = await createTreeV2(umi);
+  const leafOwner = generateSigner(umi).publicKey;
+
+  // And a Core asset to use with execute.
+  const asset = generateSigner(umi);
+  await create(umi, {
+    asset,
+    name: 'Test Asset',
+    uri: 'https://example.com/asset.json',
+  }).sendAndConfirm(umi);
+
+  // When we mint a new NFT via mpl-core execute (CPI into Bubblegum).
+  const metadata: MetadataArgsV2Args = {
+    name: 'My NFT',
+    uri: 'https://example.com/my-nft.json',
+    sellerFeeBasisPoints: 500, // 5%
+    collection: none(),
+    creators: [],
+  };
+
+  const assetSignerPda = findAssetSignerPda(umi, {
+    asset: asset.publicKey,
+  });
+
+  const mintBuilder = mintV2(umi, {
+    leafOwner,
+    merkleTree,
+    metadata,
+  });
+
+  const { signature } = await execute(umi, {
+    asset,
+    instructions: mintBuilder,
+    signers: [createNoopSigner(publicKey(assetSignerPda))],
+  }).sendAndConfirm(umi);
+
+  // Then the leaf can be parsed from the CPI transaction.
   const leaf = await parseLeafFromMintV2Transaction(umi, signature);
   const assetId = findLeafAssetIdPda(umi, { merkleTree, leafIndex: 0 });
 
