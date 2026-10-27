@@ -292,6 +292,44 @@ async fn test_cannot_create_tree_needing_too_many_proofs_with_no_canopy() {
     }
 }
 
+// Creates a tree after allocating `size_delta` bytes more (or less) than what is expected
+// for a tree without a canopy, and checks it fails with `InvalidCanopySize`.
+async fn assert_cannot_create_tree_with_mis_sized_account(size_delta: isize) {
+    let context = BubblegumTestContext::new().await.unwrap();
+    let payer = context.payer();
+
+    let mut tree =
+        Tree::<MAX_DEPTH, MAX_BUF_SIZE>::with_creator_and_canopy(&payer, None, context.client());
+    let account_size = tree
+        .merkle_tree_account_size()
+        .checked_add_signed(size_delta)
+        .unwrap();
+    tree.alloc_with_size(&payer, account_size).await.unwrap();
+
+    if let Err(err) = tree.create(&payer).await {
+        if let BanksClient(BanksClientError::TransactionError(e)) = *err {
+            assert_eq!(
+                e,
+                TransactionError::InstructionError(0, InstructionError::Custom(6041),)
+            );
+        } else {
+            panic!("Wrong variant");
+        }
+    } else {
+        panic!("Should have failed");
+    }
+}
+
+#[tokio::test]
+async fn test_cannot_create_tree_with_canopy_not_made_of_whole_nodes() {
+    assert_cannot_create_tree_with_mis_sized_account(1).await;
+}
+
+#[tokio::test]
+async fn test_cannot_create_tree_with_account_smaller_than_tree() {
+    assert_cannot_create_tree_with_mis_sized_account(-1).await;
+}
+
 #[tokio::test]
 async fn test_create_small_public_tree() {
     let context = BubblegumTestContext::new().await.unwrap();

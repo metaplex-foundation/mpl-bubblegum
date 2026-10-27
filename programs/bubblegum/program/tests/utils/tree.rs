@@ -166,8 +166,13 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
 
     // Allocates and pays for an account to hold the tree.
     pub async fn alloc(&mut self, payer: &Keypair) -> Result<()> {
+        self.alloc_with_size(payer, self.merkle_tree_account_size())
+            .await
+    }
+
+    // Allocates and pays for an account of an arbitrary size to hold the tree.
+    pub async fn alloc_with_size(&mut self, payer: &Keypair, account_size: usize) -> Result<()> {
         let rent = self.rent().await?;
-        let account_size = self.merkle_tree_account_size();
 
         // u64 -> usize conversion should never fail on the platforms we're running on.
         let lamports = rent.minimum_balance(account_size);
