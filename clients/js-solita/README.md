@@ -3,7 +3,7 @@
 This package contains the Metaplex Bubblegum program JS SDK code.
 
 ## HOW IT WORKS
-[Program Overview](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/README.md)
+[Program Overview](../../programs/bubblegum/README.md#overview)
 
 ## API Docs
 
