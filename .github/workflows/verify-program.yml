@@ -25,7 +25,7 @@ permissions: {}
 jobs:
   verify:
     name: Program
-    uses: metaplex-foundation/actions/.github/workflows/verify-program.yml@269d4cbf2dbbebda3ff5ad7cb00caca8af134fad # v2.0.0
+    uses: metaplex-foundation/actions/.github/workflows/verify-program.yml@7afc538992dfe77522d372163d6afe92b10dc15b # v2.0.0
     permissions:
       contents: read
     secrets:

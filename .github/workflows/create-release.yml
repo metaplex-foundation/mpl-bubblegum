@@ -32,7 +32,7 @@ permissions: {}
 jobs:
   build_programs:
     name: Programs
-    uses: metaplex-foundation/actions/.github/workflows/build-programs.yml@269d4cbf2dbbebda3ff5ad7cb00caca8af134fad # v2.0.0
+    uses: metaplex-foundation/actions/.github/workflows/build-programs.yml@7afc538992dfe77522d372163d6afe92b10dc15b # v2.0.0
     permissions:
       contents: read
     with:
@@ -40,7 +40,7 @@ jobs:
 
   test_programs:
     name: Programs
-    uses: metaplex-foundation/actions/.github/workflows/test-programs.yml@269d4cbf2dbbebda3ff5ad7cb00caca8af134fad # v2.0.0
+    uses: metaplex-foundation/actions/.github/workflows/test-programs.yml@7afc538992dfe77522d372163d6afe92b10dc15b # v2.0.0
     permissions:
       contents: read
     with:
@@ -51,7 +51,7 @@ jobs:
   test_js:
     name: JS client
     needs: build_programs
-    uses: metaplex-foundation/actions/.github/workflows/test-js-client.yml@269d4cbf2dbbebda3ff5ad7cb00caca8af134fad # v2.0.0
+    uses: metaplex-foundation/actions/.github/workflows/test-js-client.yml@7afc538992dfe77522d372163d6afe92b10dc15b # v2.0.0
     permissions:
       contents: read
     secrets:
@@ -62,7 +62,7 @@ jobs:
   test_rust:
     name: Rust client
     needs: build_programs
-    uses: metaplex-foundation/actions/.github/workflows/test-rust-client.yml@269d4cbf2dbbebda3ff5ad7cb00caca8af134fad # v2.0.0
+    uses: metaplex-foundation/actions/.github/workflows/test-rust-client.yml@7afc538992dfe77522d372163d6afe92b10dc15b # v2.0.0
     permissions:
       contents: read
     with:
@@ -72,7 +72,7 @@ jobs:
   create_release:
     name: Program
     needs: [test_js, test_rust, test_programs]
-    uses: metaplex-foundation/actions/.github/workflows/create-release.yml@269d4cbf2dbbebda3ff5ad7cb00caca8af134fad # v2.0.0
+    uses: metaplex-foundation/actions/.github/workflows/create-release.yml@7afc538992dfe77522d372163d6afe92b10dc15b # v2.0.0
     permissions:
       contents: write
     with:

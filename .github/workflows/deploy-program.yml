@@ -59,7 +59,7 @@ jobs:
     name: Programs
     if: needs.check_tag.outputs.type == 'ref'
     needs: check_tag
-    uses: metaplex-foundation/actions/.github/workflows/build-programs.yml@269d4cbf2dbbebda3ff5ad7cb00caca8af134fad # v2.0.0
+    uses: metaplex-foundation/actions/.github/workflows/build-programs.yml@7afc538992dfe77522d372163d6afe92b10dc15b # v2.0.0
     permissions:
       contents: read
     with:
@@ -69,7 +69,7 @@ jobs:
     name: Programs
     if: needs.check_tag.outputs.type == 'ref'
     needs: [check_tag, build_programs]
-    uses: metaplex-foundation/actions/.github/workflows/test-programs.yml@269d4cbf2dbbebda3ff5ad7cb00caca8af134fad # v2.0.0
+    uses: metaplex-foundation/actions/.github/workflows/test-programs.yml@7afc538992dfe77522d372163d6afe92b10dc15b # v2.0.0
     permissions:
       contents: read
     with:
@@ -81,7 +81,7 @@ jobs:
     name: JS client
     if: needs.check_tag.outputs.type == 'ref'
     needs: [check_tag, build_programs]
-    uses: metaplex-foundation/actions/.github/workflows/test-js-client.yml@269d4cbf2dbbebda3ff5ad7cb00caca8af134fad # v2.0.0
+    uses: metaplex-foundation/actions/.github/workflows/test-js-client.yml@7afc538992dfe77522d372163d6afe92b10dc15b # v2.0.0
     permissions:
       contents: read
     secrets:
@@ -93,7 +93,7 @@ jobs:
     name: Rust client
     if: needs.check_tag.outputs.type == 'ref'
     needs: [check_tag, build_programs]
-    uses: metaplex-foundation/actions/.github/workflows/test-rust-client.yml@269d4cbf2dbbebda3ff5ad7cb00caca8af134fad # v2.0.0
+    uses: metaplex-foundation/actions/.github/workflows/test-rust-client.yml@7afc538992dfe77522d372163d6afe92b10dc15b # v2.0.0
     permissions:
       contents: read
     with:
@@ -108,7 +108,7 @@ jobs:
       && (needs.test_programs.result == 'success' || needs.test_programs.result == 'skipped')
       && (needs.test_rust.result == 'success' || needs.test_rust.result == 'skipped')
     needs: [check_tag, test_js, test_programs, test_rust]
-    uses: metaplex-foundation/actions/.github/workflows/deploy-program.yml@269d4cbf2dbbebda3ff5ad7cb00caca8af134fad # v2.0.0
+    uses: metaplex-foundation/actions/.github/workflows/deploy-program.yml@7afc538992dfe77522d372163d6afe92b10dc15b # v2.0.0
     permissions:
       contents: write
     # GitHub Actions cannot look secrets up by a computed name, so the
