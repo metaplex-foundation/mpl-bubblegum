@@ -31,20 +31,22 @@ concurrency:
 jobs:
   build_programs:
     name: Programs
-    uses: metaplex-foundation/actions/.github/workflows/build-programs.yml@089e761576b6d1d09db11a34771fab7b150c14fc # v2.0.0
+    uses: metaplex-foundation/actions/.github/workflows/build-programs.yml@8f4db07ffb2abc0ac10bbe94f5dc623eb2218641 # v2.0.0
     permissions:
       contents: read
 
   build_rust_client:
     name: Rust client
-    uses: metaplex-foundation/actions/.github/workflows/build-rust-client.yml@089e761576b6d1d09db11a34771fab7b150c14fc # v2.0.0
+    uses: metaplex-foundation/actions/.github/workflows/build-rust-client.yml@8f4db07ffb2abc0ac10bbe94f5dc623eb2218641 # v2.0.0
     permissions:
       contents: read
+    with:
+      features: --all-features
 
   test_rust_client:
     name: Rust client
     needs: [build_programs, build_rust_client]
-    uses: metaplex-foundation/actions/.github/workflows/test-rust-client.yml@089e761576b6d1d09db11a34771fab7b150c14fc # v2.0.0
+    uses: metaplex-foundation/actions/.github/workflows/test-rust-client.yml@8f4db07ffb2abc0ac10bbe94f5dc623eb2218641 # v2.0.0
     permissions:
       contents: read
     with:
@@ -53,7 +55,7 @@ jobs:
   publish:
     name: Rust client
     needs: test_rust_client
-    uses: metaplex-foundation/actions/.github/workflows/publish-rust-client.yml@089e761576b6d1d09db11a34771fab7b150c14fc # v2.0.0
+    uses: metaplex-foundation/actions/.github/workflows/publish-rust-client.yml@8f4db07ffb2abc0ac10bbe94f5dc623eb2218641 # v2.0.0
     permissions:
       contents: write
       pull-requests: write

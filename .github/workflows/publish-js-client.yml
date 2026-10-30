@@ -36,7 +36,9 @@ jobs:
   check_tag:
     name: Check tag
     runs-on: ubuntu-latest
-    permissions: {}
+    permissions:
+      # Confirms the release tag exists.
+      contents: read
     outputs:
       type: ${{ steps.set_type.outputs.type }}
     steps:
@@ -44,19 +46,26 @@ jobs:
         id: set_type
         env:
           GIT_REF: ${{ inputs.git_ref }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # A program release tag was already built and tested when it was cut.
           case "$GIT_REF" in
-            release/bubblegum@*) echo "type=release" >> "$GITHUB_OUTPUT" ;;
+            release/bubblegum@*) TYPE=release ;;
             release/*@*) echo "::error::'$GIT_REF' is not a release tag of this repository (expected release/bubblegum@<version>)"; exit 1 ;;
-            *) echo "type=ref" >> "$GITHUB_OUTPUT" ;;
+            *) TYPE=ref ;;
           esac
+          if [ "$TYPE" = release ]; then
+            # Only an existing tag skips build and test; a branch named like one does not.
+            gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${GIT_REF}" --silent \
+              || { echo "::error::'$GIT_REF' is not an existing tag of this repository"; exit 1; }
+          fi
+          echo "type=$TYPE" >> "$GITHUB_OUTPUT"
 
   build_programs:
     name: Programs
     if: needs.check_tag.outputs.type == 'ref'
     needs: check_tag
-    uses: metaplex-foundation/actions/.github/workflows/build-programs.yml@089e761576b6d1d09db11a34771fab7b150c14fc # v2.0.0
+    uses: metaplex-foundation/actions/.github/workflows/build-programs.yml@8f4db07ffb2abc0ac10bbe94f5dc623eb2218641 # v2.0.0
     permissions:
       contents: read
     with:
@@ -66,7 +75,7 @@ jobs:
     name: JS client
     if: needs.check_tag.outputs.type == 'ref'
     needs: [check_tag, build_programs]
-    uses: metaplex-foundation/actions/.github/workflows/test-js-client.yml@089e761576b6d1d09db11a34771fab7b150c14fc # v2.0.0
+    uses: metaplex-foundation/actions/.github/workflows/test-js-client.yml@8f4db07ffb2abc0ac10bbe94f5dc623eb2218641 # v2.0.0
     permissions:
       contents: read
     secrets:
@@ -83,7 +92,7 @@ jobs:
           || (needs.build_programs.result == 'success'
           && needs.test_js.result == 'success'))
     needs: [check_tag, build_programs, test_js]
-    uses: metaplex-foundation/actions/.github/workflows/publish-js-client.yml@089e761576b6d1d09db11a34771fab7b150c14fc # v2.0.0
+    uses: metaplex-foundation/actions/.github/workflows/publish-js-client.yml@8f4db07ffb2abc0ac10bbe94f5dc623eb2218641 # v2.0.0
     permissions:
       contents: write
       pull-requests: write
