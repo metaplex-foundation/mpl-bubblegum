@@ -17,7 +17,7 @@ jobs:
       github.event.pull_request.merged == true
       && startsWith(github.event.pull_request.head.ref, 'release/js-client-')
       && github.event.pull_request.head.repo.full_name == github.repository
-    uses: metaplex-foundation/actions/.github/workflows/release-js-client.yml@6064713458c329034014d12f2f27488b592ad8a4 # v2.0.0
+    uses: metaplex-foundation/actions/.github/workflows/release-js-client.yml@782403d54939dc66861d8d7c036d6a313d5da37d # v2.0.0
     permissions:
       contents: write
     with:

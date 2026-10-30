@@ -80,7 +80,7 @@ jobs:
   build_programs:
     name: Programs
     needs: check_tag
-    uses: metaplex-foundation/actions/.github/workflows/build-programs.yml@6064713458c329034014d12f2f27488b592ad8a4 # v2.0.0
+    uses: metaplex-foundation/actions/.github/workflows/build-programs.yml@782403d54939dc66861d8d7c036d6a313d5da37d # v2.0.0
     permissions:
       contents: read
     with:
@@ -89,7 +89,7 @@ jobs:
   test_programs:
     name: Programs
     needs: [check_tag, build_programs]
-    uses: metaplex-foundation/actions/.github/workflows/test-programs.yml@6064713458c329034014d12f2f27488b592ad8a4 # v2.0.0
+    uses: metaplex-foundation/actions/.github/workflows/test-programs.yml@782403d54939dc66861d8d7c036d6a313d5da37d # v2.0.0
     permissions:
       contents: read
     with:
@@ -100,7 +100,7 @@ jobs:
   test_js:
     name: JS client
     needs: [check_tag, build_programs]
-    uses: metaplex-foundation/actions/.github/workflows/test-js-client.yml@6064713458c329034014d12f2f27488b592ad8a4 # v2.0.0
+    uses: metaplex-foundation/actions/.github/workflows/test-js-client.yml@782403d54939dc66861d8d7c036d6a313d5da37d # v2.0.0
     permissions:
       contents: read
     secrets:
@@ -111,7 +111,7 @@ jobs:
   test_rust:
     name: Rust client
     needs: [check_tag, build_programs]
-    uses: metaplex-foundation/actions/.github/workflows/test-rust-client.yml@6064713458c329034014d12f2f27488b592ad8a4 # v2.0.0
+    uses: metaplex-foundation/actions/.github/workflows/test-rust-client.yml@782403d54939dc66861d8d7c036d6a313d5da37d # v2.0.0
     permissions:
       contents: read
     with:
@@ -121,7 +121,7 @@ jobs:
   create_release:
     name: Program
     needs: [check_tag, build_programs, test_js, test_rust, test_programs]
-    uses: metaplex-foundation/actions/.github/workflows/create-release.yml@6064713458c329034014d12f2f27488b592ad8a4 # v2.0.0
+    uses: metaplex-foundation/actions/.github/workflows/create-release.yml@782403d54939dc66861d8d7c036d6a313d5da37d # v2.0.0
     permissions:
       contents: write
     with:
