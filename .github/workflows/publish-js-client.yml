@@ -27,6 +27,11 @@ on:
 
 permissions: {}
 
+concurrency:
+  # One JS publish at a time: each bumps the version and opens a release PR.
+  group: publish-js-client
+  cancel-in-progress: false
+
 jobs:
   check_tag:
     name: Check tag
@@ -41,17 +46,17 @@ jobs:
           GIT_REF: ${{ inputs.git_ref }}
         run: |
           # A program release tag was already built and tested when it was cut.
-          if [[ "$GIT_REF" == release/*@* ]]; then
-            echo "type=release" >> "$GITHUB_OUTPUT"
-          else
-            echo "type=ref" >> "$GITHUB_OUTPUT"
-          fi
+          case "$GIT_REF" in
+            release/bubblegum@*) echo "type=release" >> "$GITHUB_OUTPUT" ;;
+            release/*@*) echo "::error::'$GIT_REF' is not a release tag of this repository (expected release/bubblegum@<version>)"; exit 1 ;;
+            *) echo "type=ref" >> "$GITHUB_OUTPUT" ;;
+          esac
 
   build_programs:
     name: Programs
     if: needs.check_tag.outputs.type == 'ref'
     needs: check_tag
-    uses: metaplex-foundation/actions/.github/workflows/build-programs.yml@7afc538992dfe77522d372163d6afe92b10dc15b # v2.0.0
+    uses: metaplex-foundation/actions/.github/workflows/build-programs.yml@772e5a7cf7408fb8346dccb5665f0502c33e9dbb # v2.0.0
     permissions:
       contents: read
     with:
@@ -61,7 +66,7 @@ jobs:
     name: JS client
     if: needs.check_tag.outputs.type == 'ref'
     needs: [check_tag, build_programs]
-    uses: metaplex-foundation/actions/.github/workflows/test-js-client.yml@7afc538992dfe77522d372163d6afe92b10dc15b # v2.0.0
+    uses: metaplex-foundation/actions/.github/workflows/test-js-client.yml@772e5a7cf7408fb8346dccb5665f0502c33e9dbb # v2.0.0
     permissions:
       contents: read
     secrets:
@@ -72,10 +77,13 @@ jobs:
   publish:
     name: JS client
     if: |
-      always()
-      && (needs.test_js.result == 'success' || needs.test_js.result == 'skipped')
-    needs: [check_tag, test_js]
-    uses: metaplex-foundation/actions/.github/workflows/publish-js-client.yml@7afc538992dfe77522d372163d6afe92b10dc15b # v2.0.0
+      !cancelled() && !failure()
+      && needs.check_tag.result == 'success'
+      && (needs.check_tag.outputs.type == 'release'
+          || (needs.build_programs.result == 'success'
+          && needs.test_js.result == 'success'))
+    needs: [check_tag, build_programs, test_js]
+    uses: metaplex-foundation/actions/.github/workflows/publish-js-client.yml@772e5a7cf7408fb8346dccb5665f0502c33e9dbb # v2.0.0
     permissions:
       contents: write
       pull-requests: write
