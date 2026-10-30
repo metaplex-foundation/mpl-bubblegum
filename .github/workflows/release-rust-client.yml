@@ -1,0 +1,24 @@
+name: Release Rust Client
+
+# Tags and releases the Rust client once the pull request opened by
+# publish-rust-client is merged.
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+permissions: {}
+
+jobs:
+  release:
+    name: Rust client
+    if: |
+      github.event.pull_request.merged == true
+      && startsWith(github.event.pull_request.head.ref, 'release/rust-client-')
+      && github.event.pull_request.head.repo.full_name == github.repository
+    uses: metaplex-foundation/actions/.github/workflows/release-rust-client.yml@269d4cbf2dbbebda3ff5ad7cb00caca8af134fad # v2.0.0
+    permissions:
+      contents: write
+    with:
+      merge_commit_sha: ${{ github.event.pull_request.merge_commit_sha }}

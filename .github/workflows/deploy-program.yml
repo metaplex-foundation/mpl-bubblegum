@@ -13,8 +13,7 @@ on:
         required: true
         default: bubblegum
         type: choice
-        options:
-          - bubblegum
+        options: [bubblegum]
       cluster:
         description: Cluster environment
         required: true
@@ -33,328 +32,104 @@ on:
         type: boolean
         default: false
 
-env:
-  CACHE: true
+permissions: {}
 
 jobs:
   check_tag:
-    name: 'Check tag'
+    name: Check tag
     runs-on: ubuntu-latest
+    permissions: {}
     outputs:
-      program: ${{ steps.set_program.outputs.program }}
-      type: ${{ steps.set_program.outputs.type }}
+      type: ${{ steps.set_type.outputs.type }}
     steps:
-    - name: Check tag
-      id: set_program
-      run: |
-        echo program="${{ inputs.program }}" >> $GITHUB_OUTPUT
-        if [[ "${{ inputs.git_ref }}" =~ ^release/${{ inputs.program }}* ]]; then
-          echo type="release" >> $GITHUB_OUTPUT
-        else
-          echo type="ref" >> $GITHUB_OUTPUT
-        fi
+      - name: Check tag
+        id: set_type
+        env:
+          GIT_REF: ${{ inputs.git_ref }}
+        run: |
+          # A release tag deploys the asset attached to the GitHub release; any
+          # other ref is built and tested first.
+          if [[ "$GIT_REF" == release/*@* ]]; then
+            echo "type=release" >> "$GITHUB_OUTPUT"
+          else
+            echo "type=ref" >> "$GITHUB_OUTPUT"
+          fi
+
   build_programs:
     name: Programs
-    uses: ./.github/workflows/build-programs.yml
-    secrets: inherit
-    needs: check_tag
     if: needs.check_tag.outputs.type == 'ref'
+    needs: check_tag
+    uses: metaplex-foundation/actions/.github/workflows/build-programs.yml@269d4cbf2dbbebda3ff5ad7cb00caca8af134fad # v2.0.0
+    permissions:
+      contents: read
     with:
       git_ref: ${{ inputs.git_ref }}
 
   test_programs:
     name: Programs
-    uses: ./.github/workflows/test-programs.yml
-    secrets: inherit
-    needs: [build_programs, check_tag]
     if: needs.check_tag.outputs.type == 'ref'
+    needs: [check_tag, build_programs]
+    uses: metaplex-foundation/actions/.github/workflows/test-programs.yml@269d4cbf2dbbebda3ff5ad7cb00caca8af134fad # v2.0.0
+    permissions:
+      contents: read
     with:
       program_matrix: '["${{ inputs.program }}"]'
       git_ref: ${{ inputs.git_ref }}
+      runner: ubuntu-latest-16-cores
 
   test_js:
     name: JS client
-    needs: [build_programs, check_tag]
-    uses: ./.github/workflows/test-js-client.yml
-    secrets: inherit
     if: needs.check_tag.outputs.type == 'ref'
+    needs: [check_tag, build_programs]
+    uses: metaplex-foundation/actions/.github/workflows/test-js-client.yml@269d4cbf2dbbebda3ff5ad7cb00caca8af134fad # v2.0.0
+    permissions:
+      contents: read
+    secrets:
+      READ_API_RPC_DEVNET: ${{ secrets.READ_API_RPC_DEVNET }}
     with:
       git_ref: ${{ inputs.git_ref }}
 
-  deploy_program:
-    name: Program / Deploy
-    runs-on: ubuntu-latest
-    needs: [check_tag, test_js, test_programs]
+  test_rust:
+    name: Rust client
+    if: needs.check_tag.outputs.type == 'ref'
+    needs: [check_tag, build_programs]
+    uses: metaplex-foundation/actions/.github/workflows/test-rust-client.yml@269d4cbf2dbbebda3ff5ad7cb00caca8af134fad # v2.0.0
     permissions:
-      contents: write
+      contents: read
+    with:
+      git_ref: ${{ inputs.git_ref }}
+      runner: ubuntu-latest-16-cores
+
+  deploy:
+    name: Program
     if: |
       always()
       && (needs.test_js.result == 'success' || needs.test_js.result == 'skipped')
       && (needs.test_programs.result == 'success' || needs.test_programs.result == 'skipped')
-    steps:
-      - name: Git checkout
-        uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.SVC_TOKEN }}
-          ref: ${{ inputs.git_ref }}
-
-      - name: Load environment variables
-        run: |
-          # Allowlist instead of a blanket `cat .github/.env >> "$GITHUB_ENV"` so a
-          # PR-editable key in `.github/.env` cannot inject arbitrary env vars into
-          # subsequent steps.
-          grep -E '^(CARGO_TERM_COLOR|RUST_VERSION|SOLANA_VERSION|SOLANA_VERIFY_VERSION|SOLANA_VERIFY_RUST_VERSION|COMMIT_USER_NAME|COMMIT_USER_EMAIL|DEPLOY_SOLANA_VERSION)=' .github/.env >> "$GITHUB_ENV"
-
-      - name: Install Rust
-        uses: metaplex-foundation/actions/install-rust@v1
-        with:
-          # solana-verify (mainnet) and the squads-verified-upgrade crate compile
-          # from source and need Rust 1.85+. The deploy job never builds the program
-          # itself (it downloads the build artifact), so the host toolchain only has
-          # to satisfy those two.
-          toolchain: ${{ env.SOLANA_VERIFY_RUST_VERSION }}
-
-      - name: Install Solana
-        uses: metaplex-foundation/actions/install-solana@v1
-        with:
-          version: ${{ env.DEPLOY_SOLANA_VERSION }}
-          cache: ${{ env.CACHE }}
-
-      - name: Install solana-verify
-        if: github.event.inputs.dry_run == 'false' && (inputs.cluster == 'mainnet-beta' || inputs.cluster == 'devnet')
-        uses: metaplex-foundation/actions/install-solana-verify@v1
-        with:
-          version: ${{ env.SOLANA_VERIFY_VERSION }}
-
-      # - name: Install Anchor CLI
-      #   uses: metaplex-foundation/actions/install-anchor-cli@v1
-      #   with:
-      #     version: ${{ env.ANCHOR_VERSION }}
-      #     cache: ${{ env.CACHE }}
-
-      - name: Install cargo-release
-        uses: metaplex-foundation/actions/install-cargo-release@v1
-        if: github.event.inputs.publish_crate == 'true'
-        with:
-          cache: ${{ env.CACHE }}
-
-      - name: Set RPC
-        run: |
-          # We do this if waterfall because github actions does not allow dynamic access to secrets
-          if [ "${{ inputs.cluster }}" == "devnet" ]; then
-            echo RPC=${{ secrets.DEVNET_RPC }} >> $GITHUB_ENV
-          elif [ "${{ inputs.cluster }}" == "mainnet-beta" ]; then
-            echo RPC=${{ secrets.MAINNET_RPC }} >> $GITHUB_ENV
-          elif [ "${{ inputs.cluster }}" == "sonic-devnet" ]; then
-            echo RPC=${{ secrets.SONIC_DEVNET_RPC }} >> $GITHUB_ENV
-          elif [ "${{ inputs.cluster }}" == "sonic-testnet" ]; then
-            echo RPC=${{ secrets.SONIC_TESTNET_RPC }} >> $GITHUB_ENV
-          elif [ "${{ inputs.cluster }}" == "eclipse-devnet" ]; then
-            echo RPC=${{ secrets.ECLIPSE_DEVNET_RPC }} >> $GITHUB_ENV
-          elif [ "${{ inputs.cluster }}" == "eclipse-testnet" ]; then
-            echo RPC=${{ secrets.ECLIPSE_TESTNET_RPC }} >> $GITHUB_ENV
-          elif [ "${{ inputs.cluster }}" == "eclipse-mainnet" ]; then
-            echo RPC=${{ secrets.ECLIPSE_MAINNET_RPC }} >> $GITHUB_ENV
-          fi
-
-      - name: Identify program
-        run: |
-          echo PROGRAM_NAME="${{ inputs.program }}" >> $GITHUB_ENV
-          echo PROGRAM_PACKAGE="${{ inputs.program }}" >> $GITHUB_ENV
-          echo ${{ secrets.BUBBLEGUM_ID }} > ./program-id.json
-          # Derive the program id pubkey from the canonical keypair so the
-          # bundled-proposal step cannot drift from the PDA export target.
-          # solana-keygen pubkey only emits the public key, not the secret.
-          echo "PROGRAM_ID=$(solana-keygen pubkey ./program-id.json)" >> $GITHUB_ENV
-
-          if [[ "${{ inputs.cluster }}" == "sonic"* ]]; then
-            echo ${{ secrets.BUBBLEGUM_SONIC_DEPLOY_KEY }} > ./deployer-key.json
-            echo DEPLOY_TYPE="direct" >> $GITHUB_ENV
-          elif [[ "${{ inputs.cluster }}" == "eclipse"* ]]; then
-            echo ${{ secrets.BUBBLEGUM_ECLIPSE_DEPLOY_KEY }} > ./deployer-key.json
-            echo DEPLOY_TYPE="direct" >> $GITHUB_ENV
-          elif [[ "${{ inputs.cluster }}" == "devnet" ]]; then
-            echo DEPLOY_TYPE="squads" >> $GITHUB_ENV
-            echo SQUADS_MULTISIG="Gs6jZWxXFvmZtBcyYr6fBXX5ikwRTemBDS4f6kFuB31U" >> $GITHUB_ENV
-            echo SQUADS_VAULT="Fsxr5WVKZZoeb7xgwTWRHymSRVGY9vk7m5B5GPu1KU59" >> $GITHUB_ENV
-            echo SQUADS_PROGRAM_INDEX="2" >> $GITHUB_ENV
-          elif [[ "${{ inputs.cluster }}" == "mainnet-beta" ]]; then
-            echo DEPLOY_TYPE="squads" >> $GITHUB_ENV
-            echo SQUADS_MULTISIG="EADFTJ9b6yPAqyRjhz1scirvWhggMSWTt1BgBjKgm5wT" >> $GITHUB_ENV
-            echo SQUADS_VAULT="bfQVv6niKVgEURYqQ1beJmiEQQN7MrvLRvk3mZGFubb" >> $GITHUB_ENV
-            echo SQUADS_PROGRAM_INDEX="2" >> $GITHUB_ENV
-          else
-            echo "Invalid cluster: ${{ inputs.cluster }}"
-            exit 1
-          fi
-
-      - name: Sanitize Ref
-        id: sanitize
-        shell: bash
-        run: |
-          REF="${{ inputs.git_ref }}"
-          if [ -z "$REF" ]; then
-            REF="default"
-          fi
-          SANITIZED=${REF//\//-}
-          echo "sanitized=$SANITIZED" >> "$GITHUB_OUTPUT"
-
-      - name: Download program builds
-        uses: actions/download-artifact@v4
-        if: needs.check_tag.outputs.type == 'ref'
-        with:
-          name: program-builds-${{ steps.sanitize.outputs.sanitized }}
-
-      - name: Deploy program
-        if: github.event.inputs.dry_run == 'false' && env.DEPLOY_TYPE == 'direct'
-        run: |
-          echo "Deploying ${{ needs.check_tag.outputs.program }} to ${{ inputs.cluster }}"
-
-          solana -v program deploy ./programs/.bin/${{ env.PROGRAM_NAME }}.so \
-            -u ${{ env.RPC }} \
-            --program-id ./program-id.json \
-            -k ./deployer-key.json \
-            --max-sign-attempts 100 \
-            --use-rpc
-
-      - name: Download release asset
-        uses: actions/github-script@v5
-        id: get_release
-        if: needs.check_tag.outputs.type == 'release'
-        with:
-          script: |
-            const tag = "${{ inputs.git_ref }}";
-            const assetName = "${{ env.PROGRAM_NAME }}.so";
-
-            // Fetch the release associated with the tag
-            const release = await github.rest.repos.getReleaseByTag({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              tag: tag
-            });
-
-            if (release.status !== 200) {
-              throw new Error(`Failed to fetch release for tag ${tag}`);
-            }
-
-            const asset = release.data.assets.find(asset => asset.name === assetName);
-            if (!asset) {
-              throw new Error(`Asset ${assetName} not found in release tagged ${tag}`);
-            }
-
-            core.setOutput("url", asset.url);
-
-      - name: Download the Selected Asset
-        if: needs.check_tag.outputs.type == 'release'
-        run: |
-          mkdir -p ${{ github.workspace }}/programs/.bin
-          curl -L -o ${{ github.workspace }}/programs/.bin/${{ env.PROGRAM_NAME }}.so \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Accept: application/octet-stream" \
-            "${{ steps.get_release.outputs.url }}"
-
-      # Squads-deployed clusters need the squads vault to sign both the program
-      # upgrade and the verified-build PDA write. Export the PDA-write instruction
-      # first, then bundle it with the program upgrade in a single atomic squads
-      # transaction below. A failed export aborts before writing an orphan buffer.
-      - name: Export verified-build PDA transaction
-        if: github.event.inputs.dry_run == 'false' && env.DEPLOY_TYPE == 'squads' && (inputs.cluster == 'mainnet-beta' || inputs.cluster == 'devnet')
-        uses: metaplex-foundation/actions/verify-program@v1
-        with:
-          mode: export-pda-tx
-          program-id-keypair: ./program-id.json
-          uploader: ${{ env.SQUADS_VAULT }}
-          rpc-url: ${{ env.RPC }}
-          library-name: ${{ env.PROGRAM_NAME }}
-          package: ${{ env.PROGRAM_PACKAGE }}
-          mount-path: programs/bubblegum
-          solana-version: ${{ env.SOLANA_VERSION }}
-          repo-visibility: public
-          submit-remote: false
-          output-file: verify-pda-tx.b58
-
-      - name: Deploy squads buffer
-        if: github.event.inputs.dry_run == 'false' && env.DEPLOY_TYPE == 'squads'
-        env:
-          SQUADS_BOT_KEY: ${{ secrets.SQUADS_BOT_KEY }}
-        run: |
-          echo "Deploying buffer for ${{ inputs.program }} on ${{ inputs.cluster }}"
-          printf '%s' "$SQUADS_BOT_KEY" > ./submitter-key.json
-
-          BUFFER=$(solana program write-buffer -u ${{ env.RPC }} -k ./submitter-key.json --max-sign-attempts 100 --use-rpc ./programs/.bin/${{ env.PROGRAM_NAME }}.so | awk '{print $2}')
-          echo "Buffer: $BUFFER"
-
-          solana program set-buffer-authority $BUFFER \
-            --new-buffer-authority ${{ env.SQUADS_VAULT }} \
-            -k ./submitter-key.json \
-            -u ${{ env.RPC }}
-
-          echo "BUFFER=$BUFFER" >> $GITHUB_ENV
-
-      # Build the bundled proposal with a pinned, isolated Rust crate
-      # (cargo --locked) instead of an npm helper, so no npm/pnpm dependency tree
-      # or install scripts run in the job that holds the squads bot key. The crate
-      # reuses the Rust toolchain installed above.
-      #
-      # The crate also reads RPC, SQUADS_MULTISIG, and SQUADS_VAULT, which are
-      # exported into $GITHUB_ENV by the "Set RPC" and "Identify program" steps,
-      # plus BUFFER from "Deploy squads buffer". The step-level env below sets the
-      # remaining inputs the crate needs. The crate defaults the squads authority
-      # index to 1, which derives the shared upgrade-authority vault (SQUADS_VAULT);
-      # SQUADS_PROGRAM_INDEX is the program-manager slot, not the authority index.
-      - name: Create bundled Squads proposal
-        if: github.event.inputs.dry_run == 'false' && env.DEPLOY_TYPE == 'squads' && (inputs.cluster == 'mainnet-beta' || inputs.cluster == 'devnet')
-        env:
-          PROGRAM_ID: ${{ env.PROGRAM_ID }}
-          SUBMITTER_KEYPAIR: ./submitter-key.json
-          PDA_TX_FILE: verify-pda-tx.b58
-          SPILL_ADDRESS: botTxAkJhuCtNNn9xsH8fHJjzTkcN6XD4dR3R5hkzV2
-        run: cargo run --locked --manifest-path configs/scripts/program/squads-verified-upgrade/Cargo.toml
-
-      - name: Create Squads proposal
-        if: github.event.inputs.dry_run == 'false' && env.DEPLOY_TYPE == 'squads' && inputs.cluster != 'mainnet-beta' && inputs.cluster != 'devnet'
-        uses: metaplex-foundation/squads-program-upgrade@main
-        with:
-          network-url: ${{ env.RPC }}
-          program-multisig: ${{ env.SQUADS_MULTISIG }}
-          program-id: 'BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'
-          program-index: ${{ env.SQUADS_PROGRAM_INDEX }}
-          buffer: ${{ env.BUFFER }}
-          spill-address: 'botTxAkJhuCtNNn9xsH8fHJjzTkcN6XD4dR3R5hkzV2'
-          authority: ${{ env.SQUADS_VAULT }}
-          name: 'Deploy ${{ inputs.git_ref }}'
-          keypair: ${{ secrets.SQUADS_BOT_KEY }}
-
-      - name: Create env tag
-        uses: actions/github-script@v7
-        if: github.event.inputs.dry_run == 'false'
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const refData = await github.rest.git.getRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: '${{ (needs.check_tag.outputs.type == 'release' && format('tags/{0}', inputs.git_ref)) || inputs.git_ref }}'
-            });
-            if (refData.status !== 200) {
-              throw new Error('Failed to fetch existing tag');
-            }
-            await github.rest.git.createRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: 'refs/tags/${{ needs.check_tag.outputs.program }}-${{ inputs.cluster }}',
-              sha: refData.data.object.sha
-            }).catch(async (err) => {
-              if (err.status !== 422) throw err;
-              await github.rest.git.updateRef({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                ref: 'tags/${{ needs.check_tag.outputs.program }}-${{ inputs.cluster }}',
-                sha: refData.data.object.sha,
-                force: true
-              });
-            })
-
-      - name: Clean up signer files
-        if: always()
-        run: rm -f ./deployer-key.json ./program-id.json ./submitter-key.json
+      && (needs.test_rust.result == 'success' || needs.test_rust.result == 'skipped')
+    needs: [check_tag, test_js, test_programs, test_rust]
+    uses: metaplex-foundation/actions/.github/workflows/deploy-program.yml@269d4cbf2dbbebda3ff5ad7cb00caca8af134fad # v2.0.0
+    permissions:
+      contents: write
+    # GitHub Actions cannot look secrets up by a computed name, so the
+    # per-cluster secrets are mapped onto the shared workflow's fixed names here.
+    secrets:
+      RPC_URL: >-
+        ${{ inputs.cluster == 'devnet' && secrets.DEVNET_RPC
+         || inputs.cluster == 'mainnet-beta' && secrets.MAINNET_RPC
+         || inputs.cluster == 'sonic-devnet' && secrets.SONIC_DEVNET_RPC
+         || inputs.cluster == 'sonic-testnet' && secrets.SONIC_TESTNET_RPC
+         || inputs.cluster == 'eclipse-devnet' && secrets.ECLIPSE_DEVNET_RPC
+         || inputs.cluster == 'eclipse-mainnet' && secrets.ECLIPSE_MAINNET_RPC
+         || '' }}
+      PROGRAM_ID_KEYPAIR: ${{ secrets.BUBBLEGUM_ID }}
+      DEPLOYER_KEYPAIR: >-
+        ${{ startsWith(inputs.cluster, 'sonic') && secrets.BUBBLEGUM_SONIC_DEPLOY_KEY
+         || startsWith(inputs.cluster, 'eclipse') && secrets.BUBBLEGUM_ECLIPSE_DEPLOY_KEY
+         || '' }}
+      SQUADS_BOT_KEY: ${{ secrets.SQUADS_BOT_KEY }}
+    with:
+      program: ${{ inputs.program }}
+      cluster: ${{ inputs.cluster }}
+      git_ref: ${{ inputs.git_ref }}
+      dry_run: ${{ inputs.dry_run }}
