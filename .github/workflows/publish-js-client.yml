@@ -65,7 +65,7 @@ jobs:
     name: Programs
     if: needs.check_tag.outputs.type == 'ref'
     needs: check_tag
-    uses: metaplex-foundation/actions/.github/workflows/build-programs.yml@8f4db07ffb2abc0ac10bbe94f5dc623eb2218641 # v2.0.0
+    uses: metaplex-foundation/actions/.github/workflows/build-programs.yml@da62cf9659efdd4e28daa0c777535ea5f54ab53a # v2.0.0
     permissions:
       contents: read
     with:
@@ -75,7 +75,7 @@ jobs:
     name: JS client
     if: needs.check_tag.outputs.type == 'ref'
     needs: [check_tag, build_programs]
-    uses: metaplex-foundation/actions/.github/workflows/test-js-client.yml@8f4db07ffb2abc0ac10bbe94f5dc623eb2218641 # v2.0.0
+    uses: metaplex-foundation/actions/.github/workflows/test-js-client.yml@da62cf9659efdd4e28daa0c777535ea5f54ab53a # v2.0.0
     permissions:
       contents: read
     secrets:
@@ -92,7 +92,7 @@ jobs:
           || (needs.build_programs.result == 'success'
           && needs.test_js.result == 'success'))
     needs: [check_tag, build_programs, test_js]
-    uses: metaplex-foundation/actions/.github/workflows/publish-js-client.yml@8f4db07ffb2abc0ac10bbe94f5dc623eb2218641 # v2.0.0
+    uses: metaplex-foundation/actions/.github/workflows/publish-js-client.yml@da62cf9659efdd4e28daa0c777535ea5f54ab53a # v2.0.0
     permissions:
       contents: write
       pull-requests: write
