@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       git_ref:
-        description: Release tag or commit to publish from
+        description: Release tag (release/bubblegum@0.13.0) or commit to publish from
         required: false
         type: string
         default: ''
@@ -13,148 +13,110 @@ on:
         required: true
         default: patch
         type: choice
-        options:
-          - patch
-          - minor
-          - major
-          - prerelease
-          - prepatch
-          - preminor
-          - premajor
+        options: [patch, minor, major, prerelease, prepatch, preminor, premajor]
       tag:
-        description: NPM Tag (and preid for pre-releases)
+        description: NPM tag (and preid for pre-releases)
         required: true
         type: string
         default: latest
       create_release:
-        description: Create a GitHub release
+        description: Open the release pull request and deploy docs
         required: true
         type: boolean
         default: true
 
-env:
-  CACHE: true
+permissions: {}
+
+concurrency:
+  # One JS publish at a time: each bumps the version and opens a release PR.
+  group: publish-js-client
+  cancel-in-progress: false
 
 jobs:
+  check_tag:
+    name: Check tag
+    runs-on: ubuntu-latest
+    permissions:
+      # Confirms the release tag exists and resolves the ref to a commit.
+      contents: read
+    outputs:
+      type: ${{ steps.set_type.outputs.type }}
+      sha: ${{ steps.set_type.outputs.sha }}
+    steps:
+      - name: Check tag
+        id: set_type
+        env:
+          GIT_REF: ${{ inputs.git_ref }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # A program release tag was already built and tested when it was cut.
+          case "$GIT_REF" in
+            release/bubblegum@*) TYPE=release ;;
+            release/*@*) echo "::error::'$GIT_REF' is not a release tag of this repository (expected release/bubblegum@<version>)"; exit 1 ;;
+            *) TYPE=ref ;;
+          esac
+          if [ "$TYPE" = release ]; then
+            # Only an existing tag skips build and test; a branch named like one does not.
+            OBJ="$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${GIT_REF}" --jq '.object.type + " " + .object.sha')" \
+              || { echo "::error::'$GIT_REF' is not an existing tag of this repository"; exit 1; }
+            read -r OBJ_TYPE SHA <<< "$OBJ"
+            if [ "$OBJ_TYPE" = tag ]; then
+              # Annotated tag: follow it to the commit.
+              SHA="$(gh api "repos/${GITHUB_REPOSITORY}/git/tags/${SHA}" --jq .object.sha)"
+            fi
+          elif [ -z "$GIT_REF" ]; then
+            SHA="$GITHUB_SHA"
+          else
+            SHA="$(gh api "repos/${GITHUB_REPOSITORY}/commits/${GIT_REF}" --jq .sha)" \
+              || { echo "::error::'$GIT_REF' is not a commit, branch or tag of this repository"; exit 1; }
+          fi
+          echo "type=$TYPE" >> "$GITHUB_OUTPUT"
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "$GIT_REF -> $SHA ($TYPE)"
+
   build_programs:
     name: Programs
-    uses: ./.github/workflows/build-programs.yml
-    secrets: inherit
+    if: needs.check_tag.outputs.type == 'ref'
+    needs: check_tag
+    uses: metaplex-foundation/actions/.github/workflows/build-programs.yml@7f55495a7da7c3c1884845f75341dd5032a84139 # v2.0.0
+    permissions:
+      contents: read
     with:
-      git_ref: ${{ inputs.git_ref }}
+      git_ref: ${{ needs.check_tag.outputs.sha }}
 
   test_js:
     name: JS client
-    needs: build_programs
-    uses: ./.github/workflows/test-js-client.yml
+    if: needs.check_tag.outputs.type == 'ref'
+    needs: [check_tag, build_programs]
+    uses: metaplex-foundation/actions/.github/workflows/test-js-client.yml@7f55495a7da7c3c1884845f75341dd5032a84139 # v2.0.0
     permissions:
       contents: read
     secrets:
       READ_API_RPC_DEVNET: ${{ secrets.READ_API_RPC_DEVNET }}
     with:
-      git_ref: ${{ inputs.git_ref }}
+      git_ref: ${{ needs.check_tag.outputs.sha }}
 
-  publish_js:
-    name: JS client / Publish
-    runs-on: ubuntu-latest
-    needs: test_js
+  publish:
+    name: JS client
+    if: |
+      !cancelled() && !failure()
+      && needs.check_tag.result == 'success'
+      && (needs.check_tag.outputs.type == 'release'
+          || (needs.build_programs.result == 'success'
+          && needs.test_js.result == 'success'))
+    needs: [check_tag, build_programs, test_js]
+    uses: metaplex-foundation/actions/.github/workflows/publish-js-client.yml@7f55495a7da7c3c1884845f75341dd5032a84139 # v2.0.0
     permissions:
       contents: write
       pull-requests: write
       id-token: write
-    steps:
-      - name: Git checkout
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.git_ref || github.ref }}
-          persist-credentials: false
-
-      - name: Load environment variables
-        run: cat .github/.env >> $GITHUB_ENV
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 8.15.9
-
-      - name: Install Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          registry-url: 'https://registry.npmjs.org'
-          cache: 'pnpm'
-
-      - name: Install npm >= 11.5.1
-        run: npm install -g "npm@>=11.5.1"
-
-      - name: Install dependencies
-        uses: metaplex-foundation/actions/install-node-dependencies@v1
-        with:
-          folder: ./clients/js
-          cache: ${{ env.CACHE }}
-          key: clients-js
-
-      - name: Build
-        working-directory: ./clients/js
-        run: pnpm build
-
-      - name: Bump
-        id: bump
-        working-directory: ./clients/js
-        env:
-          BUMP: ${{ inputs.bump }}
-          TAG: ${{ inputs.tag }}
-        run: |
-          if [ "${{ startsWith(inputs.bump, 'pre') }}" == "true" ]; then
-            pnpm version "$BUMP" --preid "$TAG" --no-git-tag-version
-          else
-            pnpm version "$BUMP" --no-git-tag-version
-          fi
-          echo "new_version=$(pnpm pkg get version | sed 's/"//g')" >> $GITHUB_OUTPUT
-
-      - name: Publish
-        working-directory: ./clients/js
-        env:
-          TAG: ${{ inputs.tag }}
-        run: npm publish --access public --tag "$TAG"
-
-      - name: Create release pull request
-        if: ${{ github.event.inputs.create_release == 'true' }}
-        uses: peter-evans/create-pull-request@v6
-        with:
-          commit-message: 'chore: release JS client v${{ steps.bump.outputs.new_version }}'
-          branch: release/js-client-v${{ steps.bump.outputs.new_version }}
-          # Explicit base so the PR is created even when the checkout is a
-          # detached HEAD (dispatch with git_ref set to a tag or commit).
-          base: main
-          title: 'chore: release JS client v${{ steps.bump.outputs.new_version }}'
-          body: |
-            ## Summary
-            - publish-js-client workflow bumped the package to `${{ steps.bump.outputs.new_version }}`
-          labels: release
-
-  deploy_js_docs:
-    name: JS client / Deploy docs
-    if: ${{ github.event.inputs.create_release == 'true' }}
-    runs-on: ubuntu-latest
-    needs: publish_js
-    environment:
-      name: js-client-documentation
-      url: ${{ steps.deploy.outputs.url }}
-    steps:
-      - name: Git checkout
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.git_ref || github.ref }}
-          persist-credentials: false
-
-      - name: Load environment variables
-        run: cat .github/.env >> $GITHUB_ENV
-
-      - name: Deploy to Vercel
-        id: deploy
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        working-directory: ./clients/js
-        run: echo "url=$(vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }})" | tee $GITHUB_OUTPUT
+    secrets:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    with:
+      git_ref: ${{ needs.check_tag.outputs.sha }}
+      bump: ${{ inputs.bump }}
+      tag: ${{ inputs.tag }}
+      create_release: ${{ inputs.create_release }}
+      deploy_docs: true

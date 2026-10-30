@@ -1,0 +1,25 @@
+name: Release JS Client
+
+# Tags and releases the JS client once the pull request opened by
+# publish-js-client is merged.
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+permissions: {}
+
+jobs:
+  release:
+    name: JS client
+    if: |
+      github.event.pull_request.merged == true
+      && startsWith(github.event.pull_request.head.ref, 'release/js-client-')
+      && github.event.pull_request.head.repo.full_name == github.repository
+    uses: metaplex-foundation/actions/.github/workflows/release-js-client.yml@7f55495a7da7c3c1884845f75341dd5032a84139 # v2.0.0
+    permissions:
+      contents: write
+    with:
+      merge_commit_sha: ${{ github.event.pull_request.merge_commit_sha }}
+      head_ref: ${{ github.event.pull_request.head.ref }}

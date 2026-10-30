@@ -1,0 +1,10 @@
+version: 2
+updates:
+  # Shared CI workflows and third-party actions are SHA-pinned; keep them current.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ['*']

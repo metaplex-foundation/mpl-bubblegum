@@ -1,0 +1,67 @@
+name: Publish Rust Client
+
+run-name: Publish Rust Client (${{ inputs.level }}${{ inputs.dry_run && ', dry run' || '' }})
+
+on:
+  workflow_dispatch:
+    inputs:
+      level:
+        description: Level
+        required: true
+        default: patch
+        type: choice
+        options: [patch, minor, major, rc, beta, alpha, release, version]
+      version:
+        description: Version (when level is `version`)
+        required: false
+        type: string
+      dry_run:
+        description: Dry run
+        required: true
+        default: true
+        type: boolean
+
+permissions: {}
+
+concurrency:
+  # One Rust publish per crate at a time.
+  group: publish-rust-client
+  cancel-in-progress: false
+
+jobs:
+  build_programs:
+    name: Programs
+    uses: metaplex-foundation/actions/.github/workflows/build-programs.yml@7f55495a7da7c3c1884845f75341dd5032a84139 # v2.0.0
+    permissions:
+      contents: read
+
+  build_rust_client:
+    name: Rust client
+    uses: metaplex-foundation/actions/.github/workflows/build-rust-client.yml@7f55495a7da7c3c1884845f75341dd5032a84139 # v2.0.0
+    permissions:
+      contents: read
+    with:
+      features: --all-features
+
+  test_rust_client:
+    name: Rust client
+    needs: [build_programs, build_rust_client]
+    uses: metaplex-foundation/actions/.github/workflows/test-rust-client.yml@7f55495a7da7c3c1884845f75341dd5032a84139 # v2.0.0
+    permissions:
+      contents: read
+    with:
+      runner: ubuntu-latest-16-cores
+
+  publish:
+    name: Rust client
+    needs: test_rust_client
+    uses: metaplex-foundation/actions/.github/workflows/publish-rust-client.yml@7f55495a7da7c3c1884845f75341dd5032a84139 # v2.0.0
+    permissions:
+      contents: write
+      pull-requests: write
+    secrets:
+      CRATES_TOKEN: ${{ secrets.CRATES_TOKEN }}
+    with:
+      level: ${{ inputs.level }}
+      version: ${{ inputs.version }}
+      dry_run: ${{ inputs.dry_run }}

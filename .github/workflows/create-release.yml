@@ -1,161 +1,119 @@
 name: Create release
 
 on:
-  workflow_call:
+  workflow_dispatch:
     inputs:
       program:
         description: Program
         required: true
         default: bubblegum
-        type: string
-      type:
-        description: Type of release
-        required: true
-        default: solana
-        type: string
+        type: choice
+        options: [bubblegum]
       bump:
-        description: Version bump (patch, minor, major)
+        description: Version bump
         required: true
         default: patch
-        type: string
+        type: choice
+        options: [patch, minor, major]
+      type:
+        description: Release type
+        required: true
+        default: solana
+        type: choice
+        options: [solana, svm, commit]
       git_ref:
-        description: Commit hash or branch to create release
+        description: Commit hash or branch to create the release from
         required: false
         type: string
+        default: main
 
-env:
-  CACHE: true
+permissions: {}
+
+concurrency:
+  # One release per program at a time.
+  group: create-release-${{ inputs.program }}
+  cancel-in-progress: false
 
 jobs:
+  check_tag:
+    name: Check tag
+    runs-on: ubuntu-latest
+    permissions:
+      # Resolves the ref to a commit.
+      contents: read
+    outputs:
+      sha: ${{ steps.set_type.outputs.sha }}
+    steps:
+      - name: Check tag
+        id: set_type
+        env:
+          GIT_REF: ${{ inputs.git_ref }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Resolve the branch to one commit: build, test and the release tag must
+          # all refer to the same source, even if the branch moves meanwhile.
+          if [[ "$GIT_REF" == release/*@* ]]; then
+            echo "::error::a release is cut from a commit or branch, not from the release tag '$GIT_REF'"
+            exit 1
+          fi
+          if [ -z "$GIT_REF" ]; then
+            SHA="$GITHUB_SHA"
+          else
+            SHA="$(gh api "repos/${GITHUB_REPOSITORY}/commits/${GIT_REF}" --jq .sha)" \
+              || { echo "::error::'$GIT_REF' is not a commit, branch or tag of this repository"; exit 1; }
+          fi
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "$GIT_REF -> $SHA"
+
   build_programs:
     name: Programs
-    uses: ./.github/workflows/build-programs.yml
-    secrets: inherit
+    needs: check_tag
+    uses: metaplex-foundation/actions/.github/workflows/build-programs.yml@7f55495a7da7c3c1884845f75341dd5032a84139 # v2.0.0
+    permissions:
+      contents: read
     with:
-      git_ref: ${{ inputs.git_ref }}
+      git_ref: ${{ needs.check_tag.outputs.sha }}
 
   test_programs:
     name: Programs
-    uses: ./.github/workflows/test-programs.yml
-    secrets: inherit
+    needs: [check_tag, build_programs]
+    uses: metaplex-foundation/actions/.github/workflows/test-programs.yml@7f55495a7da7c3c1884845f75341dd5032a84139 # v2.0.0
+    permissions:
+      contents: read
     with:
       program_matrix: '["${{ inputs.program }}"]'
-      git_ref: ${{ inputs.git_ref }}
+      git_ref: ${{ needs.check_tag.outputs.sha }}
+      runner: ubuntu-latest-16-cores
 
   test_js:
     name: JS client
-    needs: build_programs
-    uses: ./.github/workflows/test-js-client.yml
-    secrets: inherit
+    needs: [check_tag, build_programs]
+    uses: metaplex-foundation/actions/.github/workflows/test-js-client.yml@7f55495a7da7c3c1884845f75341dd5032a84139 # v2.0.0
+    permissions:
+      contents: read
+    secrets:
+      READ_API_RPC_DEVNET: ${{ secrets.READ_API_RPC_DEVNET }}
     with:
-      git_ref: ${{ inputs.git_ref }}
-  
+      git_ref: ${{ needs.check_tag.outputs.sha }}
+
   test_rust:
     name: Rust client
-    needs: build_programs
-    uses: ./.github/workflows/test-rust-client.yml
-    secrets: inherit
+    needs: [check_tag, build_programs]
+    uses: metaplex-foundation/actions/.github/workflows/test-rust-client.yml@7f55495a7da7c3c1884845f75341dd5032a84139 # v2.0.0
+    permissions:
+      contents: read
     with:
-      git_ref: ${{ inputs.git_ref }}
-  
+      git_ref: ${{ needs.check_tag.outputs.sha }}
+      runner: ubuntu-latest-16-cores
+
   create_release:
-    name: Create program release
-    runs-on: ubuntu-latest
-    needs: [test_js, test_rust, test_programs]
+    name: Program
+    needs: [check_tag, build_programs, test_js, test_rust, test_programs]
+    uses: metaplex-foundation/actions/.github/workflows/create-release.yml@7f55495a7da7c3c1884845f75341dd5032a84139 # v2.0.0
     permissions:
       contents: write
-    steps:  
-    - name: Git checkout
-      uses: actions/checkout@v4
-      with:
-        ref: ${{ inputs.git_ref }}
-    - name: Bump Program Version
-      run: |
-        git fetch --tags --all
-        
-        if [ "${{ inputs.type }}" == "solana" ]; then
-          TAG_NAME="release/${{ inputs.program }}"
-        elif [ "${{ inputs.type }}" == "svm" ]; then  
-          TAG_NAME="release/${{ inputs.program }}-svm"
-        elif [ "${{ inputs.type }}" == "commit" ]; then
-          COMMIT_SHORTENED=`echo ${{ inputs.git_ref }} | cut -c1-7`
-          TAG_NAME="release/${{ inputs.program }}-${COMMIT_SHORTENED}"
-        else
-          echo "Invalid type: ${{ inputs.type }}"
-          exit 1
-        fi
-        VERSION=`git tag | grep '^release/${{ inputs.program }}' | sort -t@ -k2 -V | tail -n1 | cut -d@ -f2`
-        MAJOR=`echo ${VERSION} | cut -d. -f1`
-        MINOR=`echo ${VERSION} | cut -d. -f2`
-        PATCH=`echo ${VERSION} | cut -d. -f3`
-        
-        if [ "${{ inputs.bump }}" == "major" ]; then
-            MAJOR=$((MAJOR + 1))
-            MINOR=0
-            PATCH=0
-        elif [ "${{ inputs.bump }}" == "minor" ]; then
-            MINOR=$((MINOR + 1))
-            PATCH=0
-        else
-            PATCH=$((PATCH + 1))
-        fi
-        
-        PROGRAM_VERSION="${MAJOR}.${MINOR}.${PATCH}"
-
-        echo PROGRAM_VERSION="${PROGRAM_VERSION}" >> $GITHUB_ENV
-        echo TAG_NAME="${TAG_NAME}" >> $GITHUB_ENV
-        echo COMMIT_SHORTENED="${COMMIT_SHORTENED}" >> $GITHUB_ENV
-
-    - name: Sanitize Ref
-      id: sanitize
-      shell: bash
-      run: |
-        REF="${{ inputs.git_ref }}"
-        if [ -z "$REF" ]; then
-          REF="default"
-        fi
-        SANITIZED=${REF//\//-}
-        echo "sanitized=$SANITIZED" >> "$GITHUB_OUTPUT"
-
-    - name: Download Program Builds
-      uses: actions/download-artifact@v4
-      with:
-        name: program-builds-${{ steps.sanitize.outputs.sanitized }}
-    
-    - name: Identify Program
-      run: |
-        echo PROGRAM_NAME="${{ inputs.program }}" >> $GITHUB_ENV
-
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ env.TAG_NAME }}@${{ env.PROGRAM_VERSION }}
-        release_name: ${{ env.TAG_NAME }}@${{ env.PROGRAM_VERSION }}
-        body: |
-          Release ${{ env.TAG_NAME }}@${{ env.PROGRAM_VERSION }}
-        draft: false
-        prerelease: false
-  
-    - name: Upload Release Asset
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./programs/.bin/${{ env.PROGRAM_NAME }}.so
-        asset_name: ${{ env.PROGRAM_NAME }}.so
-        asset_content_type: application/octet-stream
-
-    # - name: Update latest tag
-    #   uses: actions/github-script@v5
-    #   with:
-    #     script: |
-    #       github.rest.git.createRef({
-    #         owner: context.repo.owner,
-    #         repo: context.repo.repo,
-    #         ref: 'refs/tags/release/${{ inputs.program }}@latest',
-    #         sha: '${{ github.sha }}'
-    #       });
+    with:
+      program: ${{ inputs.program }}
+      bump: ${{ inputs.bump }}
+      type: ${{ inputs.type }}
+      git_ref: ${{ needs.check_tag.outputs.sha }}
