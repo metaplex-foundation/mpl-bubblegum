@@ -17,7 +17,7 @@ jobs:
       github.event.pull_request.merged == true
       && startsWith(github.event.pull_request.head.ref, 'release/rust-client-')
       && github.event.pull_request.head.repo.full_name == github.repository
-    uses: metaplex-foundation/actions/.github/workflows/release-rust-client.yml@759f332a0e956a796b6823d81ede32f76f71853d # v2.0.0
+    uses: metaplex-foundation/actions/.github/workflows/release-rust-client.yml@7f55495a7da7c3c1884845f75341dd5032a84139 # v2.0.0
     permissions:
       contents: write
     with:
