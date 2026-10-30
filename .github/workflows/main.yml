@@ -14,7 +14,7 @@ permissions: {}
 jobs:
   changes:
     name: Detect changes
-    uses: metaplex-foundation/actions/.github/workflows/detect-changes.yml@772e5a7cf7408fb8346dccb5665f0502c33e9dbb # v2.0.0
+    uses: metaplex-foundation/actions/.github/workflows/detect-changes.yml@089e761576b6d1d09db11a34771fab7b150c14fc # v2.0.0
     permissions:
       contents: read
       pull-requests: read
@@ -23,7 +23,7 @@ jobs:
     name: Programs
     if: needs.changes.outputs.any == 'true'
     needs: changes
-    uses: metaplex-foundation/actions/.github/workflows/build-programs.yml@772e5a7cf7408fb8346dccb5665f0502c33e9dbb # v2.0.0
+    uses: metaplex-foundation/actions/.github/workflows/build-programs.yml@089e761576b6d1d09db11a34771fab7b150c14fc # v2.0.0
     permissions:
       contents: read
 
@@ -31,7 +31,7 @@ jobs:
     name: Programs
     if: needs.changes.outputs.programs == 'true'
     needs: changes
-    uses: metaplex-foundation/actions/.github/workflows/test-programs.yml@772e5a7cf7408fb8346dccb5665f0502c33e9dbb # v2.0.0
+    uses: metaplex-foundation/actions/.github/workflows/test-programs.yml@089e761576b6d1d09db11a34771fab7b150c14fc # v2.0.0
     permissions:
       contents: read
     with:
@@ -42,7 +42,7 @@ jobs:
     name: Generate clients
     if: needs.changes.outputs.any == 'true'
     needs: [changes, build_programs]
-    uses: metaplex-foundation/actions/.github/workflows/generate-clients.yml@772e5a7cf7408fb8346dccb5665f0502c33e9dbb # v2.0.0
+    uses: metaplex-foundation/actions/.github/workflows/generate-clients.yml@089e761576b6d1d09db11a34771fab7b150c14fc # v2.0.0
     permissions:
       contents: read
 
@@ -50,7 +50,7 @@ jobs:
     name: JS Client
     if: needs.changes.outputs.js_client == 'true'
     needs: [changes, generate_clients]
-    uses: metaplex-foundation/actions/.github/workflows/test-js-client.yml@772e5a7cf7408fb8346dccb5665f0502c33e9dbb # v2.0.0
+    uses: metaplex-foundation/actions/.github/workflows/test-js-client.yml@089e761576b6d1d09db11a34771fab7b150c14fc # v2.0.0
     permissions:
       contents: read
     secrets:
@@ -60,7 +60,7 @@ jobs:
     name: Rust Client
     if: needs.changes.outputs.rust_client == 'true'
     needs: [changes, generate_clients]
-    uses: metaplex-foundation/actions/.github/workflows/build-rust-client.yml@772e5a7cf7408fb8346dccb5665f0502c33e9dbb # v2.0.0
+    uses: metaplex-foundation/actions/.github/workflows/build-rust-client.yml@089e761576b6d1d09db11a34771fab7b150c14fc # v2.0.0
     permissions:
       contents: read
 
@@ -68,7 +68,7 @@ jobs:
     name: Rust Client
     if: needs.changes.outputs.rust_client == 'true'
     needs: [changes, generate_clients]
-    uses: metaplex-foundation/actions/.github/workflows/test-rust-client.yml@772e5a7cf7408fb8346dccb5665f0502c33e9dbb # v2.0.0
+    uses: metaplex-foundation/actions/.github/workflows/test-rust-client.yml@089e761576b6d1d09db11a34771fab7b150c14fc # v2.0.0
     permissions:
       contents: read
     with:
