@@ -35,53 +35,97 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  check_tag:
+    name: Check tag
+    runs-on: ubuntu-latest
+    permissions:
+      # Confirms the release tag exists and resolves the ref to a commit.
+      contents: read
+    outputs:
+      type: ${{ steps.set_type.outputs.type }}
+      sha: ${{ steps.set_type.outputs.sha }}
+    steps:
+      - name: Check tag
+        id: set_type
+        env:
+          GIT_REF: ${{ inputs.git_ref }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Resolve the branch to one commit: build, test and the release tag must
+          # all refer to the same source, even if the branch moves meanwhile.
+          if [[ "$GIT_REF" == release/*@* ]]; then
+            echo "::error::a release is cut from a commit or branch, not from the release tag '$GIT_REF'"
+            exit 1
+          fi
+          TYPE=ref
+          if [ "$TYPE" = release ]; then
+            # Only an existing tag skips build and test; a branch named like one does not.
+            OBJ="$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${GIT_REF}" --jq '.object.type + " " + .object.sha')" \
+              || { echo "::error::'$GIT_REF' is not an existing tag of this repository"; exit 1; }
+            read -r OBJ_TYPE SHA <<< "$OBJ"
+            if [ "$OBJ_TYPE" = tag ]; then
+              # Annotated tag: follow it to the commit.
+              SHA="$(gh api "repos/${GITHUB_REPOSITORY}/git/tags/${SHA}" --jq .object.sha)"
+            fi
+          elif [ -z "$GIT_REF" ]; then
+            SHA="$GITHUB_SHA"
+          else
+            SHA="$(gh api "repos/${GITHUB_REPOSITORY}/commits/${GIT_REF}" --jq .sha)" \
+              || { echo "::error::'$GIT_REF' is not a commit, branch or tag of this repository"; exit 1; }
+          fi
+          echo "type=$TYPE" >> "$GITHUB_OUTPUT"
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "$GIT_REF -> $SHA ($TYPE)"
+
   build_programs:
     name: Programs
-    uses: metaplex-foundation/actions/.github/workflows/build-programs.yml@da62cf9659efdd4e28daa0c777535ea5f54ab53a # v2.0.0
+    needs: check_tag
+    uses: metaplex-foundation/actions/.github/workflows/build-programs.yml@6064713458c329034014d12f2f27488b592ad8a4 # v2.0.0
     permissions:
       contents: read
     with:
-      git_ref: ${{ inputs.git_ref }}
+      git_ref: ${{ needs.check_tag.outputs.sha }}
 
   test_programs:
     name: Programs
-    uses: metaplex-foundation/actions/.github/workflows/test-programs.yml@da62cf9659efdd4e28daa0c777535ea5f54ab53a # v2.0.0
+    needs: [check_tag, build_programs]
+    uses: metaplex-foundation/actions/.github/workflows/test-programs.yml@6064713458c329034014d12f2f27488b592ad8a4 # v2.0.0
     permissions:
       contents: read
     with:
       program_matrix: '["${{ inputs.program }}"]'
-      git_ref: ${{ inputs.git_ref }}
+      git_ref: ${{ needs.check_tag.outputs.sha }}
       runner: ubuntu-latest-16-cores
 
   test_js:
     name: JS client
-    needs: build_programs
-    uses: metaplex-foundation/actions/.github/workflows/test-js-client.yml@da62cf9659efdd4e28daa0c777535ea5f54ab53a # v2.0.0
+    needs: [check_tag, build_programs]
+    uses: metaplex-foundation/actions/.github/workflows/test-js-client.yml@6064713458c329034014d12f2f27488b592ad8a4 # v2.0.0
     permissions:
       contents: read
     secrets:
       READ_API_RPC_DEVNET: ${{ secrets.READ_API_RPC_DEVNET }}
     with:
-      git_ref: ${{ inputs.git_ref }}
+      git_ref: ${{ needs.check_tag.outputs.sha }}
 
   test_rust:
     name: Rust client
-    needs: build_programs
-    uses: metaplex-foundation/actions/.github/workflows/test-rust-client.yml@da62cf9659efdd4e28daa0c777535ea5f54ab53a # v2.0.0
+    needs: [check_tag, build_programs]
+    uses: metaplex-foundation/actions/.github/workflows/test-rust-client.yml@6064713458c329034014d12f2f27488b592ad8a4 # v2.0.0
     permissions:
       contents: read
     with:
-      git_ref: ${{ inputs.git_ref }}
+      git_ref: ${{ needs.check_tag.outputs.sha }}
       runner: ubuntu-latest-16-cores
 
   create_release:
     name: Program
-    needs: [build_programs, test_js, test_rust, test_programs]
-    uses: metaplex-foundation/actions/.github/workflows/create-release.yml@da62cf9659efdd4e28daa0c777535ea5f54ab53a # v2.0.0
+    needs: [check_tag, build_programs, test_js, test_rust, test_programs]
+    uses: metaplex-foundation/actions/.github/workflows/create-release.yml@6064713458c329034014d12f2f27488b592ad8a4 # v2.0.0
     permissions:
       contents: write
     with:
       program: ${{ inputs.program }}
       bump: ${{ inputs.bump }}
       type: ${{ inputs.type }}
-      git_ref: ${{ inputs.git_ref }}
+      git_ref: ${{ needs.check_tag.outputs.sha }}

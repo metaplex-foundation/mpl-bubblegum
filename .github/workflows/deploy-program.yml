@@ -44,10 +44,11 @@ jobs:
     name: Check tag
     runs-on: ubuntu-latest
     permissions:
-      # Confirms the release tag exists.
+      # Confirms the release tag exists and resolves the ref to a commit.
       contents: read
     outputs:
       type: ${{ steps.set_type.outputs.type }}
+      sha: ${{ steps.set_type.outputs.sha }}
     steps:
       - name: Check tag
         id: set_type
@@ -73,54 +74,66 @@ jobs:
           fi
           if [ "$TYPE" = release ]; then
             # Only an existing tag skips build and test; a branch named like one does not.
-            gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${GIT_REF}" --silent \
+            OBJ="$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${GIT_REF}" --jq '.object.type + " " + .object.sha')" \
               || { echo "::error::'$GIT_REF' is not an existing tag of this repository"; exit 1; }
+            read -r OBJ_TYPE SHA <<< "$OBJ"
+            if [ "$OBJ_TYPE" = tag ]; then
+              # Annotated tag: follow it to the commit.
+              SHA="$(gh api "repos/${GITHUB_REPOSITORY}/git/tags/${SHA}" --jq .object.sha)"
+            fi
+          elif [ -z "$GIT_REF" ]; then
+            SHA="$GITHUB_SHA"
+          else
+            SHA="$(gh api "repos/${GITHUB_REPOSITORY}/commits/${GIT_REF}" --jq .sha)" \
+              || { echo "::error::'$GIT_REF' is not a commit, branch or tag of this repository"; exit 1; }
           fi
           echo "type=$TYPE" >> "$GITHUB_OUTPUT"
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "$GIT_REF -> $SHA ($TYPE)"
 
   build_programs:
     name: Programs
     if: needs.check_tag.outputs.type == 'ref'
     needs: check_tag
-    uses: metaplex-foundation/actions/.github/workflows/build-programs.yml@da62cf9659efdd4e28daa0c777535ea5f54ab53a # v2.0.0
+    uses: metaplex-foundation/actions/.github/workflows/build-programs.yml@6064713458c329034014d12f2f27488b592ad8a4 # v2.0.0
     permissions:
       contents: read
     with:
-      git_ref: ${{ inputs.git_ref }}
+      git_ref: ${{ needs.check_tag.outputs.sha }}
 
   test_programs:
     name: Programs
     if: needs.check_tag.outputs.type == 'ref'
     needs: [check_tag, build_programs]
-    uses: metaplex-foundation/actions/.github/workflows/test-programs.yml@da62cf9659efdd4e28daa0c777535ea5f54ab53a # v2.0.0
+    uses: metaplex-foundation/actions/.github/workflows/test-programs.yml@6064713458c329034014d12f2f27488b592ad8a4 # v2.0.0
     permissions:
       contents: read
     with:
       program_matrix: '["${{ inputs.program }}"]'
-      git_ref: ${{ inputs.git_ref }}
+      git_ref: ${{ needs.check_tag.outputs.sha }}
       runner: ubuntu-latest-16-cores
 
   test_js:
     name: JS client
     if: needs.check_tag.outputs.type == 'ref'
     needs: [check_tag, build_programs]
-    uses: metaplex-foundation/actions/.github/workflows/test-js-client.yml@da62cf9659efdd4e28daa0c777535ea5f54ab53a # v2.0.0
+    uses: metaplex-foundation/actions/.github/workflows/test-js-client.yml@6064713458c329034014d12f2f27488b592ad8a4 # v2.0.0
     permissions:
       contents: read
     secrets:
       READ_API_RPC_DEVNET: ${{ secrets.READ_API_RPC_DEVNET }}
     with:
-      git_ref: ${{ inputs.git_ref }}
+      git_ref: ${{ needs.check_tag.outputs.sha }}
 
   test_rust:
     name: Rust client
     if: needs.check_tag.outputs.type == 'ref'
     needs: [check_tag, build_programs]
-    uses: metaplex-foundation/actions/.github/workflows/test-rust-client.yml@da62cf9659efdd4e28daa0c777535ea5f54ab53a # v2.0.0
+    uses: metaplex-foundation/actions/.github/workflows/test-rust-client.yml@6064713458c329034014d12f2f27488b592ad8a4 # v2.0.0
     permissions:
       contents: read
     with:
-      git_ref: ${{ inputs.git_ref }}
+      git_ref: ${{ needs.check_tag.outputs.sha }}
       runner: ubuntu-latest-16-cores
 
   deploy:
@@ -134,7 +147,7 @@ jobs:
           && needs.test_programs.result == 'success'
           && needs.test_rust.result == 'success'))
     needs: [check_tag, build_programs, test_js, test_programs, test_rust]
-    uses: metaplex-foundation/actions/.github/workflows/deploy-program.yml@da62cf9659efdd4e28daa0c777535ea5f54ab53a # v2.0.0
+    uses: metaplex-foundation/actions/.github/workflows/deploy-program.yml@6064713458c329034014d12f2f27488b592ad8a4 # v2.0.0
     permissions:
       contents: write
     # GitHub Actions cannot look secrets up by a computed name, so the
@@ -157,5 +170,6 @@ jobs:
     with:
       program: ${{ inputs.program }}
       cluster: ${{ inputs.cluster }}
-      git_ref: ${{ inputs.git_ref }}
+      git_ref: ${{ needs.check_tag.outputs.sha }}
+      release_tag: ${{ needs.check_tag.outputs.type == 'release' && inputs.git_ref || '' }}
       dry_run: ${{ inputs.dry_run }}

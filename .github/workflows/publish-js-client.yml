@@ -20,7 +20,7 @@ on:
         type: string
         default: latest
       create_release:
-        description: Open the release pull request
+        description: Open the release pull request and deploy docs
         required: true
         type: boolean
         default: true
@@ -37,10 +37,11 @@ jobs:
     name: Check tag
     runs-on: ubuntu-latest
     permissions:
-      # Confirms the release tag exists.
+      # Confirms the release tag exists and resolves the ref to a commit.
       contents: read
     outputs:
       type: ${{ steps.set_type.outputs.type }}
+      sha: ${{ steps.set_type.outputs.sha }}
     steps:
       - name: Check tag
         id: set_type
@@ -56,32 +57,44 @@ jobs:
           esac
           if [ "$TYPE" = release ]; then
             # Only an existing tag skips build and test; a branch named like one does not.
-            gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${GIT_REF}" --silent \
+            OBJ="$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${GIT_REF}" --jq '.object.type + " " + .object.sha')" \
               || { echo "::error::'$GIT_REF' is not an existing tag of this repository"; exit 1; }
+            read -r OBJ_TYPE SHA <<< "$OBJ"
+            if [ "$OBJ_TYPE" = tag ]; then
+              # Annotated tag: follow it to the commit.
+              SHA="$(gh api "repos/${GITHUB_REPOSITORY}/git/tags/${SHA}" --jq .object.sha)"
+            fi
+          elif [ -z "$GIT_REF" ]; then
+            SHA="$GITHUB_SHA"
+          else
+            SHA="$(gh api "repos/${GITHUB_REPOSITORY}/commits/${GIT_REF}" --jq .sha)" \
+              || { echo "::error::'$GIT_REF' is not a commit, branch or tag of this repository"; exit 1; }
           fi
           echo "type=$TYPE" >> "$GITHUB_OUTPUT"
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "$GIT_REF -> $SHA ($TYPE)"
 
   build_programs:
     name: Programs
     if: needs.check_tag.outputs.type == 'ref'
     needs: check_tag
-    uses: metaplex-foundation/actions/.github/workflows/build-programs.yml@da62cf9659efdd4e28daa0c777535ea5f54ab53a # v2.0.0
+    uses: metaplex-foundation/actions/.github/workflows/build-programs.yml@6064713458c329034014d12f2f27488b592ad8a4 # v2.0.0
     permissions:
       contents: read
     with:
-      git_ref: ${{ inputs.git_ref }}
+      git_ref: ${{ needs.check_tag.outputs.sha }}
 
   test_js:
     name: JS client
     if: needs.check_tag.outputs.type == 'ref'
     needs: [check_tag, build_programs]
-    uses: metaplex-foundation/actions/.github/workflows/test-js-client.yml@da62cf9659efdd4e28daa0c777535ea5f54ab53a # v2.0.0
+    uses: metaplex-foundation/actions/.github/workflows/test-js-client.yml@6064713458c329034014d12f2f27488b592ad8a4 # v2.0.0
     permissions:
       contents: read
     secrets:
       READ_API_RPC_DEVNET: ${{ secrets.READ_API_RPC_DEVNET }}
     with:
-      git_ref: ${{ inputs.git_ref }}
+      git_ref: ${{ needs.check_tag.outputs.sha }}
 
   publish:
     name: JS client
@@ -92,13 +105,18 @@ jobs:
           || (needs.build_programs.result == 'success'
           && needs.test_js.result == 'success'))
     needs: [check_tag, build_programs, test_js]
-    uses: metaplex-foundation/actions/.github/workflows/publish-js-client.yml@da62cf9659efdd4e28daa0c777535ea5f54ab53a # v2.0.0
+    uses: metaplex-foundation/actions/.github/workflows/publish-js-client.yml@6064713458c329034014d12f2f27488b592ad8a4 # v2.0.0
     permissions:
       contents: write
       pull-requests: write
       id-token: write
+    secrets:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
     with:
-      git_ref: ${{ inputs.git_ref }}
+      git_ref: ${{ needs.check_tag.outputs.sha }}
       bump: ${{ inputs.bump }}
       tag: ${{ inputs.tag }}
       create_release: ${{ inputs.create_release }}
+      deploy_docs: true
