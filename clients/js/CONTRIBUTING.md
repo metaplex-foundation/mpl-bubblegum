@@ -52,9 +52,21 @@ For this to work, some initial setup is required on the repository as explained 
 
 ## Setting up GitHub actions
 
+The publish workflow authenticates to NPM with [trusted publishing](https://docs.npmjs.com/trusted-publishers)
+rather than a long-lived token: it requests an OIDC token from GitHub (`id-token: write`) and
+publishes with `npm` 11.5.1 or newer, so no `NPM_TOKEN` secret is read or needed.
+
+To enable it, on npmjs.com open the `@metaplex-foundation/mpl-bubblegum` package settings and add a GitHub Actions
+trusted publisher for this repository with the workflow filename `publish-js-client.yml` (the
+filename alone, not its path). Under allowed actions, permit direct publishing with `npm publish`:
+a publisher created after September 2026 allows only `npm stage publish` by default, and the
+workflow runs `npm publish`. The npm account performing that setup must be able to publish the
+package, and the publisher must complete its first publish within two days of being created.
+The release pull request the workflow opens afterwards needs "Allow GitHub Actions to create and
+approve pull requests" enabled under the repository's Actions settings.
+
 To deploy JavaScript clients using GitHub actions, we first need the following secret variables to be set up on the repository.
 
-- `NPM_TOKEN` — An access token that can publish your packages to NPM.
 - `VERCEL_TOKEN` — An access token that can deploy to Vercel.
 - `VERCEL_ORG_ID` — The ID of the Vercel organization you want to deploy to.
 
