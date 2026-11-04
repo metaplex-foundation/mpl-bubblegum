@@ -1,5 +1,5 @@
 use anchor_lang::{prelude::*, system_program::System};
-use bytemuck::cast_slice;
+use bytemuck::try_cast_slice;
 use mpl_account_compression::{program::MplAccountCompression, Noop as MplNoop};
 use spl_account_compression::{
     program::SplAccountCompression,
@@ -157,21 +157,46 @@ fn check_canopy_size(
     max_depth: u32,
     max_buffer_size: u32,
 ) -> Result<()> {
+    check_canopy_size_at_slot(
+        &merkle_tree_bytes,
+        tree_authority,
+        max_depth,
+        max_buffer_size,
+        Clock::get()?.slot,
+    )
+}
+
+fn check_canopy_size_at_slot(
+    merkle_tree_bytes: &[u8],
+    tree_authority: Pubkey,
+    max_depth: u32,
+    max_buffer_size: u32,
+    slot: u64,
+) -> Result<()> {
+    // The account must be large enough to hold the header.
+    require!(
+        merkle_tree_bytes.len() >= CONCURRENT_MERKLE_TREE_HEADER_SIZE_V1,
+        BubblegumError::InvalidCanopySize
+    );
+
     let (header_bytes, rest) = merkle_tree_bytes.split_at(CONCURRENT_MERKLE_TREE_HEADER_SIZE_V1);
 
     let mut header = ConcurrentMerkleTreeHeader::try_from_slice(header_bytes)?;
-    header.initialize(
-        max_depth,
-        max_buffer_size,
-        &tree_authority,
-        Clock::get()?.slot,
-    );
+    header.initialize(max_depth, max_buffer_size, &tree_authority, slot);
 
     let merkle_tree_size = merkle_tree_get_size(&header)?;
 
+    // The account must be large enough to hold the tree after the header.
+    require!(
+        rest.len() >= merkle_tree_size,
+        BubblegumError::InvalidCanopySize
+    );
+
     let (_tree_bytes, canopy_bytes) = rest.split_at(merkle_tree_size);
 
-    let canopy = cast_slice::<u8, Node>(canopy_bytes);
+    // The canopy must be made of whole nodes.
+    let canopy = try_cast_slice::<u8, Node>(canopy_bytes)
+        .map_err(|_| error!(BubblegumError::InvalidCanopySize))?;
 
     let cached_path_len = get_cached_path_length(canopy, max_depth)?;
 
@@ -213,4 +238,60 @@ fn get_cached_path_length(canopy: &[Node], max_depth: u32) -> Result<u32> {
     }
     // 1 is subtracted from the trailing zeros because the root is not stored in the canopy
     Ok(closest_power_of_2.trailing_zeros() - 1)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use spl_account_compression::ConcurrentMerkleTree;
+    use std::mem::size_of;
+
+    const MAX_DEPTH: u32 = 14;
+    const MAX_BUFFER_SIZE: u32 = 64;
+    const TREE_SIZE: usize = size_of::<ConcurrentMerkleTree<14, 64>>();
+
+    fn check(account_size: usize) -> Result<()> {
+        check_canopy_size_at_slot(
+            &vec![0u8; account_size],
+            Pubkey::new_unique(),
+            MAX_DEPTH,
+            MAX_BUFFER_SIZE,
+            0,
+        )
+    }
+
+    fn assert_invalid_canopy_size(result: Result<()>) {
+        assert_eq!(
+            result.unwrap_err(),
+            BubblegumError::InvalidCanopySize.into()
+        );
+    }
+
+    #[test]
+    fn canopy_check_passes_for_well_formed_account() {
+        // No canopy.
+        check(CONCURRENT_MERKLE_TREE_HEADER_SIZE_V1 + TREE_SIZE).unwrap();
+        // Canopy depth of 1 (2 nodes).
+        check(CONCURRENT_MERKLE_TREE_HEADER_SIZE_V1 + TREE_SIZE + 2 * size_of::<Node>()).unwrap();
+    }
+
+    #[test]
+    fn canopy_check_fails_for_account_smaller_than_header() {
+        assert_invalid_canopy_size(check(0));
+        assert_invalid_canopy_size(check(CONCURRENT_MERKLE_TREE_HEADER_SIZE_V1 - 1));
+    }
+
+    #[test]
+    fn canopy_check_fails_for_account_smaller_than_tree() {
+        assert_invalid_canopy_size(check(CONCURRENT_MERKLE_TREE_HEADER_SIZE_V1));
+        assert_invalid_canopy_size(check(CONCURRENT_MERKLE_TREE_HEADER_SIZE_V1 + TREE_SIZE - 1));
+    }
+
+    #[test]
+    fn canopy_check_fails_for_canopy_not_made_of_whole_nodes() {
+        assert_invalid_canopy_size(check(CONCURRENT_MERKLE_TREE_HEADER_SIZE_V1 + TREE_SIZE + 1));
+        assert_invalid_canopy_size(check(
+            CONCURRENT_MERKLE_TREE_HEADER_SIZE_V1 + TREE_SIZE + 2 * size_of::<Node>() - 1,
+        ));
+    }
 }
