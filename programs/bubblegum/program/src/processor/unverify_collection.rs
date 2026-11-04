@@ -3,6 +3,7 @@ use anchor_lang::prelude::*;
 use crate::{
     processor::{process_collection_verification, verify_collection::CollectionVerification},
     state::metaplex_adapter::MetadataArgs,
+    utils::validate_ownership_and_programs,
 };
 
 pub(crate) fn unverify_collection<'info>(
@@ -14,6 +15,12 @@ pub(crate) fn unverify_collection<'info>(
     index: u32,
     message: MetadataArgs,
 ) -> Result<()> {
+    validate_ownership_and_programs(
+        &ctx.accounts.merkle_tree,
+        &ctx.accounts.log_wrapper,
+        &ctx.accounts.compression_program,
+    )?;
+
     process_collection_verification(
         ctx,
         root,

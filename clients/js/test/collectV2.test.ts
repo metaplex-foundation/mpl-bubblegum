@@ -3,6 +3,7 @@ import {
   publicKey,
   sol,
   addAmounts,
+  lamports,
 } from '@metaplex-foundation/umi';
 import test from 'ava';
 import { collectV2, findTreeConfigPda } from '../src';
@@ -26,8 +27,8 @@ test('it can mint a compressed NFT and collect', async (t) => {
 
   // The tree config has the rent amount.
   let treeConfigBalance = await umi.rpc.getBalance(treeConfig);
-  const rentAmount = 0.00155904;
-  t.deepEqual(treeConfigBalance, sol(rentAmount));
+  const rentAmount = sol(0.00155904);
+  t.deepEqual(treeConfigBalance, rentAmount);
 
   // When we mint a new NFT from the tree.
   const leafOwnerA = generateSigner(umi);
@@ -48,8 +49,8 @@ test('it can mint a compressed NFT and collect', async (t) => {
 
   // And tree config has the `mintV2` fee added.
   treeConfigBalance = await umi.rpc.getBalance(treeConfig);
-  let collectAmount = 0.00009;
-  t.deepEqual(treeConfigBalance, sol(rentAmount + collectAmount));
+  let collectAmount = lamports(900);
+  t.deepEqual(treeConfigBalance, addAmounts(rentAmount, collectAmount));
 
   // When leafOwnerA transfers the NFT to leafOwnerB.
   const leafOwnerB = generateSigner(umi);
@@ -78,8 +79,8 @@ test('it can mint a compressed NFT and collect', async (t) => {
 
   // And tree config has the `transferV2` fee added.
   treeConfigBalance = await umi.rpc.getBalance(treeConfig);
-  collectAmount = collectAmount + 0.000006;
-  t.deepEqual(treeConfigBalance, sol(rentAmount + collectAmount));
+  collectAmount = addAmounts(collectAmount, lamports(60));
+  t.deepEqual(treeConfigBalance, addAmounts(rentAmount, collectAmount));
 
   // When the destination account is airdropped the exact rent amount.
   const destination = publicKey('2dgJVPC5fjLTBTmMvKDRig9JJUGK2Fgwr3EHShFxckhv');
@@ -91,12 +92,12 @@ test('it can mint a compressed NFT and collect', async (t) => {
 
   // Then the tree config has only the rent amount.
   treeConfigBalance = await umi.rpc.getBalance(treeConfig);
-  t.deepEqual(treeConfigBalance, sol(rentAmount));
+  t.deepEqual(treeConfigBalance, rentAmount);
 
   // And the destination has the fee amount.
   const destinationBalance = await umi.rpc.getBalance(destination);
   t.deepEqual(
     destinationBalance,
-    addAmounts(originalDestinationBalance, sol(collectAmount))
+    addAmounts(originalDestinationBalance, collectAmount)
   );
 });

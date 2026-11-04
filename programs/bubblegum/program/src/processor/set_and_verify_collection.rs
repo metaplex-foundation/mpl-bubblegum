@@ -4,6 +4,7 @@ use crate::{
     error::BubblegumError,
     processor::{process_collection_verification, verify_collection::CollectionVerification},
     state::metaplex_adapter::MetadataArgs,
+    utils::validate_ownership_and_programs,
 };
 
 pub(crate) fn set_and_verify_collection<'info>(
@@ -16,6 +17,12 @@ pub(crate) fn set_and_verify_collection<'info>(
     message: MetadataArgs,
     collection: Pubkey,
 ) -> Result<()> {
+    validate_ownership_and_programs(
+        &ctx.accounts.merkle_tree,
+        &ctx.accounts.log_wrapper,
+        &ctx.accounts.compression_program,
+    )?;
+
     let incoming_tree_delegate = &ctx.accounts.tree_delegate;
     let tree_creator = ctx.accounts.tree_authority.tree_creator;
     let tree_delegate = ctx.accounts.tree_authority.tree_delegate;
