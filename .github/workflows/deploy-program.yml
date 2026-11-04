@@ -95,7 +95,7 @@ jobs:
     name: Programs
     if: needs.check_tag.outputs.type == 'ref'
     needs: check_tag
-    uses: metaplex-foundation/actions/.github/workflows/build-programs.yml@8fcadb6df757cba34aa8475373886eca9b6ce8cf # v2.0.1
+    uses: metaplex-foundation/actions/.github/workflows/build-programs.yml@7f7eb6c041079973a7b2d743b174fc5d070f89f3 # ci/faster-ci, v2.1.0 candidate
     permissions:
       contents: read
     with:
@@ -105,7 +105,7 @@ jobs:
     name: Programs
     if: needs.check_tag.outputs.type == 'ref'
     needs: [check_tag, build_programs]
-    uses: metaplex-foundation/actions/.github/workflows/test-programs.yml@8fcadb6df757cba34aa8475373886eca9b6ce8cf # v2.0.1
+    uses: metaplex-foundation/actions/.github/workflows/test-programs.yml@7f7eb6c041079973a7b2d743b174fc5d070f89f3 # ci/faster-ci, v2.1.0 candidate
     permissions:
       contents: read
     with:
@@ -117,7 +117,7 @@ jobs:
     name: JS client
     if: needs.check_tag.outputs.type == 'ref'
     needs: [check_tag, build_programs]
-    uses: metaplex-foundation/actions/.github/workflows/test-js-client.yml@8fcadb6df757cba34aa8475373886eca9b6ce8cf # v2.0.1
+    uses: metaplex-foundation/actions/.github/workflows/test-js-client.yml@7f7eb6c041079973a7b2d743b174fc5d070f89f3 # ci/faster-ci, v2.1.0 candidate
     permissions:
       contents: read
     secrets:
@@ -129,11 +129,12 @@ jobs:
     name: Rust client
     if: needs.check_tag.outputs.type == 'ref'
     needs: [check_tag, build_programs]
-    uses: metaplex-foundation/actions/.github/workflows/test-rust-client.yml@8fcadb6df757cba34aa8475373886eca9b6ce8cf # v2.0.1
+    uses: metaplex-foundation/actions/.github/workflows/test-rust-client.yml@7f7eb6c041079973a7b2d743b174fc5d070f89f3 # ci/faster-ci, v2.1.0 candidate
     permissions:
       contents: read
     with:
       git_ref: ${{ needs.check_tag.outputs.sha }}
+      features: --all-features
       runner: ubuntu-latest-16-cores
 
   deploy:
@@ -147,7 +148,7 @@ jobs:
           && needs.test_programs.result == 'success'
           && needs.test_rust.result == 'success'))
     needs: [check_tag, build_programs, test_js, test_programs, test_rust]
-    uses: metaplex-foundation/actions/.github/workflows/deploy-program.yml@8fcadb6df757cba34aa8475373886eca9b6ce8cf # v2.0.1
+    uses: metaplex-foundation/actions/.github/workflows/deploy-program.yml@7f7eb6c041079973a7b2d743b174fc5d070f89f3 # ci/faster-ci, v2.1.0 candidate
     permissions:
       contents: write
     # GitHub Actions cannot look secrets up by a computed name, so the
