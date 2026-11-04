@@ -108,45 +108,56 @@ export async function parseLeafFromMintV2Transaction(
     (ix) => transaction.message.accounts[ix.programIndex] === bubblegumProgramId
   );
 
-  if (instructionIndex === -1) {
-    throw new Error('Could not find mplBubblegum instruction');
-  }
-
-  const instruction = transaction.message.instructions[instructionIndex];
-
-  if (instruction.accountIndexes.length <= 7) {
-    throw new Error(
-      'Instruction does not have a collection account at index 7'
-    );
-  }
-
-  // Read the collection account from account index 7.
-  const collectionIndex = instruction.accountIndexes[7];
-  const collection = transaction.message.accounts[collectionIndex];
-
-  if (!collection) {
-    throw new Error('Collection account at index 7 is missing');
-  }
-
-  // Use index 0 or 1 into the inner instructions depending on whether the collection is set to the
-  // Bubblegum program ID.
-  const innerInstructionIndex = collection === bubblegumProgramId ? 0 : 1;
-
-  // Find the inner instruction group corresponding to the Bubblegum outer instruction.
   const innerInstructions = transaction.meta?.innerInstructions;
-  if (innerInstructions) {
-    const inner = innerInstructions.find((ix) => ix.index === instructionIndex);
 
-    if (!inner || !inner.instructions[innerInstructionIndex]) {
-      throw new Error('Could not find matching inner instruction');
+  // Direct path: bubblegum is a top-level instruction
+  if (instructionIndex !== -1 && innerInstructions) {
+    const instruction = transaction.message.instructions[instructionIndex];
+
+    if (instruction.accountIndexes.length > 7) {
+      const collectionIndex = instruction.accountIndexes[7];
+      const collection = transaction.message.accounts[collectionIndex];
+
+      if (collection) {
+        const innerInstructionIndex = collection === bubblegumProgramId ? 0 : 1;
+        const inner = innerInstructions.find(
+          (ix) => ix.index === instructionIndex
+        );
+
+        if (inner?.instructions[innerInstructionIndex]) {
+          const leaf = getLeafSchemaSerializer().deserialize(
+            inner.instructions[innerInstructionIndex].data.slice(8)
+          );
+          return leaf[0];
+        }
+      }
     }
+  }
 
-    const instructionData = inner.instructions[innerInstructionIndex].data;
-    const leaf = getLeafSchemaSerializer().deserialize(
-      instructionData.slice(8) // Skip the 8-byte discriminator
+  // Fallback: bubblegum was called via CPI (e.g., mpl-core execute).
+  // Scan all inner instructions for leaf schema data.
+  if (innerInstructions) {
+    const allInnerIxs = innerInstructions.flatMap(
+      (group) => group.instructions
     );
+    const leafIx = allInnerIxs.find((ix) => {
+      try {
+        if (ix.data.length >= 9) {
+          getLeafSchemaSerializer().deserialize(ix.data.slice(8));
+          return true;
+        }
+      } catch {
+        // Not a leaf instruction
+      }
+      return false;
+    });
 
-    return leaf[0];
+    if (leafIx) {
+      const [leaf] = getLeafSchemaSerializer().deserialize(
+        leafIx.data.slice(8)
+      );
+      return leaf;
+    }
   }
 
   throw new Error('Could not parse leaf from transaction');
