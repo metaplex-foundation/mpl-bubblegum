@@ -25,7 +25,7 @@ permissions: {}
 jobs:
   verify:
     name: Program
-    uses: metaplex-foundation/actions/.github/workflows/verify-program.yml@7f7eb6c041079973a7b2d743b174fc5d070f89f3 # ci/faster-ci, v2.1.0 candidate
+    uses: metaplex-foundation/actions/.github/workflows/verify-program.yml@b7f2319cc97d9c8c052f24be1a709c88961dc1a8 # ci/faster-ci, v2.1.0 candidate
     permissions:
       contents: read
     secrets:

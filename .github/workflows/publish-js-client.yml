@@ -78,7 +78,7 @@ jobs:
     name: Programs
     if: needs.check_tag.outputs.type == 'ref'
     needs: check_tag
-    uses: metaplex-foundation/actions/.github/workflows/build-programs.yml@7f7eb6c041079973a7b2d743b174fc5d070f89f3 # ci/faster-ci, v2.1.0 candidate
+    uses: metaplex-foundation/actions/.github/workflows/build-programs.yml@b7f2319cc97d9c8c052f24be1a709c88961dc1a8 # ci/faster-ci, v2.1.0 candidate
     permissions:
       contents: read
     with:
@@ -88,7 +88,7 @@ jobs:
     name: JS client
     if: needs.check_tag.outputs.type == 'ref'
     needs: [check_tag, build_programs]
-    uses: metaplex-foundation/actions/.github/workflows/test-js-client.yml@7f7eb6c041079973a7b2d743b174fc5d070f89f3 # ci/faster-ci, v2.1.0 candidate
+    uses: metaplex-foundation/actions/.github/workflows/test-js-client.yml@b7f2319cc97d9c8c052f24be1a709c88961dc1a8 # ci/faster-ci, v2.1.0 candidate
     permissions:
       contents: read
     secrets:
@@ -105,7 +105,7 @@ jobs:
           || (needs.build_programs.result == 'success'
           && needs.test_js.result == 'success'))
     needs: [check_tag, build_programs, test_js]
-    uses: metaplex-foundation/actions/.github/workflows/publish-js-client.yml@7f7eb6c041079973a7b2d743b174fc5d070f89f3 # ci/faster-ci, v2.1.0 candidate
+    uses: metaplex-foundation/actions/.github/workflows/publish-js-client.yml@b7f2319cc97d9c8c052f24be1a709c88961dc1a8 # ci/faster-ci, v2.1.0 candidate
     permissions:
       contents: write
       pull-requests: write

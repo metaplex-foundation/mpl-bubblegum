@@ -68,7 +68,7 @@ jobs:
   build_programs:
     name: Programs
     needs: check_tag
-    uses: metaplex-foundation/actions/.github/workflows/build-programs.yml@7f7eb6c041079973a7b2d743b174fc5d070f89f3 # ci/faster-ci, v2.1.0 candidate
+    uses: metaplex-foundation/actions/.github/workflows/build-programs.yml@b7f2319cc97d9c8c052f24be1a709c88961dc1a8 # ci/faster-ci, v2.1.0 candidate
     permissions:
       contents: read
     with:
@@ -77,7 +77,7 @@ jobs:
   test_programs:
     name: Programs
     needs: [check_tag, build_programs]
-    uses: metaplex-foundation/actions/.github/workflows/test-programs.yml@7f7eb6c041079973a7b2d743b174fc5d070f89f3 # ci/faster-ci, v2.1.0 candidate
+    uses: metaplex-foundation/actions/.github/workflows/test-programs.yml@b7f2319cc97d9c8c052f24be1a709c88961dc1a8 # ci/faster-ci, v2.1.0 candidate
     permissions:
       contents: read
     with:
@@ -88,7 +88,7 @@ jobs:
   test_js:
     name: JS client
     needs: [check_tag, build_programs]
-    uses: metaplex-foundation/actions/.github/workflows/test-js-client.yml@7f7eb6c041079973a7b2d743b174fc5d070f89f3 # ci/faster-ci, v2.1.0 candidate
+    uses: metaplex-foundation/actions/.github/workflows/test-js-client.yml@b7f2319cc97d9c8c052f24be1a709c88961dc1a8 # ci/faster-ci, v2.1.0 candidate
     permissions:
       contents: read
     secrets:
@@ -99,7 +99,7 @@ jobs:
   test_rust:
     name: Rust client
     needs: [check_tag, build_programs]
-    uses: metaplex-foundation/actions/.github/workflows/test-rust-client.yml@7f7eb6c041079973a7b2d743b174fc5d070f89f3 # ci/faster-ci, v2.1.0 candidate
+    uses: metaplex-foundation/actions/.github/workflows/test-rust-client.yml@b7f2319cc97d9c8c052f24be1a709c88961dc1a8 # ci/faster-ci, v2.1.0 candidate
     permissions:
       contents: read
     with:
@@ -110,7 +110,7 @@ jobs:
   create_release:
     name: Program
     needs: [check_tag, build_programs, test_js, test_rust, test_programs]
-    uses: metaplex-foundation/actions/.github/workflows/create-release.yml@7f7eb6c041079973a7b2d743b174fc5d070f89f3 # ci/faster-ci, v2.1.0 candidate
+    uses: metaplex-foundation/actions/.github/workflows/create-release.yml@b7f2319cc97d9c8c052f24be1a709c88961dc1a8 # ci/faster-ci, v2.1.0 candidate
     permissions:
       contents: write
     with:
