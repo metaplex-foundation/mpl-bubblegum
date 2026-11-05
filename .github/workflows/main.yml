@@ -14,7 +14,7 @@ permissions: {}
 jobs:
   changes:
     name: Detect changes
-    uses: metaplex-foundation/actions/.github/workflows/detect-changes.yml@8fcadb6df757cba34aa8475373886eca9b6ce8cf # v2.0.1
+    uses: metaplex-foundation/actions/.github/workflows/detect-changes.yml@d23217f66ec0f17ef88cc9e85f2ee093076ac869 # v2.1.0
     permissions:
       contents: read
       pull-requests: read
@@ -23,7 +23,7 @@ jobs:
     name: Programs
     if: needs.changes.outputs.any == 'true'
     needs: changes
-    uses: metaplex-foundation/actions/.github/workflows/build-programs.yml@8fcadb6df757cba34aa8475373886eca9b6ce8cf # v2.0.1
+    uses: metaplex-foundation/actions/.github/workflows/build-programs.yml@d23217f66ec0f17ef88cc9e85f2ee093076ac869 # v2.1.0
     permissions:
       contents: read
 
@@ -31,7 +31,7 @@ jobs:
     name: Programs
     if: needs.changes.outputs.programs == 'true'
     needs: changes
-    uses: metaplex-foundation/actions/.github/workflows/test-programs.yml@8fcadb6df757cba34aa8475373886eca9b6ce8cf # v2.0.1
+    uses: metaplex-foundation/actions/.github/workflows/test-programs.yml@d23217f66ec0f17ef88cc9e85f2ee093076ac869 # v2.1.0
     permissions:
       contents: read
     with:
@@ -41,37 +41,28 @@ jobs:
   generate_clients:
     name: Generate clients
     if: needs.changes.outputs.any == 'true'
-    needs: [changes, build_programs]
-    uses: metaplex-foundation/actions/.github/workflows/generate-clients.yml@8fcadb6df757cba34aa8475373886eca9b6ce8cf # v2.0.1
+    needs: changes
+    uses: metaplex-foundation/actions/.github/workflows/generate-clients.yml@d23217f66ec0f17ef88cc9e85f2ee093076ac869 # v2.1.0
     permissions:
       contents: read
 
   test_js:
     name: JS Client
     if: needs.changes.outputs.js_client == 'true'
-    needs: [changes, generate_clients]
-    uses: metaplex-foundation/actions/.github/workflows/test-js-client.yml@8fcadb6df757cba34aa8475373886eca9b6ce8cf # v2.0.1
+    needs: [changes, build_programs]
+    uses: metaplex-foundation/actions/.github/workflows/test-js-client.yml@d23217f66ec0f17ef88cc9e85f2ee093076ac869 # v2.1.0
     permissions:
       contents: read
     secrets:
       READ_API_RPC_DEVNET: ${{ secrets.READ_API_RPC_DEVNET }}
 
-  build_rust_client:
+  test_rust_client:
     name: Rust Client
     if: needs.changes.outputs.rust_client == 'true'
-    needs: [changes, generate_clients]
-    uses: metaplex-foundation/actions/.github/workflows/build-rust-client.yml@8fcadb6df757cba34aa8475373886eca9b6ce8cf # v2.0.1
+    needs: [changes, build_programs]
+    uses: metaplex-foundation/actions/.github/workflows/test-rust-client.yml@d23217f66ec0f17ef88cc9e85f2ee093076ac869 # v2.1.0
     permissions:
       contents: read
     with:
       features: --all-features
-
-  test_rust_client:
-    name: Rust Client
-    if: needs.changes.outputs.rust_client == 'true'
-    needs: [changes, generate_clients]
-    uses: metaplex-foundation/actions/.github/workflows/test-rust-client.yml@8fcadb6df757cba34aa8475373886eca9b6ce8cf # v2.0.1
-    permissions:
-      contents: read
-    with:
       runner: ubuntu-latest-16-cores
