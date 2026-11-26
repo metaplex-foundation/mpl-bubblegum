@@ -35,7 +35,7 @@ concurrency:
 jobs:
   upload:
     name: IDL
-    uses: metaplex-foundation/actions/.github/workflows/upload-idl.yml@58e51083a7cdf59068282913ec93994e989d4b61 # v2.2.2
+    uses: metaplex-foundation/actions/.github/workflows/upload-idl.yml@c52338cb2174341e2da73dc4396f23bd16d2efb9 # v2.2.3
     permissions:
       contents: read
     secrets:
