@@ -1,0 +1,51 @@
+name: Upload IDL
+
+on:
+  workflow_dispatch:
+    inputs:
+      git_ref:
+        description: Release tag, commit hash, or branch whose IDL matches the deployed program
+        required: true
+        type: string
+      program:
+        description: Program
+        required: true
+        default: bubblegum
+        type: choice
+        options: [bubblegum]
+      cluster:
+        description: Cluster environment
+        required: true
+        default: devnet
+        type: choice
+        options: [devnet, mainnet-beta]
+      dry_run:
+        description: Dry run (convert and compare with the on-chain IDL, write nothing)
+        required: false
+        type: boolean
+        default: true
+
+permissions: {}
+
+concurrency:
+  # One upload per program and cluster at a time; a running upload is never cancelled.
+  group: upload-idl-${{ inputs.program }}-${{ inputs.cluster }}
+  cancel-in-progress: false
+
+jobs:
+  upload:
+    name: IDL
+    uses: metaplex-foundation/actions/.github/workflows/upload-idl.yml@6366751a998eff830d3307991254b4209655249e # v2.2.5
+    permissions:
+      contents: read
+    secrets:
+      RPC_URL: >-
+        ${{ inputs.cluster == 'devnet' && secrets.DEVNET_RPC
+         || inputs.cluster == 'mainnet-beta' && secrets.MAINNET_RPC
+         || '' }}
+      SQUADS_BOT_KEY: ${{ secrets.SQUADS_BOT_KEY }}
+    with:
+      program: ${{ inputs.program }}
+      cluster: ${{ inputs.cluster }}
+      git_ref: ${{ inputs.git_ref }}
+      dry_run: ${{ inputs.dry_run }}
